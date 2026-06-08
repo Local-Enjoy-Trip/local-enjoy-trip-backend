@@ -6,6 +6,7 @@ dependencies {
     implementation project(':backend:core')
     implementation project(':backend:storage')
     implementation project(':backend:external')
+    implementation project(':backend:support:common')
 
     implementation 'org.springframework.boot:spring-boot-starter-batch'
     implementation 'org.springframework.boot:spring-boot-starter-json'

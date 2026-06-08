@@ -25,3 +25,6 @@ logs/
 .agents/
 .antigravitycli/
 .codex/
+
+# OpenTelemetry Java Agent
+infra/agent/
