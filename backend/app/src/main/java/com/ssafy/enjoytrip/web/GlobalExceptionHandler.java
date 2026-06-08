@@ -7,8 +7,14 @@ import com.ssafy.enjoytrip.support.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 @Slf4j
@@ -17,6 +23,20 @@ class GlobalExceptionHandler {
     @ExceptionHandler(CoreException.class)
     ResponseEntity<ApiResponse<Void>> handleCoreException(CoreException exception) {
         ErrorType error = exception.errorType();
+        writeLog(error, exception);
+        return ResponseEntity.status(resolveHttpStatus(error)).body(ApiResponse.fail(error));
+    }
+
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            BindException.class,
+            ConstraintViolationException.class,
+            HandlerMethodValidationException.class,
+            MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class
+    })
+    ResponseEntity<ApiResponse<Void>> handleValidationException(Exception exception) {
+        ErrorType error = ErrorType.INVALID_REQUEST;
         writeLog(error, exception);
         return ResponseEntity.status(resolveHttpStatus(error)).body(ApiResponse.fail(error));
     }

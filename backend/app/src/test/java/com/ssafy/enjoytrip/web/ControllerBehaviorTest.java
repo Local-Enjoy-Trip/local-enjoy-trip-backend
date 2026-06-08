@@ -8,13 +8,13 @@ import com.ssafy.enjoytrip.domain.BoardPost;
 import com.ssafy.enjoytrip.domain.Hotplace;
 import com.ssafy.enjoytrip.domain.Member;
 import com.ssafy.enjoytrip.domain.Notice;
-import com.ssafy.enjoytrip.domain.PlanItem;
 import com.ssafy.enjoytrip.domain.TravelPlan;
 import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.AttractionStats;
 import com.ssafy.enjoytrip.domain.AttractionTag;
 import com.ssafy.enjoytrip.domain.WeatherSummary;
 import com.ssafy.enjoytrip.exception.ExternalServiceException;
+import com.ssafy.enjoytrip.support.error.CoreException;
 import com.ssafy.enjoytrip.repository.DbHealthRepository;
 import com.ssafy.enjoytrip.service.AttractionService;
 import com.ssafy.enjoytrip.service.BoardService;
@@ -25,6 +25,7 @@ import com.ssafy.enjoytrip.service.MemberService;
 import com.ssafy.enjoytrip.service.NoticeService;
 import com.ssafy.enjoytrip.service.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.service.PlanService;
+import com.ssafy.enjoytrip.service.command.PlanMutationCommand;
 import com.ssafy.enjoytrip.service.RouteOptimizationService;
 import com.ssafy.enjoytrip.service.WeatherService;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import com.ssafy.enjoytrip.web.mapper.PlanResponseAssembler;
+import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
@@ -44,9 +47,11 @@ import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
 
+import static com.ssafy.enjoytrip.support.error.ErrorType.PLAN_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -90,7 +95,10 @@ class ControllerBehaviorTest {
         mockMvc = MockMvcBuilders.standaloneSetup(
                         new BoardController(boardService),
                         new HotplaceController(hotplaceService),
-                        new PlanController(planService),
+                        new PlanController(
+                                planService,
+                                new PlanResponseAssembler(planService)
+                        ),
                         new NoticeController(noticeService),
                         new MemberController(memberService, tokenService, oauthSignupTicketService),
                         new AttractionController(attractionService),
@@ -177,7 +185,10 @@ class ControllerBehaviorTest {
         @Test
         void findsHotplacesByUserAndCreatesWithCoordinates() throws Exception {
             when(hotplaceService.findHotplacesByUser("ssafy")).thenReturn(List.of(
-                    new Hotplace("h1", "ssafy", "남산", "view", "2026-05-14", 37.55, 126.99, "night", "", "created")
+                    new Hotplace(
+                            "h1", "ssafy", "남산", "view", "2026-05-14", 37.55, 126.99, "night", "",
+                            "created"
+                    )
             ));
 
             mockMvc.perform(get("/api/hotplaces").param("userId", " ssafy "))
@@ -224,64 +235,103 @@ class ControllerBehaviorTest {
     @Nested
     class PlanAndNoticeEndpoints {
         @Test
-        void planFindParsesRouteItemsAndFallsBackToEmptyArrayForInvalidJson() throws Exception {
+        void planFindReturnsOnlyNormalizedRouteItemsAndDoesNotParseStoredJsonFallback() throws Exception {
             when(planService.findPlansByUser("ssafy")).thenReturn(List.of(
-                    new TravelPlan("p1", "ssafy", "서울", "2026-05-14", "2026-05-15", 1000, null, "[{\"title\":\"A\"}]", "created"),
-                    new TravelPlan("p2", "ssafy", "부산", "2026-05-16", "2026-05-17", 2000, "note", "not json", "created")
+                    new TravelPlan(
+                            "p1", "ssafy", "서울", "2026-05-14", "2026-05-15", 1000, null,
+                            "[{\"title\":\"A\"}]", "created"
+                    ),
+                    new TravelPlan(
+                            "p2", "ssafy", "부산", "2026-05-16", "2026-05-17", 2000, "note",
+                            "not json", "created"
+                    )
             ));
 
             mockMvc.perform(get("/api/plans").param("userId", " ssafy "))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.plans[0].routeItems[0].title").value("A"))
+                    .andExpect(jsonPath("$.data.plans[0].routeItems", empty()))
                     .andExpect(jsonPath("$.data.plans[0].note").value(""))
                     .andExpect(jsonPath("$.data.plans[1].routeItems", empty()));
         }
 
         @Test
-        void planCreateDefaultsInvalidBudgetAndDeleteMissingReturnsNotFound() throws Exception {
-            mockMvc.perform(post("/api/plans/items")
-                            .principal(jwtPrincipal("ssafy"))
-                            .param("id", "p1")
-                            .param("userId", "ssafy")
-                            .param("title", "서울")
-                            .param("startDate", "2026-05-14")
-                            .param("endDate", "2026-05-15")
-                            .param("budget", "many")
-                            .param("routeItems", ""))
-                    .andExpect(status().isOk());
+        void planDeleteMissingReturnsNotFound() throws Exception {
+            doThrow(new CoreException(PLAN_NOT_FOUND)).when(planService).deletePlan("ssafy", "missing");
 
-            ArgumentCaptor<TravelPlan> captor = ArgumentCaptor.forClass(TravelPlan.class);
-            verify(planService).insertPlan(captor.capture(), any());
-            assertThat(captor.getValue().budget()).isZero();
-            assertThat(captor.getValue().routeItemsJson()).isEqualTo("[]");
-
-            when(planService.findPlan("missing")).thenReturn(java.util.Optional.empty());
             mockMvc.perform(delete("/api/plans/missing").principal(jwtPrincipal("ssafy")))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error.message").value("Plan not found"));
         }
 
         @Test
-        void planCreateStoresNormalizedRouteItemsFromAuthenticatedUser() throws Exception {
+        void canonicalPlanCreateStoresTypedRouteItemsFromAuthenticatedUser() throws Exception {
             mockMvc.perform(post("/api/plans/items")
+                            .contentType(MediaType.APPLICATION_JSON)
                             .principal(jwtPrincipal("ssafy"))
-                            .param("id", "p-route")
-                            .param("userId", "ignored")
-                            .param("title", "서울")
-                            .param("startDate", "2026-05-14")
-                            .param("endDate", "2026-05-15")
-                            .param("routeItems", "[{\"id\":10,\"day\":2,\"memo\":\"lunch\",\"stayMinutes\":120},{\"attractionId\":11}]"))
+                            .content("""
+                                    {
+                                      "id":"p-route",
+                                      "title":"서울",
+                                      "startDate":"2026-05-14",
+                                      "endDate":"2026-05-15",
+                                      "routeItems":[
+                                        {"attractionId":10,"day":2,"memo":"lunch","stayMinutes":120},
+                                        {"attractionId":11}
+                                      ]
+                                    }
+                                    """))
                     .andExpect(status().isOk());
 
-            ArgumentCaptor<TravelPlan> planCaptor = ArgumentCaptor.forClass(TravelPlan.class);
-            @SuppressWarnings("unchecked")
-            ArgumentCaptor<List<PlanItem>> itemsCaptor = ArgumentCaptor.forClass(List.class);
-            verify(planService).insertPlan(planCaptor.capture(), itemsCaptor.capture());
-            assertThat(planCaptor.getValue().userId()).isEqualTo("ssafy");
+            ArgumentCaptor<PlanMutationCommand> commandCaptor =
+                    ArgumentCaptor.forClass(PlanMutationCommand.class);
+            verify(planService).createPlan(eq("ssafy"), commandCaptor.capture());
 
-            assertThat(itemsCaptor.getValue()).extracting(PlanItem::attractionId).containsExactly(10L, 11L);
-            assertThat(itemsCaptor.getValue().getFirst().day()).isEqualTo(2);
-            assertThat(itemsCaptor.getValue().getFirst().memo()).isEqualTo("lunch");
+            assertThat(commandCaptor.getValue().id()).isEqualTo("p-route");
+            assertThat(commandCaptor.getValue().routeItems())
+                    .extracting("attractionId")
+                    .containsExactly(10L, 11L);
+            assertThat(commandCaptor.getValue().routeItems().getFirst().day()).isEqualTo(2);
+            assertThat(commandCaptor.getValue().routeItems().getFirst().memo()).isEqualTo("lunch");
+        }
+
+        @Test
+        void canonicalPlanCreateValidationFailureUsesStandardBadRequestEnvelope() throws Exception {
+            mockMvc.perform(post("/api/plans/items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .principal(jwtPrincipal("ssafy"))
+                            .content("""
+                                    {
+                                      "id":"",
+                                      "title":"서울",
+                                      "startDate":"2026-05-14",
+                                      "endDate":"2026-05-15",
+                                      "budget":-1
+                                    }
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.message").value("Invalid request"));
+        }
+
+        @Test
+        void canonicalPlanUpdateKeepsRouteItemsWhenRouteItemsFieldIsAbsent() throws Exception {
+            mockMvc.perform(put("/api/plans/p-route")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .principal(jwtPrincipal("ssafy"))
+                            .content("""
+                                    {
+                                      "title":"서울 수정",
+                                      "budget":2000
+                                    }
+                                    """))
+                    .andExpect(status().isOk());
+
+            ArgumentCaptor<PlanMutationCommand> commandCaptor =
+                    ArgumentCaptor.forClass(PlanMutationCommand.class);
+            verify(planService).updatePlan(eq("ssafy"), eq("p-route"), commandCaptor.capture());
+
+            assertThat(commandCaptor.getValue().title()).isEqualTo("서울 수정");
+            assertThat(commandCaptor.getValue().budget()).isEqualTo(2000);
+            assertThat(commandCaptor.getValue().routeItems()).isNull();
         }
 
         @Test
@@ -322,7 +372,9 @@ class ControllerBehaviorTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.message").value("Missing userId"));
 
-            mockMvc.perform(post("/api/members/find-password").param("userId", "ssafy").param("email", "ssafy@example.com"))
+            mockMvc.perform(post("/api/members/find-password")
+                            .param("userId", "ssafy")
+                            .param("email", "ssafy@example.com"))
                     .andExpect(status().isGone())
                     .andExpect(jsonPath("$.error.code").value("GONE"));
         }
@@ -357,21 +409,37 @@ class ControllerBehaviorTest {
                     .andExpect(status().isMethodNotAllowed())
                     .andExpect(jsonPath("$.error.message").value("Use GET /api/attractions"));
 
-            when(attractionService.searchAttractions(new AttractionSearchCondition("1", "", "", "궁", "", "", ""), ""))
-                    .thenThrow(new ExternalServiceException(ExternalServiceException.Source.TOUR_API, new RuntimeException("tour failed")));
+            when(attractionService.searchAttractions(
+                    new AttractionSearchCondition("1", "", "", "궁", "", "", ""),
+                    ""
+            ))
+                    .thenThrow(new ExternalServiceException(
+                            ExternalServiceException.Source.TOUR_API,
+                            new RuntimeException("tour failed")
+                    ));
             mockMvc.perform(get("/api/attractions").param("sidoCode", "1").param("keyword", "궁"))
                     .andExpect(status().isBadGateway())
                     .andExpect(jsonPath("$.error.message").value("Tour API call failed"));
 
-            when(attractionService.searchAttractions(new AttractionSearchCondition("", "", "", "", "126.9", "37.5", ""), ""))
+            when(attractionService.searchAttractions(
+                    new AttractionSearchCondition("", "", "", "", "126.9", "37.5", ""),
+                    ""
+            ))
                     .thenThrow(new IllegalStateException("not configured"));
             mockMvc.perform(get("/api/attractions").param("mapX", "126.9").param("mapY", "37.5"))
                     .andExpect(status().isInternalServerError())
                     .andExpect(jsonPath("$.error.message").value("Internal server error"));
 
-            when(chargerService.findChargers("", "", 1, 150))
-                    .thenThrow(new ExternalServiceException(ExternalServiceException.Source.EV_CHARGER_API, new RuntimeException("timeout")));
             mockMvc.perform(get("/api/chargers").param("pageNo", "bad").param("numOfRows", "bad"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.message").value("Invalid request"));
+
+            when(chargerService.findChargers("", "", 1, 150))
+                    .thenThrow(new ExternalServiceException(
+                            ExternalServiceException.Source.EV_CHARGER_API,
+                            new RuntimeException("timeout")
+                    ));
+            mockMvc.perform(get("/api/chargers"))
                     .andExpect(status().isBadGateway())
                     .andExpect(jsonPath("$.error.message").value("EV charger API call failed"));
         }
@@ -389,7 +457,9 @@ class ControllerBehaviorTest {
                     .andExpect(status().isOk());
             verify(attractionService).addFavorite(1L, "ssafy");
 
-            mockMvc.perform(put("/api/attractions/1/rating").principal(jwtPrincipal("ssafy")).param("rating", "6"))
+            mockMvc.perform(put("/api/attractions/1/rating")
+                            .principal(jwtPrincipal("ssafy"))
+                            .param("rating", "6"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.message").value("Rating must be between 1 and 5"));
 
@@ -398,7 +468,9 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.stats.favoriteCount").value(2))
                     .andExpect(jsonPath("$.data.stats.tags[0].name").value("family"));
 
-            mockMvc.perform(put("/api/attractions/1/tags").principal(jwtPrincipal("ssafy")).param("tagIds", "3"))
+            mockMvc.perform(put("/api/attractions/1/tags")
+                            .principal(jwtPrincipal("ssafy"))
+                            .param("tagIds", "3"))
                     .andExpect(status().isOk());
             verify(attractionService).replaceTags(1L, List.of(3L));
 

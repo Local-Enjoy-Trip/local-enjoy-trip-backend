@@ -25,16 +25,37 @@
 - `GET /api/hotplaces?userId={userId}`
 - `POST /api/hotplaces?action=create|delete`
 - `GET /api/plans?userId={userId}`
-- `POST /api/plans?action=create|delete`
 - `GET /api/boards`
 - `POST /api/boards?action=create|update|delete`
 
-RESTful 신규 mutation 경로도 함께 제공한다:
+Mutation 경로:
 - `POST /api/members/signup`, `POST /api/members/login`, `PUT /api/members/{userId}`, `DELETE /api/members/{userId}`
 - `POST /api/notices/items`, `PUT /api/notices/{id}`, `DELETE /api/notices/{id}`
 - `POST /api/boards/posts`, `PUT /api/boards/{id}`, `DELETE /api/boards/{id}`
 - `POST /api/hotplaces/items`, `DELETE /api/hotplaces/{id}`
-- `POST /api/plans/items`, `DELETE /api/plans/{id}`
+- `POST /api/plans/items` (JSON), `PUT /api/plans/{id}` (JSON), `PUT /api/plans/{id}/items` (JSON), `DELETE /api/plans/{id}`
+
+
+### Plans canonical JSON 예시
+
+여행 계획 mutation은 JSON request body만 사용한다. `userId`는 요청 body에서 받지 않고 인증된 JWT subject를 사용한다.
+
+```http
+POST /api/plans/items
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "id": "p1",
+  "title": "서울 여행",
+  "startDate": "2026-05-14",
+  "endDate": "2026-05-15",
+  "budget": 100000,
+  "routeItems": [
+    {"attractionId": 1, "day": 1, "stayMinutes": 120}
+  ]
+}
+```
 
 ## 실행
 ```powershell

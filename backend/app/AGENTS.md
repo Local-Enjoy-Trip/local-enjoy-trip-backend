@@ -17,6 +17,9 @@
 - **Explicit Contract Dependencies**: By separating `api` and `controller` packages, the controller implementation must explicitly import its corresponding API interface (e.g., `import com.ssafy.enjoytrip.web.api.AttractionApi;`). This clearly shows the contract dependency in the import block.
 - **Request/Response DTOs**: Controllers must use dedicated request/response DTOs (e.g., `MemberRequest`, `AttractionsResponse`). Do not use `Map`, `Map.of(...)`, or `@RequestParam Map` for defining controller contracts.
 - **Spring Validation First**: Do not add repetitive null/blank/range validation branches in controllers when the rule can be expressed on request DTOs. Put Bean Validation annotations such as `@NotBlank`, `@NotNull`, `@Positive`, `@Min`, `@Size`, or `@Pattern` on request DTO fields, apply `@Valid`/`@Validated` at controller boundaries, and let `GlobalExceptionHandler` convert validation failures into standardized API errors. Keep only validations that require authenticated principal, ownership, persisted state, or cross-resource business checks in services/application flow.
+- **Ingress Parsing Boundary**: Structured query strings, legacy form blobs, and raw request fields must be parsed and
+  normalized in `app` request DTOs, mappers, or controller-adjacent helpers before calling `core`. Do not push raw HTTP
+  strings into `core` services for parsing, trimming, coercion, or default-value repair.
 - **Error Handling**: Use custom exceptions like `CoreException` coupled with specific `ErrorType` values. A `GlobalExceptionHandler` processes these into standardized HTTP error responses.
 - **Dependency Injection**: Use `@RequiredArgsConstructor` for constructor injection of `final` service dependencies. Avoid manual constructors.
 

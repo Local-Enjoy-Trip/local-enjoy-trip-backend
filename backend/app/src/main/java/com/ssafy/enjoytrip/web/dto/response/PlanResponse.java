@@ -1,5 +1,7 @@
 package com.ssafy.enjoytrip.web.dto.response;
 
+import java.util.List;
+
 public record PlanResponse(
         String id,
         String userId,
@@ -8,7 +10,7 @@ public record PlanResponse(
         String endDate,
         int budget,
         String note,
-        Object routeItems,
+        List<PlanRouteItemResponse> routeItems,
         String createdAt
 ) {
 }

@@ -154,6 +154,18 @@ Migration 작성 시:
 - public service 메서드나 복잡한 application 흐름의 상위 메서드는 메서드 이름만 따라 읽어도 유스케이스 순서를 알 수 있어야 한다.
 - 상위 메서드는 `validate...`, `find...`, `create...`, `save...`, `record...`,
   `return...`처럼 업무 의도가 드러나는 단계 호출로 구성한다.
+- `validate...` 단계는 인증 주체, 소유권, 저장된 상태 존재 여부, 도메인 불변식, 교차 리소스 비즈니스 규칙처럼
+  `core`가 책임지는 규칙일 때만 사용한다.
+- HTTP query/body 모양, raw string parsing, request DTO의 null/blank/range 검증, batch job parameter 존재 여부,
+  단순 blank-to-null/default 치환은 `app` 또는 `batch` ingress 경계에서 처리한다.
+- `core` service가 `String raw`, `parse...`, `split(...)`, `trim/strip` 기반 요청 해석, 반복되는 `null`/`isBlank`
+  default 분기를 갖기 시작하면 먼저 command/value object 경계로 옮길 수 있는지 검토한다.
+- `core`에 남길 수 있는 방어 코드는 "HTTP가 아닌 다른 caller가 호출해도 여전히 필요한가",
+  "인증 사용자나 저장 상태를 알아야 판단할 수 있는가", "도메인 값 자체를 유효하게 만드는가"에 답할 수 있어야 한다.
+- route `points` 같은 구조화된 query string, legacy form JSON blob, plan request default, batch `sourceVersion` 같은
+  job parameter는 ingress 모듈의 DTO/mapper/config에서 typed command로 변환한 뒤 `core`에 넘긴다.
+- repository/external/runtime 예외를 잡아 fallback 데이터를 반환하는 `core` 흐름은 무음 방어 코드로 두지 않는다.
+  fallback이 제품 정책이면 로그, 결과 metadata, 응답 contract, 또는 문서화된 caller contract 중 하나로 실패 사실을 관측 가능하게 한다.
 - 하위 private 메서드는 각 단계의 구현 세부사항을 숨기되, `process`, `handle`, `doWork`, `check`처럼 의미가 흐린 이름만으로 추출하지 않는다.
 - 단순 repository 위임처럼 흐름이 없는 메서드는 억지로 쪼개지 않는다. 분리는 유스케이스 흐름을 더 잘 읽히게 할 때만 한다.
 - 조건 분기, 실패 기록, 보상/로그 기록, 외부 gateway 호출이 섞이는 core 서비스는 먼저 회귀 테스트로 동작을 잠근 뒤 단계 이름 중심으로 정리한다.

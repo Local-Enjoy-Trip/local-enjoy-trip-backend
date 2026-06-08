@@ -21,6 +21,7 @@ import com.ssafy.enjoytrip.service.NewsService;
 import com.ssafy.enjoytrip.service.NoticeService;
 import com.ssafy.enjoytrip.service.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.service.PlanService;
+import com.ssafy.enjoytrip.web.mapper.PlanResponseAssembler;
 import com.ssafy.enjoytrip.service.WeatherService;
 import com.ssafy.enjoytrip.domain.BoardPost;
 import com.ssafy.enjoytrip.domain.Hotplace;
@@ -87,7 +88,10 @@ class ApiDocumentationTest {
                         new WeatherController(weatherService),
                         new BoardController(boardService),
                         new HotplaceController(hotplaceService),
-                        new PlanController(planService),
+                        new PlanController(
+                                planService,
+                                new PlanResponseAssembler(planService)
+                        ),
                         new NoticeController(noticeService),
                         new MemberController(memberService, tokenService, oauthSignupTicketService)
                 )
@@ -132,8 +136,10 @@ class ApiDocumentationTest {
 
     @Test
     void attractions() throws Exception {
-        when(attractionService.searchAttractions(new AttractionSearchCondition("1", "", "", "궁", "", "", ""))).thenReturn(List.of(
-                new Attraction(1L, "경복궁", "서울 종로구", "", "", "", "", "", 0, 1, 1, 37.5796, 126.9770, "6", "", "",
+        when(attractionService.searchAttractions(new AttractionSearchCondition("1", "", "", "궁", "", "", "")))
+                .thenReturn(List.of(
+                new Attraction(
+                        1L, "경복궁", "서울 종로구", "", "", "", "", "", 0, 1, 1, 37.5796, 126.9770, "6", "", "",
                         0, 0.0, 0, List.of(), false, null)
         ));
 
@@ -148,7 +154,9 @@ class ApiDocumentationTest {
     @Test
     void chargers() throws Exception {
         when(chargerService.findChargers("", "서울", 1, 150)).thenReturn(List.of(
-                new ChargerItem("ST001", "서울충전소", "01", "06", "서울", "", 37.5, 127.0, "24시간", "환경부", "1661-9408", "2")
+                new ChargerItem(
+                        "ST001", "서울충전소", "01", "06", "서울", "", 37.5, 127.0, "24시간", "환경부", "1661-9408", "2"
+                )
         ));
 
         mockMvc.perform(get("/api/chargers").param("keyword", "서울"))
@@ -204,7 +212,10 @@ class ApiDocumentationTest {
     @Test
     void hotplaces() throws Exception {
         when(hotplaceService.findAllHotplaces()).thenReturn(List.of(
-                new Hotplace("h1", "ssafy", "남산", "view", "2026-05-14", 37.55, 126.99, "야경", "", "2026-05-14 11:00:00")
+                new Hotplace(
+                        "h1", "ssafy", "남산", "view", "2026-05-14", 37.55, 126.99, "야경", "",
+                        "2026-05-14 11:00:00"
+                )
         ));
 
         mockMvc.perform(get("/api/hotplaces"))
@@ -218,7 +229,10 @@ class ApiDocumentationTest {
     @Test
     void plans() throws Exception {
         when(planService.findAllPlans()).thenReturn(List.of(
-                new TravelPlan("p1", "ssafy", "서울 여행", "2026-05-14", "2026-05-15", 100000, "메모", "[]", "2026-05-14 11:00:00")
+                new TravelPlan(
+                        "p1", "ssafy", "서울 여행", "2026-05-14", "2026-05-15", 100000, "메모", "[]",
+                        "2026-05-14 11:00:00"
+                )
         ));
 
         mockMvc.perform(get("/api/plans"))
