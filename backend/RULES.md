@@ -169,7 +169,38 @@ public Member login(String userId, String password) {
 }
 ```
 
-## 12. 완료 보고 템플릿
+## 12. 실제 API JSON 응답 검증 규칙
+
+이 repo는 백엔드만 있으므로 화면을 열어 검증하는 것을 완료 기준으로 삼지 않는다.
+기능을 추가하거나 수정한 뒤에는 테스트 통과와 별도로, 가능한 한 실제 실행 중인 백엔드에 HTTP 요청을 보내 응답 JSON을 확인한다.
+
+원칙:
+
+- public API를 추가하거나 수정했다면 `curl`, `httpie`, Postman, REST Client 등으로 실제 endpoint를 호출한다.
+- 조회 기능은 seed/local DB/test fixture 등 실제 저장소에서 읽힌 데이터가 `data` 아래에 기대한 shape와 값으로 내려오는지 확인한다.
+- 생성/수정/삭제 기능은 요청 후 조회 API를 다시 호출해 변경 결과가 JSON 응답에 반영되는지 확인한다.
+- 공통 envelope는 최소한 `success`, `data`, `error` 필드가 의도대로 나오는지 확인한다.
+- 인증이 필요한 API는 실제 또는 테스트용 JWT를 사용해 성공/실패 응답을 모두 확인한다.
+- 외부 API, Redis, DB처럼 런타임 의존성이 있는 기능은 mock 테스트만으로 완료 처리하지 않는다. 로컬에서 의존성을 띄울 수 없으면 이유와 대체 검증을 완료 보고에 명시한다.
+- 응답 검증에는 `jq`나 JSONPath를 사용해 핵심 필드를 확인한다. 단순히 HTTP 200만 확인하지 않는다.
+
+권장 검증 예:
+
+```bash
+curl -s 'http://localhost:8080/api/attractions?sidoCode=1&keyword=%EA%B6%81' | jq '.success, .data.attractions[0]'
+curl -s 'http://localhost:8080/api/weather/briefings' | jq '.success, .data.weather'
+curl -s 'http://localhost:8080/api/plans?userId=ssafy' | jq '.success, .data.plans'
+```
+
+완료 보고에는 다음을 남긴다.
+
+- 실행한 서버 또는 compose profile
+- 호출한 HTTP method/path/query/body
+- 사용한 인증 정보의 종류
+- 확인한 JSON 필드와 실제 결과 요약
+- 실제 요청 검증을 못 했다면 못 한 이유와 대체 검증
+
+## 13. 완료 보고 템플릿
 
 ```text
 변경 파일:
@@ -182,6 +213,8 @@ public Member login(String userId, String password) {
 검증:
 - 명령: ...
 - 결과: ...
+- 실제 API 요청: ...
+- 응답 JSON 확인: ...
 
 남은 위험:
 - ...
