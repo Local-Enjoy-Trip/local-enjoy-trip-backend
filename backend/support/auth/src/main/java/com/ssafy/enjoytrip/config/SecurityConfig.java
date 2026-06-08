@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/members/me", "/api/ai/events").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/members/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/members/me", "/api/members/{userId}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/members/me", "/api/members/{userId}").authenticated()
                         .requestMatchers(HttpMethod.PUT,
