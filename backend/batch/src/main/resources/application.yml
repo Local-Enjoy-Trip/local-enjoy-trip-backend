@@ -1,0 +1,44 @@
+spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../../.env[.properties]
+      - classpath:embedding-target-regions.yml
+  application:
+    name: enjoytrip-batch
+  datasource:
+    url: ${ENJOYTRIP_DB_URL:jdbc:postgresql://localhost:5432/enjoytrip}
+    username: ${ENJOYTRIP_DB_USER:${POSTGRES_USER:ssafy}}
+    password: ${ENJOYTRIP_DB_PASSWORD:${POSTGRES_PASSWORD:ssafy}}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    baseline-on-migrate: true
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
+
+enjoytrip:
+  ai:
+    embedding:
+      gms:
+        url: ${GMS_EMBEDDING_URL:https://gms.ssafy.io/gmsapi/api.openai.com/v1/embeddings}
+        api-key: ${GMS_KEY:}
+        timeout: ${GMS_EMBEDDING_TIMEOUT:30s}
+        provider: gms
+        model: text-embedding-3-large
+        dimension: 3072
+      expansion:
+        gms:
+          url: ${GMS_CHAT_COMPLETIONS_URL:https://gms.ssafy.io/gmsapi/api.openai.com/v1/chat/completions}
+          api-key: ${GMS_KEY:}
+          timeout: ${GMS_CHAT_COMPLETIONS_TIMEOUT:30s}
+          model: gpt-5.4
+          max-keywords: ${ATTRACTION_KEYWORD_EXPANSION_MAX_KEYWORDS:24}
+      backfill:
+        fail-on-outside-target-embeddings: true

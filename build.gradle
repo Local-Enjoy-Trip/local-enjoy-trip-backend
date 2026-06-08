@@ -1,0 +1,58 @@
+plugins {
+    id 'org.springframework.boot' version '4.0.6' apply false
+    id 'io.spring.dependency-management' version '1.1.6' apply false
+}
+
+allprojects {
+    group = 'com.ssafy'
+    version = '1.0.0-SNAPSHOT'
+    
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25) // Note: reduced from 25 for compatibility, adjust if JDK 25 is strictly required
+        }
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:4.0.6"
+        }
+    }
+
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testCompileOnly 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.projectlombok:lombok'
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+        testImplementation 'org.junit.platform:junit-platform-suite'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform {
+            excludeTags 'suite'
+            excludeEngines 'junit-platform-suite'
+        }
+    }
+
+    tasks.register('moduleTestSuite', Test) {
+        description = "Runs the ${project.path} JUnit suite classes."
+        group = 'verification'
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        shouldRunAfter tasks.named('test')
+        useJUnitPlatform {
+            includeEngines 'junit-platform-suite'
+        }
+    }
+}

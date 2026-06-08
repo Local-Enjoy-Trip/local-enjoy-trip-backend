@@ -1,0 +1,60 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F7FAFF
+  BorderColor #3563E9
+}
+
+actor "비회원(Guest)" as Guest
+actor "회원(Member)" as Member
+actor "관리자(Admin)" as Admin
+
+rectangle "EnjoyTrip Web System" {
+  usecase "회원가입" as UC_SIGNUP
+  usecase "로그인" as UC_LOGIN
+  usecase "로그아웃" as UC_LOGOUT
+  usecase "회원정보 수정/탈퇴" as UC_MEMBER_MANAGE
+
+  usecase "관광지 조회\n(지역/키워드/카테고리)" as UC_TRAVEL_SEARCH
+  usecase "관광지 상세 조회" as UC_TRAVEL_DETAIL
+
+  usecase "여행 경로 구성/저장" as UC_PLAN_SAVE
+  usecase "경로 최적화" as UC_ROUTE_OPT
+  usecase "일차 자동 분할" as UC_ROUTE_SPLIT
+
+  usecase "Hotplace 등록/조회/삭제" as UC_HOTPLACE
+
+  usecase "공지사항 조회" as UC_NOTICE_VIEW
+  usecase "공지사항 등록/수정/삭제" as UC_NOTICE_MANAGE
+
+  usecase "관광 뉴스 조회" as UC_NEWS
+  usecase "헬스체크 조회" as UC_HEALTH
+}
+
+Guest --> UC_SIGNUP
+Guest --> UC_LOGIN
+Guest --> UC_TRAVEL_SEARCH
+Guest --> UC_TRAVEL_DETAIL
+Guest --> UC_NOTICE_VIEW
+Guest --> UC_NEWS
+Guest --> UC_HEALTH
+
+Member --> UC_LOGOUT
+Member --> UC_MEMBER_MANAGE
+Member --> UC_PLAN_SAVE
+Member --> UC_ROUTE_OPT
+Member --> UC_ROUTE_SPLIT
+Member --> UC_HOTPLACE
+Member --> UC_NOTICE_VIEW
+Member --> UC_NEWS
+
+Admin --> UC_NOTICE_MANAGE
+
+UC_TRAVEL_DETAIL ..> UC_TRAVEL_SEARCH : <<include>>
+UC_ROUTE_OPT ..> UC_PLAN_SAVE : <<extend>>
+UC_ROUTE_SPLIT ..> UC_PLAN_SAVE : <<extend>>
+UC_NOTICE_MANAGE ..> UC_NOTICE_VIEW : <<include>>
+UC_LOGOUT ..> UC_LOGIN : <<extend>>
+
+@enduml

@@ -1,0 +1,16 @@
+.git
+.gradle
+.idea
+.omx
+.codex
+.agents
+build
+backend/**/build
+frontend/node_modules
+frontend/dist
+node_modules
+*.log
+.env
+.env.*
+!.env.example
+java_enjoytrip_15_06_DB.pdf

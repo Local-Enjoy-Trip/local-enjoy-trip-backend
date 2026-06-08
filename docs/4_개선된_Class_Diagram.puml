@@ -1,0 +1,97 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "web" {
+  abstract class BaseApiServlet {
+    +writeJson(response, status, json)
+    +writeError(response, status, message)
+    +writeSqlError(response, ex)
+  }
+
+  class HealthServlet
+  class DbHealthServlet
+  class RouteOptimizeServlet
+  class RouteSplitByDayServlet
+  class MemberServlet
+  class NoticeServlet
+  class NewsServlet
+}
+
+package "service" {
+  class RouteOptimizationService {
+    +optimizeOrder(points)
+    +estimateTotalDistanceKm(points, order)
+    +splitByLargestGap(orderedPoints, days)
+    +parsePoints(rawPoints)
+  }
+}
+
+package "model" {
+  class Point {
+    -lat: double
+    -lng: double
+    +lat()
+    +lng()
+  }
+}
+
+package "util" {
+  class DbUtil {
+    +getConnection()
+    -ensureDriverLoaded()
+  }
+  class DbSchemaUtil {
+    +ensureCoreTables(connection)
+  }
+}
+
+package "filter" {
+  class Utf8EncodingFilter
+}
+
+database "MySQL(enjoytrip)" {
+  class members {
+    user_id
+    name
+    email
+    password
+  }
+  class auth_logs {
+    user_id
+    event_type
+    logged_at
+  }
+  class notices {
+    title
+    content
+    author
+  }
+}
+
+BaseApiServlet <|-- HealthServlet
+BaseApiServlet <|-- DbHealthServlet
+BaseApiServlet <|-- RouteOptimizeServlet
+BaseApiServlet <|-- RouteSplitByDayServlet
+BaseApiServlet <|-- MemberServlet
+BaseApiServlet <|-- NoticeServlet
+BaseApiServlet <|-- NewsServlet
+
+RouteOptimizeServlet --> RouteOptimizationService
+RouteSplitByDayServlet --> RouteOptimizationService
+RouteOptimizationService --> Point
+
+DbHealthServlet --> DbUtil
+DbHealthServlet --> DbSchemaUtil
+MemberServlet --> DbUtil
+MemberServlet --> DbSchemaUtil
+NoticeServlet --> DbUtil
+NoticeServlet --> DbSchemaUtil
+
+DbUtil --> "JDBC Driver\ncom.mysql.cj.jdbc.Driver"
+
+MemberServlet ..> members : CRUD
+MemberServlet ..> auth_logs : INSERT(LOGIN/LOGOUT)
+NoticeServlet ..> notices : CRUD
+
+@enduml

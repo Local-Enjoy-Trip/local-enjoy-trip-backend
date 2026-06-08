@@ -1,0 +1,64 @@
+= EnjoyTrip API
+:doctype: book
+:toc: left
+:sectnums:
+:snippets: ../../target/generated-snippets
+
+== Controller Contract
+
+Controller request and response contracts must use named DTO objects. Raw map contracts such as `@RequestParam Map`, `@RequestBody Map`, `ApiResponse<Map<...>>`, and `Map.of(...)` response bodies are not allowed.
+
+== Health
+
+include::{snippets}/health/http-request.adoc[]
+include::{snippets}/health/http-response.adoc[]
+
+== Route Optimize
+
+include::{snippets}/route-optimize/http-request.adoc[]
+include::{snippets}/route-optimize/http-response.adoc[]
+
+== Route Split By Day
+
+include::{snippets}/route-split-by-day/http-request.adoc[]
+include::{snippets}/route-split-by-day/http-response.adoc[]
+
+== Attractions
+
+include::{snippets}/attractions/http-request.adoc[]
+include::{snippets}/attractions/http-response.adoc[]
+
+== Chargers
+
+include::{snippets}/chargers/http-request.adoc[]
+include::{snippets}/chargers/http-response.adoc[]
+
+== News
+
+include::{snippets}/news/http-request.adoc[]
+include::{snippets}/news/http-response.adoc[]
+
+== Boards
+
+include::{snippets}/boards/http-request.adoc[]
+include::{snippets}/boards/http-response.adoc[]
+
+== Hotplaces
+
+include::{snippets}/hotplaces/http-request.adoc[]
+include::{snippets}/hotplaces/http-response.adoc[]
+
+== Plans
+
+include::{snippets}/plans/http-request.adoc[]
+include::{snippets}/plans/http-response.adoc[]
+
+== Notices
+
+include::{snippets}/notices/http-request.adoc[]
+include::{snippets}/notices/http-response.adoc[]
+
+== Members
+
+include::{snippets}/members/http-request.adoc[]
+include::{snippets}/members/http-response.adoc[]

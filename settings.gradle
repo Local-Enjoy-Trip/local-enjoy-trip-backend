@@ -1,0 +1,9 @@
+rootProject.name = 'local-enjoy-trip-backend'
+
+include 'backend:app'
+include 'backend:core'
+include 'backend:external'
+include 'backend:storage'
+include 'backend:batch'
+include 'backend:support:error'
+include 'backend:support:auth'

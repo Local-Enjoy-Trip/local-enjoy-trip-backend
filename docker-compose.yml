@@ -1,0 +1,208 @@
+services:
+  db:
+    build:
+      context: ./infra/postgres-vector
+    image: enjoytrip-postgis-pgvector:17-3.5
+    platform: linux/amd64
+    container_name: enjoytrip-postgres
+    restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=10
+      - -c
+      - max_wal_senders=10
+      - -c
+      - max_slot_wal_keep_size=1024MB
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - enjoytrip-postgres-data:/var/lib/postgresql/data
+      - ./infra/cdc/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: enjoytrip-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - enjoytrip-pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+
+  ai-server:
+    build:
+      context: .
+      dockerfile: ./ai/Dockerfile
+    container_name: enjoytrip-ai-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - AI_PORT=8000
+      - AI_HOST=0.0.0.0
+      - REDIS_URL=redis://redis:6379/0
+      - AI_RESPONSE_STREAM_KEY=enjoytrip-ai-responses
+      - AI_RESPONSE_STREAM_MAXLEN=10000
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: enjoytrip-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    container_name: enjoytrip-kafka
+    restart: unless-stopped
+    ports:
+      - "${KAFKA_LOCAL_PORT:-9092}:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      CLUSTER_ID: q1Sh-9_ISia_zwGINzRvyQ
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${KAFKA_LOCAL_PORT:-9092}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - enjoytrip-kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  kafka-connect:
+    build:
+      context: ./infra/cdc/connect
+      dockerfile: Dockerfile
+    container_name: enjoytrip-kafka-connect
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "${KAFKA_CONNECT_PORT:-8083}:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:29092
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: enjoytrip-cdc-connect
+      CONNECT_CONFIG_STORAGE_TOPIC: enjoytrip-cdc-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: enjoytrip-cdc-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: enjoytrip-cdc-connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/connectors >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 24
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.5
+    container_name: enjoytrip-clickhouse
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-enjoytrip_clickhouse}
+      TZ: Asia/Seoul
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
+    volumes:
+      - enjoytrip-clickhouse-data:/var/lib/clickhouse
+      - ./infra/cdc/clickhouse/001_attraction_favorites_events.sql:/docker-entrypoint-initdb.d/001_attraction_favorites_events.sql:ro
+      - ./infra/cdc/clickhouse/002_attraction_favorites_counts.sql:/docker-entrypoint-initdb.d/002_attraction_favorites_counts.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user default --password ${CLICKHOUSE_PASSWORD:-enjoytrip_clickhouse} --query 'SELECT 1' >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  cdc-postgres-bootstrap:
+    image: postgres:17
+    container_name: enjoytrip-cdc-postgres-bootstrap
+    profiles: ["cdc-bootstrap"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-enjoytrip}
+      POSTGRES_USER: ${POSTGRES_USER:-ssafy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ssafy}
+      CDC_PUBLICATION_BOOTSTRAP_TIMEOUT_SECONDS: ${CDC_PUBLICATION_BOOTSTRAP_TIMEOUT_SECONDS:-600}
+    volumes:
+      - ./infra/cdc/postgres:/cdc/postgres:ro
+    entrypoint: ["/cdc/postgres/bootstrap-publication.sh"]
+
+  kafka-connect-bootstrap:
+    image: python:3.12-slim
+    container_name: enjoytrip-kafka-connect-bootstrap
+    profiles: ["cdc-bootstrap"]
+    depends_on:
+      kafka-connect:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      cdc-postgres-bootstrap:
+        condition: service_completed_successfully
+    environment:
+      CONNECT_URL: http://kafka-connect:8083
+      CONNECTOR_DIR: /cdc/connectors
+    volumes:
+      - ./infra/cdc/connectors:/cdc/connectors:ro
+    entrypoint: ["/cdc/connectors/bootstrap-connectors.sh"]
+
+volumes:
+  enjoytrip-postgres-data:
+  enjoytrip-pgadmin-data:
+  enjoytrip-kafka-data:
+  enjoytrip-clickhouse-data:
