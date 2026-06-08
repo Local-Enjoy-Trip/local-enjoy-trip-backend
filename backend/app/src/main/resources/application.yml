@@ -39,15 +39,3 @@ enjoytrip:
     google:
       client-id: ${GOOGLE_CLIENT_ID:}
       client-secret: ${GOOGLE_CLIENT_SECRET:}
-  ai:
-    redis:
-      stream-key: ${AI_RESPONSE_STREAM_KEY:enjoytrip-ai-responses}
-      reader-name: ${AI_RESPONSE_STREAM_READER:${HOSTNAME:enjoytrip-backend}}
-      poll:
-        block-timeout-millis: ${AI_RESPONSE_STREAM_BLOCK_TIMEOUT_MILLIS:2000}
-        retry-delay-millis: ${AI_RESPONSE_STREAM_RETRY_DELAY_MILLIS:1000}
-        batch-size: ${AI_RESPONSE_STREAM_BATCH_SIZE:10}
-    sse:
-      timeout-millis: ${AI_SSE_TIMEOUT_MILLIS:180000}
-      delivery-threads: ${AI_SSE_DELIVERY_THREADS:2}
-      delivery-queue-capacity: ${AI_SSE_DELIVERY_QUEUE_CAPACITY:100}
