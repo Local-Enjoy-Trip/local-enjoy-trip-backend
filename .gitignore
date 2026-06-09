@@ -28,3 +28,6 @@ logs/
 
 # OpenTelemetry Java Agent
 infra/agent/
+
+# Project source PDFs stay local only
+docs/project/*.pdf
