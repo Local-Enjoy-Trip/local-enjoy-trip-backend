@@ -4,9 +4,13 @@ import com.ssafy.enjoytrip.domain.BoardPost;
 import com.ssafy.enjoytrip.domain.ChargerItem;
 import com.ssafy.enjoytrip.domain.Hotplace;
 import com.ssafy.enjoytrip.domain.Member;
+import com.ssafy.enjoytrip.domain.CreateNoteCommand;
+import com.ssafy.enjoytrip.domain.NearbyNotesCondition;
 import com.ssafy.enjoytrip.domain.NewsItem;
+import com.ssafy.enjoytrip.domain.Note;
 import com.ssafy.enjoytrip.domain.Notice;
 import com.ssafy.enjoytrip.domain.TravelPlan;
+import com.ssafy.enjoytrip.domain.UpdateNoteCommand;
 import com.ssafy.enjoytrip.domain.Attraction;
 import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.WeatherSummary;
@@ -19,6 +23,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -44,6 +49,7 @@ class RepositoryPortContractTest {
                 HotplaceRepository.class,
                 MemberRepository.class,
                 NewsRepository.class,
+                NoteRepository.class,
                 NoticeRepository.class,
                 PlanRepository.class,
                 WeatherRepository.class
@@ -123,6 +129,17 @@ class RepositoryPortContractTest {
         assertMethod(NoticeRepository.class, "delete", boolean.class, Long.class);
     }
 
+    @DisplayName("쪽지 저장소 계약은 소유권 변경과 주변 접근 가능 조회를 분리한다")
+    @Test
+    void noteRepositoryContractSeparatesOwnedMutationAndNearbyLookup() throws Exception {
+        assertMethod(NoteRepository.class, "save", Note.class, CreateNoteCommand.class);
+        assertMethod(NoteRepository.class, "findById", Optional.class, Long.class);
+        assertMethod(NoteRepository.class, "updateOwned", Optional.class, UpdateNoteCommand.class);
+        assertMethod(NoteRepository.class, "softDeleteOwned", boolean.class, Long.class, String.class);
+        assertListReturn(NoteRepository.class.getMethod(
+                "findNearbyAccessible", NearbyNotesCondition.class, String.class), Note.class);
+    }
+
     @DisplayName("계획 저장소 계약은 TravelPlan과 사용자 범위 조회를 사용한다")
     @Test
     void planRepositoryContractUsesTravelPlanAndUserScopedLookup() throws Exception {
@@ -142,6 +159,7 @@ class RepositoryPortContractTest {
                 HotplaceRepository.class,
                 MemberRepository.class,
                 NewsRepository.class,
+                NoteRepository.class,
                 NoticeRepository.class,
                 PlanRepository.class,
                 WeatherRepository.class

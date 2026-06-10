@@ -38,6 +38,8 @@ public enum ErrorType {
     HOTPLACE_NOT_FOUND(NOT_FOUND, "Hotplace not found", WARN),
     PLAN_NOT_FOUND(NOT_FOUND, "Plan not found", WARN),
     NOTICE_NOT_FOUND(NOT_FOUND, "Notice not found", WARN),
+    NOTE_NOT_FOUND(NOT_FOUND, "Note not found", WARN),
+    NOTE_ACCESS_DENIED(FORBIDDEN, "Cannot access another user's note", WARN),
 
     USER_ALREADY_EXISTS(CONFLICT, "User already exists", WARN),
     EMAIL_ALREADY_EXISTS(CONFLICT, "Email already exists", WARN),
