@@ -140,21 +140,14 @@ public class NoteStorageRepository implements NoteRepository {
                 record.get(NOTES.CONTENT),
                 NoteCategory.valueOf(record.get(NOTES.CATEGORY)),
                 NoteVisibility.valueOf(record.get(NOTES.VISIBILITY)),
-                decimalToDouble(record.get(NOTES.LATITUDE)),
-                decimalToDouble(record.get(NOTES.LONGITUDE)),
+                record.get(NOTES.LATITUDE).doubleValue(),
+                record.get(NOTES.LONGITUDE).doubleValue(),
                 record.get(NOTES.REGION_NAME),
                 NoteStatus.valueOf(record.get(NOTES.STATUS)),
                 record.get(NOTES.CREATED_AT),
                 record.get(NOTES.UPDATED_AT),
                 record.get(NOTES.DELETED_AT)
         );
-    }
-
-    private static double decimalToDouble(BigDecimal value) {
-        if (value == null) {
-            return 0.0;
-        }
-        return value.doubleValue();
     }
 
     private static String blankToNull(String value) {

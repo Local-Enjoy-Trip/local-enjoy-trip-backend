@@ -39,6 +39,7 @@ public enum ErrorType {
     PLAN_NOT_FOUND(NOT_FOUND, "Plan not found", WARN),
     NOTICE_NOT_FOUND(NOT_FOUND, "Notice not found", WARN),
     NOTE_NOT_FOUND(NOT_FOUND, "Note not found", WARN),
+    NOTE_NOT_ACTIVE(GONE, "Note is not active", WARN),
     NOTE_ACCESS_DENIED(FORBIDDEN, "Cannot access another user's note", WARN),
 
     USER_ALREADY_EXISTS(CONFLICT, "User already exists", WARN),

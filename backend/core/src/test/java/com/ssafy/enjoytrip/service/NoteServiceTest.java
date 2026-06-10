@@ -1,9 +1,10 @@
 package com.ssafy.enjoytrip.service;
 
-import static com.ssafy.enjoytrip.support.error.ErrorType.AUTHENTICATION_REQUIRED;
 import static com.ssafy.enjoytrip.support.error.ErrorType.NOTE_ACCESS_DENIED;
+import static com.ssafy.enjoytrip.support.error.ErrorType.NOTE_NOT_ACTIVE;
 import static com.ssafy.enjoytrip.support.error.ErrorType.NOTE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.ssafy.enjoytrip.domain.CreateNoteCommand;
@@ -23,9 +24,9 @@ import org.junit.jupiter.api.Test;
 
 class NoteServiceTest {
 
-    @DisplayName("쪽지 생성은 인증 작성자를 요구하고 저장소에 위임한다")
+    @DisplayName("쪽지 생성은 인증 경계에서 전달된 작성자 command를 저장소에 위임한다")
     @Test
-    void createRequiresAuthenticatedAuthorAndDelegatesToRepository() {
+    void createDelegatesAuthenticatedAuthorCommandToRepository() {
         Note note = activeNote(1L, "ssafy");
         FakeNoteRepository repository = new FakeNoteRepository();
         repository.savedNote = note;
@@ -36,17 +37,6 @@ class NoteServiceTest {
 
         assertEquals(note, result);
         assertEquals(command, repository.lastCreateCommand);
-    }
-
-    @DisplayName("쪽지 생성은 인증 작성자가 없으면 거부한다")
-    @Test
-    void createRejectsAnonymousAuthor() {
-        NoteService service = new NoteService(new FakeNoteRepository());
-        CreateNoteCommand command = createCommand(" ");
-
-        CoreException exception = assertThrows(CoreException.class, () -> service.createNote(command));
-
-        assertEquals(AUTHENTICATION_REQUIRED, exception.errorType());
     }
 
     @DisplayName("쪽지 수정은 active 작성자 본인일 때만 guarded update를 수행한다")
@@ -66,9 +56,9 @@ class NoteServiceTest {
         assertEquals(command, repository.lastUpdateCommand);
     }
 
-    @DisplayName("쪽지 수정은 없는 쪽지와 비활성 쪽지를 모두 not found로 숨긴다")
+    @DisplayName("쪽지 수정은 없는 쪽지와 비활성 쪽지 예외를 구분한다")
     @Test
-    void updateHidesMissingAndInactiveNotesAsNotFound() {
+    void updateSeparatesMissingAndInactiveNoteErrors() {
         FakeNoteRepository missingRepository = new FakeNoteRepository();
         NoteService missingService = new NoteService(missingRepository);
 
@@ -80,7 +70,7 @@ class NoteServiceTest {
         NoteService deletedService = new NoteService(deletedRepository);
 
         CoreException deleted = assertThrows(CoreException.class, () -> deletedService.updateNote(updateCommand(1L, "ssafy")));
-        assertEquals(NOTE_NOT_FOUND, deleted.errorType());
+        assertEquals(NOTE_NOT_ACTIVE, deleted.errorType());
     }
 
     @DisplayName("쪽지 수정은 active 쪽지의 작성자가 다르면 forbidden으로 거부한다")
@@ -109,9 +99,9 @@ class NoteServiceTest {
         assertEquals("ssafy", repository.lastDeletedAuthorUserId);
     }
 
-    @DisplayName("주변 쪽지 조회는 viewer를 빈 문자열로 정규화해 저장소에 위임한다")
+    @DisplayName("주변 쪽지 조회는 인증 경계의 viewer 값을 그대로 저장소에 위임한다")
     @Test
-    void nearbyNotesNormalizeBlankViewerAndDelegateToRepository() {
+    void nearbyNotesDelegateViewerFromAuthenticationBoundaryToRepository() {
         NearbyNotesCondition condition = new NearbyNotesCondition(126.9780, 37.5665, 500, 20);
         Note note = activeNote(1L, "ssafy");
         FakeNoteRepository repository = new FakeNoteRepository();
@@ -122,7 +112,7 @@ class NoteServiceTest {
 
         assertEquals(List.of(note), result);
         assertEquals(condition, repository.lastNearbyCondition);
-        assertEquals("", repository.lastViewerUserId);
+        assertNull(repository.lastViewerUserId);
     }
 
     private static CreateNoteCommand createCommand(String authorUserId) {
