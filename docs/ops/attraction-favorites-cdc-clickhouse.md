@@ -73,6 +73,24 @@ Aggregate table: `attraction_favorites_counts`
 - `SummingMergeTree` 기반으로 `attraction_id`별 `favorite_count` delta를 누적한다.
 - 현재 count 조회는 `SELECT sum(favorite_count) ... GROUP BY attraction_id` 형태를 사용한다.
 
+## Backend read path
+
+`GET /api/attractions/popular-nearby`는 PostGIS가 먼저 반경 안의 주변 관광지 후보를 조회한 뒤, 후보 ID에 한해서
+ClickHouse `attraction_favorites_counts`를 JDBC로 조회한다.
+
+```sql
+SELECT attraction_id, sum(favorite_count) AS favorite_count
+FROM attraction_favorites_counts
+WHERE attraction_id IN (...)
+GROUP BY attraction_id;
+```
+
+- 기본 좌표는 서울 시청(`mapX=126.9780`, `mapY=37.5665`)이고 기본 반경은 500m다.
+- 후보 중 하나라도 ClickHouse 집계 행이 있으면 `popularityCount` 내림차순, 거리, 제목/ID 순으로 정렬한다.
+- 후보에 대한 ClickHouse 행이 없으면 PostGIS 주변 후보의 기본 거리순 결과를 그대로 반환한다.
+- ClickHouse 연결 실패나 쿼리 실패도 API 실패로 전파하지 않고 warning log를 남긴 뒤 같은 PostGIS 기본 순서로 폴백한다.
+- 기존 `favoriteCount`는 PostgreSQL 찜 수 의미를 유지하며, ClickHouse 집계 값은 `popularityCount`로만 노출한다.
+
 업데이트 정책:
 
 - phase 1에서 `attraction_favorites` update는 예상하지 않는다.

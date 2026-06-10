@@ -13,15 +13,19 @@ import static com.ssafy.enjoytrip.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.domain.Attraction;
 import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
+import com.ssafy.enjoytrip.domain.PopularAttraction;
 import com.ssafy.enjoytrip.service.AttractionService;
 import com.ssafy.enjoytrip.support.error.CoreException;
 import com.ssafy.enjoytrip.support.error.ErrorType;
 import com.ssafy.enjoytrip.support.response.ApiResponse;
 import com.ssafy.enjoytrip.web.dto.request.AttractionTagsRequest;
 import com.ssafy.enjoytrip.web.dto.request.AttractionSearchRequest;
+import com.ssafy.enjoytrip.web.dto.request.NearbySectionRequest;
 import com.ssafy.enjoytrip.web.dto.request.RatingRequest;
 import com.ssafy.enjoytrip.web.dto.response.AttractionStatsResponse;
 import com.ssafy.enjoytrip.web.dto.response.AttractionsResponse;
+import com.ssafy.enjoytrip.web.dto.response.PopularAttractionsResponse;
+import jakarta.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -56,6 +60,17 @@ public class AttractionController implements AttractionApi {
         );
         List<Attraction> attractions = service.searchAttractions(condition, authenticatedUserIdOrBlank(jwt));
         return success(new AttractionsResponse(attractions));
+    }
+
+    @GetMapping("/popular-nearby")
+    @Override
+    public ApiResponse<PopularAttractionsResponse> popularNearby(@Valid @ModelAttribute NearbySectionRequest request,
+                                                                 @AuthenticationPrincipal Jwt jwt) {
+        List<PopularAttraction> attractions = service.findPopularNearbyAttractions(
+                request.toCondition(),
+                authenticatedUserIdOrBlank(jwt)
+        );
+        return success(PopularAttractionsResponse.from(attractions));
     }
 
     @PostMapping

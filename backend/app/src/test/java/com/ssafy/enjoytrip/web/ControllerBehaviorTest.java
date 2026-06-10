@@ -9,9 +9,12 @@ import com.ssafy.enjoytrip.domain.Hotplace;
 import com.ssafy.enjoytrip.domain.Member;
 import com.ssafy.enjoytrip.domain.Notice;
 import com.ssafy.enjoytrip.domain.TravelPlan;
+import com.ssafy.enjoytrip.domain.Attraction;
 import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.AttractionStats;
 import com.ssafy.enjoytrip.domain.AttractionTag;
+import com.ssafy.enjoytrip.domain.NearbySearchCondition;
+import com.ssafy.enjoytrip.domain.PopularAttraction;
 import com.ssafy.enjoytrip.domain.WeatherSummary;
 import com.ssafy.enjoytrip.exception.ExternalServiceException;
 import com.ssafy.enjoytrip.support.error.CoreException;
@@ -457,6 +460,42 @@ class ControllerBehaviorTest {
             mockMvc.perform(get("/api/chargers"))
                     .andExpect(status().isBadGateway())
                     .andExpect(jsonPath("$.error.message").value("EV charger API call failed"));
+        }
+
+        @DisplayName("홈 인기 주변 관광지는 서울과 500m 기본값을 적용하고 전용 인기 수를 반환한다")
+        @Test
+        void popularNearbyAttractionsApplyHomeDefaultsAndReturnPopularityCount() throws Exception {
+            Attraction attraction = new Attraction(
+                    1L, "경복궁", "서울 종로구", "", "zip", "tel", "image", "image2",
+                    7, 1, 2, 37.579617, 126.977041, "6", "12", "overview",
+                    4, 4.5, 2, List.of(), false, null
+            );
+            when(attractionService.findPopularNearbyAttractions(
+                    new NearbySearchCondition(126.9780, 37.5665, 500.0, 20),
+                    ""
+            )).thenReturn(List.of(new PopularAttraction(attraction, 120.5, 42L)));
+
+            mockMvc.perform(get("/api/attractions/popular-nearby"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.attractions[0].id").value(1))
+                    .andExpect(jsonPath("$.data.attractions[0].title").value("경복궁"))
+                    .andExpect(jsonPath("$.data.attractions[0].favoriteCount").value(4))
+                    .andExpect(jsonPath("$.data.attractions[0].popularityCount").value(42))
+                    .andExpect(jsonPath("$.data.attractions[0].distanceMeters").value(120.5));
+
+            verify(attractionService).findPopularNearbyAttractions(
+                    new NearbySearchCondition(126.9780, 37.5665, 500.0, 20),
+                    ""
+            );
+        }
+
+        @DisplayName("홈 인기 주변 관광지는 좌표가 하나만 있으면 검증 오류를 반환한다")
+        @Test
+        void popularNearbyAttractionsRejectPartialCoordinates() throws Exception {
+            mockMvc.perform(get("/api/attractions/popular-nearby").param("mapX", "126.9780"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.message").value("Invalid latitude or longitude"));
         }
 
         @DisplayName("관광지 참여와 태그 엔드포인트는 검증 후 위임한다")

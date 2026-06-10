@@ -15,13 +15,17 @@ import com.ssafy.enjoytrip.domain.Attraction;
 import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.AttractionStats;
 import com.ssafy.enjoytrip.domain.AttractionTag;
+import com.ssafy.enjoytrip.domain.NearbyAttractionCandidate;
+import com.ssafy.enjoytrip.domain.NearbySearchCondition;
 import com.ssafy.enjoytrip.repository.AttractionRepository;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -81,6 +85,57 @@ public class AttractionStorageRepository implements AttractionRepository {
     }
 
     @Override
+    public List<NearbyAttractionCandidate> findNearbyCandidates(NearbySearchCondition condition, String userId) {
+        var point = field("ST_SetSRID(ST_MakePoint({0}, {1}), 4326)", ATTRACTIONS.LOCATION.getDataType(),
+                condition.longitude(), condition.latitude());
+        var distance = field("ST_Distance({0}::geography, {1}::geography)",
+                Double.class, ATTRACTIONS.LOCATION, point).as("distanceMeters");
+        List<AttractionWithDistance> candidates = dslContext.select(
+                        ATTRACTIONS.ID,
+                        ATTRACTIONS.TITLE,
+                        ATTRACTIONS.ADDR1,
+                        ATTRACTIONS.ADDR2,
+                        ATTRACTIONS.ZIPCODE,
+                        ATTRACTIONS.TEL,
+                        ATTRACTIONS.FIRST_IMAGE.as("firstImage"),
+                        ATTRACTIONS.FIRST_IMAGE2.as("firstImage2"),
+                        ATTRACTIONS.READ_COUNT.as("readcount"),
+                        ATTRACTIONS.SIDO_CODE.as("sidoCode"),
+                        ATTRACTIONS.GUGUN_CODE.as("gugunCode"),
+                        field("ST_Y({0})", Double.class, ATTRACTIONS.LOCATION).as("latitude"),
+                        field("ST_X({0})", Double.class, ATTRACTIONS.LOCATION).as("longitude"),
+                        ATTRACTIONS.MLEVEL,
+                        ATTRACTIONS.CONTENT_TYPE_ID.as("contentTypeId"),
+                        ATTRACTIONS.OVERVIEW,
+                        distance
+                )
+                .from(ATTRACTIONS)
+                .where(ATTRACTIONS.LOCATION.isNotNull())
+                .and("ST_DWithin({0}::geography, {1}::geography, {2})",
+                        ATTRACTIONS.LOCATION, point, condition.radiusMeters())
+                .orderBy(distance.asc(), ATTRACTIONS.TITLE.asc(), ATTRACTIONS.ID.asc())
+                .limit(condition.limit())
+                .fetch(record -> new AttractionWithDistance(
+                        toAttraction(record),
+                        record.get("distanceMeters", Double.class)
+                ));
+        List<Attraction> enriched = enrich(candidates.stream()
+                .map(AttractionWithDistance::attraction)
+                .toList(), userId);
+        Map<Long, Double> distanceByAttractionId = candidates.stream()
+                .collect(Collectors.toMap(
+                        candidate -> candidate.attraction().id(),
+                        AttractionWithDistance::distanceMeters
+                ));
+        return enriched.stream()
+                .map(attraction -> new NearbyAttractionCandidate(
+                        attraction,
+                        distanceByAttractionId.getOrDefault(attraction.id(), 0.0)
+                ))
+                .toList();
+    }
+
+    @Override
     public boolean existsById(Long attractionId) {
         return attractionId != null && dslContext.fetchExists(ATTRACTIONS, ATTRACTIONS.ID.eq(attractionId));
     }
@@ -123,7 +178,7 @@ public class AttractionStorageRepository implements AttractionRepository {
                 .onConflict(ATTRACTION_RATINGS.ATTRACTION_ID, ATTRACTION_RATINGS.USER_ID)
                 .doUpdate()
                 .set(ATTRACTION_RATINGS.RATING, rating)
-                .set(ATTRACTION_RATINGS.UPDATED_AT, field("current_timestamp", java.time.LocalDateTime.class))
+                .set(ATTRACTION_RATINGS.UPDATED_AT, field("current_timestamp", LocalDateTime.class))
                 .execute();
     }
 
@@ -441,5 +496,8 @@ public class AttractionStorageRepository implements AttractionRepository {
     }
 
     private record RatingAggregate(double average, int count) {
+    }
+
+    private record AttractionWithDistance(Attraction attraction, double distanceMeters) {
     }
 }

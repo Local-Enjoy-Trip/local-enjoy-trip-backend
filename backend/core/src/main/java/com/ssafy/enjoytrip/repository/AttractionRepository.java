@@ -4,11 +4,15 @@ import com.ssafy.enjoytrip.domain.Attraction;
 import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.AttractionStats;
 import com.ssafy.enjoytrip.domain.AttractionTag;
+import com.ssafy.enjoytrip.domain.NearbyAttractionCandidate;
+import com.ssafy.enjoytrip.domain.NearbySearchCondition;
 
 import java.util.List;
 
 public interface AttractionRepository {
     List<Attraction> search(AttractionSearchCondition condition);
+
+    List<NearbyAttractionCandidate> findNearbyCandidates(NearbySearchCondition condition, String userId);
 
     default List<Attraction> search(AttractionSearchCondition condition, String userId) {
         return search(condition);

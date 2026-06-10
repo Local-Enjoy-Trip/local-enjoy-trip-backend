@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -25,7 +26,7 @@ class DbBackedTravelDataServicesTest {
     @Nested
     class AttractionServiceTests {
         private final AttractionRepository repository = mock(AttractionRepository.class);
-        private final AttractionService service = new AttractionService(repository);
+        private final AttractionService service = new AttractionService(repository, attractionIds -> Map.of());
 
         @DisplayName("지역 검색을 저장소에 위임한다")
         @Test
