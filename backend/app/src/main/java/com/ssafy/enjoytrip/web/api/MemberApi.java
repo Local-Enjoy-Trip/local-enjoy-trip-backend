@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 @Tag(name = "Members", description = "회원 가입, 로그인, 내 정보, 회원 관리 API")
@@ -49,27 +48,6 @@ public interface MemberApi {
     ApiResponse<UsersResponse> findAll();
 
     @Operation(
-            summary = "회원 레거시 액션 처리",
-            description = """
-                    기존 폼 기반 클라이언트를 위한 통합 엔드포인트입니다.
-
-                    `action=signup|login|logout|find-password|update|delete` 값을 받아 전용 엔드포인트로 위임합니다.
-                    `update`, `delete` 액션은 인증된 사용자와 대상 `userId`가 같아야 합니다.
-                    """,
-            operationId = "legacyMemberPost"
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "액션 처리 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 action 또는 필수 필드 누락"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요 또는 로그인 실패"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "다른 사용자 계정 접근"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 존재하는 회원"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "410", description = "비밀번호 찾기 기능 제거")
-    })
-    ApiResponse<?> legacyPost(@ParameterObject MemberRequest request, @Parameter(hidden = true) Jwt jwt);
-
-    @Operation(
             summary = "회원 가입",
             description = "`userId`, `name`, `email`, `password`를 등록하고 선택적으로 닉네임, 프로필 이미지, 대표 위치를 받습니다.",
             operationId = "signup"
@@ -79,7 +57,7 @@ public interface MemberApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "필수 필드 누락"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 존재하는 회원")
     })
-    ApiResponse<Void> signup(@ParameterObject MemberRequest request);
+    ApiResponse<Void> signup(MemberRequest request);
 
     @Operation(summary = "로그인", description = "`userId`, `password`로 인증하고 JWT access token을 발급합니다.", operationId = "login")
     @ApiResponses({
@@ -112,20 +90,20 @@ public interface MemberApi {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "아이디 또는 비밀번호 불일치")
     })
-    ApiResponse<LoginResponse> login(@ParameterObject MemberRequest request);
+    ApiResponse<LoginResponse> login(MemberRequest request);
 
     @Operation(summary = "로그아웃", description = "`userId` 기준으로 로그아웃 처리를 수행합니다.", operationId = "logout")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그아웃 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "userId 누락")
     })
-    ApiResponse<Void> logout(@ParameterObject MemberRequest request);
+    ApiResponse<Void> logout(MemberRequest request);
 
     @Operation(summary = "비밀번호 찾기 종료 안내", description = "비밀번호 찾기 기능은 더 이상 지원하지 않아 410 Gone을 반환합니다.", operationId = "findPassword")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "410", description = "비밀번호 찾기 기능 제거")
     })
-    ApiResponse<Void> findPassword(@ParameterObject MemberRequest request);
+    ApiResponse<Void> findPassword(MemberRequest request);
 
     @Operation(
             summary = "회원 수정",
@@ -142,7 +120,7 @@ public interface MemberApi {
     })
     ApiResponse<Void> update(
             @Parameter(description = "수정할 회원 ID", example = "ssafy", required = true) String userId,
-            @ParameterObject MemberRequest request,
+            MemberRequest request,
             @Parameter(hidden = true) Jwt jwt
     );
 
@@ -166,7 +144,7 @@ public interface MemberApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "다른 사용자 계정 접근"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
     })
-    ApiResponse<Void> updateMe(@ParameterObject MemberRequest request, @Parameter(hidden = true) Jwt jwt);
+    ApiResponse<Void> updateMe(MemberRequest request, @Parameter(hidden = true) Jwt jwt);
 
     @Operation(summary = "내 계정 삭제", description = "JWT subject에 해당하는 내 계정을 삭제합니다.", operationId = "deleteMe", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({

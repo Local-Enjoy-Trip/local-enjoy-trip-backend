@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
@@ -53,8 +54,13 @@ class MemberControllerTest {
     @Test
     void signupRequiresAllFields() throws Exception {
         mockMvc.perform(post("/api/members/signup")
-                        .param("userId", "ssafy")
-                        .param("password", "secret123"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "userId": "ssafy",
+                                  "password": "secret123"
+                                }
+                                """))
                 .andExpect(status().isBadRequest());
     }
 
@@ -64,10 +70,8 @@ class MemberControllerTest {
         when(memberService.existsByUserId("ssafy")).thenReturn(true);
 
         mockMvc.perform(post("/api/members/signup")
-                        .param("userId", "ssafy")
-                        .param("name", "SSAFY")
-                        .param("email", "ssafy@example.com")
-                        .param("password", "secret123"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(signupJson("ssafy", "SSAFY", "ssafy@example.com", "secret123")))
                 .andExpect(status().isConflict());
     }
 
@@ -75,19 +79,15 @@ class MemberControllerTest {
     @Test
     void signupValidatesFieldsAndEmailDuplicates() throws Exception {
         mockMvc.perform(post("/api/members/signup")
-                        .param("userId", "bad id")
-                        .param("name", "SSAFY")
-                        .param("email", "ssafy@example.com")
-                        .param("password", "secret123"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(signupJson("bad id", "SSAFY", "ssafy@example.com", "secret123")))
                 .andExpect(status().isBadRequest());
 
         when(memberService.existsByEmail("ssafy@example.com")).thenReturn(true);
 
         mockMvc.perform(post("/api/members/signup")
-                        .param("userId", "ssafy")
-                        .param("name", "SSAFY")
-                        .param("email", "ssafy@example.com")
-                        .param("password", "secret123"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(signupJson("ssafy", "SSAFY", "ssafy@example.com", "secret123")))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error.message").value("Email already exists"));
     }
@@ -100,8 +100,13 @@ class MemberControllerTest {
         when(tokenService.issue(member)).thenReturn(new IssuedToken("jwt-token", "Bearer", 7200));
 
         mockMvc.perform(post("/api/members/login")
-                        .param("userId", "ssafy")
-                        .param("password", "secret"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "userId": "ssafy",
+                                  "password": "secret"
+                                }
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
@@ -120,8 +125,13 @@ class MemberControllerTest {
         when(tokenService.issue(member)).thenReturn(new IssuedToken("jwt-token", "Bearer", 7200));
 
         mockMvc.perform(post("/api/members/oauth/signup")
-                        .param("oauthSignupTicket", "ticket")
-                        .param("name", "트래블러"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "oauthSignupTicket": "ticket",
+                                  "name": "트래블러"
+                                }
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
                 .andExpect(jsonPath("$.data.user.name").value("트래블러"));
@@ -169,11 +179,16 @@ class MemberControllerTest {
 
         mockMvc.perform(put("/api/members/me")
                         .principal(jwtPrincipal("ssafy"))
-                        .param("nickname", "동네핀러")
-                        .param("profileImageUrl", "https://cdn.example.com/profile.png")
-                        .param("representativeLatitude", "37.5665")
-                        .param("representativeLongitude", "126.9780")
-                        .param("representativeRegionName", "서울 중구"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "nickname": "동네핀러",
+                                  "profileImageUrl": "https://cdn.example.com/profile.png",
+                                  "representativeLatitude": 37.5665,
+                                  "representativeLongitude": 126.9780,
+                                  "representativeRegionName": "서울 중구"
+                                }
+                                """))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<Member> memberCaptor = ArgumentCaptor.forClass(Member.class);
@@ -192,7 +207,12 @@ class MemberControllerTest {
     void updateMeRequiresBothLatitudeAndLongitude() throws Exception {
         mockMvc.perform(put("/api/members/me")
                         .principal(jwtPrincipal("ssafy"))
-                        .param("representativeLatitude", "37.5665"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "representativeLatitude": 37.5665
+                                }
+                                """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.message").value("Invalid latitude or longitude"));
     }
@@ -202,7 +222,12 @@ class MemberControllerTest {
     void updateRejectsDifferentUserToken() throws Exception {
         mockMvc.perform(put("/api/members/other")
                         .principal(jwtPrincipal("ssafy"))
-                        .param("name", "Other"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Other"
+                                }
+                                """))
                 .andExpect(status().isForbidden());
     }
 
@@ -212,6 +237,17 @@ class MemberControllerTest {
         mockMvc.perform(delete("/api/members/other")
                         .principal(jwtPrincipal("ssafy")))
                 .andExpect(status().isForbidden());
+    }
+
+    private static String signupJson(String userId, String name, String email, String password) {
+        return """
+                {
+                  "userId": "%s",
+                  "name": "%s",
+                  "email": "%s",
+                  "password": "%s"
+                }
+                """.formatted(userId, name, email, password);
     }
 
     private static JwtAuthenticationToken jwtPrincipal(String userId) {

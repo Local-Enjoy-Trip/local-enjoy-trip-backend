@@ -5,7 +5,6 @@ import com.ssafy.enjoytrip.web.api.*;
 import static com.ssafy.enjoytrip.support.error.ErrorType.ACCESS_DENIED;
 import static com.ssafy.enjoytrip.support.error.ErrorType.AUTHENTICATION_REQUIRED;
 import static com.ssafy.enjoytrip.support.error.ErrorType.EMAIL_ALREADY_EXISTS;
-import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_ACTION;
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_CREDENTIALS;
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_EMAIL;
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_LATITUDE_OR_LONGITUDE;
@@ -43,10 +42,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -69,23 +68,10 @@ public class MemberController implements MemberApi {
         return success(new UsersResponse(users));
     }
 
-    @PostMapping
-    @Override
-    public ApiResponse<?> legacyPost(@ModelAttribute MemberRequest request, @AuthenticationPrincipal Jwt jwt) {
-        return switch (trim(request.action())) {
-            case "signup" -> signup(request);
-            case "login" -> login(request);
-            case "logout" -> logout(request);
-            case "find-password" -> findPassword(request);
-            case "update" -> updateAuthenticated(trim(request.userId()), request, jwt);
-            case "delete" -> deleteAuthenticated(trim(request.userId()), jwt);
-            default -> fail(INVALID_ACTION);
-        };
-    }
-
     @PostMapping("/signup")
     @Override
-    public ApiResponse<Void> signup(@ModelAttribute MemberRequest request) {
+    public ApiResponse<Void> signup(@RequestBody(required = false) MemberRequest request) {
+        request = requestOrEmpty(request);
         String userId = trim(request.userId());
         String name = trim(request.name());
         String nickname = trim(request.nickname());
@@ -130,7 +116,8 @@ public class MemberController implements MemberApi {
 
     @PostMapping("/login")
     @Override
-    public ApiResponse<LoginResponse> login(@ModelAttribute MemberRequest request) {
+    public ApiResponse<LoginResponse> login(@RequestBody(required = false) MemberRequest request) {
+        request = requestOrEmpty(request);
         String userId = trim(request.userId());
         String password = trim(request.password());
         if (userId.isEmpty() || password.isEmpty()) {
@@ -150,7 +137,8 @@ public class MemberController implements MemberApi {
     }
 
     @PostMapping("/oauth/signup")
-    public ApiResponse<LoginResponse> completeOAuthSignup(@ModelAttribute MemberRequest request) {
+    public ApiResponse<LoginResponse> completeOAuthSignup(@RequestBody(required = false) MemberRequest request) {
+        request = requestOrEmpty(request);
         String ticket = trim(request.oauthSignupTicket());
         String name = trim(request.name());
         if (ticket.isEmpty() || name.isEmpty()) {
@@ -176,7 +164,8 @@ public class MemberController implements MemberApi {
 
     @PostMapping("/logout")
     @Override
-    public ApiResponse<Void> logout(@ModelAttribute MemberRequest request) {
+    public ApiResponse<Void> logout(@RequestBody(required = false) MemberRequest request) {
+        request = requestOrEmpty(request);
         String userId = trim(request.userId());
         if (userId.isEmpty()) {
             return fail(MISSING_USER_ID);
@@ -187,14 +176,14 @@ public class MemberController implements MemberApi {
 
     @PostMapping("/find-password")
     @Override
-    public ApiResponse<Void> findPassword(@ModelAttribute MemberRequest request) {
+    public ApiResponse<Void> findPassword(@RequestBody(required = false) MemberRequest request) {
         return fail(PASSWORD_LOOKUP_GONE);
     }
 
     @PutMapping("/{userId}")
     @Override
     public ApiResponse<Void> update(@PathVariable String userId,
-                                    @ModelAttribute MemberRequest request,
+                                    @RequestBody(required = false) MemberRequest request,
                                     @AuthenticationPrincipal Jwt jwt) {
         return updateAuthenticated(userId, request, jwt);
     }
@@ -212,7 +201,8 @@ public class MemberController implements MemberApi {
 
     @PutMapping("/me")
     @Override
-    public ApiResponse<Void> updateMe(@ModelAttribute MemberRequest request, @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<Void> updateMe(@RequestBody(required = false) MemberRequest request,
+                                      @AuthenticationPrincipal Jwt jwt) {
         String userId = authenticatedUserId(jwt);
         return updateAuthenticated(userId, request, jwt);
     }
@@ -227,6 +217,7 @@ public class MemberController implements MemberApi {
     private ApiResponse<Void> updateAuthenticated(String userId,
                                                   MemberRequest request,
                                                   Jwt jwt) {
+        request = requestOrEmpty(request);
         if (trim(userId).isEmpty()) {
             return fail(MISSING_USER_ID);
         }
@@ -319,6 +310,13 @@ public class MemberController implements MemberApi {
 
     private static <T> T fail(ErrorType error) {
         throw new CoreException(error);
+    }
+
+    private static MemberRequest requestOrEmpty(MemberRequest request) {
+        if (request != null) {
+            return request;
+        }
+        return new MemberRequest(null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private static String trim(String value) {
