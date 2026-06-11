@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -14,7 +13,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "members", uniqueConstraints = {
@@ -23,7 +21,7 @@ import java.time.LocalDateTime;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MemberEntity {
+public class MemberEntity extends UpdatableBaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -55,12 +53,6 @@ public class MemberEntity {
     @Column(name = "representative_region_name", length = 100)
     private String representativeRegionName;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     public MemberEntity(String userId,
                         String name,
                         String nickname,
@@ -79,13 +71,6 @@ public class MemberEntity {
         this.representativeLatitude = decimalValue(representativeLatitude);
         this.representativeLongitude = decimalValue(representativeLongitude);
         this.representativeRegionName = representativeRegionName;
-    }
-
-    @PrePersist
-    void prePersist() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
     }
 
     public void update(String name,
@@ -118,7 +103,6 @@ public class MemberEntity {
         if (representativeRegionName != null && !representativeRegionName.isBlank()) {
             this.representativeRegionName = representativeRegionName;
         }
-        this.updatedAt = LocalDateTime.now();
     }
 
     public Double getRepresentativeLatitude() {

@@ -3,20 +3,17 @@ package com.ssafy.enjoytrip.storage.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "plans")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TravelPlanEntity {
+public class TravelPlanEntity extends BaseEntity {
     @Id
     @Column(length = 128)
     private String id;
@@ -42,9 +39,6 @@ public class TravelPlanEntity {
     @Column(name = "route_items", columnDefinition = "TEXT")
     private String routeItemsJson;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
     public TravelPlanEntity(String id, String userId, String title, String startDate, String endDate,
                             int budget, String note, String routeItemsJson) {
         this.id = id;
@@ -64,12 +58,5 @@ public class TravelPlanEntity {
         this.budget = budget;
         this.note = note;
         this.routeItemsJson = routeItemsJson;
-    }
-
-    @PrePersist
-    void prePersist() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
     }
 }

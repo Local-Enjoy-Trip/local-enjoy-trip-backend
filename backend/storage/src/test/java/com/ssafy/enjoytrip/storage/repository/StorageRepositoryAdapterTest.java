@@ -128,7 +128,6 @@ class StorageRepositoryAdapterTest {
                 () -> assertEquals(37.5665, updated.getRepresentativeLatitude()),
                 () -> assertEquals(126.9780, updated.getRepresentativeLongitude()),
                 () -> assertEquals("서울 중구", updated.getRepresentativeRegionName()),
-                () -> assertNotNull(field(updated, "updatedAt")),
                 () -> assertFalse(repository.update(new Member("missing", "Name", "email@example.com", "pw", ""))),
                 () -> assertEquals(1, authFake.saved.size()),
                 () -> assertFalse(repository.delete("missing")),
@@ -273,7 +272,7 @@ class StorageRepositoryAdapterTest {
 
     private static Object field(Object target, String fieldName) {
         try {
-            Field field = target.getClass().getDeclaredField(fieldName);
+            Field field = declaredField(target.getClass(), fieldName);
             field.setAccessible(true);
             return field.get(target);
         } catch (ReflectiveOperationException ex) {
@@ -296,12 +295,24 @@ class StorageRepositoryAdapterTest {
 
     private static void setField(Object target, String fieldName, Object value) {
         try {
-            Field field = target.getClass().getDeclaredField(fieldName);
+            Field field = declaredField(target.getClass(), fieldName);
             field.setAccessible(true);
             field.set(target, value);
         } catch (ReflectiveOperationException ex) {
             throw new AssertionError(ex);
         }
+    }
+
+    private static Field declaredField(Class<?> type, String fieldName) throws NoSuchFieldException {
+        Class<?> current = type;
+        while (current != null) {
+            try {
+                return current.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException ex) {
+                current = current.getSuperclass();
+            }
+        }
+        throw new NoSuchFieldException(fieldName);
     }
 
     @SuppressWarnings("unchecked")

@@ -8,7 +8,7 @@
 
 ## Coding Style
 
-- **Entity Definitions**: Use `@Entity` for database mapping. Map table structures explicitly using `@Table`, `@Column`, and use `@PrePersist`/`@PreUpdate` for auditing timestamps (e.g., `createdAt`, `updatedAt`).
+- **Entity Definitions**: Use `@Entity` for database mapping. Map table structures explicitly using `@Table` and `@Column`. For auditing timestamps (e.g., `createdAt`, `updatedAt`), use Spring Data JPA Auditing through the storage base entity classes instead of entity-local `@PrePersist`/`@PreUpdate` callbacks.
 - **Repository Implementations**: Adapter classes must be annotated with `@Repository` and implement `core/repository` interfaces (e.g., `MemberStorageRepository implements MemberRepository`).
 - **Lombok**: Use `@RequiredArgsConstructor` to inject JPA repositories (`*JpaRepository`) and jOOQ `DSLContext`. Ensure entities use `@NoArgsConstructor(access = AccessLevel.PROTECTED)`.
 - **Data Transformation**: Storage adapters must map persistence-specific `*Entity` classes to `core/domain` models before returning data to the caller (e.g., using `toModel()` mapper methods).
