@@ -57,6 +57,7 @@ public class NoteStorageRepository implements NoteRepository {
         if (id == null) {
             return Optional.empty();
         }
+
         return dslContext.selectFrom(NOTES)
                 .where(NOTES.ID.eq(id))
                 .fetchOptional(NoteStorageRepository::toNote);
@@ -99,6 +100,7 @@ public class NoteStorageRepository implements NoteRepository {
     public List<Note> findNearbyAccessible(NearbyNotesCondition condition, String viewerUserId) {
         String viewer = blankToNull(viewerUserId);
         var point = point(condition.longitude(), condition.latitude());
+
         return dslContext.selectFrom(NOTES)
                 .where(NOTES.STATUS.eq(ACTIVE))
                 .and("ST_DWithin({0}::geography, {1}::geography, {2})",
@@ -113,9 +115,11 @@ public class NoteStorageRepository implements NoteRepository {
         if (viewerUserId == null) {
             return NOTES.VISIBILITY.eq(NoteVisibility.PUBLIC.name());
         }
+
         return NOTES.VISIBILITY.eq(NoteVisibility.PUBLIC.name())
                 .or(NOTES.AUTHOR_USER_ID.eq(viewerUserId))
-                .or(NOTES.VISIBILITY.eq(NoteVisibility.FRIENDS.name()).and(acceptedFriendshipExists(viewerUserId)));
+                .or(NOTES.VISIBILITY.eq(NoteVisibility.FRIENDS.name())
+                        .and(acceptedFriendshipExists(viewerUserId)));
     }
 
     private static Condition acceptedFriendshipExists(String viewerUserId) {
@@ -123,8 +127,10 @@ public class NoteStorageRepository implements NoteRepository {
                 .from(FRIENDSHIPS)
                 .where(FRIENDSHIPS.STATUS.eq(ACCEPTED))
                 .and(
-                        FRIENDSHIPS.REQUESTER_USER_ID.eq(viewerUserId).and(FRIENDSHIPS.ADDRESSEE_USER_ID.eq(NOTES.AUTHOR_USER_ID))
-                                .or(FRIENDSHIPS.REQUESTER_USER_ID.eq(NOTES.AUTHOR_USER_ID).and(FRIENDSHIPS.ADDRESSEE_USER_ID.eq(viewerUserId)))
+                        FRIENDSHIPS.REQUESTER_USER_ID.eq(viewerUserId)
+                                .and(FRIENDSHIPS.ADDRESSEE_USER_ID.eq(NOTES.AUTHOR_USER_ID))
+                                .or(FRIENDSHIPS.REQUESTER_USER_ID.eq(NOTES.AUTHOR_USER_ID)
+                                        .and(FRIENDSHIPS.ADDRESSEE_USER_ID.eq(viewerUserId)))
                 ));
     }
 
@@ -154,6 +160,7 @@ public class NoteStorageRepository implements NoteRepository {
         if (value == null || value.isBlank()) {
             return null;
         }
+
         return value.trim();
     }
 }

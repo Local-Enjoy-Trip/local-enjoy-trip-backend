@@ -27,6 +27,7 @@ public class NoteService {
     public Note updateNote(UpdateNoteCommand command) {
         Note note = findEditableNote(command.id());
         requireOwner(note, command.authorUserId());
+
         return repository.updateOwned(command)
                 .orElseThrow(() -> new CoreException(NOTE_NOT_FOUND));
     }
@@ -34,6 +35,7 @@ public class NoteService {
     public void deleteNote(Long id, String authorUserId) {
         Note note = findEditableNote(id);
         requireOwner(note, authorUserId);
+
         if (!repository.softDeleteOwned(id, authorUserId)) {
             throw new CoreException(NOTE_NOT_FOUND);
         }
@@ -46,9 +48,11 @@ public class NoteService {
     private Note findEditableNote(Long id) {
         Note note = repository.findById(id)
                 .orElseThrow(() -> new CoreException(NOTE_NOT_FOUND));
+
         if (note.status() != NoteStatus.ACTIVE) {
             throw new CoreException(NOTE_NOT_ACTIVE);
         }
+
         return note;
     }
 

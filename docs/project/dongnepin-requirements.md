@@ -82,6 +82,14 @@
 - Then `나만보기` 쪽지는 작성자 본인에게만 표시되고, `친구공개` 쪽지는 작성자의 친구에게만 표시된다.
 - Given 근처 최근 쪽지가 없을 때, Then 빈 상태와 쪽지 남기기 CTA가 표시된다.
 
+**Backend implementation notes**
+
+- 홈 backend는 단일 `/api/home`이 아니라 독립 API를 조합한다.
+- 날씨는 기존 `GET /api/weather/briefings`를 사용하며, 외부 날씨 저장소가 실패하거나 비어도 기본 지역 fallback을 반환한다.
+- 주변 인기 장소는 `GET /api/attractions/popular-nearby`를 사용한다. 좌표가 없으면 서울 시청 좌표와 500m 반경을 사용한다.
+- 주변 최근 쪽지는 `GET /api/notes/nearby`를 사용한다. 장소와 같은 서울 시청 좌표 및 500m 기본 반경을 사용한다.
+- 쪽지 생성/수정/삭제는 `POST /api/notes`, `PUT /api/notes/{id}`, `DELETE /api/notes/{id}`로 제공하며 JWT 인증 사용자의 본인 쪽지만 변경할 수 있다.
+
 ### US-04. 홈 항목에서 지도 이동하기
 
 **As a** 홈에서 마음에 드는 장소나 쪽지를 발견한 사용자  

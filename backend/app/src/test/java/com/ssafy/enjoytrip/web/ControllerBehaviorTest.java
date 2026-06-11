@@ -7,14 +7,21 @@ import com.ssafy.enjoytrip.web.dto.response.*;
 import com.ssafy.enjoytrip.domain.BoardPost;
 import com.ssafy.enjoytrip.domain.Hotplace;
 import com.ssafy.enjoytrip.domain.Member;
+import com.ssafy.enjoytrip.domain.Note;
+import com.ssafy.enjoytrip.domain.NoteCategory;
+import com.ssafy.enjoytrip.domain.NoteStatus;
+import com.ssafy.enjoytrip.domain.NoteVisibility;
 import com.ssafy.enjoytrip.domain.Notice;
 import com.ssafy.enjoytrip.domain.TravelPlan;
 import com.ssafy.enjoytrip.domain.Attraction;
 import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.AttractionStats;
 import com.ssafy.enjoytrip.domain.AttractionTag;
+import com.ssafy.enjoytrip.domain.CreateNoteCommand;
+import com.ssafy.enjoytrip.domain.NearbyNotesCondition;
 import com.ssafy.enjoytrip.domain.NearbySearchCondition;
 import com.ssafy.enjoytrip.domain.PopularAttraction;
+import com.ssafy.enjoytrip.domain.UpdateNoteCommand;
 import com.ssafy.enjoytrip.domain.WeatherSummary;
 import com.ssafy.enjoytrip.exception.ExternalServiceException;
 import com.ssafy.enjoytrip.support.error.CoreException;
@@ -25,6 +32,7 @@ import com.ssafy.enjoytrip.service.EvChargerService;
 import com.ssafy.enjoytrip.service.HotplaceService;
 import com.ssafy.enjoytrip.service.JwtTokenService;
 import com.ssafy.enjoytrip.service.MemberService;
+import com.ssafy.enjoytrip.service.NoteService;
 import com.ssafy.enjoytrip.service.NoticeService;
 import com.ssafy.enjoytrip.service.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.service.PlanService;
@@ -49,6 +57,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.ssafy.enjoytrip.support.error.ErrorType.PLAN_NOT_FOUND;
@@ -73,6 +82,7 @@ class ControllerBehaviorTest {
     private HotplaceService hotplaceService;
     private PlanService planService;
     private NoticeService noticeService;
+    private NoteService noteService;
     private MemberService memberService;
     private JwtTokenService tokenService;
     private OAuthSignupTicketService oauthSignupTicketService;
@@ -88,6 +98,7 @@ class ControllerBehaviorTest {
         hotplaceService = mock(HotplaceService.class);
         planService = mock(PlanService.class);
         noticeService = mock(NoticeService.class);
+        noteService = mock(NoteService.class);
         memberService = mock(MemberService.class);
         tokenService = mock(JwtTokenService.class);
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
@@ -104,6 +115,7 @@ class ControllerBehaviorTest {
                                 new PlanResponseAssembler(planService)
                         ),
                         new NoticeController(noticeService),
+                        new NoteController(noteService),
                         new MemberController(memberService, tokenService, oauthSignupTicketService),
                         new AttractionController(attractionService),
                         new AttractionTagController(attractionService),
@@ -139,6 +151,106 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.weather[0].sunset").value("19:33"));
 
             verify(weatherService).findWeatherBriefings();
+        }
+    }
+
+    @Nested
+    class NoteEndpoints {
+        @DisplayName("인증 사용자는 JSON 본문으로 쪽지를 생성한다")
+        @Test
+        void createsNoteWithJsonBodyAndAuthenticatedAuthor() throws Exception {
+            Note note = note(1L, "ssafy", "서울 산책 메모", NoteVisibility.PUBLIC);
+            when(noteService.createNote(any())).thenReturn(note);
+
+            mockMvc.perform(post("/api/notes")
+                            .principal(jwtPrincipal("ssafy"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "title":" 서울 산책 메모 ",
+                                      "content":" 오늘 날씨 좋음 ",
+                                      "category":"TIP",
+                                      "visibility":"PUBLIC",
+                                      "latitude":37.5665,
+                                      "longitude":126.9780,
+                                      "regionName":" 서울 "
+                                    }
+                                    """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.id").value(1))
+                    .andExpect(jsonPath("$.data.title").value("서울 산책 메모"))
+                    .andExpect(jsonPath("$.data.visibility").value("PUBLIC"));
+
+            ArgumentCaptor<CreateNoteCommand> captor = ArgumentCaptor.forClass(CreateNoteCommand.class);
+            verify(noteService).createNote(captor.capture());
+            assertThat(captor.getValue().authorUserId()).isEqualTo("ssafy");
+            assertThat(captor.getValue().title()).isEqualTo("서울 산책 메모");
+            assertThat(captor.getValue().regionName()).isEqualTo("서울");
+        }
+
+        @DisplayName("쪽지 생성은 인증이 없으면 거부한다")
+        @Test
+        void rejectsCreateWithoutAuthentication() throws Exception {
+            mockMvc.perform(post("/api/notes")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"title":"제목","content":"내용","category":"TIP","visibility":"PUBLIC","latitude":37.5665,"longitude":126.9780}
+                                    """))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.error.message").value("Authentication required"));
+        }
+
+        @DisplayName("인증 사용자는 본인 쪽지를 수정하고 삭제한다")
+        @Test
+        void updatesAndDeletesOwnedNote() throws Exception {
+            Note updated = note(1L, "ssafy", "수정 제목", NoteVisibility.PRIVATE);
+            when(noteService.updateNote(any())).thenReturn(updated);
+
+            mockMvc.perform(put("/api/notes/1")
+                            .principal(jwtPrincipal("ssafy"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"title":"수정 제목","content":"수정 내용","category":"TIP","visibility":"PRIVATE","latitude":37.5665,"longitude":126.9780}
+                                    """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.title").value("수정 제목"))
+                    .andExpect(jsonPath("$.data.visibility").value("PRIVATE"));
+
+            ArgumentCaptor<UpdateNoteCommand> captor = ArgumentCaptor.forClass(UpdateNoteCommand.class);
+            verify(noteService).updateNote(captor.capture());
+            assertThat(captor.getValue().id()).isEqualTo(1L);
+            assertThat(captor.getValue().authorUserId()).isEqualTo("ssafy");
+
+            mockMvc.perform(delete("/api/notes/1").principal(jwtPrincipal("ssafy")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+            verify(noteService).deleteNote(1L, "ssafy");
+        }
+
+        @DisplayName("주변 쪽지는 서울과 500m 기본값으로 조회하고 목록을 반환한다")
+        @Test
+        void nearbyNotesUseDefaultSeoulAndRadius() throws Exception {
+            Note note = note(1L, "writer", "근처 쪽지", NoteVisibility.PUBLIC);
+            when(noteService.findNearbyNotes(new NearbyNotesCondition(126.9780, 37.5665, 500.0, 20), null))
+                    .thenReturn(List.of(note));
+
+            mockMvc.perform(get("/api/notes/nearby"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.notes[0].id").value(1))
+                    .andExpect(jsonPath("$.data.notes[0].title").value("근처 쪽지"))
+                    .andExpect(jsonPath("$.data.notes[0].visibility").value("PUBLIC"));
+
+            verify(noteService).findNearbyNotes(new NearbyNotesCondition(126.9780, 37.5665, 500.0, 20), null);
+        }
+
+        @DisplayName("주변 쪽지는 일부 좌표만 전달되면 검증 오류를 반환한다")
+        @Test
+        void nearbyNotesRejectPartialCoordinates() throws Exception {
+            mockMvc.perform(get("/api/notes/nearby").param("mapY", "37.5665"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.message").value("Invalid latitude or longitude"));
         }
     }
 
@@ -576,6 +688,24 @@ class ControllerBehaviorTest {
         for (Path path : files) {
             assertControllerDoesNotUseRawMapContract(path);
         }
+    }
+
+    private static Note note(Long id, String authorUserId, String title, NoteVisibility visibility) {
+        return new Note(
+                id,
+                authorUserId,
+                title,
+                "content",
+                NoteCategory.TIP,
+                visibility,
+                37.5665,
+                126.9780,
+                "서울",
+                NoteStatus.ACTIVE,
+                LocalDateTime.of(2026, 6, 10, 10, 0),
+                null,
+                null
+        );
     }
 
     private static JwtAuthenticationToken jwtPrincipal(String userId) {

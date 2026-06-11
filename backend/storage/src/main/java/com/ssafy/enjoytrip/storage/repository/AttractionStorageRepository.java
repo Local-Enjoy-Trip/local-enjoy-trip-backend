@@ -85,11 +85,21 @@ public class AttractionStorageRepository implements AttractionRepository {
     }
 
     @Override
-    public List<NearbyAttractionCandidate> findNearbyCandidates(NearbySearchCondition condition, String userId) {
-        var point = field("ST_SetSRID(ST_MakePoint({0}, {1}), 4326)", ATTRACTIONS.LOCATION.getDataType(),
-                condition.longitude(), condition.latitude());
-        var distance = field("ST_Distance({0}::geography, {1}::geography)",
-                Double.class, ATTRACTIONS.LOCATION, point).as("distanceMeters");
+    public List<NearbyAttractionCandidate> findNearbyCandidates(NearbySearchCondition condition,
+                                                                String userId) {
+        var point = field(
+                "ST_SetSRID(ST_MakePoint({0}, {1}), 4326)",
+                ATTRACTIONS.LOCATION.getDataType(),
+                condition.longitude(),
+                condition.latitude()
+        );
+        var distance = field(
+                "ST_Distance({0}::geography, {1}::geography)",
+                Double.class,
+                ATTRACTIONS.LOCATION,
+                point
+        ).as("distanceMeters");
+
         List<AttractionWithDistance> candidates = dslContext.select(
                         ATTRACTIONS.ID,
                         ATTRACTIONS.TITLE,
@@ -119,14 +129,17 @@ public class AttractionStorageRepository implements AttractionRepository {
                         toAttraction(record),
                         record.get("distanceMeters", Double.class)
                 ));
+
         List<Attraction> enriched = enrich(candidates.stream()
                 .map(AttractionWithDistance::attraction)
                 .toList(), userId);
+
         Map<Long, Double> distanceByAttractionId = candidates.stream()
                 .collect(Collectors.toMap(
                         candidate -> candidate.attraction().id(),
                         AttractionWithDistance::distanceMeters
                 ));
+
         return enriched.stream()
                 .map(attraction -> new NearbyAttractionCandidate(
                         attraction,
@@ -196,7 +209,10 @@ public class AttractionStorageRepository implements AttractionRepository {
         return dslContext.select(ATTRACTION_TAGS.ID, ATTRACTION_TAGS.NAME)
                 .from(ATTRACTION_TAGS)
                 .orderBy(ATTRACTION_TAGS.NAME.asc())
-                .fetch(record -> new AttractionTag(record.get(ATTRACTION_TAGS.ID), record.get(ATTRACTION_TAGS.NAME)));
+                .fetch(record -> new AttractionTag(
+                        record.get(ATTRACTION_TAGS.ID),
+                        record.get(ATTRACTION_TAGS.NAME)
+                ));
     }
 
     @Override
@@ -205,7 +221,10 @@ public class AttractionStorageRepository implements AttractionRepository {
         return dslContext.insertInto(ATTRACTION_TAGS)
                 .set(ATTRACTION_TAGS.NAME, name)
                 .returning(ATTRACTION_TAGS.ID, ATTRACTION_TAGS.NAME)
-                .fetchOne(record -> new AttractionTag(record.get(ATTRACTION_TAGS.ID), record.get(ATTRACTION_TAGS.NAME)));
+                .fetchOne(record -> new AttractionTag(
+                        record.get(ATTRACTION_TAGS.ID),
+                        record.get(ATTRACTION_TAGS.NAME)
+                ));
     }
 
     @Override
@@ -231,38 +250,54 @@ public class AttractionStorageRepository implements AttractionRepository {
         if (!existsById(attractionId)) {
             return false;
         }
+
         List<Long> normalized = tagIds.stream().distinct().toList();
+
         if (!normalized.isEmpty()) {
             int existing = dslContext.selectCount()
                     .from(ATTRACTION_TAGS)
                     .where(ATTRACTION_TAGS.ID.in(normalized))
                     .fetchOne(0, int.class);
+
             if (existing != normalized.size()) {
                 return false;
             }
         }
+
         dslContext.deleteFrom(ATTRACTION_TAG_MAPPINGS)
                 .where(ATTRACTION_TAG_MAPPINGS.ATTRACTION_ID.eq(attractionId))
                 .execute();
+
         for (Long tagId : normalized) {
             dslContext.insertInto(ATTRACTION_TAG_MAPPINGS)
                     .set(ATTRACTION_TAG_MAPPINGS.ATTRACTION_ID, attractionId)
                     .set(ATTRACTION_TAG_MAPPINGS.TAG_ID, tagId)
                     .execute();
         }
+
         return true;
     }
 
-    private Condition searchCondition(AttractionSearchCondition condition, Double longitude, Double latitude, boolean aroundSearch) {
+    private Condition searchCondition(AttractionSearchCondition condition,
+                                      Double longitude,
+                                      Double latitude,
+                                      boolean aroundSearch) {
         Condition searchCondition = contentTypeCondition(condition.contentTypeId())
                 .and(keywordCondition(condition.keyword()));
 
         if (aroundSearch) {
             double parsedRadius = parseRadius(condition.radius());
+
             return searchCondition
                     .and(ATTRACTIONS.LOCATION.isNotNull())
-                    .and("ST_DWithin({0}::geography, ST_SetSRID(ST_MakePoint({1}, {2}), 4326)::geography, {3})",
-                            ATTRACTIONS.LOCATION, longitude, latitude, parsedRadius);
+                    .and(
+                            "ST_DWithin({0}::geography, "
+                                    + "ST_SetSRID(ST_MakePoint({1}, {2}), 4326)::geography, {3})",
+                            ATTRACTIONS.LOCATION,
+                            longitude,
+                            latitude,
+                            parsedRadius
+                    );
         }
 
         return searchCondition
@@ -331,6 +366,7 @@ public class AttractionStorageRepository implements AttractionRepository {
         if (value == null || value.isBlank()) {
             return null;
         }
+
         return value.trim();
     }
 
@@ -338,10 +374,21 @@ public class AttractionStorageRepository implements AttractionRepository {
         if (attractions.isEmpty()) {
             return attractions;
         }
-        Map<Long, AttractionStats> statsByAttraction = statsFor(attractions.stream().map(Attraction::id).toList(), userId);
+
+        Map<Long, AttractionStats> statsByAttraction = statsFor(
+                attractions.stream()
+                        .map(Attraction::id)
+                        .toList(),
+                userId
+        );
+
         return attractions.stream()
                 .map(attraction -> {
-                    AttractionStats stats = statsByAttraction.getOrDefault(attraction.id(), emptyStats(attraction.id()));
+                    AttractionStats stats = statsByAttraction.getOrDefault(
+                            attraction.id(),
+                            emptyStats(attraction.id())
+                    );
+
                     return new Attraction(
                             attraction.id(),
                             attraction.title(),
@@ -431,7 +478,10 @@ public class AttractionStorageRepository implements AttractionRepository {
                 .orderBy(ATTRACTION_TAG_MAPPINGS.ATTRACTION_ID.asc(), ATTRACTION_TAGS.NAME.asc())
                 .fetchGroups(
                         ATTRACTION_TAG_MAPPINGS.ATTRACTION_ID,
-                        record -> new AttractionTag(record.get(ATTRACTION_TAGS.ID), record.get(ATTRACTION_TAGS.NAME))
+                        record -> new AttractionTag(
+                                record.get(ATTRACTION_TAGS.ID),
+                                record.get(ATTRACTION_TAGS.NAME)
+                        )
                 );
     }
 

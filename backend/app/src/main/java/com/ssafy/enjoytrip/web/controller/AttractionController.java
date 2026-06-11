@@ -48,7 +48,8 @@ public class AttractionController implements AttractionApi {
 
     @GetMapping
     @Override
-    public ApiResponse<AttractionsResponse> search(@ModelAttribute AttractionSearchRequest request, @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<AttractionsResponse> search(@ModelAttribute AttractionSearchRequest request,
+                                                   @AuthenticationPrincipal Jwt jwt) {
         AttractionSearchCondition condition = new AttractionSearchCondition(
                 request.sidoCode(),
                 request.gugunCode(),
@@ -59,17 +60,21 @@ public class AttractionController implements AttractionApi {
                 request.radius()
         );
         List<Attraction> attractions = service.searchAttractions(condition, authenticatedUserIdOrBlank(jwt));
+
         return success(new AttractionsResponse(attractions));
     }
 
     @GetMapping("/popular-nearby")
     @Override
-    public ApiResponse<PopularAttractionsResponse> popularNearby(@Valid @ModelAttribute NearbySectionRequest request,
-                                                                 @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<PopularAttractionsResponse> popularNearby(
+            @Valid @ModelAttribute NearbySectionRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
         List<PopularAttraction> attractions = service.findPopularNearbyAttractions(
                 request.toCondition(),
                 authenticatedUserIdOrBlank(jwt)
         );
+
         return success(PopularAttractionsResponse.from(attractions));
     }
 
@@ -84,6 +89,7 @@ public class AttractionController implements AttractionApi {
     public ApiResponse<Void> favorite(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
         requireAttraction(id);
         service.addFavorite(id, authenticatedUserId(jwt));
+
         return success();
     }
 
@@ -92,6 +98,7 @@ public class AttractionController implements AttractionApi {
     public ApiResponse<Void> unfavorite(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
         requireAttraction(id);
         service.removeFavorite(id, authenticatedUserId(jwt));
+
         return success();
     }
 
@@ -103,6 +110,7 @@ public class AttractionController implements AttractionApi {
         requireAttraction(id);
         int rating = parseRating(request.rating());
         service.upsertRating(id, authenticatedUserId(jwt), rating);
+
         return success();
     }
 
@@ -111,12 +119,14 @@ public class AttractionController implements AttractionApi {
     public ApiResponse<Void> deleteRating(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
         requireAttraction(id);
         service.removeRating(id, authenticatedUserId(jwt));
+
         return success();
     }
 
     @GetMapping("/{id}/stats")
     @Override
-    public ApiResponse<AttractionStatsResponse> stats(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<AttractionStatsResponse> stats(@PathVariable Long id,
+                                                      @AuthenticationPrincipal Jwt jwt) {
         requireAttraction(id);
         return success(new AttractionStatsResponse(service.findStats(id, authenticatedUserIdOrBlank(jwt))));
     }
@@ -128,9 +138,11 @@ public class AttractionController implements AttractionApi {
                                          @AuthenticationPrincipal Jwt jwt) {
         authenticatedUserId(jwt);
         requireAttraction(id);
+
         if (!service.replaceTags(id, parseTagIds(request.tagIds()))) {
             return fail(TAG_NOT_FOUND);
         }
+
         return success();
     }
 
@@ -138,6 +150,7 @@ public class AttractionController implements AttractionApi {
         if (id == null || id <= 0) {
             fail(INVALID_ID);
         }
+
         if (!service.existsById(id)) {
             fail(ATTRACTION_NOT_FOUND);
         }
@@ -148,6 +161,7 @@ public class AttractionController implements AttractionApi {
         if (rating == null || rating < 1 || rating > 5) {
             fail(INVALID_RATING);
         }
+
         return rating;
     }
 
@@ -156,6 +170,7 @@ public class AttractionController implements AttractionApi {
         if (value.isEmpty()) {
             return List.of();
         }
+
         try {
             return Arrays.stream(value.split(","))
                     .map(String::trim)
@@ -173,6 +188,7 @@ public class AttractionController implements AttractionApi {
         if (value.isEmpty()) {
             return null;
         }
+
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException ex) {
@@ -188,6 +204,7 @@ public class AttractionController implements AttractionApi {
         if (jwt == null) {
             return "";
         }
+
         return trim(jwt.getSubject());
     }
 
@@ -199,6 +216,7 @@ public class AttractionController implements AttractionApi {
         if (value == null) {
             return "";
         }
+
         return value.trim();
     }
 

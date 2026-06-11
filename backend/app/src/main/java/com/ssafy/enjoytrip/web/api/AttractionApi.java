@@ -39,11 +39,29 @@ public interface AttractionApi {
                             mediaType = "application/json",
                             schema = @Schema(implementation = AttractionsResponse.class),
                             examples = @ExampleObject(value = """
-                                    {"success":true,"data":{"attractions":[{"id":125405,"title":"경복궁","addr1":"서울 종로구 사직로 161","latitude":37.579617,"longitude":126.977041,"contentTypeId":"12"}]},"error":null}
+                                    {
+                                      "success": true,
+                                      "data": {
+                                        "attractions": [
+                                          {
+                                            "id": 125405,
+                                            "title": "경복궁",
+                                            "addr1": "서울 종로구 사직로 161",
+                                            "latitude": 37.579617,
+                                            "longitude": 126.977041,
+                                            "contentTypeId": "12"
+                                          }
+                                        ]
+                                      },
+                                      "error": null
+                                    }
                                     """)
                             )
             ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "502", description = "Tour API 호출 실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "502",
+                    description = "Tour API 호출 실패"
+            )
     })
     ApiResponse<AttractionsResponse> search(@ParameterObject AttractionSearchRequest request, Jwt jwt);
 
@@ -57,7 +75,8 @@ public interface AttractionApi {
                     - 먼저 PostGIS로 반경 안 후보를 찾고, 후보 중 ClickHouse `attraction_favorites_counts` 집계 행이 있으면
                       `popularityCount` 내림차순, 거리, 제목/ID 순으로 정렬합니다.
                     - ClickHouse 집계 행이 없거나 ClickHouse를 사용할 수 없으면 PostGIS 주변 후보의 기본 거리순 결과를 그대로 반환합니다.
-                    - 기존 `favoriteCount`는 PostgreSQL 찜 수 의미를 유지하고, ClickHouse 인기 metric은 `popularityCount`로만 노출합니다.
+                    - 기존 `favoriteCount`는 PostgreSQL 찜 수 의미를 유지하고,
+                      ClickHouse 인기 metric은 `popularityCount`로만 노출합니다.
                     """,
             operationId = "getPopularNearbyAttractions"
     )
@@ -69,12 +88,29 @@ public interface AttractionApi {
                             mediaType = "application/json",
                             schema = @Schema(implementation = PopularAttractionsResponse.class),
                             examples = @ExampleObject(value = """
-                                    {"success":true,"data":{"attractions":[{"id":125405,"title":"경복궁","latitude":37.579617,"longitude":126.977041,"contentTypeId":"12","favoriteCount":3,"popularityCount":42}]},"error":null}
+                                    {
+                                      "success": true,
+                                      "data": {
+                                        "attractions": [
+                                          {
+                                            "id": 125405,
+                                            "title": "경복궁",
+                                            "latitude": 37.579617,
+                                            "longitude": 126.977041,
+                                            "contentTypeId": "12",
+                                            "favoriteCount": 3,
+                                            "popularityCount": 42
+                                          }
+                                        ]
+                                      },
+                                      "error": null
+                                    }
                                     """)
                     )
             )
     })
-    ApiResponse<PopularAttractionsResponse> popularNearby(@ParameterObject NearbySectionRequest request, Jwt jwt);
+    ApiResponse<PopularAttractionsResponse> popularNearby(@ParameterObject NearbySectionRequest request,
+                                                          Jwt jwt);
 
     @Operation(
             summary = "관광지 POST 차단",
@@ -82,26 +118,52 @@ public interface AttractionApi {
             operationId = "rejectAttractionsPost"
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "405", description = "GET /api/attractions 사용 필요"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "405",
+                    description = "GET /api/attractions 사용 필요"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류"
+            )
     })
     ApiResponse<Void> rejectPost();
 
     @Operation(summary = "관광지 찜", description = "인증 사용자의 관광지 찜을 저장합니다.", operationId = "favoriteAttraction")
     ApiResponse<Void> favorite(Long id, Jwt jwt);
 
-    @Operation(summary = "관광지 찜 해제", description = "인증 사용자의 관광지 찜을 삭제합니다.", operationId = "unfavoriteAttraction")
+    @Operation(
+            summary = "관광지 찜 해제",
+            description = "인증 사용자의 관광지 찜을 삭제합니다.",
+            operationId = "unfavoriteAttraction"
+    )
     ApiResponse<Void> unfavorite(Long id, Jwt jwt);
 
-    @Operation(summary = "관광지 평점 등록", description = "인증 사용자의 1~5 평점을 등록하거나 갱신합니다.", operationId = "rateAttraction")
+    @Operation(
+            summary = "관광지 평점 등록",
+            description = "인증 사용자의 1~5 평점을 등록하거나 갱신합니다.",
+            operationId = "rateAttraction"
+    )
     ApiResponse<Void> rate(Long id, @ParameterObject RatingRequest request, Jwt jwt);
 
-    @Operation(summary = "관광지 평점 삭제", description = "인증 사용자의 평점을 삭제합니다.", operationId = "deleteAttractionRating")
+    @Operation(
+            summary = "관광지 평점 삭제",
+            description = "인증 사용자의 평점을 삭제합니다.",
+            operationId = "deleteAttractionRating"
+    )
     ApiResponse<Void> deleteRating(Long id, Jwt jwt);
 
-    @Operation(summary = "관광지 통계 조회", description = "찜 수, 평균 평점, 태그와 내 사용자 상태를 조회합니다.", operationId = "getAttractionStats")
+    @Operation(
+            summary = "관광지 통계 조회",
+            description = "찜 수, 평균 평점, 태그와 내 사용자 상태를 조회합니다.",
+            operationId = "getAttractionStats"
+    )
     ApiResponse<AttractionStatsResponse> stats(Long id, Jwt jwt);
 
-    @Operation(summary = "관광지 태그 연결", description = "관광지에 연결된 태그 목록을 교체합니다.", operationId = "replaceAttractionTags")
+    @Operation(
+            summary = "관광지 태그 연결",
+            description = "관광지에 연결된 태그 목록을 교체합니다.",
+            operationId = "replaceAttractionTags"
+    )
     ApiResponse<Void> replaceTags(Long id, @ParameterObject AttractionTagsRequest request, Jwt jwt);
 }

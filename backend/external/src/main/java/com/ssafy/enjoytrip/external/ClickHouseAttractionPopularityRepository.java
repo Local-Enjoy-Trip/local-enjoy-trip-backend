@@ -27,23 +27,29 @@ public class ClickHouseAttractionPopularityRepository implements AttractionPopul
                 .filter(id -> id != null && id > 0)
                 .distinct()
                 .toList();
+
         if (normalizedIds.isEmpty()) {
             return Map.of();
         }
+
         try (Connection connection = DriverManager.getConnection(
                 properties.getUrl(),
                 properties.getUsername(),
                 properties.getPassword()
         ); PreparedStatement statement = connection.prepareStatement(query(normalizedIds.size()))) {
             statement.setQueryTimeout((int) properties.getQueryTimeout().toSeconds());
+
             for (int index = 0; index < normalizedIds.size(); index++) {
                 statement.setLong(index + 1, normalizedIds.get(index));
             }
+
             try (ResultSet resultSet = statement.executeQuery()) {
                 Map<Long, Long> counts = new LinkedHashMap<>();
+
                 while (resultSet.next()) {
                     counts.put(resultSet.getLong("attraction_id"), resultSet.getLong("favorite_count"));
                 }
+
                 return counts;
             }
         } catch (SQLException | RuntimeException exception) {
@@ -53,15 +59,18 @@ public class ClickHouseAttractionPopularityRepository implements AttractionPopul
                     exception.getClass().getSimpleName(),
                     exception
             );
+
             return Map.of();
         }
     }
 
     private static String query(int size) {
         StringJoiner placeholders = new StringJoiner(", ");
+
         for (int index = 0; index < size; index++) {
             placeholders.add("?");
         }
+
         return """
                 SELECT attraction_id, sum(favorite_count) AS favorite_count
                 FROM attraction_favorites_counts

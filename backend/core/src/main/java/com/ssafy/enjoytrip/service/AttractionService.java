@@ -29,21 +29,26 @@ public class AttractionService {
         return repository.search(condition, userId);
     }
 
-    public List<PopularAttraction> findPopularNearbyAttractions(NearbySearchCondition condition, String userId) {
+    public List<PopularAttraction> findPopularNearbyAttractions(NearbySearchCondition condition,
+                                                                String userId) {
         List<NearbyAttractionCandidate> candidates = repository.findNearbyCandidates(condition, userId);
+
         if (candidates.isEmpty()) {
             return List.of();
         }
+
         Map<Long, Long> popularityCounts = popularityRepository.findFavoriteCounts(
                 candidates.stream()
                         .map(candidate -> candidate.attraction().id())
                         .toList()
         );
+
         if (popularityCounts.isEmpty()) {
             return candidates.stream()
                     .map(candidate -> toPopularAttraction(candidate, 0L))
                     .toList();
         }
+
         return candidates.stream()
                 .map(candidate -> toPopularAttraction(
                         candidate,
@@ -52,8 +57,14 @@ public class AttractionService {
                 .sorted(Comparator
                         .comparingLong(PopularAttraction::popularityCount).reversed()
                         .thenComparingDouble(PopularAttraction::distanceMeters)
-                        .thenComparing(popular -> popular.attraction().title(), Comparator.nullsLast(String::compareTo))
-                        .thenComparing(popular -> popular.attraction().id(), Comparator.nullsLast(Long::compareTo)))
+                        .thenComparing(
+                                popular -> popular.attraction().title(),
+                                Comparator.nullsLast(String::compareTo)
+                        )
+                        .thenComparing(
+                                popular -> popular.attraction().id(),
+                                Comparator.nullsLast(Long::compareTo)
+                        ))
                 .toList();
     }
 
@@ -101,7 +112,8 @@ public class AttractionService {
         return repository.replaceTags(attractionId, tagIds);
     }
 
-    private static PopularAttraction toPopularAttraction(NearbyAttractionCandidate candidate, long popularityCount) {
+    private static PopularAttraction toPopularAttraction(NearbyAttractionCandidate candidate,
+                                                         long popularityCount) {
         return new PopularAttraction(candidate.attraction(), candidate.distanceMeters(), popularityCount);
     }
 }

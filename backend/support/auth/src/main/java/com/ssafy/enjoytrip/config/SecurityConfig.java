@@ -35,16 +35,26 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http,
                                            ObjectProvider<ClientRegistrationRepository> clientRegistrations,
                                            ObjectProvider<AuthenticationSuccessHandler> successHandler,
-                                           ObjectProvider<AuthenticationFailureHandler> failureHandler) throws Exception {
+                                           ObjectProvider<AuthenticationFailureHandler> failureHandler)
+            throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/members/me").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/members/me", "/api/members/{userId}").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/members/me", "/api/members/{userId}").authenticated()
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/members/me",
+                                "/api/members/{userId}"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/members/me",
+                                "/api/members/{userId}"
+                        ).authenticated()
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/attractions/{id}/favorite",
                                 "/api/attractions/{id}/rating",
@@ -55,12 +65,24 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/attraction-tags").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/attraction-tags/{id}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/attraction-tags/{id}").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/notes").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/notes/{id}").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/notes/{id}").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/plans", "/api/plans/items").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/plans/{id}", "/api/plans/{id}/items").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/plans/{id}", "/api/plans/{id}/items/{itemId}").authenticated()
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/plans/{id}",
+                                "/api/plans/{id}/items"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/plans/{id}",
+                                "/api/plans/{id}/items/{itemId}"
+                        ).authenticated()
                         .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+
         if (clientRegistrations.getIfAvailable() != null) {
             http.oauth2Login(oauth2 -> oauth2
                     .successHandler(successHandler.getIfAvailable())
