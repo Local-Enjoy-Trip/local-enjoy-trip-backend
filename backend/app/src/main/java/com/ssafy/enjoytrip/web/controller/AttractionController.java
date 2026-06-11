@@ -1,14 +1,11 @@
 package com.ssafy.enjoytrip.web.controller;
 
-import com.ssafy.enjoytrip.web.api.*;
-
 import static com.ssafy.enjoytrip.support.error.ErrorType.ATTRACTION_NOT_FOUND;
 import static com.ssafy.enjoytrip.support.error.ErrorType.ATTRACTIONS_POST_NOT_ALLOWED;
 import static com.ssafy.enjoytrip.support.error.ErrorType.AUTHENTICATION_REQUIRED;
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_ID;
-import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_RATING;
-import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_REQUEST;
 import static com.ssafy.enjoytrip.support.error.ErrorType.TAG_NOT_FOUND;
+import static com.ssafy.enjoytrip.support.response.ApiResponse.fail;
 import static com.ssafy.enjoytrip.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.domain.Attraction;
@@ -16,8 +13,8 @@ import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.PopularAttraction;
 import com.ssafy.enjoytrip.service.AttractionService;
 import com.ssafy.enjoytrip.support.error.CoreException;
-import com.ssafy.enjoytrip.support.error.ErrorType;
 import com.ssafy.enjoytrip.support.response.ApiResponse;
+import com.ssafy.enjoytrip.web.api.AttractionApi;
 import com.ssafy.enjoytrip.web.dto.request.AttractionTagsRequest;
 import com.ssafy.enjoytrip.web.dto.request.AttractionSearchRequest;
 import com.ssafy.enjoytrip.web.dto.request.NearbySectionRequest;
@@ -26,17 +23,19 @@ import com.ssafy.enjoytrip.web.dto.response.AttractionStatsResponse;
 import com.ssafy.enjoytrip.web.dto.response.AttractionsResponse;
 import com.ssafy.enjoytrip.web.dto.response.PopularAttractionsResponse;
 import jakarta.validation.Valid;
-import java.util.Arrays;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -80,8 +79,10 @@ public class AttractionController implements AttractionApi {
 
     @PostMapping
     @Override
-    public ApiResponse<Void> rejectPost() {
-        return fail(ATTRACTIONS_POST_NOT_ALLOWED);
+    public ResponseEntity<ApiResponse<Void>> rejectPost() {
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(fail(ATTRACTIONS_POST_NOT_ALLOWED));
     }
 
     @PutMapping("/{id}/favorite")
@@ -105,11 +106,10 @@ public class AttractionController implements AttractionApi {
     @PutMapping("/{id}/rating")
     @Override
     public ApiResponse<Void> rate(@PathVariable Long id,
-                                  @ModelAttribute RatingRequest request,
+                                  @Valid @RequestBody RatingRequest request,
                                   @AuthenticationPrincipal Jwt jwt) {
         requireAttraction(id);
-        int rating = parseRating(request.rating());
-        service.upsertRating(id, authenticatedUserId(jwt), rating);
+        service.upsertRating(id, authenticatedUserId(jwt), request.rating());
 
         return success();
     }
@@ -134,13 +134,13 @@ public class AttractionController implements AttractionApi {
     @PutMapping("/{id}/tags")
     @Override
     public ApiResponse<Void> replaceTags(@PathVariable Long id,
-                                         @ModelAttribute AttractionTagsRequest request,
+                                         @Valid @RequestBody AttractionTagsRequest request,
                                          @AuthenticationPrincipal Jwt jwt) {
         authenticatedUserId(jwt);
         requireAttraction(id);
 
-        if (!service.replaceTags(id, parseTagIds(request.tagIds()))) {
-            return fail(TAG_NOT_FOUND);
+        if (!service.replaceTags(id, request.tagIds())) {
+            throw new CoreException(TAG_NOT_FOUND);
         }
 
         return success();
@@ -148,55 +148,19 @@ public class AttractionController implements AttractionApi {
 
     private void requireAttraction(Long id) {
         if (id == null || id <= 0) {
-            fail(INVALID_ID);
+            throw new CoreException(INVALID_ID);
         }
 
         if (!service.existsById(id)) {
-            fail(ATTRACTION_NOT_FOUND);
-        }
-    }
-
-    private static int parseRating(String raw) {
-        Integer rating = parseInteger(raw);
-        if (rating == null || rating < 1 || rating > 5) {
-            fail(INVALID_RATING);
-        }
-
-        return rating;
-    }
-
-    private static List<Long> parseTagIds(String raw) {
-        String value = trim(raw);
-        if (value.isEmpty()) {
-            return List.of();
-        }
-
-        try {
-            return Arrays.stream(value.split(","))
-                    .map(String::trim)
-                    .filter(token -> !token.isEmpty())
-                    .map(Long::parseLong)
-                    .distinct()
-                    .toList();
-        } catch (NumberFormatException ex) {
-            return fail(INVALID_REQUEST);
-        }
-    }
-
-    private static Integer parseInteger(String raw) {
-        String value = trim(raw);
-        if (value.isEmpty()) {
-            return null;
-        }
-
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException ex) {
-            return null;
+            throw new CoreException(ATTRACTION_NOT_FOUND);
         }
     }
 
     private static String authenticatedUserId(Jwt jwt) {
+        if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
+            throw new CoreException(AUTHENTICATION_REQUIRED);
+        }
+
         return trim(jwt.getSubject());
     }
 
@@ -206,10 +170,6 @@ public class AttractionController implements AttractionApi {
         }
 
         return trim(jwt.getSubject());
-    }
-
-    private static <T> T fail(ErrorType error) {
-        throw new CoreException(error);
     }
 
     private static String trim(String value) {

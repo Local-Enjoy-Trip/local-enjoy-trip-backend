@@ -59,6 +59,7 @@ import java.security.Principal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_CREDENTIALS;
 import static com.ssafy.enjoytrip.support.error.ErrorType.PLAN_NOT_FOUND;
@@ -262,11 +263,16 @@ class ControllerBehaviorTest {
         @Test
         void createTrimsAndPassesBoardPostToService() throws Exception {
             mockMvc.perform(post("/api/boards/posts")
-                            .param("id", " b1 ")
-                            .param("title", " title ")
-                            .param("content", " content ")
-                            .param("author", " ssafy "))
-                    .andExpect(status().isOk())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "id":" b1 ",
+                                      "title":" title ",
+                                      "content":" content ",
+                                      "author":" ssafy "
+                                    }
+                                    """))
+                    .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.success").value(true));
 
             ArgumentCaptor<BoardPost> captor = ArgumentCaptor.forClass(BoardPost.class);
@@ -274,28 +280,32 @@ class ControllerBehaviorTest {
             assertThat(captor.getValue()).isEqualTo(new BoardPost("b1", "title", "content", "ssafy", "", ""));
         }
 
-        @DisplayName("검증 실패와 액션 없음 및 서비스 예외 응답을 보고한다")
+        @DisplayName("검증 실패와 서비스 예외 응답을 보고한다")
         @Test
-        void reportsValidationActionNotFoundAndServiceExceptionCases() throws Exception {
-            mockMvc.perform(post("/api/boards/posts").param("id", "b1"))
+        void reportsValidationNotFoundAndServiceExceptionCases() throws Exception {
+            mockMvc.perform(post("/api/boards/posts")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"id":"b1"}
+                                    """))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.code").value("BAD_REQUEST"));
 
-            mockMvc.perform(post("/api/boards").param("action", "unknown"))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.message").value("Invalid action"));
-
             when(boardService.updatePost(any())).thenReturn(false);
-            mockMvc.perform(put("/api/boards/b1").param("title", "title").param("content", "content"))
+            mockMvc.perform(put("/api/boards/b1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"title":"title","content":"content"}
+                                    """))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error.message").value("Post not found"));
 
             doThrow(new IllegalStateException("write failed")).when(boardService).insertPost(any());
             mockMvc.perform(post("/api/boards/posts")
-                            .param("id", "b2")
-                            .param("title", "title")
-                            .param("content", "content")
-                            .param("author", "ssafy"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"id":"b2","title":"title","content":"content","author":"ssafy"}
+                                    """))
                     .andExpect(status().isInternalServerError())
                     .andExpect(jsonPath("$.error.code").value("INTERNAL_SERVER_ERROR"));
         }
@@ -318,15 +328,20 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.hotplaces[0].id").value("h1"));
 
             mockMvc.perform(post("/api/hotplaces/items")
-                            .param("id", "h2")
-                            .param("userId", "ssafy")
-                            .param("title", "광안리")
-                            .param("type", "beach")
-                            .param("visitDate", "2026-05-15")
-                            .param("lat", "35.153")
-                            .param("lng", "129.118")
-                            .param("description", "sea"))
-                    .andExpect(status().isOk());
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "id":"h2",
+                                      "userId":"ssafy",
+                                      "title":"광안리",
+                                      "type":"beach",
+                                      "visitDate":"2026-05-15",
+                                      "lat":35.153,
+                                      "lng":129.118,
+                                      "description":"sea"
+                                    }
+                                    """))
+                    .andExpect(status().isCreated());
 
             ArgumentCaptor<Hotplace> captor = ArgumentCaptor.forClass(Hotplace.class);
             verify(hotplaceService).insertHotplace(captor.capture());
@@ -338,15 +353,20 @@ class ControllerBehaviorTest {
         @Test
         void rejectsInvalidCoordinatesAndMissingDeleteTarget() throws Exception {
             mockMvc.perform(post("/api/hotplaces/items")
-                            .param("id", "h1")
-                            .param("userId", "ssafy")
-                            .param("title", "남산")
-                            .param("type", "view")
-                            .param("visitDate", "2026-05-14")
-                            .param("lat", "north")
-                            .param("lng", "126.99"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "id":"h1",
+                                      "userId":"ssafy",
+                                      "title":"남산",
+                                      "type":"view",
+                                      "visitDate":"2026-05-14",
+                                      "lat":100.0,
+                                      "lng":126.99
+                                    }
+                                    """))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.message").value("Invalid latitude or longitude"));
+                    .andExpect(jsonPath("$.error.message").value("Invalid request"));
 
             when(hotplaceService.deleteHotplace("h-missing")).thenReturn(false);
             mockMvc.perform(delete("/api/hotplaces/h-missing"))
@@ -466,24 +486,29 @@ class ControllerBehaviorTest {
         @Test
         void noticeCreateUpdateAndDeleteValidationCases() throws Exception {
             mockMvc.perform(post("/api/notices/items")
-                            .param("title", "공지")
-                            .param("content", "내용")
-                            .param("author", "admin"))
-                    .andExpect(status().isOk());
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"title":"공지","content":"내용","author":"admin"}
+                                    """))
+                    .andExpect(status().isCreated());
             verify(noticeService).insertNotice(any());
 
-            mockMvc.perform(put("/api/notices/0").param("title", "공지").param("content", "내용"))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.message").value("Invalid request"));
-
-            when(noticeService.updateNotice(any())).thenReturn(false);
-            mockMvc.perform(put("/api/notices/1").param("title", "공지").param("content", "내용"))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.error.message").value("Notice not found"));
-
-            mockMvc.perform(post("/api/notices").param("action", "delete").param("id", "not-a-number"))
+            mockMvc.perform(put("/api/notices/0")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"title":"공지","content":"내용"}
+                                    """))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.message").value("Invalid id"));
+
+            when(noticeService.updateNotice(any())).thenReturn(false);
+            mockMvc.perform(put("/api/notices/1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"title":"공지","content":"내용"}
+                                    """))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error.message").value("Notice not found"));
         }
     }
 
@@ -638,9 +663,12 @@ class ControllerBehaviorTest {
 
             mockMvc.perform(put("/api/attractions/1/rating")
                             .principal(jwtPrincipal("ssafy"))
-                            .param("rating", "6"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"rating":6}
+                                    """))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.message").value("Rating must be between 1 and 5"));
+                    .andExpect(jsonPath("$.error.message").value("Invalid request"));
 
             mockMvc.perform(get("/api/attractions/1/stats").principal(jwtPrincipal("ssafy")))
                     .andExpect(status().isOk())
@@ -649,7 +677,10 @@ class ControllerBehaviorTest {
 
             mockMvc.perform(put("/api/attractions/1/tags")
                             .principal(jwtPrincipal("ssafy"))
-                            .param("tagIds", "3"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"tagIds":[3]}
+                                    """))
                     .andExpect(status().isOk());
             verify(attractionService).replaceTags(1L, List.of(3L));
 
@@ -741,8 +772,17 @@ class ControllerBehaviorTest {
                 .doesNotContain("Map.of(")
                 .doesNotContain("@RequestParam Map")
                 .doesNotContain("@RequestBody Map")
-                .doesNotContain("ApiResponse<Map");
+                .doesNotContain("ApiResponse<Map")
+                .doesNotContain("legacyPost")
+                .doesNotContain("private static <T> T fail");
+        assertThat(MUTATION_MODEL_ATTRIBUTE_PATTERN.matcher(source).find())
+                .as(path.toString())
+                .isFalse();
     }
+
+    private static final Pattern MUTATION_MODEL_ATTRIBUTE_PATTERN = Pattern.compile(
+            "@(?:Post|Put|Patch)Mapping[^\\n]*(?:\\R(?!\\s*@(Get|Delete|Post|Put|Patch)Mapping)[^\\n]*){0,12}@ModelAttribute"
+    );
 
     @org.springframework.web.bind.annotation.RestController
     static class FailingController {

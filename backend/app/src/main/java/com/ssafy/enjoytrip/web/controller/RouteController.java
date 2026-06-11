@@ -1,7 +1,5 @@
 package com.ssafy.enjoytrip.web.controller;
 
-import com.ssafy.enjoytrip.web.api.*;
-
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_POINTS;
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_REQUEST;
 import static com.ssafy.enjoytrip.support.response.ApiResponse.success;
@@ -10,8 +8,8 @@ import com.ssafy.enjoytrip.domain.Point;
 import com.ssafy.enjoytrip.service.RouteOptimizationService;
 import com.ssafy.enjoytrip.service.RouteOptimizationService.SplitResult;
 import com.ssafy.enjoytrip.support.error.CoreException;
-import com.ssafy.enjoytrip.support.error.ErrorType;
 import com.ssafy.enjoytrip.support.response.ApiResponse;
+import com.ssafy.enjoytrip.web.api.RouteApi;
 import com.ssafy.enjoytrip.web.dto.response.RouteOptimizeResponse;
 import com.ssafy.enjoytrip.web.dto.response.RouteSplitByDayResponse;
 import java.util.List;
@@ -31,7 +29,7 @@ public class RouteController implements RouteApi {
     @Override
     public ApiResponse<RouteOptimizeResponse> optimize(@RequestParam(required = false) String points) {
         if (hasInvalidPoints(points)) {
-            return fail(INVALID_POINTS);
+            throw new CoreException(INVALID_POINTS);
         }
         List<Point> parsed = service.parsePoints(points);
         int[] order = service.optimizeOrder(parsed);
@@ -46,17 +44,13 @@ public class RouteController implements RouteApi {
     public ApiResponse<RouteSplitByDayResponse> splitByDay(@RequestParam(required = false) String points,
                                                     @RequestParam(required = false) String days) {
         if (hasInvalidPoints(points)) {
-            return fail(INVALID_REQUEST);
+            throw new CoreException(INVALID_REQUEST);
         }
         SplitResult result = service.splitByLargestGap(service.parsePoints(points), parseInt(days, 1));
         List<Double> formattedDistances = result.dayDistances().stream()
                 .map(value -> Double.parseDouble(service.formatDouble(value)))
                 .toList();
         return success(new RouteSplitByDayResponse(result.days(), formattedDistances));
-    }
-
-    private static <T> T fail(ErrorType error) {
-        throw new CoreException(error);
     }
 
     private static int parseInt(String raw, int fallback) {
