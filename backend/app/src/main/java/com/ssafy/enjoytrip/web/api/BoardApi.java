@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Boards", description = "게시판 게시글 API")
 public interface BoardApi {
@@ -34,7 +33,7 @@ public interface BoardApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "게시글 생성 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 본문")
     })
-    ResponseEntity<ApiResponse<Void>> create(BoardCreateRequest request);
+    ApiResponse<Void> create(BoardCreateRequest request);
 
     @Operation(summary = "게시글 수정", description = "경로의 `id` 게시글 제목과 내용을 수정합니다.", operationId = "updateBoardPost")
     @ApiResponses({

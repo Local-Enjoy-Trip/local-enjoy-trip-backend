@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Notices", description = "공지사항 API")
 public interface NoticeApi {
@@ -34,7 +33,7 @@ public interface NoticeApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "공지사항 생성 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 본문")
     })
-    ResponseEntity<ApiResponse<Void>> create(NoticeCreateRequest request);
+    ApiResponse<Void> create(NoticeCreateRequest request);
 
     @Operation(summary = "공지사항 수정", description = "경로의 `id` 공지사항 제목과 내용을 수정합니다.", operationId = "updateNotice")
     @ApiResponses({

@@ -15,7 +15,6 @@ import com.ssafy.enjoytrip.web.dto.response.NoticesResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -38,8 +38,9 @@ public class NoticeController implements NoticeApi {
     }
 
     @PostMapping("/items")
+    @ResponseStatus(HttpStatus.CREATED)
     @Override
-    public ResponseEntity<ApiResponse<Void>> create(@Valid @RequestBody NoticeCreateRequest request) {
+    public ApiResponse<Void> create(@Valid @RequestBody NoticeCreateRequest request) {
         service.insertNotice(new Notice(
                 null,
                 request.normalizedTitle(),
@@ -49,7 +50,7 @@ public class NoticeController implements NoticeApi {
                 ""
         ));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(success());
+        return success();
     }
 
     @PutMapping("/{id}")

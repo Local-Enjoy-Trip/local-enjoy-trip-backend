@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Hotplaces", description = "사용자 핫플레이스 API")
 public interface HotplaceApi {
@@ -33,7 +32,7 @@ public interface HotplaceApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "핫플레이스 생성 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 본문")
     })
-    ResponseEntity<ApiResponse<Void>> create(HotplaceCreateRequest request);
+    ApiResponse<Void> create(HotplaceCreateRequest request);
 
     @Operation(summary = "핫플레이스 삭제", description = "경로의 `id` 핫플레이스를 삭제합니다.", operationId = "deleteHotplace")
     @ApiResponses({

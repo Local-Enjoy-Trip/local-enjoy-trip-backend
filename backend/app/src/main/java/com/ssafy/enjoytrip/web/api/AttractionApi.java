@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 @Tag(name = "Attractions", description = "관광지 검색 API")
@@ -128,7 +127,7 @@ public interface AttractionApi {
                     description = "서버 내부 오류"
             )
     })
-    ResponseEntity<ApiResponse<Void>> rejectPost();
+    ApiResponse<Void> rejectPost();
 
     @Operation(summary = "관광지 찜", description = "인증 사용자의 관광지 찜을 저장합니다.", operationId = "favoriteAttraction")
     ApiResponse<Void> favorite(Long id, Jwt jwt);
