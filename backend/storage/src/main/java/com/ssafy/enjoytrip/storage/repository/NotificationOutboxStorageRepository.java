@@ -21,10 +21,8 @@ public class NotificationOutboxStorageRepository implements NotificationOutboxRe
     @Transactional
     public NotificationOutboxEvent saveFriendRequestReceived(Long friendshipId,
                                                              String requesterUserId,
-                                                             String requesterDisplayName,
                                                              String recipientUserId) {
         String payload = "{\"requesterUserId\":\"" + escape(requesterUserId) + "\","
-                + "\"requesterDisplayName\":\"" + escape(requesterDisplayName) + "\","
                 + "\"friendshipId\":" + friendshipId + "}";
         NotificationOutboxEntity entity = new NotificationOutboxEntity(
                 FRIEND_REQUEST_RECEIVED,

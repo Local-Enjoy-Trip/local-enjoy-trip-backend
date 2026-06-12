@@ -36,7 +36,8 @@ public class FriendshipStorageRepository implements FriendshipRepository {
     @Override
     @Transactional
     public Friendship savePending(String requesterUserId, String addresseeUserId) {
-        return toModel(friendshipJpaRepository.save(new FriendshipEntity(requesterUserId, addresseeUserId)));
+        FriendshipEntity entity = friendshipJpaRepository.save(new FriendshipEntity(requesterUserId, addresseeUserId));
+        return toModelWithoutMemberLookup(entity);
     }
 
     @Override
@@ -79,12 +80,26 @@ public class FriendshipStorageRepository implements FriendshipRepository {
     }
 
     private Friendship toModel(FriendshipEntity entity) {
+        return toModel(
+                entity,
+                displayName(entity.getRequesterUserId()),
+                displayName(entity.getAddresseeUserId())
+        );
+    }
+
+    private static Friendship toModelWithoutMemberLookup(FriendshipEntity entity) {
+        return toModel(entity, entity.getRequesterUserId(), entity.getAddresseeUserId());
+    }
+
+    private static Friendship toModel(FriendshipEntity entity,
+                                      String requesterDisplayName,
+                                      String addresseeDisplayName) {
         return new Friendship(
                 entity.getId(),
                 entity.getRequesterUserId(),
-                displayName(entity.getRequesterUserId()),
+                requesterDisplayName,
                 entity.getAddresseeUserId(),
-                displayName(entity.getAddresseeUserId()),
+                addresseeDisplayName,
                 entity.getStatus(),
                 entity.getRequestedAt(),
                 entity.getRespondedAt(),

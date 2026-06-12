@@ -3,19 +3,16 @@ package com.ssafy.enjoytrip.service;
 import static com.ssafy.enjoytrip.domain.FriendshipStatus.ACCEPTED;
 import static com.ssafy.enjoytrip.domain.FriendshipStatus.PENDING;
 import static com.ssafy.enjoytrip.support.error.ErrorType.FRIENDSHIP_ACCESS_DENIED;
-import static com.ssafy.enjoytrip.support.error.ErrorType.FRIENDSHIP_ALREADY_ACTIVE;
 import static com.ssafy.enjoytrip.support.error.ErrorType.FRIENDSHIP_SELF_REQUEST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.ssafy.enjoytrip.domain.Friendship;
 import com.ssafy.enjoytrip.domain.FriendshipStatus;
-import com.ssafy.enjoytrip.domain.Member;
 import com.ssafy.enjoytrip.domain.Notification;
 import com.ssafy.enjoytrip.domain.NotificationOutboxEvent;
 import com.ssafy.enjoytrip.domain.NotificationReferenceType;
 import com.ssafy.enjoytrip.repository.FriendshipRepository;
-import com.ssafy.enjoytrip.repository.MemberRepository;
 import com.ssafy.enjoytrip.repository.NotificationOutboxRepository;
 import com.ssafy.enjoytrip.repository.NotificationRepository;
 import com.ssafy.enjoytrip.support.error.CoreException;
@@ -47,6 +44,24 @@ class FriendshipServiceTest {
         assertEquals("bob", outbox.lastRecipientUserId);
     }
 
+    @DisplayName("친구 요청은 회원과 중복 관계 사전 조회 없이 저장을 시도한다")
+    @Test
+    void requestFriendshipSavesWithoutPreloadingMembersOrActiveRelationship() {
+        FakeFriendshipRepository friendships = new FakeFriendshipRepository();
+        FakeOutboxRepository outbox = new FakeOutboxRepository();
+        FriendshipService service = new FriendshipService(
+                friendships,
+                outbox,
+                new FakeNotificationRepository()
+        );
+
+        Friendship result = service.requestFriendship("alice", "bob");
+
+        assertEquals(0, friendships.existsActiveBetweenCalls);
+        assertEquals("alice", result.requesterDisplayName());
+        assertEquals("bob", result.addresseeDisplayName());
+    }
+
     @DisplayName("자기 자신에게 친구 요청하면 self request 오류로 거부한다")
     @Test
     void requestFriendshipRejectsSelfRequest() {
@@ -58,17 +73,18 @@ class FriendshipServiceTest {
         assertEquals(FRIENDSHIP_SELF_REQUEST, exception.errorType());
     }
 
-    @DisplayName("이미 active 관계가 있으면 중복 친구 요청을 conflict로 거부한다")
+    @DisplayName("이미 active 관계가 있으면 저장소 제약 실패를 그대로 전파한다")
     @Test
-    void requestFriendshipRejectsActiveDuplicate() {
+    void requestFriendshipPropagatesActiveDuplicateConstraintFailure() {
         FakeFriendshipRepository friendships = new FakeFriendshipRepository();
-        friendships.activePairs.add(pair("alice", "bob"));
-        FriendshipService service = service(friendships, new FakeOutboxRepository(), "alice", "bob");
+        RuntimeException duplicate = new IllegalStateException("active friendship constraint violation");
+        friendships.saveFailure = duplicate;
+        FriendshipService service = service(friendships, new FakeOutboxRepository());
 
-        CoreException exception = assertThrows(CoreException.class,
+        RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> service.requestFriendship("alice", "bob"));
 
-        assertEquals(FRIENDSHIP_ALREADY_ACTIVE, exception.errorType());
+        assertEquals(duplicate, exception);
     }
 
     @DisplayName("받은 사람만 대기 친구 요청을 수락할 수 있다")
@@ -118,16 +134,15 @@ class FriendshipServiceTest {
 
     private static FriendshipService service(FakeFriendshipRepository friendships,
                                              FakeOutboxRepository outbox,
-                                             String... users) {
-        return service(friendships, outbox, new FakeNotificationRepository(), users);
+                                             String... ignoredUsers) {
+        return service(friendships, outbox, new FakeNotificationRepository(), ignoredUsers);
     }
 
     private static FriendshipService service(FakeFriendshipRepository friendships,
                                              FakeOutboxRepository outbox,
                                              FakeNotificationRepository notifications,
-                                             String... users) {
-        FakeMemberRepository members = new FakeMemberRepository(Set.of(users));
-        return new FriendshipService(friendships, outbox, notifications, members);
+                                             String... ignoredUsers) {
+        return new FriendshipService(friendships, outbox, notifications);
     }
 
     private static Friendship friendship(Long id, String requester, String addressee, FriendshipStatus status) {
@@ -152,6 +167,8 @@ class FriendshipServiceTest {
     private static class FakeFriendshipRepository implements FriendshipRepository {
         private final List<Friendship> saved = new ArrayList<>();
         private final Set<String> activePairs = new HashSet<>();
+        private RuntimeException saveFailure;
+        private int existsActiveBetweenCalls;
         private long sequence = 1;
 
         @Override
@@ -161,11 +178,15 @@ class FriendshipServiceTest {
 
         @Override
         public boolean existsActiveBetween(String userId, String otherUserId) {
+            existsActiveBetweenCalls++;
             return activePairs.contains(pair(userId, otherUserId));
         }
 
         @Override
         public Friendship savePending(String requesterUserId, String addresseeUserId) {
+            if (saveFailure != null) {
+                throw saveFailure;
+            }
             Friendship friendship = friendship(sequence++, requesterUserId, addresseeUserId, PENDING);
             saved.add(friendship);
             activePairs.add(pair(requesterUserId, addresseeUserId));
@@ -239,7 +260,6 @@ class FriendshipServiceTest {
         @Override
         public NotificationOutboxEvent saveFriendRequestReceived(Long friendshipId,
                                                                  String requesterUserId,
-                                                                 String requesterDisplayName,
                                                                  String recipientUserId) {
             this.lastFriendshipId = friendshipId;
             this.lastRequesterUserId = requesterUserId;
@@ -258,63 +278,6 @@ class FriendshipServiceTest {
 
         @Override
         public void markFailed(Long id, String lastError) {
-        }
-    }
-
-    private static class FakeMemberRepository implements MemberRepository {
-        private final Set<String> users;
-
-        FakeMemberRepository(Set<String> users) {
-            this.users = users;
-        }
-
-        @Override
-        public List<Member> findAll() {
-            return List.of();
-        }
-
-        @Override
-        public Member findByUserId(String userId) {
-            return new Member(userId, userId, userId, userId + "@example.com", "password", null,
-                    null, null, null, "2026-06-12T10:00:00");
-        }
-
-        @Override
-        public Member findByEmail(String email) {
-            return null;
-        }
-
-        @Override
-        public String findPassword(String userId, String email) {
-            return null;
-        }
-
-        @Override
-        public boolean existsByUserId(String userId) {
-            return users.contains(userId);
-        }
-
-        @Override
-        public boolean existsByEmail(String email) {
-            return false;
-        }
-
-        @Override
-        public void insert(Member member) {
-        }
-
-        @Override
-        public boolean update(Member member) {
-            return false;
-        }
-
-        @Override
-        public boolean delete(String userId) {
-            return false;
-        }
-
-        @Override
-        public void insertAuthLog(String userId, String eventType) {
         }
     }
 }

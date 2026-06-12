@@ -6,7 +6,6 @@ import java.util.Optional;
 public interface NotificationOutboxRepository {
     NotificationOutboxEvent saveFriendRequestReceived(Long friendshipId,
                                                        String requesterUserId,
-                                                       String requesterDisplayName,
                                                        String recipientUserId);
 
     Optional<NotificationOutboxEvent> findById(Long id);

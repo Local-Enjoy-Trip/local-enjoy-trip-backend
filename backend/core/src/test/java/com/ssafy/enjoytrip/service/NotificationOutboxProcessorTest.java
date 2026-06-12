@@ -88,7 +88,6 @@ class NotificationOutboxProcessorTest {
         @Override
         public NotificationOutboxEvent saveFriendRequestReceived(Long friendshipId,
                                                                  String requesterUserId,
-                                                                 String requesterDisplayName,
                                                                  String recipientUserId) {
             return null;
         }

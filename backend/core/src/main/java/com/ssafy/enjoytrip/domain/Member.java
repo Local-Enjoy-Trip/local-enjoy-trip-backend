@@ -58,6 +58,16 @@ public record Member(
         return !isBlank(password) && !passwordCodec.isEncoded(password);
     }
 
+    public String displayName() {
+        if (!isBlank(nickname)) {
+            return nickname;
+        }
+        if (!isBlank(name)) {
+            return name;
+        }
+        return userId;
+    }
+
     private static boolean isBlank(String value) {
         return value == null || value.isBlank();
     }
