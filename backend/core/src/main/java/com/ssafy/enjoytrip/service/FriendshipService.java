@@ -14,9 +14,11 @@ import static com.ssafy.enjoytrip.support.error.ErrorType.USER_NOT_FOUND;
 import com.ssafy.enjoytrip.domain.Friendship;
 import com.ssafy.enjoytrip.domain.FriendshipStatus;
 import com.ssafy.enjoytrip.domain.Member;
+import com.ssafy.enjoytrip.domain.NotificationReferenceType;
 import com.ssafy.enjoytrip.repository.FriendshipRepository;
 import com.ssafy.enjoytrip.repository.MemberRepository;
 import com.ssafy.enjoytrip.repository.NotificationOutboxRepository;
+import com.ssafy.enjoytrip.repository.NotificationRepository;
 import com.ssafy.enjoytrip.support.error.CoreException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class FriendshipService {
     private final FriendshipRepository friendshipRepository;
     private final NotificationOutboxRepository notificationOutboxRepository;
+    private final NotificationRepository notificationRepository;
     private final MemberRepository memberRepository;
 
     @Transactional
@@ -52,7 +55,9 @@ public class FriendshipService {
         Friendship friendship = findFriendship(friendshipId);
         validatePending(friendship);
         validateAddressee(friendship, actorUserId);
-        return friendshipRepository.updateStatus(friendshipId, ACCEPTED);
+        Friendship accepted = friendshipRepository.updateStatus(friendshipId, ACCEPTED);
+        markFriendRequestNotificationRead(accepted);
+        return accepted;
     }
 
     @Transactional
@@ -60,7 +65,9 @@ public class FriendshipService {
         Friendship friendship = findFriendship(friendshipId);
         validatePending(friendship);
         validateAddressee(friendship, actorUserId);
-        return friendshipRepository.updateStatus(friendshipId, REJECTED);
+        Friendship rejected = friendshipRepository.updateStatus(friendshipId, REJECTED);
+        markFriendRequestNotificationRead(rejected);
+        return rejected;
     }
 
     @Transactional
@@ -92,6 +99,14 @@ public class FriendshipService {
     @Transactional(readOnly = true)
     public List<Friendship> findSentPendingRequests(String actorUserId) {
         return friendshipRepository.findPendingSentByUser(actorUserId);
+    }
+
+    private void markFriendRequestNotificationRead(Friendship friendship) {
+        notificationRepository.markReadByReference(
+                friendship.addresseeUserId(),
+                NotificationReferenceType.FRIENDSHIP,
+                friendship.id()
+        );
     }
 
     private void validateDifferentUsers(String requesterUserId, String targetUserId) {

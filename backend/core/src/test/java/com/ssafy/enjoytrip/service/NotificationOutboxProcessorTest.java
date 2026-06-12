@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.ssafy.enjoytrip.domain.Notification;
 import com.ssafy.enjoytrip.domain.NotificationOutboxEvent;
 import com.ssafy.enjoytrip.domain.NotificationOutboxStatus;
+import com.ssafy.enjoytrip.domain.NotificationReferenceType;
 import com.ssafy.enjoytrip.repository.NotificationOutboxRepository;
 import com.ssafy.enjoytrip.repository.NotificationRepository;
 import java.time.LocalDateTime;
@@ -117,23 +118,23 @@ class NotificationOutboxProcessorTest {
         }
 
         @Override
+        public boolean existsUnreadByRecipient(String recipientUserId) {
+            return false;
+        }
+
+        @Override
         public Notification saveFromOutbox(NotificationOutboxEvent event) {
             savedOutboxId = event.id();
             return null;
         }
 
         @Override
-        public List<Notification> findByRecipient(String recipientUserId, boolean unreadOnly, int limit) {
+        public List<Notification> findUnreadByRecipient(String recipientUserId, int limit) {
             return List.of();
         }
 
         @Override
-        public Optional<Notification> markRead(Long notificationId, String recipientUserId) {
-            return Optional.empty();
-        }
-
-        @Override
-        public int markAllRead(String recipientUserId) {
+        public int markReadByReference(String recipientUserId, NotificationReferenceType referenceType, Long referenceId) {
             return 0;
         }
     }

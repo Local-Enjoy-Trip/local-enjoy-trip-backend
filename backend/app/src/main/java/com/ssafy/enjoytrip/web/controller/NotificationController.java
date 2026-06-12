@@ -8,16 +8,13 @@ import com.ssafy.enjoytrip.service.NotificationService;
 import com.ssafy.enjoytrip.support.error.CoreException;
 import com.ssafy.enjoytrip.support.response.ApiResponse;
 import com.ssafy.enjoytrip.web.api.NotificationApi;
-import com.ssafy.enjoytrip.web.dto.response.NotificationReadAllResponse;
-import com.ssafy.enjoytrip.web.dto.response.NotificationResponse;
+import com.ssafy.enjoytrip.web.dto.response.NotificationUnreadStatusResponse;
 import com.ssafy.enjoytrip.web.dto.response.NotificationsResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,27 +27,17 @@ public class NotificationController implements NotificationApi {
 
     @GetMapping
     @Override
-    public ApiResponse<NotificationsResponse> notifications(@RequestParam(defaultValue = "false") boolean unreadOnly,
-                                                            @RequestParam(required = false) Integer limit,
+    public ApiResponse<NotificationsResponse> notifications(@RequestParam(required = false) Integer limit,
                                                             @AuthenticationPrincipal Jwt jwt) {
-        List<Notification> notifications = notificationService.findNotifications(authenticatedUserId(jwt), unreadOnly, limit);
+        List<Notification> notifications = notificationService.findNotifications(authenticatedUserId(jwt), limit);
         return success(NotificationsResponse.from(notifications));
     }
 
-    @PatchMapping("/{notificationId}/read")
+    @GetMapping("/unread-status")
     @Override
-    public ApiResponse<NotificationResponse> markRead(@PathVariable Long notificationId,
-                                                      @AuthenticationPrincipal Jwt jwt) {
-        return success(NotificationResponse.from(
-                notificationService.markRead(notificationId, authenticatedUserId(jwt))
-        ));
-    }
-
-    @PatchMapping("/read-all")
-    @Override
-    public ApiResponse<NotificationReadAllResponse> markAllRead(@AuthenticationPrincipal Jwt jwt) {
-        return success(new NotificationReadAllResponse(
-                notificationService.markAllRead(authenticatedUserId(jwt))
+    public ApiResponse<NotificationUnreadStatusResponse> unreadStatus(@AuthenticationPrincipal Jwt jwt) {
+        return success(new NotificationUnreadStatusResponse(
+                notificationService.hasUnreadNotification(authenticatedUserId(jwt))
         ));
     }
 

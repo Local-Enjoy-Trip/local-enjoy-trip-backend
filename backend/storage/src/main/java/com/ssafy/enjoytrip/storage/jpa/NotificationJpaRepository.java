@@ -1,5 +1,8 @@
 package com.ssafy.enjoytrip.storage.jpa;
 
+import com.ssafy.enjoytrip.domain.FriendshipStatus;
+import com.ssafy.enjoytrip.domain.NotificationReferenceType;
+import com.ssafy.enjoytrip.domain.NotificationType;
 import com.ssafy.enjoytrip.storage.entity.NotificationEntity;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,19 +18,57 @@ public interface NotificationJpaRepository extends JpaRepository<NotificationEnt
 
     Optional<NotificationEntity> findByOutboxEventId(Long outboxEventId);
 
-    List<NotificationEntity> findByRecipientUserIdOrderByCreatedAtDescIdDesc(String recipientUserId, Pageable pageable);
+    @Query("""
+            select count(n) > 0
+            from NotificationEntity n
+            where n.recipientUserId = :recipientUserId
+              and n.readAt is null
+              and n.type = :type
+              and n.referenceType = :referenceType
+              and exists (
+                  select f.id
+                  from FriendshipEntity f
+                  where f.id = n.referenceId
+                    and f.status = :status
+              )
+            """)
+    boolean existsUnreadFriendRequest(@Param("recipientUserId") String recipientUserId,
+                                      @Param("type") NotificationType type,
+                                      @Param("referenceType") NotificationReferenceType referenceType,
+                                      @Param("status") FriendshipStatus status);
 
-    List<NotificationEntity> findByRecipientUserIdAndReadAtIsNullOrderByCreatedAtDescIdDesc(String recipientUserId,
-                                                                                             Pageable pageable);
-
-    Optional<NotificationEntity> findByIdAndRecipientUserId(Long id, String recipientUserId);
+    @Query("""
+            select n
+            from NotificationEntity n
+            where n.recipientUserId = :recipientUserId
+              and n.readAt is null
+              and n.type = :type
+              and n.referenceType = :referenceType
+              and exists (
+                  select f.id
+                  from FriendshipEntity f
+                  where f.id = n.referenceId
+                    and f.status = :status
+              )
+            order by n.createdAt desc, n.id desc
+            """)
+    List<NotificationEntity> findUnreadFriendRequests(@Param("recipientUserId") String recipientUserId,
+                                                       @Param("type") NotificationType type,
+                                                       @Param("referenceType") NotificationReferenceType referenceType,
+                                                       @Param("status") FriendshipStatus status,
+                                                       Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             update NotificationEntity n
             set n.readAt = :readAt
             where n.recipientUserId = :recipientUserId
+              and n.referenceType = :referenceType
+              and n.referenceId = :referenceId
               and n.readAt is null
             """)
-    int markAllRead(@Param("recipientUserId") String recipientUserId, @Param("readAt") LocalDateTime readAt);
+    int markReadByReference(@Param("recipientUserId") String recipientUserId,
+                            @Param("referenceType") NotificationReferenceType referenceType,
+                            @Param("referenceId") Long referenceId,
+                            @Param("readAt") LocalDateTime readAt);
 }

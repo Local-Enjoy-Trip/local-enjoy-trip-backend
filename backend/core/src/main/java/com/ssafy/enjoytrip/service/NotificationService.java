@@ -1,7 +1,6 @@
 package com.ssafy.enjoytrip.service;
 
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_REQUEST;
-import static com.ssafy.enjoytrip.support.error.ErrorType.NOTIFICATION_NOT_FOUND;
 
 import com.ssafy.enjoytrip.domain.Notification;
 import com.ssafy.enjoytrip.repository.NotificationRepository;
@@ -20,19 +19,13 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
 
     @Transactional(readOnly = true)
-    public List<Notification> findNotifications(String recipientUserId, boolean unreadOnly, Integer limit) {
-        return notificationRepository.findByRecipient(recipientUserId, unreadOnly, normalizeLimit(limit));
+    public List<Notification> findNotifications(String recipientUserId, Integer limit) {
+        return notificationRepository.findUnreadByRecipient(recipientUserId, normalizeLimit(limit));
     }
 
-    @Transactional
-    public Notification markRead(Long notificationId, String recipientUserId) {
-        return notificationRepository.markRead(notificationId, recipientUserId)
-                .orElseThrow(() -> new CoreException(NOTIFICATION_NOT_FOUND));
-    }
-
-    @Transactional
-    public int markAllRead(String recipientUserId) {
-        return notificationRepository.markAllRead(recipientUserId);
+    @Transactional(readOnly = true)
+    public boolean hasUnreadNotification(String recipientUserId) {
+        return notificationRepository.existsUnreadByRecipient(recipientUserId);
     }
 
     private static int normalizeLimit(Integer limit) {

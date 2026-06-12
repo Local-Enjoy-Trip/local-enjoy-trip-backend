@@ -2,17 +2,17 @@ package com.ssafy.enjoytrip.repository;
 
 import com.ssafy.enjoytrip.domain.Notification;
 import com.ssafy.enjoytrip.domain.NotificationOutboxEvent;
+import com.ssafy.enjoytrip.domain.NotificationReferenceType;
 import java.util.List;
-import java.util.Optional;
 
 public interface NotificationRepository {
     boolean existsByOutboxEventId(Long outboxEventId);
 
+    boolean existsUnreadByRecipient(String recipientUserId);
+
     Notification saveFromOutbox(NotificationOutboxEvent event);
 
-    List<Notification> findByRecipient(String recipientUserId, boolean unreadOnly, int limit);
+    List<Notification> findUnreadByRecipient(String recipientUserId, int limit);
 
-    Optional<Notification> markRead(Long notificationId, String recipientUserId);
-
-    int markAllRead(String recipientUserId);
+    int markReadByReference(String recipientUserId, NotificationReferenceType referenceType, Long referenceId);
 }

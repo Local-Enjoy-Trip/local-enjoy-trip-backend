@@ -11,10 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.ssafy.enjoytrip.domain.Friendship;
 import com.ssafy.enjoytrip.domain.FriendshipStatus;
 import com.ssafy.enjoytrip.domain.Member;
+import com.ssafy.enjoytrip.domain.Notification;
 import com.ssafy.enjoytrip.domain.NotificationOutboxEvent;
+import com.ssafy.enjoytrip.domain.NotificationReferenceType;
 import com.ssafy.enjoytrip.repository.FriendshipRepository;
 import com.ssafy.enjoytrip.repository.MemberRepository;
 import com.ssafy.enjoytrip.repository.NotificationOutboxRepository;
+import com.ssafy.enjoytrip.repository.NotificationRepository;
 import com.ssafy.enjoytrip.support.error.CoreException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -81,23 +84,50 @@ class FriendshipServiceTest {
         assertEquals(FRIENDSHIP_ACCESS_DENIED, exception.errorType());
     }
 
-    @DisplayName("받은 사람이 대기 친구 요청을 수락하면 ACCEPTED 상태가 된다")
+    @DisplayName("받은 사람이 대기 친구 요청을 수락하면 ACCEPTED 상태가 되고 알림을 읽음 처리한다")
     @Test
     void acceptTransitionsPendingToAccepted() {
         FakeFriendshipRepository friendships = new FakeFriendshipRepository();
+        FakeNotificationRepository notifications = new FakeNotificationRepository();
         friendships.saved.add(friendship(1L, "alice", "bob", PENDING));
-        FriendshipService service = service(friendships, new FakeOutboxRepository(), "alice", "bob");
+        FriendshipService service = service(friendships, new FakeOutboxRepository(), notifications, "alice", "bob");
 
         Friendship result = service.acceptRequest(1L, "bob");
 
         assertEquals(ACCEPTED, result.status());
+        assertEquals("bob", notifications.lastRecipientUserId);
+        assertEquals(NotificationReferenceType.FRIENDSHIP, notifications.lastReferenceType);
+        assertEquals(1L, notifications.lastReferenceId);
+    }
+
+    @DisplayName("받은 사람이 대기 친구 요청을 거절하면 REJECTED 상태가 되고 알림을 읽음 처리한다")
+    @Test
+    void rejectTransitionsPendingToRejectedAndMarksNotificationRead() {
+        FakeFriendshipRepository friendships = new FakeFriendshipRepository();
+        FakeNotificationRepository notifications = new FakeNotificationRepository();
+        friendships.saved.add(friendship(1L, "alice", "bob", PENDING));
+        FriendshipService service = service(friendships, new FakeOutboxRepository(), notifications, "alice", "bob");
+
+        Friendship result = service.rejectRequest(1L, "bob");
+
+        assertEquals(FriendshipStatus.REJECTED, result.status());
+        assertEquals("bob", notifications.lastRecipientUserId);
+        assertEquals(NotificationReferenceType.FRIENDSHIP, notifications.lastReferenceType);
+        assertEquals(1L, notifications.lastReferenceId);
     }
 
     private static FriendshipService service(FakeFriendshipRepository friendships,
                                              FakeOutboxRepository outbox,
                                              String... users) {
+        return service(friendships, outbox, new FakeNotificationRepository(), users);
+    }
+
+    private static FriendshipService service(FakeFriendshipRepository friendships,
+                                             FakeOutboxRepository outbox,
+                                             FakeNotificationRepository notifications,
+                                             String... users) {
         FakeMemberRepository members = new FakeMemberRepository(Set.of(users));
-        return new FriendshipService(friendships, outbox, members);
+        return new FriendshipService(friendships, outbox, notifications, members);
     }
 
     private static Friendship friendship(Long id, String requester, String addressee, FriendshipStatus status) {
@@ -164,6 +194,40 @@ class FriendshipServiceTest {
         @Override
         public List<Friendship> findPendingSentByUser(String userId) {
             return List.of();
+        }
+    }
+
+    private static class FakeNotificationRepository implements NotificationRepository {
+        private String lastRecipientUserId;
+        private NotificationReferenceType lastReferenceType;
+        private Long lastReferenceId;
+
+        @Override
+        public boolean existsByOutboxEventId(Long outboxEventId) {
+            return false;
+        }
+
+        @Override
+        public boolean existsUnreadByRecipient(String recipientUserId) {
+            return false;
+        }
+
+        @Override
+        public Notification saveFromOutbox(NotificationOutboxEvent event) {
+            return null;
+        }
+
+        @Override
+        public List<Notification> findUnreadByRecipient(String recipientUserId, int limit) {
+            return List.of();
+        }
+
+        @Override
+        public int markReadByReference(String recipientUserId, NotificationReferenceType referenceType, Long referenceId) {
+            this.lastRecipientUserId = recipientUserId;
+            this.lastReferenceType = referenceType;
+            this.lastReferenceId = referenceId;
+            return 1;
         }
     }
 

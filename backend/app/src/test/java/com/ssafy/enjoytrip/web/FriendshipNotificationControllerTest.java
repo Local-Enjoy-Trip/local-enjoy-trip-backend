@@ -6,7 +6,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -94,13 +93,13 @@ class FriendshipNotificationControllerTest {
                 .andExpect(jsonPath("$.data.friends[0].userId").value("bob"));
     }
 
-    @DisplayName("내 알림 조회는 notifications 필드와 읽음 상태를 반환한다")
+    @DisplayName("내 알림 조회는 미처리 친구 요청 알림만 notifications 필드로 반환한다")
     @Test
-    void notificationsReturnsCurrentRecipientNotifications() throws Exception {
-        when(notificationService.findNotifications("bob", true, 10))
+    void notificationsReturnsCurrentRecipientUnreadNotifications() throws Exception {
+        when(notificationService.findNotifications("bob", 10))
                 .thenReturn(List.of(notification(3L, "bob", null)));
 
-        mockMvc.perform(get("/api/notifications?unreadOnly=true&limit=10")
+        mockMvc.perform(get("/api/notifications?limit=10")
                         .principal(jwtPrincipal("bob")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -108,23 +107,22 @@ class FriendshipNotificationControllerTest {
                 .andExpect(jsonPath("$.data.notifications[0].type").value("FRIEND_REQUEST_RECEIVED"))
                 .andExpect(jsonPath("$.data.notifications[0].read").value(false));
 
-        verify(notificationService).findNotifications("bob", true, 10);
+        verify(notificationService).findNotifications("bob", 10);
     }
 
-    @DisplayName("알림 읽음 처리는 인증 사용자 id와 notification id를 service로 전달한다")
+    @DisplayName("안 읽은 알림 상태 조회는 존재 여부만 hasUnread 필드로 반환한다")
     @Test
-    void markNotificationReadDelegatesCurrentRecipient() throws Exception {
-        LocalDateTime readAt = LocalDateTime.of(2026, 6, 12, 11, 0);
-        when(notificationService.markRead(3L, "bob"))
-                .thenReturn(notification(3L, "bob", readAt));
+    void unreadStatusReturnsHasUnreadOnly() throws Exception {
+        when(notificationService.hasUnreadNotification("bob"))
+                .thenReturn(true);
 
-        mockMvc.perform(patch("/api/notifications/3/read").principal(jwtPrincipal("bob")))
+        mockMvc.perform(get("/api/notifications/unread-status")
+                        .principal(jwtPrincipal("bob")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").value(3))
-                .andExpect(jsonPath("$.data.read").value(true));
+                .andExpect(jsonPath("$.data.hasUnread").value(true));
 
-        verify(notificationService).markRead(3L, "bob");
+        verify(notificationService).hasUnreadNotification("bob");
     }
 
     private static Friendship friendship(Long id,
