@@ -144,7 +144,7 @@ public interface AttractionApi {
             description = "인증 사용자의 1~5 평점을 등록하거나 갱신합니다.",
             operationId = "rateAttraction"
     )
-    ApiResponse<Void> rate(Long id, @ParameterObject RatingRequest request, Jwt jwt);
+    ApiResponse<Void> rate(Long id, RatingRequest request, Jwt jwt);
 
     @Operation(
             summary = "관광지 평점 삭제",
@@ -165,5 +165,5 @@ public interface AttractionApi {
             description = "관광지에 연결된 태그 목록을 교체합니다.",
             operationId = "replaceAttractionTags"
     )
-    ApiResponse<Void> replaceTags(Long id, @ParameterObject AttractionTagsRequest request, Jwt jwt);
+    ApiResponse<Void> replaceTags(Long id, AttractionTagsRequest request, Jwt jwt);
 }

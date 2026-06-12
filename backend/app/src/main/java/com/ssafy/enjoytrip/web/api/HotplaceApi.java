@@ -1,7 +1,7 @@
 package com.ssafy.enjoytrip.web.api;
 
 import com.ssafy.enjoytrip.support.response.ApiResponse;
-import com.ssafy.enjoytrip.web.dto.request.HotplaceRequest;
+import com.ssafy.enjoytrip.web.dto.request.HotplaceCreateRequest;
 import com.ssafy.enjoytrip.web.dto.response.HotplacesResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springdoc.core.annotations.ParameterObject;
 
 @Tag(name = "Hotplaces", description = "사용자 핫플레이스 API")
 public interface HotplaceApi {
@@ -28,24 +27,12 @@ public interface HotplaceApi {
     })
     ApiResponse<HotplacesResponse> find(@Parameter(description = "사용자 ID 필터", example = "ssafy") String userId);
 
-    @Operation(
-            summary = "핫플레이스 레거시 액션 처리",
-            description = "`action=create`는 생성, `action=delete`는 삭제로 위임됩니다. 신규 클라이언트는 `/items`, `/{id}` 사용을 권장합니다.",
-            operationId = "legacyHotplacePost"
-    )
+    @Operation(summary = "핫플레이스 생성", description = "JSON 본문에 `id`, `userId`, `title`, `type`, `visitDate`, 숫자형 `lat`, `lng`가 필요합니다.", operationId = "createHotplace")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "액션 처리 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 action, id 누락, 필수 필드 누락 또는 위도/경도 형식 오류"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "삭제 대상 핫플레이스 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "핫플레이스 생성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 본문")
     })
-    ApiResponse<Void> legacyPost(@ParameterObject HotplaceRequest request);
-
-    @Operation(summary = "핫플레이스 생성", description = "`id`, `userId`, `title`, `type`, `visitDate`, 숫자형 `lat`, `lng`가 필요합니다.", operationId = "createHotplace")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "핫플레이스 생성 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "필수 필드 누락 또는 위도/경도 형식 오류")
-    })
-    ApiResponse<Void> create(@ParameterObject HotplaceRequest request);
+    ApiResponse<Void> create(HotplaceCreateRequest request);
 
     @Operation(summary = "핫플레이스 삭제", description = "경로의 `id` 핫플레이스를 삭제합니다.", operationId = "deleteHotplace")
     @ApiResponses({
