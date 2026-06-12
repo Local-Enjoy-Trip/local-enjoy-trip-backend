@@ -240,6 +240,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-enjoytrip}
       POSTGRES_USER: ${POSTGRES_USER:-ssafy}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ssafy}
+      CDC_DB_USER: ${CDC_DB_USER:-enjoytrip_cdc}
+      CDC_DB_PASSWORD: ${CDC_DB_PASSWORD:-enjoytrip_cdc}
       CDC_PUBLICATION_BOOTSTRAP_TIMEOUT_SECONDS: ${CDC_PUBLICATION_BOOTSTRAP_TIMEOUT_SECONDS:-600}
     volumes:
       - ./infra/cdc/postgres:/cdc/postgres:ro
@@ -259,6 +261,11 @@ services:
     environment:
       CONNECT_URL: http://kafka-connect:8083
       CONNECTOR_DIR: /cdc/connectors
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-enjoytrip}
+      CDC_DB_USER: ${CDC_DB_USER:-enjoytrip_cdc}
+      CDC_DB_PASSWORD: ${CDC_DB_PASSWORD:-enjoytrip_cdc}
     volumes:
       - ./infra/cdc/connectors:/cdc/connectors:ro
     entrypoint: ["/cdc/connectors/bootstrap-connectors.sh"]

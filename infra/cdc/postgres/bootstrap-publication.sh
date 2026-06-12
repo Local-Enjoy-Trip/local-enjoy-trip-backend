@@ -6,6 +6,8 @@ set -euo pipefail
 : "${POSTGRES_DB:=enjoytrip}"
 : "${POSTGRES_USER:=ssafy}"
 : "${POSTGRES_PASSWORD:=ssafy}"
+: "${CDC_DB_USER:=enjoytrip_cdc}"
+: "${CDC_DB_PASSWORD:=enjoytrip_cdc}"
 : "${CDC_PUBLICATION_BOOTSTRAP_TIMEOUT_SECONDS:=600}"
 
 export PGPASSWORD="$POSTGRES_PASSWORD"
@@ -27,7 +29,26 @@ while true; do
   sleep 5
 done
 
-psql -v ON_ERROR_STOP=1 -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f "$SQL_FILE"
+psql -v ON_ERROR_STOP=1 \
+  -v cdc_user="$CDC_DB_USER" \
+  -v cdc_password="$CDC_DB_PASSWORD" \
+  -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'SQL'
+SELECT format('CREATE ROLE %I WITH LOGIN REPLICATION PASSWORD %L', :'cdc_user', :'cdc_password')
+WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'cdc_user')
+\gexec
+
+SELECT format('ALTER ROLE %I WITH LOGIN REPLICATION PASSWORD %L', :'cdc_user', :'cdc_password')
+WHERE EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'cdc_user')
+\gexec
+
+SELECT format('GRANT CONNECT ON DATABASE %I TO %I', current_database(), :'cdc_user')
+\gexec
+SQL
+
+psql -v ON_ERROR_STOP=1 \
+  -v cdc_user="$CDC_DB_USER" \
+  -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+  -f "$SQL_FILE"
 psql -v ON_ERROR_STOP=1 -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'SQL'
 select name, setting from pg_settings where name in ('wal_level', 'max_replication_slots', 'max_wal_senders') order by name;
 select pubname from pg_publication where pubname = 'attraction_favorites_publication';

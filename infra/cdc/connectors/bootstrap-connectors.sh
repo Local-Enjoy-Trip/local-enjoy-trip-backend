@@ -34,6 +34,8 @@ for props in "${CONNECTORS[@]}"; do
   echo "[kafka-connect-bootstrap] reconciling ${props}"
   python3 - "$CONNECT_URL" "$props" <<'PYCONNECTOR'
 import json
+import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -41,6 +43,19 @@ from pathlib import Path
 
 connect_url = sys.argv[1].rstrip('/')
 props_path = Path(sys.argv[2])
+ENV_PATTERN = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?}")
+
+
+def substitute_env(value):
+    def replace(match):
+        name, default = match.group(1), match.group(2)
+        if name in os.environ:
+            return os.environ[name]
+        if default is not None:
+            return default
+        raise SystemExit(f"Missing environment variable {name} required by {props_path}")
+
+    return ENV_PATTERN.sub(replace, value)
 
 config = {}
 for raw_line in props_path.read_text().splitlines():
@@ -50,7 +65,7 @@ for raw_line in props_path.read_text().splitlines():
     if '=' not in line:
         raise SystemExit(f"Invalid properties line in {props_path}: {raw_line}")
     key, value = line.split('=', 1)
-    config[key.strip()] = value.strip()
+    config[key.strip()] = substitute_env(value.strip())
 
 name = config.pop('name', None)
 if not name:

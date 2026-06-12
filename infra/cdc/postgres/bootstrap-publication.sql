@@ -15,9 +15,9 @@ $$;
 -- Delete events must include attraction_id/user_id for ClickHouse count decrements.
 ALTER TABLE public.attraction_favorites REPLICA IDENTITY FULL;
 
-GRANT USAGE ON SCHEMA public TO enjoytrip_cdc;
-GRANT SELECT ON TABLE public.attraction_favorites TO enjoytrip_cdc;
-GRANT SELECT ON TABLE public.notification_outbox TO enjoytrip_cdc;
+GRANT USAGE ON SCHEMA public TO :"cdc_user";
+GRANT SELECT ON TABLE public.attraction_favorites TO :"cdc_user";
+GRANT SELECT ON TABLE public.notification_outbox TO :"cdc_user";
 
 DO $$
 BEGIN
