@@ -6,12 +6,12 @@
 
 명시적 비목표:
 
-- `backend/app` read path 변경 없음
+- `backend/web` read path 변경 없음
 - 기존 favorite/unfavorite API 계약 변경 없음
 - Java Kafka Streams 또는 별도 애플리케이션 프로세서 추가 없음
 - production 배포/운영 전제 추가 없음
 
-현재 `backend/app/build.gradle`에는 `project(':backend:storage')` 참조와 storage 참조 금지 task가 함께 존재하는 경계상 oddity가 있다. 이 작업은 그 이상으로 app read path를 넓히지 않는다.
+현재 executable module은 `backend/web`과 `backend/worker`로 분리되어 있으며, 둘 다 조립 목적의 `project(':backend:storage')` 의존성과 source-level storage 참조 금지 task를 함께 둔다. 이 문서는 attraction favorites CDC/ClickHouse 작업이 web read path를 불필요하게 넓히지 않는다는 의미로 유지한다.
 
 ## 구성 요소
 
@@ -138,7 +138,7 @@ docker compose up -d db kafka kafka-connect clickhouse redis pgadmin
 backend app을 로컬에서 실행해 기존 Flyway 경로로 `attraction_favorites`를 만든다.
 
 ```bash
-./gradlew :backend:app:bootRun
+./gradlew :backend:web:bootRun
 ```
 
 이미 migration만 별도 수행하는 운영 절차가 있다면 그 절차를 사용해도 된다. phase 1은 backend를 compose service로 추가하지 않는다.

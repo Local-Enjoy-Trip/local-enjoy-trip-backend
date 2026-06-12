@@ -1,12 +1,13 @@
 # Local Enjoy Trip Backend
 
 ## 구조
-- `backend/app`: Spring Boot 진입점, REST controller, application service, REST Docs 테스트
+- `backend/web`: Spring Boot HTTP/API 진입점, REST controller, DTO, validation, security, REST Docs 테스트
+- `backend/worker`: Kafka/Scheduled/background worker 진입점, outbox/async 처리와 retry/error handling
 - `backend/core`: domain model, repository interface 같은 application contract
 - `backend/storage`: JPA entity, Spring Data repository, JPA-backed adapter, DB model, PostgreSQL/PostGIS schema 관리
 - `backend/external`: 한국관광공사 Tour API, EV 충전소 API, 뉴스 RSS client
 
-`backend/app`에서는 `com.ssafy.enjoytrip.storage.*`를 import하면 안 된다. 저장소 구현은 전부 `backend/storage`에 두고, `backend:app:check`의 `forbidStorageReferences`가 app의 storage import와 compile classpath 의존성을 차단한다.
+`backend/web`과 `backend/worker` 소스에서는 `com.ssafy.enjoytrip.storage.*`를 import하면 안 된다. 저장소 구현은 전부 `backend/storage`에 두고, `backend:web:check`와 `backend:worker:check`의 `forbidStorageReferences`가 executable module의 storage 구현 참조를 차단한다. Kafka/outbox worker 코드는 `backend/worker`에 두고, controller/API/REST Docs 코드는 `backend/web`에 둔다.
 
 ## API
 컨트롤러 요청/응답 계약은 반드시 명명된 객체 DTO를 사용한다. `@RequestParam Map`, `@RequestBody Map`, `ApiResponse<Map<...>>`, `Map.of(...)`로 만든 임시 응답 객체는 사용하지 않는다.
@@ -59,17 +60,19 @@ Content-Type: application/json
 
 ## 실행
 ```powershell
-.\gradlew :backend:app:bootRun
+.\gradlew :backend:web:bootRun
 ```
 
 빌드:
 ```powershell
-.\gradlew :backend:app:build
+.\gradlew :backend:web:build
+.\gradlew :backend:worker:build
 ```
 
 생성 결과:
-- `backend/app/build/libs/app-1.0.0-SNAPSHOT.jar`
-- `backend/app/build/docs/asciidoc/index.html`
+- `backend/web/build/libs/web-1.0.0-SNAPSHOT.jar`
+- `backend/worker/build/libs/worker-1.0.0-SNAPSHOT.jar`
+- `backend/web/build/docs/asciidoc/index.html`
 
 ## DB/API Key
 기본 DB 값:

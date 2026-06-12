@@ -18,7 +18,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.kafka:spring-kafka'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -27,7 +26,7 @@ dependencies {
 }
 
 tasks.register('forbidStorageReferences') {
-    description = 'Fails if backend:app source imports or references backend:storage implementation types.'
+    description = 'Fails if backend:web source imports or references backend:storage implementation types.'
     group = 'verification'
 
     def mainJava = layout.projectDirectory.dir('src/main/java')
@@ -46,11 +45,36 @@ tasks.register('forbidStorageReferences') {
         }
 
         if (!offenders.isEmpty()) {
-            def message = new StringBuilder('backend:app source must not import or reference backend:storage implementation types.')
-            if (!offenders.isEmpty()) {
-                message.append(System.lineSeparator()).append('Forbidden storage imports/packages:')
-                offenders.each { message.append(System.lineSeparator()).append(' - ').append(it) }
+            def message = new StringBuilder('backend:web source must not import or reference backend:storage implementation types.')
+            message.append(System.lineSeparator()).append('Forbidden storage imports/packages:')
+            offenders.each { message.append(System.lineSeparator()).append(' - ').append(it) }
+            throw new GradleException(message.toString())
+        }
+    }
+}
+
+tasks.register('forbidWorkerReferences') {
+    description = 'Fails if backend:web source owns worker-only notification CDC/Kafka listener code.'
+    group = 'verification'
+
+    def mainJava = layout.projectDirectory.dir('src/main/java')
+    inputs.dir(mainJava)
+
+    doLast {
+        def offenders = []
+        fileTree(mainJava) {
+            include '**/*.java'
+        }.each { file ->
+            def source = file.getText('UTF-8')
+            if (source.contains('@KafkaListener') || source.contains('NotificationOutboxCdcConsumer')) {
+                offenders << file
             }
+        }
+
+        if (!offenders.isEmpty()) {
+            def message = new StringBuilder('backend:web source must not contain worker Kafka listener/outbox CDC code.')
+            message.append(System.lineSeparator()).append('Worker-only references:')
+            offenders.each { message.append(System.lineSeparator()).append(' - ').append(it) }
             throw new GradleException(message.toString())
         }
     }
@@ -58,6 +82,7 @@ tasks.register('forbidStorageReferences') {
 
 tasks.named('check') {
     dependsOn tasks.named('forbidStorageReferences')
+    dependsOn tasks.named('forbidWorkerReferences')
 }
 
 ext {

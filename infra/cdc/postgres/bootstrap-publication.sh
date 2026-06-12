@@ -22,7 +22,7 @@ while true; do
   fi
 
   if (( SECONDS >= deadline )); then
-    echo "[cdc-postgres-bootstrap] attraction_favorites table was not found before timeout. Run :backend:app:bootRun or Flyway migrations, then rerun this service." >&2
+    echo "[cdc-postgres-bootstrap] attraction_favorites table was not found before timeout. Run :backend:web:bootRun or Flyway migrations, then rerun this service." >&2
     exit 1
   fi
 

@@ -1,6 +1,7 @@
 rootProject.name = 'local-enjoy-trip-backend'
 
-include 'backend:app'
+include 'backend:web'
+include 'backend:worker'
 include 'backend:core'
 include 'backend:external'
 include 'backend:storage'

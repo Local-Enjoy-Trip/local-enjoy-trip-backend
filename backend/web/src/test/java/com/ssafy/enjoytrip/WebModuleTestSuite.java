@@ -12,5 +12,5 @@ import org.junit.platform.suite.api.Suite;
         "com.ssafy.enjoytrip.support",
         "com.ssafy.enjoytrip.web"
 })
-class AppModuleTestSuite {
+class WebModuleTestSuite {
 }

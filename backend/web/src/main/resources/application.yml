@@ -7,7 +7,7 @@ spring:
       - optional:file:.env[.properties]
       - optional:file:../../.env[.properties]
   application:
-    name: enjoytrip-backend
+    name: enjoytrip-web
   datasource:
     url: ${ENJOYTRIP_DB_URL:jdbc:postgresql://localhost:5432/enjoytrip}
     username: ${ENJOYTRIP_DB_USER:ssafy}
@@ -22,17 +22,6 @@ spring:
   data:
     redis:
       url: ${REDIS_URL:redis://localhost:6379}
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      auto-offset-reset: earliest
-      properties:
-        spring.json.trusted.packages: "*"
-        spring.json.value.default.type: java.util.HashMap
-    listener:
-      ack-mode: manual
 
 enjoytrip:
   external:
@@ -55,9 +44,3 @@ enjoytrip:
     google:
       client-id: ${GOOGLE_CLIENT_ID:}
       client-secret: ${GOOGLE_CLIENT_SECRET:}
-  notification:
-    outbox:
-      cdc:
-        enabled: ${NOTIFICATION_OUTBOX_CDC_ENABLED:true}
-        topic: ${NOTIFICATION_OUTBOX_CDC_TOPIC:enjoytrip.public.notification_outbox}
-        group-id: ${NOTIFICATION_OUTBOX_CDC_GROUP_ID:enjoytrip-notification-outbox}

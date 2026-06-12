@@ -6,6 +6,7 @@ import com.ssafy.enjoytrip.service.NotificationOutboxProcessor;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -25,6 +26,7 @@ import org.springframework.util.backoff.BackOffExecution;
 @EnableKafka
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 @ConditionalOnProperty(name = "enjoytrip.notification.outbox.cdc.enabled", havingValue = "true")
 public class NotificationOutboxKafkaErrorHandlerConfig {
     static final long[] RETRY_BACKOFF_MILLIS = {
@@ -123,7 +125,8 @@ public class NotificationOutboxKafkaErrorHandlerConfig {
         }
         try {
             return objectMapper.readValue(text, MESSAGE_TYPE);
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            log.warn("Failed to parse notification outbox CDC record after retry exhaustion", exception);
             return null;
         }
     }
