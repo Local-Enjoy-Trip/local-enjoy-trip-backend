@@ -54,7 +54,7 @@ class MemberControllerTest {
     @DisplayName("회원가입은 모든 필드를 요구한다")
     @Test
     void signupRequiresAllFields() throws Exception {
-        mockMvc.perform(post("/api/members/signup")
+        mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -70,7 +70,7 @@ class MemberControllerTest {
     void signupReturnsConflictWhenUserExists() throws Exception {
         doThrow(new CoreException(USER_ALREADY_EXISTS)).when(memberService).signup(any(Member.class));
 
-        mockMvc.perform(post("/api/members/signup")
+        mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(signupJson("ssafy", "SSAFY", "ssafy@example.com", "secret123")))
                 .andExpect(status().isConflict());
@@ -79,14 +79,14 @@ class MemberControllerTest {
     @DisplayName("회원가입은 필드와 이메일 중복을 검증한다")
     @Test
     void signupValidatesFieldsAndEmailDuplicates() throws Exception {
-        mockMvc.perform(post("/api/members/signup")
+        mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(signupJson("bad id", "SSAFY", "ssafy@example.com", "secret123")))
                 .andExpect(status().isBadRequest());
 
         doThrow(new CoreException(EMAIL_ALREADY_EXISTS)).when(memberService).signup(any(Member.class));
 
-        mockMvc.perform(post("/api/members/signup")
+        mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(signupJson("ssafy", "SSAFY", "ssafy@example.com", "secret123")))
                 .andExpect(status().isConflict())
@@ -125,7 +125,7 @@ class MemberControllerTest {
         when(memberService.signupWithOAuth("google", "123", "google@example.com", "트래블러")).thenReturn(member);
         when(tokenService.issue(member)).thenReturn(new IssuedToken("jwt-token", "Bearer", 7200));
 
-        mockMvc.perform(post("/api/members/oauth/signup")
+        mockMvc.perform(post("/api/members/oauth")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

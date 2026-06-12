@@ -20,12 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/route")
+@RequestMapping("/api/routes")
 @RequiredArgsConstructor
 public class RouteController implements RouteApi {
     private final RouteOptimizationService service;
 
-    @GetMapping("/optimize")
+    @GetMapping("/optimizations")
     @Override
     public ApiResponse<RouteOptimizeResponse> optimize(@RequestParam(required = false) String points) {
         if (hasInvalidPoints(points)) {
@@ -39,7 +39,7 @@ public class RouteController implements RouteApi {
         ));
     }
 
-    @GetMapping("/split-by-day")
+    @GetMapping("/day-splits")
     @Override
     public ApiResponse<RouteSplitByDayResponse> splitByDay(@RequestParam(required = false) String points,
                                                     @RequestParam(required = false) String days) {

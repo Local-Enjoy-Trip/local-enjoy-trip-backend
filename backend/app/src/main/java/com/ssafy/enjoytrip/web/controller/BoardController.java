@@ -36,7 +36,7 @@ public class BoardController implements BoardApi {
         return success(new BoardsResponse(service.findAllPosts()));
     }
 
-    @PostMapping("/posts")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Override
     public ApiResponse<Void> create(@Valid @RequestBody BoardCreateRequest request) {

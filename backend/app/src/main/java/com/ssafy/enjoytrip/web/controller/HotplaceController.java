@@ -41,7 +41,7 @@ public class HotplaceController implements HotplaceApi {
         return success(new HotplacesResponse(hotplaces));
     }
 
-    @PostMapping("/items")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Override
     public ApiResponse<Void> create(@Valid @RequestBody HotplaceCreateRequest request) {

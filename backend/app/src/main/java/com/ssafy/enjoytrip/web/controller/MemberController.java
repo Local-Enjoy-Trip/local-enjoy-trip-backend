@@ -52,7 +52,7 @@ public class MemberController implements MemberApi {
         return success(new UsersResponse(users));
     }
 
-    @PostMapping("/signup")
+    @PostMapping
     @Override
     public ApiResponse<Void> signup(@Valid @RequestBody MemberSignupRequest request) {
         service.signup(new Member(
@@ -83,7 +83,7 @@ public class MemberController implements MemberApi {
         ));
     }
 
-    @PostMapping("/oauth/signup")
+    @PostMapping("/oauth")
     public ApiResponse<LoginResponse> completeOAuthSignup(@Valid @RequestBody MemberOAuthSignupRequest request) {
         PendingOAuthSignup pending = oauthSignupTicketService.verify(request.oauthSignupTicket().trim());
         Member member = service.signupWithOAuth(
@@ -108,7 +108,7 @@ public class MemberController implements MemberApi {
         return success();
     }
 
-    @PostMapping("/find-password")
+    @PostMapping("/password-lookup-requests")
     @Override
     public ApiResponse<Void> findPassword() {
         throw new CoreException(PASSWORD_LOOKUP_GONE);

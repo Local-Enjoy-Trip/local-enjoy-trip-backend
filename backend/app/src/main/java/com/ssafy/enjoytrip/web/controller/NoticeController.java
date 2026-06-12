@@ -37,7 +37,7 @@ public class NoticeController implements NoticeApi {
         return success(new NoticesResponse(service.findAllNotices()));
     }
 
-    @PostMapping("/items")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Override
     public ApiResponse<Void> create(@Valid @RequestBody NoticeCreateRequest request) {

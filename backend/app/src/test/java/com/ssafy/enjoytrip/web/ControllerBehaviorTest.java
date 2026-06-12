@@ -262,7 +262,7 @@ class ControllerBehaviorTest {
         @DisplayName("게시글 생성은 값을 정리해 서비스에 전달한다")
         @Test
         void createTrimsAndPassesBoardPostToService() throws Exception {
-            mockMvc.perform(post("/api/boards/posts")
+            mockMvc.perform(post("/api/boards")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
@@ -283,7 +283,7 @@ class ControllerBehaviorTest {
         @DisplayName("검증 실패와 서비스 예외 응답을 보고한다")
         @Test
         void reportsValidationNotFoundAndServiceExceptionCases() throws Exception {
-            mockMvc.perform(post("/api/boards/posts")
+            mockMvc.perform(post("/api/boards")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"id":"b1"}
@@ -301,7 +301,7 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.error.message").value("Post not found"));
 
             doThrow(new IllegalStateException("write failed")).when(boardService).insertPost(any());
-            mockMvc.perform(post("/api/boards/posts")
+            mockMvc.perform(post("/api/boards")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"id":"b2","title":"title","content":"content","author":"ssafy"}
@@ -327,7 +327,7 @@ class ControllerBehaviorTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.hotplaces[0].id").value("h1"));
 
-            mockMvc.perform(post("/api/hotplaces/items")
+            mockMvc.perform(post("/api/hotplaces")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
@@ -352,7 +352,7 @@ class ControllerBehaviorTest {
         @DisplayName("잘못된 좌표와 누락된 삭제 대상을 거부한다")
         @Test
         void rejectsInvalidCoordinatesAndMissingDeleteTarget() throws Exception {
-            mockMvc.perform(post("/api/hotplaces/items")
+            mockMvc.perform(post("/api/hotplaces")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
@@ -411,7 +411,7 @@ class ControllerBehaviorTest {
         @DisplayName("표준 계획 생성은 인증 사용자 기준의 타입화된 경로 항목을 저장한다")
         @Test
         void canonicalPlanCreateStoresTypedRouteItemsFromAuthenticatedUser() throws Exception {
-            mockMvc.perform(post("/api/plans/items")
+            mockMvc.perform(post("/api/plans")
                             .contentType(MediaType.APPLICATION_JSON)
                             .principal(jwtPrincipal("ssafy"))
                             .content("""
@@ -443,7 +443,7 @@ class ControllerBehaviorTest {
         @DisplayName("표준 계획 생성 검증 실패는 표준 잘못된 요청 응답을 사용한다")
         @Test
         void canonicalPlanCreateValidationFailureUsesStandardBadRequestEnvelope() throws Exception {
-            mockMvc.perform(post("/api/plans/items")
+            mockMvc.perform(post("/api/plans")
                             .contentType(MediaType.APPLICATION_JSON)
                             .principal(jwtPrincipal("ssafy"))
                             .content("""
@@ -485,7 +485,7 @@ class ControllerBehaviorTest {
         @DisplayName("공지 생성과 수정 및 삭제의 검증 사례를 확인한다")
         @Test
         void noticeCreateUpdateAndDeleteValidationCases() throws Exception {
-            mockMvc.perform(post("/api/notices/items")
+            mockMvc.perform(post("/api/notices")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"title":"공지","content":"내용","author":"admin"}
@@ -534,7 +534,7 @@ class ControllerBehaviorTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.message").value("Invalid request"));
 
-            mockMvc.perform(post("/api/members/find-password")
+            mockMvc.perform(post("/api/members/password-lookup-requests")
                             .param("userId", "ssafy")
                             .param("email", "ssafy@example.com"))
                     .andExpect(status().isGone())
@@ -712,11 +712,11 @@ class ControllerBehaviorTest {
     @DisplayName("경로 엔드포인트는 잘못된 입력을 거부한다")
     @Test
     void routeEndpointsRejectInvalidInput() throws Exception {
-        mockMvc.perform(get("/api/route/optimize").param("points", "37.5|bad"))
+        mockMvc.perform(get("/api/routes/optimizations").param("points", "37.5|bad"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.message").value("Invalid points"));
 
-        mockMvc.perform(get("/api/route/split-by-day").param("points", "37.5|bad").param("days", "two"))
+        mockMvc.perform(get("/api/routes/day-splits").param("points", "37.5|bad").param("days", "two"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.message").value("Invalid request"));
     }

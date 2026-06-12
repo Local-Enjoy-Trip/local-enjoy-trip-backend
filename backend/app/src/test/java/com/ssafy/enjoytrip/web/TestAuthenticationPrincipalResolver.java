@@ -57,8 +57,7 @@ public class TestAuthenticationPrincipalResolver implements HandlerMethodArgumen
         }
         if ("POST".equalsIgnoreCase(method)) {
             return path.equals("/api/attraction-tags")
-                    || path.equals("/api/plans")
-                    || path.equals("/api/plans/items");
+                    || path.equals("/api/plans");
         }
         if ("PUT".equalsIgnoreCase(method)) {
             return path.startsWith("/api/members/")

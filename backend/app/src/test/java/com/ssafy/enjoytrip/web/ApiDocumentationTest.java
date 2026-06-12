@@ -116,7 +116,7 @@ class ApiDocumentationTest {
     @DisplayName("경로 최적화 API 문서를 검증한다")
     @Test
     void routeOptimize() throws Exception {
-        mockMvc.perform(get("/api/route/optimize")
+        mockMvc.perform(get("/api/routes/optimizations")
                         .param("points", "37.5665,126.9780|35.1796,129.0756|33.4996,126.5312"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.order").isArray())
@@ -128,7 +128,7 @@ class ApiDocumentationTest {
     @DisplayName("일자별 경로 분할 API 문서를 검증한다")
     @Test
     void routeSplitByDay() throws Exception {
-        mockMvc.perform(get("/api/route/split-by-day")
+        mockMvc.perform(get("/api/routes/day-splits")
                         .param("points", "37.5665,126.9780|35.1796,129.0756|33.4996,126.5312")
                         .param("days", "2"))
                 .andExpect(status().isOk())

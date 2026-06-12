@@ -59,7 +59,7 @@ public class PlanController implements PlanApi {
                 .orElseThrow(() -> new CoreException(PLAN_NOT_FOUND))));
     }
 
-    @PostMapping(value = "/items", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ApiResponse<Void> create(
             @Valid @RequestBody PlanCreateRequest request,
