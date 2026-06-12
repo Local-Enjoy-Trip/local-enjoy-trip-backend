@@ -21,7 +21,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const SNIPPETS_DIR = 'C:\\Users\\SSAFY\\IdeaProjects\\ssafy-enjoytrip\\backend\\app\\build\\generated-snippets';
+const SNIPPETS_DIR = 'C:\\Users\\SSAFY\\IdeaProjects\\ssafy-enjoytrip\\backend\\app\\web\\build\\generated-snippets';
 const DOCS_DIR = 'C:\\Users\\SSAFY\\IdeaProjects\\ssafy-enjoytrip\\docs\\api';
 
 const FOLDERS = [

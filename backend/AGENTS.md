@@ -16,23 +16,29 @@ USE CODEX NATIVE SUBAGENTS FOR INDEPENDENT PARALLEL SUBTASKS WHEN THAT IMPROVES 
 
 ## architecture
 
-The backend is organized as a multi-module architecture with executable boundary modules and shared lower-level modules:
+The backend is organized as a multi-module architecture with an application assembly namespace,
+executable boundary modules, and shared lower-level modules:
 
-- `web`: HTTP/API executable.
+- `app`: source-free Gradle assembly namespace for executable applications.
+  - Owns no business, web, worker, persistence, or integration source code.
+  - Do not add `backend/app/src/main` or `backend/app/src/test` source sets.
+  - Runnable boundaries live under `backend/app/web` and `backend/app/worker`.
+  - `backend:app:check` delegates to `backend:app:web:check` and `backend:app:worker:check`.
+- `app:web`: HTTP/API executable.
   - Owns Spring MVC controllers, request/response DTOs, validation, exception handling, OpenAPI/REST Docs, security configuration, and HTTP JSON contracts.
   - Depends on `core`, `external`, support modules, and may depend on `storage` only for Spring Boot assembly wiring.
-  - Must not import any `com.ssafy.enjoytrip.storage.*` type and must not place persistence adapters under `web`.
+  - Must not import any `com.ssafy.enjoytrip.storage.*` type and must not place persistence adapters under `app:web`.
   - Must not own Kafka CDC consumers, scheduled workers, or background-only retry/error handler infrastructure.
-  - `backend:web:check` enforces source-level isolation from storage implementation packages and worker-only listener code.
-- `worker`: async/background executable.
+  - `backend:app:web:check` enforces source-level isolation from storage implementation packages and worker-only listener code.
+- `app:worker`: async/background executable.
   - Owns Kafka consumers, retry/error handling, scheduled/background workers, and future outbox processing infrastructure.
   - Calls `core` services/processors and may depend on `storage` only for Spring Boot assembly wiring.
-  - Must not import any `com.ssafy.enjoytrip.storage.*` type and must not place persistence adapters under `worker`.
+  - Must not import any `com.ssafy.enjoytrip.storage.*` type and must not place persistence adapters under `app:worker`.
   - Must not own controllers, OpenAPI contracts, REST Docs, web DTOs, or REST response envelopes.
-  - `backend:worker:check` enforces source-level isolation from storage implementation packages and web/controller code.
+  - `backend:app:worker:check` enforces source-level isolation from storage implementation packages and web/controller code.
 - `core`: domain and application ports.
   - Owns domain models and repository interfaces.
-  - Must not depend on `web`, `worker`, `storage`, or `external`.
+  - Must not depend on `app`, `app:web`, `app:worker`, `storage`, or `external`.
 - `storage`: persistence layer.
   - Owns JPA entities, Spring Data repositories, persistence DTOs, database-specific configuration, and JPA-backed repository adapter implementations.
   - Depends on `core` and implements repository interfaces from `core`.
@@ -63,9 +69,9 @@ Layering rules:
 - Services contain application/business logic and transaction boundaries.
 - Domain models live in `core/domain`; repository interfaces live in `core/repository`.
 - JPA-backed adapters live only in `storage/repository` and use the `storage` module's entities and Spring Data repositories.
-- No source under `backend/web/src/main` or `backend/worker/src/main` may import or reference `com.ssafy.enjoytrip.storage.*`.
+- No source under `backend/app/web/src/main` or `backend/app/worker/src/main` may import or reference `com.ssafy.enjoytrip.storage.*`.
 - Controllers and workers must not call repositories directly.
-- `web`, `worker`, `storage`, and `external` must not depend on each other through source-level imports except for allowed `web -> external` client usage and executable modules' Spring Boot assembly dependency on `storage`. Shared application contracts go through `core`.
+- `app:web`, `app:worker`, `storage`, and `external` must not depend on each other through source-level imports except for allowed `app:web -> external` client usage and executable modules' Spring Boot assembly dependency on `storage`. Shared application contracts go through `core`.
 
 ---
 

@@ -68,7 +68,7 @@ try {
         $sourceFile = Join-Path $ProjectRoot $relativePath
         $sourceText = Get-Content -LiteralPath $sourceFile -Raw
         $sourceLines = Get-Content -LiteralPath $sourceFile
-        $snippetsRoot = Join-Path $ProjectRoot 'backend\web\build\generated-snippets'
+        $snippetsRoot = Join-Path $ProjectRoot 'backend\app\web\build\generated-snippets'
 
         $sections = New-Object System.Collections.Generic.List[object]
         $current = $null

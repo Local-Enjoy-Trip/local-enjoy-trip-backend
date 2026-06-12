@@ -21,10 +21,10 @@
 - Normalize external runtime payloads before calling `core` processors.
 - Use constructor injection with `@RequiredArgsConstructor` for collaborators.
 - Keep retry/backoff policy explicit and covered by tests when failure behavior changes.
-- Keep worker application configuration in `backend/worker/src/main/resources/application.yml`.
+- Keep worker application configuration in `backend/app/worker/src/main/resources/application.yml`.
 
 ## Verification
 
-- Run `./gradlew :backend:worker:check` after worker changes.
-- `backend:worker:check` must fail if worker source imports storage implementation packages or owns web/controller/API/REST response code.
+- Run `./gradlew :backend:app:worker:check` after worker changes.
+- `backend:app:worker:check` must fail if worker source imports storage implementation packages or owns web/controller/API/REST response code.
 - Worker runtime should use `spring.main.web-application-type: none` and should not include `spring-boot-starter-web` by default.

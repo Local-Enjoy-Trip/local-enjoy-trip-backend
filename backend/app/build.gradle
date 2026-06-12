@@ -1,0 +1,7 @@
+// Aggregator namespace for backend executable applications.
+// Keep this module source-free; put runnable boundaries under backend:app:web and backend:app:worker.
+
+tasks.named('check') {
+    dependsOn ':backend:app:web:check'
+    dependsOn ':backend:app:worker:check'
+}

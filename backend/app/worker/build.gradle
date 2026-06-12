@@ -17,7 +17,7 @@ dependencies {
 }
 
 tasks.register('forbidStorageReferences') {
-    description = 'Fails if backend:worker source imports or references backend:storage implementation types.'
+    description = 'Fails if backend:app:worker source imports or references backend:storage implementation types.'
     group = 'verification'
 
     def mainJava = layout.projectDirectory.dir('src/main/java')
@@ -36,7 +36,7 @@ tasks.register('forbidStorageReferences') {
         }
 
         if (!offenders.isEmpty()) {
-            def message = new StringBuilder('backend:worker source must not import or reference backend:storage implementation types.')
+            def message = new StringBuilder('backend:app:worker source must not import or reference backend:storage implementation types.')
             message.append(System.lineSeparator()).append('Forbidden storage imports/packages:')
             offenders.each { message.append(System.lineSeparator()).append(' - ').append(it) }
             throw new GradleException(message.toString())
@@ -45,7 +45,7 @@ tasks.register('forbidStorageReferences') {
 }
 
 tasks.register('forbidWebReferences') {
-    description = 'Fails if backend:worker source owns web/controller/API/REST response code.'
+    description = 'Fails if backend:app:worker source owns web/controller/API/REST response code.'
     group = 'verification'
 
     def mainJava = layout.projectDirectory.dir('src/main/java')
@@ -65,7 +65,7 @@ tasks.register('forbidWebReferences') {
         }
 
         if (!offenders.isEmpty()) {
-            def message = new StringBuilder('backend:worker source must not contain web/controller/API/REST response code.')
+            def message = new StringBuilder('backend:app:worker source must not contain web/controller/API/REST response code.')
             message.append(System.lineSeparator()).append('Worker-only module offenders:')
             offenders.each { message.append(System.lineSeparator()).append(' - ').append(it) }
             throw new GradleException(message.toString())

@@ -1,13 +1,14 @@
 # Local Enjoy Trip Backend
 
 ## 구조
-- `backend/web`: Spring Boot HTTP/API 진입점, REST controller, DTO, validation, security, REST Docs 테스트
-- `backend/worker`: Kafka/Scheduled/background worker 진입점, outbox/async 처리와 retry/error handling
+- `backend/app`: 실행 애플리케이션을 묶는 source-free 조립/네임스페이스 모듈
+- `backend/app/web`: Spring Boot HTTP/API 진입점, REST controller, DTO, validation, security, REST Docs 테스트
+- `backend/app/worker`: Kafka/Scheduled/background worker 진입점, outbox/async 처리와 retry/error handling
 - `backend/core`: domain model, repository interface 같은 application contract
 - `backend/storage`: JPA entity, Spring Data repository, JPA-backed adapter, DB model, PostgreSQL/PostGIS schema 관리
 - `backend/external`: 한국관광공사 Tour API, EV 충전소 API, 뉴스 RSS client
 
-`backend/web`과 `backend/worker` 소스에서는 `com.ssafy.enjoytrip.storage.*`를 import하면 안 된다. 저장소 구현은 전부 `backend/storage`에 두고, `backend:web:check`와 `backend:worker:check`의 `forbidStorageReferences`가 executable module의 storage 구현 참조를 차단한다. Kafka/outbox worker 코드는 `backend/worker`에 두고, controller/API/REST Docs 코드는 `backend/web`에 둔다.
+`backend/app` 루트에는 업무 소스를 두지 않고, 실행 경계는 `backend/app/web`과 `backend/app/worker` 아래에만 둔다. 두 실행 모듈 소스에서는 `com.ssafy.enjoytrip.storage.*`를 import하면 안 된다. 저장소 구현은 전부 `backend/storage`에 두고, `backend:app:web:check`와 `backend:app:worker:check`의 `forbidStorageReferences`가 executable module의 storage 구현 참조를 차단한다. Kafka/outbox worker 코드는 `backend/app/worker`에 두고, controller/API/REST Docs 코드는 `backend/app/web`에 둔다.
 
 ## API
 컨트롤러 요청/응답 계약은 반드시 명명된 객체 DTO를 사용한다. `@RequestParam Map`, `@RequestBody Map`, `ApiResponse<Map<...>>`, `Map.of(...)`로 만든 임시 응답 객체는 사용하지 않는다.
@@ -60,19 +61,19 @@ Content-Type: application/json
 
 ## 실행
 ```powershell
-.\gradlew :backend:web:bootRun
+.\gradlew :backend:app:web:bootRun
 ```
 
 빌드:
 ```powershell
-.\gradlew :backend:web:build
-.\gradlew :backend:worker:build
+.\gradlew :backend:app:web:build
+.\gradlew :backend:app:worker:build
 ```
 
 생성 결과:
-- `backend/web/build/libs/web-1.0.0-SNAPSHOT.jar`
-- `backend/worker/build/libs/worker-1.0.0-SNAPSHOT.jar`
-- `backend/web/build/docs/asciidoc/index.html`
+- `backend/app/web/build/libs/web-1.0.0-SNAPSHOT.jar`
+- `backend/app/worker/build/libs/worker-1.0.0-SNAPSHOT.jar`
+- `backend/app/web/build/docs/asciidoc/index.html`
 
 ## DB/API Key
 기본 DB 값:

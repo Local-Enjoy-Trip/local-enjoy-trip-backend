@@ -1,7 +1,7 @@
 # API Documentation Update Design
 
 ## Goal
-Update the API documentation in `docs/api` using generated snippets from `backend/web/build/generated-snippets`.
+Update the API documentation in `docs/api` using generated snippets from `backend/app/web/build/generated-snippets`.
 
 ## Strategy: Scripted Automation
 Use a Node.js script to automate the transformation and replacement of snippets across 11+ documentation files.

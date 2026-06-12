@@ -6,7 +6,7 @@
 
 Backend 작업을 시작할 때 확인한다.
 
-- [ ] 변경 대상 모듈이 `web`, `worker`, `core`, `storage`, `external` 중 어디인지 식별했다.
+- [ ] 변경 대상 모듈이 `app`, `app:web`, `app:worker`, `core`, `storage`, `external` 중 어디인지 식별했다.
 - [ ] public API 계약 변경 여부를 확인했다.
 - [ ] DB schema 변경 여부를 확인했다.
 - [ ] 인증/인가/secret/token/redirect 관련 보안 영향이 있는지 확인했다.
@@ -18,8 +18,9 @@ Backend 작업을 시작할 때 확인한다.
 
 필수 확인 대상:
 
-- `backend/web/AGENTS.md` — web 모듈 수정 전
-- `backend/worker/AGENTS.md` — worker 모듈 수정 전
+- `backend/app/web/AGENTS.md` — web 모듈 수정 전
+- `backend/app/worker/AGENTS.md` — worker 모듈 수정 전
+- `backend/app/AGENTS.md` — app 조립/네임스페이스 모듈 수정 전
 - `backend/core/AGENTS.md` — core 모듈 수정 전
 - `backend/storage/AGENTS.md` — storage 모듈 수정 전
 - `backend/external/AGENTS.md` — external 모듈 수정 전
@@ -88,8 +89,8 @@ Controller request/response 계약은 이름 있는 DTO로 표현한다.
 검증 예:
 
 ```bash
-./gradlew.bat :backend:web:test --tests '*Security*'
-./gradlew.bat :backend:web:test --tests '*Member*'
+./gradlew.bat :backend:app:web:test --tests '*Security*'
+./gradlew.bat :backend:app:web:test --tests '*Member*'
 ```
 
 ## 7. DB migration 템플릿

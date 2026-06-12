@@ -12,7 +12,7 @@
   assembly module, its Gradle build may depend on `backend:storage` for application wiring, but
   controllers/configuration must not directly use storage implementation types.
 - **No Worker Ownership**: Kafka CDC consumers, scheduled workers, retry/error handler infrastructure,
-  and background-only processing belong in `backend:worker`, not `backend:web`.
+  and background-only processing belong in `backend:app:worker`, not `backend:app:web`.
 
 ## Coding Style
 
@@ -43,7 +43,7 @@
 
 ## Verification
 
-- Run `./gradlew :backend:web:check` after web changes.
-- Public API changes should also be proven with a real HTTP JSON request against `:backend:web:bootRun`
+- Run `./gradlew :backend:app:web:check` after web changes.
+- Public API changes should also be proven with a real HTTP JSON request against `:backend:app:web:bootRun`
   when local runtime dependencies are available.
-- `backend:web:check` must fail if web source imports storage implementation packages or owns worker-only Kafka listener/outbox CDC code.
+- `backend:app:web:check` must fail if web source imports storage implementation packages or owns worker-only Kafka listener/outbox CDC code.
