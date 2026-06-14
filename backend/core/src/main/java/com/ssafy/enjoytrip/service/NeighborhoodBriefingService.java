@@ -18,30 +18,27 @@ public class NeighborhoodBriefingService {
     private final WeatherService weatherService;
     private final CourseRepository courseRepository;
     private final NeighborhoodBriefingGenerator generator;
-    private final SeasonResolver seasonResolver;
 
     public NeighborhoodBriefing brief(String regionName) {
-        String season = seasonResolver.currentSeason();
         WeatherSummary weather = findWeatherForRegion(regionName);
         List<CourseBriefingCandidate> candidates = findCourseCandidates(regionName);
 
         if (candidates.isEmpty()) {
-            return fallbackBriefing(regionName, season, weather, candidates);
+            return fallbackBriefing(regionName, weather, candidates);
         }
 
         NeighborhoodBriefingPrompt prompt = new NeighborhoodBriefingPrompt(
                 regionName,
-                season,
                 weather,
                 candidates
         );
 
         String generated = normalizeGeneratedBriefing(generator.generate(prompt));
         if (generated.isBlank()) {
-            return fallbackBriefing(regionName, season, weather, candidates);
+            return fallbackBriefing(regionName, weather, candidates);
         }
 
-        return new NeighborhoodBriefing(regionName, season, generated);
+        return new NeighborhoodBriefing(regionName, generated);
     }
 
     private WeatherSummary findWeatherForRegion(String region) {
@@ -59,14 +56,13 @@ public class NeighborhoodBriefingService {
     }
 
     private NeighborhoodBriefing fallbackBriefing(String region,
-                                                  String season,
                                                   WeatherSummary weather,
                                                   List<CourseBriefingCandidate> candidates) {
         String briefing = candidates.isEmpty()
                 ? weatherOnlyFallback(region, weather)
                 : courseFallback(region, weather, candidates.getFirst());
 
-        return new NeighborhoodBriefing(region, season, briefing);
+        return new NeighborhoodBriefing(region, briefing);
     }
 
     private static String weatherOnlyFallback(String region, WeatherSummary weather) {

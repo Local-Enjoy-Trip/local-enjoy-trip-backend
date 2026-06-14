@@ -15,7 +15,7 @@ final class NeighborhoodBriefingPromptTemplate {
             - JSON, markdown, bullet, courseId, 추천 ID, 배열, 리스트를 쓰지 않는다.
             - 저장된 코스 후보 제목 중 하나를 자연스럽게 언급한다.
             - 후보 제목에 없는 장소나 세부 사실을 새로 지어내지 않는다.
-            - 과장하지 말고 날씨와 계절 맥락을 가볍게 반영한다.
+            - 과장하지 말고 날씨 맥락을 가볍게 반영한다.
             """;
 
     private NeighborhoodBriefingPromptTemplate() {
@@ -24,7 +24,6 @@ final class NeighborhoodBriefingPromptTemplate {
     static String userPrompt(NeighborhoodBriefingPrompt prompt) {
         return """
                 지역: %s
-                계절: %s
                 날씨: %s, 기온 %d도, 강수확률 %d%%
                 저장된 공개 코스 후보:
                 %s
@@ -35,7 +34,6 @@ final class NeighborhoodBriefingPromptTemplate {
                 코스 후보를 바탕으로 할 일을 2~3문장 추천해라.
                 """.formatted(
                 prompt.region(),
-                prompt.season(),
                 prompt.weather().condition(),
                 prompt.weather().temperature(),
                 prompt.weather().rainChance(),

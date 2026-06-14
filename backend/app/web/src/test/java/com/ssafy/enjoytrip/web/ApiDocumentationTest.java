@@ -213,12 +213,12 @@ class ApiDocumentationTest {
     void neighborhoodBriefing() throws Exception {
         when(neighborhoodBriefingService.brief("서울")).thenReturn(new NeighborhoodBriefing(
                 "서울",
-                "여름",
                 "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?"
         ));
 
         mockMvc.perform(get("/api/neighborhood/briefing").param("regionName", "서울"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.season").doesNotExist())
                 .andExpect(jsonPath("$.data.briefing").isNotEmpty())
                 .andExpect(jsonPath("$.data.courseId").doesNotExist())
                 .andDo(document("neighborhood-briefing",

@@ -46,7 +46,8 @@ class SpringAiNeighborhoodBriefingGeneratorTest {
         assertThat(result).isEqualTo("오늘 서울은 맑아요.\n한강 저녁 산책 코스 어떠세요?");
         ArgumentCaptor<String> userPromptCaptor = ArgumentCaptor.forClass(String.class);
         verify(requestSpec).user(userPromptCaptor.capture());
-        assertThat(userPromptCaptor.getValue()).contains("서울", "여름", "맑음", "한강 저녁 산책");
+        assertThat(userPromptCaptor.getValue()).contains("서울", "맑음", "한강 저녁 산책");
+        assertThat(userPromptCaptor.getValue()).doesNotContain("계절", "여름");
     }
 
     @DisplayName("GMS_KEY가 비어 있으면 ChatClient를 호출하지 않고 fallback 가능한 예외를 던진다")
@@ -81,7 +82,6 @@ class SpringAiNeighborhoodBriefingGeneratorTest {
     private static NeighborhoodBriefingPrompt prompt() {
         return new NeighborhoodBriefingPrompt(
                 "서울",
-                "여름",
                 new WeatherSummary("서울", "맑음", 27, 10, "05:10", "19:50"),
                 List.of(new CourseBriefingCandidate("course-1", "한강 저녁 산책", "서울"))
         );

@@ -169,7 +169,6 @@ class ControllerBehaviorTest {
         void returnsNeighborhoodBriefingWithoutStructuredRecommendationIds() throws Exception {
             when(neighborhoodBriefingService.brief("서울")).thenReturn(new NeighborhoodBriefing(
                     "서울",
-                    "여름",
                     "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?"
             ));
 
@@ -178,7 +177,7 @@ class ControllerBehaviorTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.region").value("서울"))
-                    .andExpect(jsonPath("$.data.season").value("여름"))
+                    .andExpect(jsonPath("$.data.season").doesNotExist())
                     .andExpect(jsonPath("$.data.briefing").isNotEmpty())
                     .andExpect(jsonPath("$.data.courseId").doesNotExist())
                     .andExpect(jsonPath("$.data.courseCandidates").doesNotExist())

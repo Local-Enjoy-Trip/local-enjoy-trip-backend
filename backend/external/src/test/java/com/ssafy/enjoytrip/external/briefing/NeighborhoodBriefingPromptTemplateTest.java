@@ -12,20 +12,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class NeighborhoodBriefingPromptTemplateTest {
 
-    @DisplayName("프롬프트에 지역 계절 날씨와 저장된 코스 제목을 포함한다")
+    @DisplayName("프롬프트에 지역 날씨와 저장된 코스 제목을 포함한다")
     @Test
-    void promptContainsWeatherSeasonAndCourseTitles() {
+    void promptContainsWeatherAndCourseTitles() {
         NeighborhoodBriefingPrompt prompt = new NeighborhoodBriefingPrompt(
                 "서울",
-                "여름",
                 new WeatherSummary("서울", "맑음", 27, 10, "05:10", "19:50"),
                 List.of(new CourseBriefingCandidate("course-1", "한강 저녁 산책", "서울"))
         );
 
         String userPrompt = NeighborhoodBriefingPromptTemplate.userPrompt(prompt);
 
-        assertThat(userPrompt).contains("서울", "여름", "맑음", "27도", "한강 저녁 산책");
+        assertThat(userPrompt).contains("서울", "맑음", "27도", "한강 저녁 산책");
+        assertThat(userPrompt).doesNotContain("계절");
         assertThat(NeighborhoodBriefingPromptTemplate.SYSTEM_PROMPT).contains("courseId", "JSON");
+        assertThat(NeighborhoodBriefingPromptTemplate.SYSTEM_PROMPT).doesNotContain("계절");
         assertThat(NeighborhoodBriefingPromptTemplate.SYSTEM_PROMPT)
                 .contains("첫 줄", "동네의 현재 상황", "2~3문장");
         assertThat(userPrompt).contains("상황 브리핑", "코스 후보를 바탕으로 할 일");
