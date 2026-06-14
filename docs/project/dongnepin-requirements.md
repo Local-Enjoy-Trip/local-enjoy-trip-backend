@@ -36,7 +36,7 @@
 
 | ID | 유저 스토리 | Priority | 상태 | 구현 근거 |
 |---|---|---|---|---|
-| US-01 | 홈 상단에서 현재 계절과 날씨 보기 | Must | 부분 구현 | `WeatherController`의 `/api/weather/briefings`와 날씨 연동 기반은 있으나 홈 상단 전용 계절/날씨 요약 계약은 없다. |
+| US-01 | 홈 상단에서 현재 계절과 날씨 보기 | Must | 구현됨 | 기존 `GET /api/weather/briefings`를 유지하고, 홈 상단 자연어 문장은 별도 `GET /api/neighborhood/briefing`에서 제공한다. |
 | US-02 | 현재 위치 기준 가까운 장소를 인기순으로 보기 | Must | 부분 구현 | `/api/attractions`의 좌표/반경 검색 기반은 있으나 현재 위치 주변 장소를 인기순으로 정렬해 홈에 제공하는 API 계약은 없다. |
 | US-03 | 근처 최근 쪽지 보기 | Must | 미구현 | 쪽지 도메인과 현재 위치 주변 최근 쪽지 조회 API가 없다. |
 | US-04 | 홈 항목에서 지도 이동하기 | Must | 부분 구현 | 장소 상세와 지도 좌표 기반은 있으나 홈의 장소/쪽지를 눌렀을 때 지도 중심 이동과 바텀시트를 여는 전용 계약은 없다. |
@@ -86,6 +86,7 @@
 
 - 홈 backend는 단일 `/api/home`이 아니라 독립 API를 조합한다.
 - 날씨는 기존 `GET /api/weather/briefings`를 사용하며, 외부 날씨 저장소가 실패하거나 비어도 기본 지역 fallback을 반환한다.
+- 홈 상단 자연어 브리핑은 `GET /api/neighborhood/briefing?regionName=서울`을 사용한다. Spring AI/GMS 호출 실패나 저장된 공개 READY 코스 후보 부재 시에도 성공 envelope와 fallback 문장을 반환한다.
 - 주변 인기 장소는 `GET /api/attractions/popular-nearby`를 사용한다. 좌표가 없으면 서울 시청 좌표와 500m 반경을 사용한다.
 - 주변 최근 쪽지는 `GET /api/notes/nearby`를 사용한다. 장소와 같은 서울 시청 좌표 및 500m 기본 반경을 사용한다.
 - 쪽지 생성/수정/삭제는 `POST /api/notes`, `PUT /api/notes/{id}`, `DELETE /api/notes/{id}`로 제공하며 JWT 인증 사용자의 본인 쪽지만 변경할 수 있다.

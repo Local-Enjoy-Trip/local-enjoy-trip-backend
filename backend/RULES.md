@@ -171,6 +171,12 @@ Migration 작성 시:
   job parameter는 ingress 모듈의 DTO/mapper/config에서 typed command로 변환한 뒤 `core`에 넘긴다.
 - repository/external/runtime 예외를 잡아 fallback 데이터를 반환하는 `core` 흐름은 무음 방어 코드로 두지 않는다.
   fallback이 제품 정책이면 로그, 결과 metadata, 응답 contract, 또는 문서화된 caller contract 중 하나로 실패 사실을 관측 가능하게 한다.
+- port, external adapter, runtime 예외는 명시적인 제품 fallback 정책이 없으면 `core` service에서 잡지 않는다.
+  예외는 전역 예외 처리까지 전파해 서버 로그에 원인과 stack trace를 남기고, HTTP client에는 표준 내부 오류 응답만 반환한다.
+  클라이언트에 원본 예외 메시지를 그대로 노출하지 않는다.
+- 외부 연동 실패나 port 실패를 `CoreException`으로 감싸지 않는다. `CoreException`은 비즈니스 규칙 위반이나
+  core가 소유한 application error에만 사용한다. 별도 HTTP status, error type, log level 분류가 필요할 때만
+  외부/port 전용 예외나 전역 핸들러 매핑을 추가한다.
 - 하위 private 메서드는 각 단계의 구현 세부사항을 숨기되, `process`, `handle`, `doWork`, `check`처럼 의미가 흐린 이름만으로 추출하지 않는다.
 - 단순 repository 위임처럼 흐름이 없는 메서드는 억지로 쪼개지 않는다. 분리는 유스케이스 흐름을 더 잘 읽히게 할 때만 한다.
 - 조건 분기, 실패 기록, 보상/로그 기록, 외부 gateway 호출이 섞이는 core 서비스는 먼저 회귀 테스트로 동작을 잠근 뒤 단계 이름 중심으로 정리한다.

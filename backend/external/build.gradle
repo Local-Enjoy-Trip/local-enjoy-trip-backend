@@ -8,6 +8,7 @@ dependencies {
     implementation 'org.springframework:spring-web'
     implementation 'org.springframework:spring-context'
     implementation 'org.springframework.boot:spring-boot-starter-json'
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.clickhouse:clickhouse-jdbc:0.9.8'
 

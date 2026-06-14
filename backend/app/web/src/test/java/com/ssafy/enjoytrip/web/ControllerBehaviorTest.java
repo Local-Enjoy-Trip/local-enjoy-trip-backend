@@ -7,6 +7,7 @@ import com.ssafy.enjoytrip.web.dto.response.*;
 import com.ssafy.enjoytrip.domain.BoardPost;
 import com.ssafy.enjoytrip.domain.Hotplace;
 import com.ssafy.enjoytrip.domain.Member;
+import com.ssafy.enjoytrip.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.domain.Note;
 import com.ssafy.enjoytrip.domain.NoteCategory;
 import com.ssafy.enjoytrip.domain.NoteStatus;
@@ -32,6 +33,7 @@ import com.ssafy.enjoytrip.service.EvChargerService;
 import com.ssafy.enjoytrip.service.HotplaceService;
 import com.ssafy.enjoytrip.service.JwtTokenService;
 import com.ssafy.enjoytrip.service.MemberService;
+import com.ssafy.enjoytrip.service.NeighborhoodBriefingService;
 import com.ssafy.enjoytrip.service.NoteService;
 import com.ssafy.enjoytrip.service.NoticeService;
 import com.ssafy.enjoytrip.service.OAuthSignupTicketService;
@@ -92,6 +94,7 @@ class ControllerBehaviorTest {
     private AttractionService attractionService;
     private EvChargerService chargerService;
     private WeatherService weatherService;
+    private NeighborhoodBriefingService neighborhoodBriefingService;
     private DbHealthRepository dbHealthRepository;
     private MockMvc mockMvc;
 
@@ -108,6 +111,7 @@ class ControllerBehaviorTest {
         attractionService = mock(AttractionService.class);
         chargerService = mock(EvChargerService.class);
         weatherService = mock(WeatherService.class);
+        neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         dbHealthRepository = mock(DbHealthRepository.class);
 
         mockMvc = MockMvcBuilders.standaloneSetup(
@@ -124,6 +128,7 @@ class ControllerBehaviorTest {
                         new AttractionTagController(attractionService),
                         new ChargerController(chargerService),
                         new WeatherController(weatherService),
+                        new NeighborhoodBriefingController(neighborhoodBriefingService),
                         new RouteController(new RouteOptimizationService()),
                         new HealthController(dbHealthRepository),
                         new FailingController()
@@ -154,6 +159,39 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.weather[0].sunset").value("19:33"));
 
             verify(weatherService).findWeatherBriefings();
+        }
+    }
+
+    @Nested
+    class NeighborhoodBriefingEndpoints {
+        @DisplayName("동네 브리핑을 반환하고 구조화 추천 ID를 노출하지 않는다")
+        @Test
+        void returnsNeighborhoodBriefingWithoutStructuredRecommendationIds() throws Exception {
+            when(neighborhoodBriefingService.brief("서울")).thenReturn(new NeighborhoodBriefing(
+                    "서울",
+                    "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?"
+            ));
+
+            mockMvc.perform(get("/api/neighborhood/briefing")
+                            .param("regionName", "서울"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.region").value("서울"))
+                    .andExpect(jsonPath("$.data.season").doesNotExist())
+                    .andExpect(jsonPath("$.data.briefing").isNotEmpty())
+                    .andExpect(jsonPath("$.data.courseId").doesNotExist())
+                    .andExpect(jsonPath("$.data.courseCandidates").doesNotExist())
+                    .andExpect(jsonPath("$.data.recommendations").doesNotExist());
+
+            verify(neighborhoodBriefingService).brief("서울");
+        }
+
+        @DisplayName("동네 브리핑은 지역 query DTO 검증을 적용한다")
+        @Test
+        void validatesRegionNameQuery() throws Exception {
+            mockMvc.perform(get("/api/neighborhood/briefing"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false));
         }
     }
 
@@ -198,7 +236,14 @@ class ControllerBehaviorTest {
             mockMvc.perform(post("/api/notes")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"title":"제목","content":"내용","category":"TIP","visibility":"PUBLIC","latitude":37.5665,"longitude":126.9780}
+                                    {
+                                      "title":"제목",
+                                      "content":"내용",
+                                      "category":"TIP",
+                                      "visibility":"PUBLIC",
+                                      "latitude":37.5665,
+                                      "longitude":126.9780
+                                    }
                                     """))
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.error.message").value("Authentication required"));
@@ -214,7 +259,14 @@ class ControllerBehaviorTest {
                             .principal(jwtPrincipal("ssafy"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"title":"수정 제목","content":"수정 내용","category":"TIP","visibility":"PRIVATE","latitude":37.5665,"longitude":126.9780}
+                                    {
+                                      "title":"수정 제목",
+                                      "content":"수정 내용",
+                                      "category":"TIP",
+                                      "visibility":"PRIVATE",
+                                      "latitude":37.5665,
+                                      "longitude":126.9780
+                                    }
                                     """))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.title").value("수정 제목"))
@@ -781,7 +833,9 @@ class ControllerBehaviorTest {
     }
 
     private static final Pattern MUTATION_MODEL_ATTRIBUTE_PATTERN = Pattern.compile(
-            "@(?:Post|Put|Patch)Mapping[^\\n]*(?:\\R(?!\\s*@(Get|Delete|Post|Put|Patch)Mapping)[^\\n]*){0,12}@ModelAttribute"
+            "@(?:Post|Put|Patch)Mapping[^\\n]*"
+                    + "(?:\\R(?!\\s*@(Get|Delete|Post|Put|Patch)Mapping)[^\\n]*){0,12}"
+                    + "@ModelAttribute"
     );
 
     @org.springframework.web.bind.annotation.RestController

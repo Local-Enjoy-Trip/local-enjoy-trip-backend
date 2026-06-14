@@ -9,6 +9,7 @@ import com.ssafy.enjoytrip.domain.Attraction;
 import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.ChargerItem;
 import com.ssafy.enjoytrip.domain.NewsItem;
+import com.ssafy.enjoytrip.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.domain.WeatherSummary;
 import com.ssafy.enjoytrip.repository.DbHealthRepository;
 import com.ssafy.enjoytrip.service.AttractionService;
@@ -17,6 +18,7 @@ import com.ssafy.enjoytrip.service.EvChargerService;
 import com.ssafy.enjoytrip.service.HotplaceService;
 import com.ssafy.enjoytrip.service.JwtTokenService;
 import com.ssafy.enjoytrip.service.MemberService;
+import com.ssafy.enjoytrip.service.NeighborhoodBriefingService;
 import com.ssafy.enjoytrip.service.NewsService;
 import com.ssafy.enjoytrip.service.NoticeService;
 import com.ssafy.enjoytrip.service.OAuthSignupTicketService;
@@ -57,6 +59,7 @@ class ApiDocumentationTest {
     private EvChargerService chargerService;
     private NewsService newsService;
     private WeatherService weatherService;
+    private NeighborhoodBriefingService neighborhoodBriefingService;
     private BoardService boardService;
     private HotplaceService hotplaceService;
     private PlanService planService;
@@ -71,6 +74,7 @@ class ApiDocumentationTest {
         chargerService = mock(EvChargerService.class);
         newsService = mock(NewsService.class);
         weatherService = mock(WeatherService.class);
+        neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         boardService = mock(BoardService.class);
         hotplaceService = mock(HotplaceService.class);
         planService = mock(PlanService.class);
@@ -87,6 +91,7 @@ class ApiDocumentationTest {
                         new ChargerController(chargerService),
                         new NewsController(newsService),
                         new WeatherController(weatherService),
+                        new NeighborhoodBriefingController(neighborhoodBriefingService),
                         new BoardController(boardService),
                         new HotplaceController(hotplaceService),
                         new PlanController(
@@ -199,6 +204,24 @@ class ApiDocumentationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.weather").isArray())
                 .andDo(document("weather-briefings",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())));
+    }
+
+    @DisplayName("동네 AI 브리핑 API 문서를 검증한다")
+    @Test
+    void neighborhoodBriefing() throws Exception {
+        when(neighborhoodBriefingService.brief("서울")).thenReturn(new NeighborhoodBriefing(
+                "서울",
+                "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?"
+        ));
+
+        mockMvc.perform(get("/api/neighborhood/briefing").param("regionName", "서울"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.season").doesNotExist())
+                .andExpect(jsonPath("$.data.briefing").isNotEmpty())
+                .andExpect(jsonPath("$.data.courseId").doesNotExist())
+                .andDo(document("neighborhood-briefing",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint())));
     }

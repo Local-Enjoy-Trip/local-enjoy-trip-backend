@@ -22,8 +22,22 @@ spring:
   data:
     redis:
       url: ${REDIS_URL:redis://localhost:6379}
+  ai:
+    model:
+      chat: openai
+    openai:
+      api-key: ${GMS_KEY:local-fallback-disabled}
+      chat:
+        base-url: ${GMS_CHAT_BASE_URL:https://gms.ssafy.io/gmsapi/api.openai.com}
+        api-key: ${GMS_KEY:local-fallback-disabled}
+        model: ${GMS_CHAT_MODEL:gpt-5.4}
 
 enjoytrip:
+  ai:
+    briefing:
+      gms:
+        api-key: ${GMS_KEY:}
+        max-length: ${GMS_BRIEFING_MAX_LENGTH:160}
   external:
     tour-api:
       service-key: ${ENJOYTRIP_TOUR_API_KEY:${TOUR_API_KEY:}}
