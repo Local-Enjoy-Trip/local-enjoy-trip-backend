@@ -9,6 +9,7 @@ public record UpdateNoteCommand(
         NoteVisibility visibility,
         double latitude,
         double longitude,
-        String regionName
+        String regionName,
+        NoteImageReference imageReference
 ) {
 }

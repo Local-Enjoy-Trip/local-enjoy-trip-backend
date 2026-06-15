@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 @Tag(name = "Members", description = "회원 가입, 로그인, 내 정보, 회원 관리 API")
 public interface MemberApi {
@@ -124,7 +123,7 @@ public interface MemberApi {
     ApiResponse<Void> update(
             @Parameter(description = "수정할 회원 ID", example = "ssafy", required = true) String userId,
             MemberUpdateRequest request,
-            @Parameter(hidden = true) Jwt jwt
+            @Parameter(hidden = true) String authenticatedUserId
     );
 
     @Operation(summary = "내 정보 조회", description = "JWT subject에 해당하는 회원 정보를 조회합니다.", operationId = "me", security = @SecurityRequirement(name = "bearerAuth"))
@@ -133,7 +132,7 @@ public interface MemberApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
     })
-    ApiResponse<UserEnvelopeResponse> me(@Parameter(hidden = true) Jwt jwt);
+    ApiResponse<UserEnvelopeResponse> me(@Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "내 정보 수정",
@@ -147,7 +146,7 @@ public interface MemberApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "다른 사용자 계정 접근"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
     })
-    ApiResponse<Void> updateMe(MemberUpdateRequest request, @Parameter(hidden = true) Jwt jwt);
+    ApiResponse<Void> updateMe(MemberUpdateRequest request, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(summary = "내 계정 삭제", description = "JWT subject에 해당하는 내 계정을 삭제합니다.", operationId = "deleteMe", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
@@ -156,7 +155,7 @@ public interface MemberApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "다른 사용자 계정 접근"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
     })
-    ApiResponse<Void> deleteMe(@Parameter(hidden = true) Jwt jwt);
+    ApiResponse<Void> deleteMe(@Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(summary = "회원 삭제", description = "경로의 `userId` 회원을 삭제합니다. 인증된 사용자 본인만 삭제할 수 있습니다.", operationId = "deleteMember", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
@@ -168,6 +167,6 @@ public interface MemberApi {
     })
     ApiResponse<Void> delete(
             @Parameter(description = "삭제할 회원 ID", example = "ssafy", required = true) String userId,
-            @Parameter(hidden = true) Jwt jwt
+            @Parameter(hidden = true) String authenticatedUserId
     );
 }

@@ -31,8 +31,6 @@ public class AttractionEmbeddingBackfillService {
                                                       String sourceVersion,
                                                       boolean dryRun,
                                                       int limit) {
-        validateBackfillRequest(targetRegions, sourceVersion);
-
         List<AttractionEmbeddingSource> targets = repository.findTargets(targetRegions, limit);
         BackfillCounter counter = new BackfillCounter(dryRun);
 
@@ -51,16 +49,6 @@ public class AttractionEmbeddingBackfillService {
         append(builder, "sidoCode", source.sidoCode());
         append(builder, "gugunCode", source.gugunCode());
         return builder.toString().strip();
-    }
-
-    private static void validateBackfillRequest(List<AttractionEmbeddingTargetRegion> targetRegions,
-                                                String sourceVersion) {
-        if (sourceVersion == null || sourceVersion.isBlank()) {
-            throw new IllegalArgumentException("sourceVersion이 필요합니다.");
-        }
-        if (targetRegions == null || targetRegions.isEmpty()) {
-            throw new IllegalArgumentException("targetRegions가 필요합니다.");
-        }
     }
 
     private void backfillTarget(AttractionEmbeddingSource source,

@@ -39,8 +39,8 @@ public class PlanService {
                 command.title(),
                 command.startDate(),
                 command.endDate(),
-                value(command.budget(), 0),
-                stringValue(command.note()),
+                command.budget(),
+                command.note(),
                 "[]",
                 ""
         );
@@ -52,11 +52,11 @@ public class PlanService {
         TravelPlan next = new TravelPlan(
                 current.id(),
                 current.userId(),
-                defaultValue(command.title(), current.title()),
-                defaultValue(command.startDate(), current.startDate()),
-                defaultValue(command.endDate(), current.endDate()),
-                value(command.budget(), current.budget()),
-                defaultValue(command.note(), current.note()),
+                valueOrCurrent(command.title(), current.title()),
+                valueOrCurrent(command.startDate(), current.startDate()),
+                valueOrCurrent(command.endDate(), current.endDate()),
+                valueOrCurrent(command.budget(), current.budget()),
+                valueOrCurrent(command.note(), current.note()),
                 current.routeItemsJson(),
                 current.createdAt()
         );
@@ -77,6 +77,15 @@ public class PlanService {
         if (!repository.replaceItems(plan.id(), toPlanItems(plan.id(), items))) {
             throw new CoreException(PLAN_NOT_FOUND);
         }
+    }
+
+    private TravelPlan requireOwnedPlan(String planId, String authenticatedUserId) {
+        TravelPlan plan = repository.findById(planId)
+                .orElseThrow(() -> new CoreException(PLAN_NOT_FOUND));
+        if (!plan.userId().equals(authenticatedUserId)) {
+            throw new CoreException(ACCESS_DENIED);
+        }
+        return plan;
     }
 
     public void deletePlanItem(String authenticatedUserId, String planId, Long itemId) {
@@ -125,15 +134,6 @@ public class PlanService {
         return repository.deleteItem(planId, itemId);
     }
 
-    private TravelPlan requireOwnedPlan(String planId, String authenticatedUserId) {
-        TravelPlan plan = repository.findById(planId)
-                .orElseThrow(() -> new CoreException(PLAN_NOT_FOUND));
-        if (!plan.userId().equals(authenticatedUserId)) {
-            throw new CoreException(ACCESS_DENIED);
-        }
-        return plan;
-    }
-
     private static List<PlanItem> toPlanItems(String planId, List<PlanRouteItemCommand> routeItems) {
         if (routeItems == null || routeItems.isEmpty()) {
             return List.of();
@@ -144,30 +144,16 @@ public class PlanService {
                         planId,
                         item.attractionId(),
                         0,
-                        value(item.day(), 1),
-                        stringValue(item.memo()),
-                        value(item.stayMinutes(), 90)
+                        item.day(),
+                        item.memo(),
+                        item.stayMinutes()
                 ))
                 .toList();
     }
 
-    private static String defaultValue(String value, String fallback) {
-        if (value == null || value.isBlank()) {
-            return fallback;
-        }
-        return value.strip();
-    }
-
-    private static String stringValue(String value) {
+    private static <T> T valueOrCurrent(T value, T current) {
         if (value == null) {
-            return "";
-        }
-        return value.strip();
-    }
-
-    private static int value(Integer value, int fallback) {
-        if (value == null) {
-            return fallback;
+            return current;
         }
         return value;
     }

@@ -19,8 +19,7 @@ import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import com.ssafy.enjoytrip.web.security.AuthenticatedUserId;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,8 +51,7 @@ public class PlanController implements PlanApi {
     @GetMapping("/{id}")
     @Override
     public ApiResponse<PlanResponse> findOne(
-            @PathVariable @NotBlank String id,
-            @AuthenticationPrincipal Jwt jwt
+            @PathVariable @NotBlank String id
     ) {
         return success(responseAssembler.toResponse(service.findPlan(id.strip())
                 .orElseThrow(() -> new CoreException(PLAN_NOT_FOUND))));
@@ -63,9 +61,9 @@ public class PlanController implements PlanApi {
     @Override
     public ApiResponse<Void> create(
             @Valid @RequestBody PlanCreateRequest request,
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticatedUserId String authenticatedUserId
     ) {
-        service.createPlan(authenticatedUserId(jwt), request.toCommand());
+        service.createPlan(authenticatedUserId, request.toCommand());
         return success();
     }
 
@@ -73,8 +71,8 @@ public class PlanController implements PlanApi {
     @Override
     public ApiResponse<Void> update(@PathVariable @NotBlank String id,
                                     @Valid @RequestBody PlanUpdateRequest request,
-                                    @AuthenticationPrincipal Jwt jwt) {
-        service.updatePlan(authenticatedUserId(jwt), id.strip(), request.toCommand());
+                                    @AuthenticatedUserId String authenticatedUserId) {
+        service.updatePlan(authenticatedUserId, id.strip(), request.toCommand());
         return success();
     }
 
@@ -82,8 +80,8 @@ public class PlanController implements PlanApi {
     @Override
     public ApiResponse<Void> replaceItems(@PathVariable @NotBlank String id,
                                           @Valid @RequestBody PlanReplaceItemsRequest request,
-                                          @AuthenticationPrincipal Jwt jwt) {
-        service.replacePlanItems(authenticatedUserId(jwt), id.strip(), request.toCommands());
+                                          @AuthenticatedUserId String authenticatedUserId) {
+        service.replacePlanItems(authenticatedUserId, id.strip(), request.toCommands());
         return success();
     }
 
@@ -91,21 +89,18 @@ public class PlanController implements PlanApi {
     @Override
     public ApiResponse<Void> deleteItem(@PathVariable @NotBlank String id,
                                         @PathVariable @Positive Long itemId,
-                                        @AuthenticationPrincipal Jwt jwt) {
-        service.deletePlanItem(authenticatedUserId(jwt), id.strip(), itemId);
+                                        @AuthenticatedUserId String authenticatedUserId) {
+        service.deletePlanItem(authenticatedUserId, id.strip(), itemId);
         return success();
     }
 
     @DeleteMapping("/{id}")
     @Override
-    public ApiResponse<Void> delete(@PathVariable @NotBlank String id, @AuthenticationPrincipal Jwt jwt) {
-        service.deletePlan(authenticatedUserId(jwt), id.strip());
+    public ApiResponse<Void> delete(@PathVariable @NotBlank String id, @AuthenticatedUserId String authenticatedUserId) {
+        service.deletePlan(authenticatedUserId, id.strip());
         return success();
     }
 
-    private static String authenticatedUserId(Jwt jwt) {
-        return jwt.getSubject().strip();
-    }
 
     private static boolean hasText(String value) {
         return value != null && !value.isBlank();

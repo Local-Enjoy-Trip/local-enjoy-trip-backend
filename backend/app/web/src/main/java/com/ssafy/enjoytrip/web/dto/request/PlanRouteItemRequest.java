@@ -12,6 +12,18 @@ public record PlanRouteItemRequest(
         @Min(1) Integer stayMinutes
 ) {
     public PlanRouteItemCommand toCommand() {
-        return new PlanRouteItemCommand(attractionId, day, memo, stayMinutes);
+        return new PlanRouteItemCommand(
+                attractionId,
+                day == null ? 1 : day,
+                trimToEmpty(memo),
+                stayMinutes == null ? 90 : stayMinutes
+        );
+    }
+
+    private static String trimToEmpty(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.strip();
     }
 }

@@ -94,17 +94,17 @@ class MemberServiceTest {
         assertEquals(List.of("existing:LOGIN"), repository.authLogs);
     }
 
-    @DisplayName("OAuth 회원가입은 정제된 회원을 만들고 로그인 기록을 남긴다")
+    @DisplayName("OAuth 회원가입은 정규화된 provider 정보를 사용하고 로그인 기록을 남긴다")
     @Test
-    void signupWithOAuthCreatesSanitizedMemberAndRecordsLogin() {
+    void signupWithOAuthCreatesMemberAndRecordsLogin() {
         FakeMemberRepository repository = new FakeMemberRepository();
         CountingPasswordCodec passwordCodec = new CountingPasswordCodec();
         MemberService service = new MemberService(repository, passwordCodec);
 
-        Member result = service.signupWithOAuth("Google", "provider-123", "google@example.com", "");
+        Member result = service.signupWithOAuth("Google", "provider-123", "google@example.com", "Google User");
 
         assertEquals("google_provider123", result.userId());
-        assertEquals("google@example.com", result.name());
+        assertEquals("Google User", result.name());
         assertEquals("google@example.com", result.email());
         assertTrue(result.password().startsWith("encoded:"));
         assertEquals(List.of("google_provider123:LOGIN"), repository.authLogs);

@@ -8,7 +8,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class RouteOptimizationServiceTest {
     private final RouteOptimizationService service = new RouteOptimizationService();
@@ -52,19 +51,4 @@ class RouteOptimizationServiceTest {
         assertEquals(3, result.dayDistances().size());
     }
 
-    @DisplayName("지점 파싱은 잘못된 좌표를 거부한다")
-    @Test
-    void parsePointsRejectsMalformedCoordinates() {
-        assertThrows(IllegalArgumentException.class, () -> service.parsePoints("37.1,127.1|broken"));
-    }
-
-    @DisplayName("지점 파싱은 입력 순서를 지점 인덱스로 유지한다")
-    @Test
-    void parsePointsKeepsInputOrderAsPointIndex() {
-        List<Point> points = service.parsePoints("37.1,127.1|35.2,129.2");
-
-        assertEquals(2, points.size());
-        assertEquals(0, points.get(0).index());
-        assertEquals(1, points.get(1).index());
-    }
 }

@@ -9,13 +9,13 @@ import com.ssafy.enjoytrip.web.dto.response.AttractionStatsResponse;
 import com.ssafy.enjoytrip.web.dto.response.AttractionsResponse;
 import com.ssafy.enjoytrip.web.dto.response.PopularAttractionsResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 @Tag(name = "Attractions", description = "관광지 검색 API")
 public interface AttractionApi {
@@ -63,7 +63,7 @@ public interface AttractionApi {
                     description = "Tour API 호출 실패"
             )
     })
-    ApiResponse<AttractionsResponse> search(@ParameterObject AttractionSearchRequest request, Jwt jwt);
+    ApiResponse<AttractionsResponse> search(@ParameterObject AttractionSearchRequest request, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "홈 인기 주변 관광지 조회",
@@ -110,7 +110,7 @@ public interface AttractionApi {
             )
     })
     ApiResponse<PopularAttractionsResponse> popularNearby(@ParameterObject NearbySectionRequest request,
-                                                          Jwt jwt);
+                                                          @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "관광지 POST 차단",
@@ -130,40 +130,40 @@ public interface AttractionApi {
     ApiResponse<Void> rejectPost();
 
     @Operation(summary = "관광지 찜", description = "인증 사용자의 관광지 찜을 저장합니다.", operationId = "favoriteAttraction")
-    ApiResponse<Void> favorite(Long id, Jwt jwt);
+    ApiResponse<Void> favorite(Long id, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "관광지 찜 해제",
             description = "인증 사용자의 관광지 찜을 삭제합니다.",
             operationId = "unfavoriteAttraction"
     )
-    ApiResponse<Void> unfavorite(Long id, Jwt jwt);
+    ApiResponse<Void> unfavorite(Long id, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "관광지 평점 등록",
             description = "인증 사용자의 1~5 평점을 등록하거나 갱신합니다.",
             operationId = "rateAttraction"
     )
-    ApiResponse<Void> rate(Long id, RatingRequest request, Jwt jwt);
+    ApiResponse<Void> rate(Long id, RatingRequest request, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "관광지 평점 삭제",
             description = "인증 사용자의 평점을 삭제합니다.",
             operationId = "deleteAttractionRating"
     )
-    ApiResponse<Void> deleteRating(Long id, Jwt jwt);
+    ApiResponse<Void> deleteRating(Long id, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "관광지 통계 조회",
             description = "찜 수, 평균 평점, 태그와 내 사용자 상태를 조회합니다.",
             operationId = "getAttractionStats"
     )
-    ApiResponse<AttractionStatsResponse> stats(Long id, Jwt jwt);
+    ApiResponse<AttractionStatsResponse> stats(Long id, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "관광지 태그 연결",
             description = "관광지에 연결된 태그 목록을 교체합니다.",
             operationId = "replaceAttractionTags"
     )
-    ApiResponse<Void> replaceTags(Long id, AttractionTagsRequest request, Jwt jwt);
+    ApiResponse<Void> replaceTags(Long id, AttractionTagsRequest request, @Parameter(hidden = true) String authenticatedUserId);
 }

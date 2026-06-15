@@ -18,12 +18,12 @@ public record PlanCreateRequest(
 ) {
     public PlanMutationCommand toCommand() {
         return new PlanMutationCommand(
-                id,
-                title,
-                startDate,
-                endDate,
-                budget,
-                note,
+                id.strip(),
+                title.strip(),
+                startDate.strip(),
+                endDate.strip(),
+                budget == null ? 0 : budget,
+                trimToEmpty(note),
                 toRouteItemCommands(routeItems)
         );
     }
@@ -33,5 +33,12 @@ public record PlanCreateRequest(
             return List.of();
         }
         return routeItems.stream().map(PlanRouteItemRequest::toCommand).toList();
+    }
+
+    private static String trimToEmpty(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.strip();
     }
 }

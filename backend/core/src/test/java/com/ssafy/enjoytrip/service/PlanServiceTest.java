@@ -23,9 +23,9 @@ import org.junit.jupiter.api.Test;
 
 class PlanServiceTest {
 
-    @DisplayName("계획 생성은 인증 사용자를 사용하고 경로 항목을 정규화한다")
+    @DisplayName("계획 생성은 정규화된 명령을 받아 인증 사용자 기준으로 저장한다")
     @Test
-    void createPlanUsesAuthenticatedUserAndNormalizesRouteItems() {
+    void createPlanUsesAuthenticatedUserWithNormalizedCommand() {
         FakePlanRepository repository = new FakePlanRepository();
         PlanService service = new PlanService(repository);
 
@@ -34,9 +34,9 @@ class PlanServiceTest {
                 "서울 여행",
                 "2026-05-14",
                 "2026-05-15",
-                null,
-                null,
-                List.of(new PlanRouteItemCommand(10L, 2, " lunch ", 120))
+                0,
+                "",
+                List.of(new PlanRouteItemCommand(10L, 2, "lunch", 120))
         ));
 
         assertEquals("ssafy", repository.savedPlan.userId());
@@ -64,7 +64,7 @@ class PlanServiceTest {
 
         service.updatePlan("owner", "p1", new PlanMutationCommand(
                 null,
-                " 부산 ",
+                "부산",
                 null,
                 null,
                 2000,

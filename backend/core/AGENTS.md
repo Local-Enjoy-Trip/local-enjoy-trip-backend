@@ -1,5 +1,21 @@
 # Core Module Coding Style & Rules
 
+## Stop First: Validation Boundary
+
+Before adding validation, parsing, defaulting, fallback, or defensive null/blank handling in `core`, stop and check the
+existing ingress boundary first.
+
+- Put HTTP query/body shape validation, request DTO `null`/blank/range checks, raw string parsing, trimming/normalizing,
+  and default-value conversion in `app:web` DTO/mapper or `batch` ingress code, not in `core`.
+- `core` validation is allowed only for domain invariants, authenticated user ownership, persisted state, or
+  cross-resource business rules.
+- If existing request DTO validation already guarantees a value, do not repeat the same `isBlank`, `trim/strip`,
+  defaulting, or fail-fast branch in the service.
+- Do not add repository pre-check queries merely to validate request shape when DB constraints or existing domain flow
+  already express the failure.
+- Do not catch repository, external, port, or runtime exceptions in `core` to return success-shaped fallback data unless
+  that fallback is an explicit product contract and the failure remains observable.
+
 ## Operating Principles
 
 - **Spring Boot Native**: The `core` module is built to be a Spring Boot native module. It may use Spring stereotype

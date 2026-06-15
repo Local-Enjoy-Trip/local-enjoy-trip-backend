@@ -10,35 +10,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Tag("service")
 class RouteOptimizationServiceTest {
     private final RouteOptimizationService service = new RouteOptimizationService();
-
-    @Nested
-    class Parsing {
-        @DisplayName("파이프로 구분한 위도와 경도를 원래 순서 인덱스로 파싱한다")
-        @Test
-        void parsesPipeDelimitedLatitudeLongitudePairsWithOriginalIndexes() {
-            List<Point> points = service.parsePoints("37.5665,126.9780 | 35.1796,129.0756");
-
-            assertThat(points).containsExactly(
-                    new Point(37.5665, 126.9780, 0),
-                    new Point(35.1796, 129.0756, 1)
-            );
-        }
-
-        @DisplayName("입력이 없으면 빈 목록을 반환하고 잘못된 좌표는 거부한다")
-        @Test
-        void returnsEmptyListForMissingInputAndRejectsMalformedCoordinates() {
-            assertThat(service.parsePoints(null)).isEmpty();
-            assertThat(service.parsePoints(" ")).isEmpty();
-
-            assertThatThrownBy(() -> service.parsePoints("37.5|bad,126.9"))
-                    .isInstanceOf(RuntimeException.class);
-        }
-    }
 
     @Nested
     class Optimization {

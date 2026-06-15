@@ -36,6 +36,11 @@ public enum ErrorType {
             WARN
     ),
     INVALID_PROFILE_IMAGE_URL(BAD_REQUEST, "프로필 이미지 URL은 512자 이하여야 합니다.", WARN),
+    MEMBER_REPRESENTATIVE_LOCATION_REQUIRED(
+            BAD_REQUEST,
+            "대표 동네 위치를 먼저 설정하세요.",
+            WARN
+    ),
 
     AUTHENTICATION_REQUIRED(UNAUTHORIZED, "인증이 필요합니다.", WARN),
     INVALID_CREDENTIALS(UNAUTHORIZED, "아이디 또는 비밀번호가 올바르지 않습니다.", WARN),

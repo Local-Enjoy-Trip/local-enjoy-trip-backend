@@ -6,7 +6,16 @@ import com.ssafy.enjoytrip.web.dto.response.*;
 
 import com.ssafy.enjoytrip.domain.BoardPost;
 import com.ssafy.enjoytrip.domain.Hotplace;
+import com.ssafy.enjoytrip.domain.MapExploreCommand;
+import com.ssafy.enjoytrip.domain.MapExploreResult;
 import com.ssafy.enjoytrip.domain.Member;
+import com.ssafy.enjoytrip.domain.MapCenter;
+import com.ssafy.enjoytrip.domain.MapExploreFilter;
+import com.ssafy.enjoytrip.domain.NoteImageUploadCommand;
+import com.ssafy.enjoytrip.domain.NoteImageUploadUrl;
+import com.ssafy.enjoytrip.domain.NoteMapPin;
+import com.ssafy.enjoytrip.domain.NoteViewerRelationship;
+import com.ssafy.enjoytrip.domain.PlaceMapPin;
 import com.ssafy.enjoytrip.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.domain.Note;
 import com.ssafy.enjoytrip.domain.NoteCategory;
@@ -32,8 +41,11 @@ import com.ssafy.enjoytrip.service.BoardService;
 import com.ssafy.enjoytrip.service.EvChargerService;
 import com.ssafy.enjoytrip.service.HotplaceService;
 import com.ssafy.enjoytrip.service.JwtTokenService;
+import com.ssafy.enjoytrip.service.MapExploreService;
 import com.ssafy.enjoytrip.service.MemberService;
+import com.ssafy.enjoytrip.service.NoteImageUploadService;
 import com.ssafy.enjoytrip.service.NeighborhoodBriefingService;
+import com.ssafy.enjoytrip.service.NoteImageService;
 import com.ssafy.enjoytrip.service.NoteService;
 import com.ssafy.enjoytrip.service.NoticeService;
 import com.ssafy.enjoytrip.service.OAuthSignupTicketService;
@@ -64,6 +76,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_CREDENTIALS;
+import static com.ssafy.enjoytrip.support.error.ErrorType.MEMBER_REPRESENTATIVE_LOCATION_REQUIRED;
 import static com.ssafy.enjoytrip.support.error.ErrorType.PLAN_NOT_FOUND;
 import static com.ssafy.enjoytrip.support.error.ErrorType.USER_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,6 +101,7 @@ class ControllerBehaviorTest {
     private PlanService planService;
     private NoticeService noticeService;
     private NoteService noteService;
+    private MapExploreService mapExploreService;
     private MemberService memberService;
     private JwtTokenService tokenService;
     private OAuthSignupTicketService oauthSignupTicketService;
@@ -95,6 +109,7 @@ class ControllerBehaviorTest {
     private EvChargerService chargerService;
     private WeatherService weatherService;
     private NeighborhoodBriefingService neighborhoodBriefingService;
+    private NoteImageUploadService noteImageUploadService;
     private DbHealthRepository dbHealthRepository;
     private MockMvc mockMvc;
 
@@ -105,6 +120,7 @@ class ControllerBehaviorTest {
         planService = mock(PlanService.class);
         noticeService = mock(NoticeService.class);
         noteService = mock(NoteService.class);
+        mapExploreService = mock(MapExploreService.class);
         memberService = mock(MemberService.class);
         tokenService = mock(JwtTokenService.class);
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
@@ -112,6 +128,7 @@ class ControllerBehaviorTest {
         chargerService = mock(EvChargerService.class);
         weatherService = mock(WeatherService.class);
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
+        noteImageUploadService = mock(NoteImageUploadService.class);
         dbHealthRepository = mock(DbHealthRepository.class);
 
         mockMvc = MockMvcBuilders.standaloneSetup(
@@ -129,6 +146,8 @@ class ControllerBehaviorTest {
                         new ChargerController(chargerService),
                         new WeatherController(weatherService),
                         new NeighborhoodBriefingController(neighborhoodBriefingService),
+                        new MapController(mapExploreService),
+                        new NoteImageController(noteImageUploadService),
                         new RouteController(new RouteOptimizationService()),
                         new HealthController(dbHealthRepository),
                         new FailingController()
@@ -307,6 +326,230 @@ class ControllerBehaviorTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.message")
                             .value("위도 또는 경도가 유효하지 않습니다."));
+        }
+    }
+
+
+    @Nested
+    class MapExploreEndpoints {
+        @DisplayName("지도 탐색은 인증이 필요하다")
+        @Test
+        void mapExploreRequiresAuthentication() throws Exception {
+            mockMvc.perform(get("/api/map/explore"))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.error.code").value("UNAUTHORIZED"));
+        }
+
+        @DisplayName("지도 탐색은 일부 좌표만 전달되면 검증 오류를 반환한다")
+        @Test
+        void mapExploreRejectsPartialCoordinates() throws Exception {
+            mockMvc.perform(get("/api/map/explore")
+                            .principal(jwtPrincipal("viewer"))
+                            .param("mapX", "126.9780"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.message")
+                            .value("위도 또는 경도가 유효하지 않습니다."));
+        }
+
+        @DisplayName("대표 동네가 없고 좌표도 없으면 400을 반환한다")
+        @Test
+        void mapExploreRequiresRepresentativeLocationWhenCoordinatesAreMissing() throws Exception {
+            when(mapExploreService.explore(any()))
+                    .thenThrow(new CoreException(MEMBER_REPRESENTATIVE_LOCATION_REQUIRED));
+
+            mockMvc.perform(get("/api/map/explore")
+                            .principal(jwtPrincipal("viewer")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.message")
+                            .value("대표 동네 위치를 먼저 설정하세요."));
+        }
+
+        @DisplayName("명시 좌표는 대표 위치 fallback보다 우선하여 서비스 command로 전달된다")
+        @Test
+        void mapExploreExplicitCoordinatesOverrideRepresentativeFallback() throws Exception {
+            when(mapExploreService.explore(any())).thenReturn(new MapExploreResult(
+                    new MapCenter(127.0276, 37.4979, null, false),
+                    750.0,
+                    10,
+                    MapExploreFilter.NOTE,
+                    List.of(),
+                    List.of()
+            ));
+
+            mockMvc.perform(get("/api/map/explore")
+                            .principal(jwtPrincipal("viewer"))
+                            .param("mapX", "127.0276")
+                            .param("mapY", "37.4979")
+                            .param("radius", "750")
+                            .param("limit", "10")
+                            .param("filter", "NOTE")
+                            .param("noteCategory", "TIP"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.center.fromRepresentativeLocation").value(false))
+                    .andExpect(jsonPath("$.data.radiusMeters").value(750.0))
+                    .andExpect(jsonPath("$.data.limit").value(10))
+                    .andExpect(jsonPath("$.data.filter").value("NOTE"));
+
+            ArgumentCaptor<MapExploreCommand> captor = ArgumentCaptor.forClass(MapExploreCommand.class);
+            verify(mapExploreService).explore(captor.capture());
+            assertThat(captor.getValue().viewerUserId()).isEqualTo("viewer");
+            assertThat(captor.getValue().longitude()).isEqualTo(127.0276);
+            assertThat(captor.getValue().latitude()).isEqualTo(37.4979);
+            assertThat(captor.getValue().radiusMeters()).isEqualTo(750.0);
+            assertThat(captor.getValue().limit()).isEqualTo(10);
+            assertThat(captor.getValue().filter()).isEqualTo(MapExploreFilter.NOTE);
+            assertThat(captor.getValue().noteCategory()).isEqualTo(NoteCategory.TIP);
+        }
+
+        @DisplayName("지도 탐색은 장소와 SELF/FRIEND/NONE privacy-projected 쪽지를 반환한다")
+        @Test
+        void mapExploreReturnsPlaceAndPrivacyProjectedNotePins() throws Exception {
+            MapExploreResult result = new MapExploreResult(
+                    new MapCenter(126.9780, 37.5665, "서울 중구", true),
+                    1000.0,
+                    50,
+                    MapExploreFilter.ALL,
+                    List.of(new PlaceMapPin(
+                            100L,
+                            "서울광장",
+                            "서울 중구 세종대로",
+                            37.5665,
+                            126.9780,
+                            "https://example.com/place.jpg",
+                            "12",
+                            24.5,
+                            true,
+                            4.5,
+                            2
+                    )),
+                    List.of(
+                            new NoteMapPin(
+                                    1L,
+                                    "내 쪽지",
+                                    NoteCategory.TIP,
+                                    NoteVisibility.PUBLIC,
+                                    37.5666,
+                                    126.9781,
+                                    "서울 중구",
+                                    10.0,
+                                    "notes/self/sample.jpg",
+                                    "viewer",
+                                    "내닉",
+                                    "https://example.com/self.jpg",
+                                    NoteViewerRelationship.SELF,
+                                    LocalDateTime.of(2026, 6, 15, 10, 0)
+                            ),
+                            new NoteMapPin(
+                                    2L,
+                                    "친구 쪽지",
+                                    NoteCategory.TIP,
+                                    NoteVisibility.FRIENDS,
+                                    37.5667,
+                                    126.9782,
+                                    "서울 중구",
+                                    30.0,
+                                    "notes/friend/sample.jpg",
+                                    "friend",
+                                    "친구닉",
+                                    "https://example.com/profile.jpg",
+                                    NoteViewerRelationship.FRIEND,
+                                    LocalDateTime.of(2026, 6, 15, 10, 1)
+                            ),
+                            new NoteMapPin(
+                                    3L,
+                                    "공개 쪽지",
+                                    NoteCategory.TIP,
+                                    NoteVisibility.PUBLIC,
+                                    37.5668,
+                                    126.9783,
+                                    "서울 중구",
+                                    45.0,
+                                    null,
+                                    "stranger",
+                                    "낯선닉",
+                                    null,
+                                    NoteViewerRelationship.NONE,
+                                    LocalDateTime.of(2026, 6, 15, 10, 2)
+                            )
+                    )
+            );
+            when(mapExploreService.explore(any())).thenReturn(result);
+
+            mockMvc.perform(get("/api/map/explore")
+                            .principal(jwtPrincipal("viewer")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.center.fromRepresentativeLocation").value(true))
+                    .andExpect(jsonPath("$.data.places[0].title").value("서울광장"))
+                    .andExpect(jsonPath("$.data.notes[0].authorNickname").value("내닉"))
+                    .andExpect(jsonPath("$.data.notes[0].authorProfileImageUrl").value("https://example.com/self.jpg"))
+                    .andExpect(jsonPath("$.data.notes[0].relationshipToViewer").value("SELF"))
+                    .andExpect(jsonPath("$.data.notes[1].authorNickname").value("친구닉"))
+                    .andExpect(jsonPath("$.data.notes[1].authorProfileImageUrl")
+                            .value("https://example.com/profile.jpg"))
+                    .andExpect(jsonPath("$.data.notes[1].relationshipToViewer").value("FRIEND"))
+                    .andExpect(jsonPath("$.data.notes[2].authorNickname").value("낯선닉"))
+                    .andExpect(jsonPath("$.data.notes[2].authorProfileImageUrl").doesNotExist())
+                    .andExpect(jsonPath("$.data.notes[2].relationshipToViewer").value("NONE"));
+
+            verify(mapExploreService).explore(any());
+        }
+    }
+
+    @Nested
+    class NoteImageEndpoints {
+        @DisplayName("쪽지 이미지 presigned upload는 인증이 필요하다")
+        @Test
+        void noteImageUploadRequiresAuthentication() throws Exception {
+            mockMvc.perform(post("/api/note-images/presigned-upload")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"contentType":"image/jpeg","fileExtension":"jpg"}
+                                    """))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.error.code").value("UNAUTHORIZED"));
+        }
+
+        @DisplayName("쪽지 이미지 presigned upload는 이미지 타입만 허용한다")
+        @Test
+        void noteImageUploadValidatesImageContentType() throws Exception {
+            mockMvc.perform(post("/api/note-images/presigned-upload")
+                            .principal(jwtPrincipal("viewer"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"contentType":"text/plain","fileExtension":"txt"}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @DisplayName("쪽지 이미지 presigned upload는 objectKey와 uploadUrl을 반환한다")
+        @Test
+        void noteImageUploadReturnsPresignedResponseShape() throws Exception {
+            when(noteImageUploadService.createPresignedUpload(any())).thenReturn(new NoteImageUploadUrl(
+                    "notes/viewer/sample.jpg",
+                    "http://localhost:9000/dongnepin-notes/notes/viewer/sample.jpg?signature=abc",
+                    Instant.parse("2026-06-15T01:10:00Z"),
+                    "http://localhost:9000/dongnepin-notes/notes/viewer/sample.jpg"
+            ));
+
+            mockMvc.perform(post("/api/note-images/presigned-upload")
+                            .principal(jwtPrincipal("viewer"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"contentType":"image/jpeg","fileExtension":"jpg"}
+                                    """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.objectKey").value("notes/viewer/sample.jpg"))
+                    .andExpect(jsonPath("$.data.uploadUrl").isNotEmpty())
+                    .andExpect(jsonPath("$.data.expiresAt").value("2026-06-15T01:10:00Z"))
+                    .andExpect(jsonPath("$.data.publicUrl").isNotEmpty());
+
+            ArgumentCaptor<NoteImageUploadCommand> captor = ArgumentCaptor.forClass(NoteImageUploadCommand.class);
+            verify(noteImageUploadService).createPresignedUpload(captor.capture());
+            assertThat(captor.getValue().userId()).isEqualTo("viewer");
+            assertThat(captor.getValue().contentType()).isEqualTo("image/jpeg");
+            assertThat(captor.getValue().fileExtension()).isEqualTo("jpg");
         }
     }
 
@@ -805,6 +1048,9 @@ class ControllerBehaviorTest {
                 37.5665,
                 126.9780,
                 "서울",
+                null,
+                null,
+                null,
                 NoteStatus.ACTIVE,
                 LocalDateTime.of(2026, 6, 10, 10, 0),
                 null,
@@ -833,7 +1079,7 @@ class ControllerBehaviorTest {
                 .doesNotContain("Map.of(")
                 .doesNotContain("@RequestParam Map")
                 .doesNotContain("@RequestBody Map")
-                .doesNotContain("ApiResponse<Map")
+                .doesNotContain("ApiResponse<Map<")
                 .doesNotContain("legacyPost")
                 .doesNotContain("private static <T> T fail");
         assertThat(MUTATION_MODEL_ATTRIBUTE_PATTERN.matcher(source).find())

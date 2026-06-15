@@ -5,6 +5,7 @@ import com.ssafy.enjoytrip.service.JwtTokenService;
 import com.ssafy.enjoytrip.web.dto.response.IssuedToken;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
+import com.ssafy.enjoytrip.web.security.AuthenticatedUserIdArgumentResolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -52,7 +53,7 @@ class SecuritySupportTest {
     void corsAllowsLocalhostDevelopmentOriginsAndJwtHeaders() {
         TestCorsRegistry registry = new TestCorsRegistry();
 
-        new WebConfig().addCorsMappings(registry);
+        new WebConfig(new AuthenticatedUserIdArgumentResolver()).addCorsMappings(registry);
 
         CorsConfiguration configuration = registry.corsConfigurations().get("/**");
         assertThat(configuration).isNotNull();

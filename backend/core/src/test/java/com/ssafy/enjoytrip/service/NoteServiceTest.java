@@ -8,9 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.ssafy.enjoytrip.domain.CreateNoteCommand;
+import com.ssafy.enjoytrip.domain.MapNotesCondition;
 import com.ssafy.enjoytrip.domain.NearbyNotesCondition;
 import com.ssafy.enjoytrip.domain.Note;
 import com.ssafy.enjoytrip.domain.NoteCategory;
+import com.ssafy.enjoytrip.domain.NoteImageReference;
+import com.ssafy.enjoytrip.domain.NoteMapPin;
 import com.ssafy.enjoytrip.domain.NoteStatus;
 import com.ssafy.enjoytrip.domain.NoteVisibility;
 import com.ssafy.enjoytrip.domain.UpdateNoteCommand;
@@ -124,7 +127,8 @@ class NoteServiceTest {
                 NoteVisibility.PUBLIC,
                 37.5665,
                 126.9780,
-                "서울"
+                "서울",
+                null
         );
     }
 
@@ -138,7 +142,8 @@ class NoteServiceTest {
                 NoteVisibility.PUBLIC,
                 37.5665,
                 126.9780,
-                "서울"
+                "서울",
+                null
         );
     }
 
@@ -161,6 +166,9 @@ class NoteServiceTest {
                 37.5665,
                 126.9780,
                 "서울",
+                null,
+                null,
+                null,
                 status,
                 LocalDateTime.of(2026, 6, 10, 10, 0),
                 null,
@@ -210,6 +218,11 @@ class NoteServiceTest {
             lastNearbyCondition = condition;
             lastViewerUserId = viewerUserId;
             return nearbyNotes;
+        }
+
+        @Override
+        public List<NoteMapPin> findMapNotes(MapNotesCondition condition) {
+            return List.of();
         }
     }
 }

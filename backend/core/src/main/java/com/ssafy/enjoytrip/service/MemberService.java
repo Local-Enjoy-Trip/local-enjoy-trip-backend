@@ -105,7 +105,7 @@ public class MemberService {
     }
 
     private void validateEmailOwner(Member member) {
-        if (member.email() == null || member.email().isBlank()) {
+        if (member.email() == null) {
             return;
         }
         Member owner = repository.findByEmail(member.email());
@@ -140,7 +140,7 @@ public class MemberService {
     private Member createOAuthMember(String provider, String providerUserId, String email, String name) {
         return new Member(
                 oauthUserId(provider, providerUserId),
-                valueOrDefault(name, email),
+                name,
                 email,
                 passwordCodec.encode(UUID.randomUUID().toString()),
                 ""
@@ -156,10 +156,10 @@ public class MemberService {
     }
 
     private String oauthUserId(String provider, String providerUserId) {
-        String normalizedProvider = valueOrDefault(provider, "oauth").toLowerCase(Locale.ROOT);
-        String sourceId = valueOrDefault(providerUserId, UUID.randomUUID().toString());
+        String normalizedProvider = provider.toLowerCase(Locale.ROOT);
+        String sourceId = providerUserId;
         String normalizedId = sourceId.replaceAll("[^A-Za-z0-9_]", "");
-        if (normalizedId.isBlank()) {
+        if (normalizedId.isEmpty()) {
             normalizedId = Integer.toUnsignedString(sourceId.hashCode(), 36);
         }
         String userId = normalizedProvider + "_" + normalizedId;
@@ -179,10 +179,4 @@ public class MemberService {
         return provider + "_" + UUID.randomUUID().toString().replace("-", "");
     }
 
-    private static String valueOrDefault(String value, String fallback) {
-        if (value == null || value.isBlank()) {
-            return fallback;
-        }
-        return value.trim();
-    }
 }
