@@ -17,16 +17,23 @@ public record PlanUpdateRequest(
     public PlanMutationCommand toCommand() {
         return new PlanMutationCommand(
                 null,
-                title,
-                startDate,
-                endDate,
+                trimToNull(title),
+                trimToNull(startDate),
+                trimToNull(endDate),
                 budget,
-                note,
+                trimToNull(note),
                 routeItems == null ? null : toRouteItemCommands(routeItems)
         );
     }
 
     private static List<PlanRouteItemCommand> toRouteItemCommands(List<PlanRouteItemRequest> routeItems) {
         return routeItems.stream().map(PlanRouteItemRequest::toCommand).toList();
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.strip();
     }
 }

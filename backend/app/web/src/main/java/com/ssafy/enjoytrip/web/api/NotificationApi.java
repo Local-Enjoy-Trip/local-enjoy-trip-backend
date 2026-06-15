@@ -14,7 +14,7 @@ public interface NotificationApi {
             description = "현재 알림은 친구 요청 알림만 제공하며, 프론트가 별도 읽음 처리를 고민하지 않도록 기본적으로 미읽음 알림만 반환합니다. 여기서 미읽음은 요청을 수락하거나 거절하지 않은 상태의 친구 요청 알림을 의미합니다.",
             operationId = "getNotifications"
     )
-    ApiResponse<NotificationsResponse> notifications(Integer limit, Jwt jwt);
+    ApiResponse<NotificationsResponse> notifications(int limit, Jwt jwt);
 
     @Operation(
             summary = "미읽음 알림 존재 여부 조회",

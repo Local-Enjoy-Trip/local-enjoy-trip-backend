@@ -21,11 +21,7 @@ public class WeatherService {
     private final WeatherRepository repository;
 
     public List<WeatherSummary> findWeatherBriefings() {
-        try {
-            return completeWithFallback(repository.findWeatherBriefings());
-        } catch (RuntimeException ex) {
-            return fallbackBriefings();
-        }
+        return completeWithFallback(repository.findWeatherBriefings());
     }
 
     public List<WeatherSummary> fallbackBriefings() {

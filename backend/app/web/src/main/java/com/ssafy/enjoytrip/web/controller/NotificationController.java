@@ -10,10 +10,12 @@ import com.ssafy.enjoytrip.support.response.ApiResponse;
 import com.ssafy.enjoytrip.web.api.NotificationApi;
 import com.ssafy.enjoytrip.web.dto.response.NotificationUnreadStatusResponse;
 import com.ssafy.enjoytrip.web.dto.response.NotificationsResponse;
+import jakarta.validation.constraints.Min;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,14 +24,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
+@Validated
 public class NotificationController implements NotificationApi {
+    private static final int MAX_LIMIT = 100;
+
     private final NotificationService notificationService;
 
     @GetMapping
     @Override
-    public ApiResponse<NotificationsResponse> notifications(@RequestParam(required = false) Integer limit,
-                                                            @AuthenticationPrincipal Jwt jwt) {
-        List<Notification> notifications = notificationService.findNotifications(authenticatedUserId(jwt), limit);
+    public ApiResponse<NotificationsResponse> notifications(
+            @RequestParam(defaultValue = "50") @Min(1) int limit,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        List<Notification> notifications = notificationService.findNotifications(
+                authenticatedUserId(jwt),
+                Math.min(limit, MAX_LIMIT)
+        );
         return success(NotificationsResponse.from(notifications));
     }
 

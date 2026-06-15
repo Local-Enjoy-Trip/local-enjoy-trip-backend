@@ -9,7 +9,6 @@ import static com.ssafy.enjoytrip.support.response.ApiResponse.fail;
 import static com.ssafy.enjoytrip.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.domain.Attraction;
-import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.PopularAttraction;
 import com.ssafy.enjoytrip.service.AttractionService;
 import com.ssafy.enjoytrip.support.error.CoreException;
@@ -49,16 +48,10 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<AttractionsResponse> search(@ModelAttribute AttractionSearchRequest request,
                                                    @AuthenticationPrincipal Jwt jwt) {
-        AttractionSearchCondition condition = new AttractionSearchCondition(
-                request.sidoCode(),
-                request.gugunCode(),
-                request.contentTypeId(),
-                request.keyword(),
-                request.mapX(),
-                request.mapY(),
-                request.radius()
+        List<Attraction> attractions = service.searchAttractions(
+                request.toCondition(),
+                authenticatedUserIdOrBlank(jwt)
         );
-        List<Attraction> attractions = service.searchAttractions(condition, authenticatedUserIdOrBlank(jwt));
 
         return success(new AttractionsResponse(attractions));
     }

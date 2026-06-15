@@ -26,4 +26,13 @@ public record Attraction(
         boolean favorited,
         Integer myRating
 ) {
+    public String primaryImageUrl() {
+        if (firstImage != null && !firstImage.isBlank()) {
+            return firstImage;
+        }
+        if (firstImage2 != null && !firstImage2.isBlank()) {
+            return firstImage2;
+        }
+        return null;
+    }
 }

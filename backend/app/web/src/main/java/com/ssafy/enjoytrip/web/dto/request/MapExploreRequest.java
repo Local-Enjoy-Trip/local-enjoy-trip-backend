@@ -20,6 +20,9 @@ public record MapExploreRequest(
         MapExploreFilter filter,
         NoteCategory noteCategory
 ) {
+    private static final double DEFAULT_RADIUS_METERS = 500.0;
+    private static final int DEFAULT_LIMIT = 50;
+
     public MapExploreCommand toCommand(String viewerUserId) {
         if ((mapX == null) != (mapY == null)) {
             throw new CoreException(INVALID_LATITUDE_OR_LONGITUDE);
@@ -35,9 +38,9 @@ public record MapExploreRequest(
                 viewerUserId,
                 mapX,
                 mapY,
-                radius,
-                limit,
-                filter,
+                radius == null ? DEFAULT_RADIUS_METERS : radius,
+                limit == null ? DEFAULT_LIMIT : limit,
+                filter == null ? MapExploreFilter.ALL : filter,
                 noteCategory
         );
     }

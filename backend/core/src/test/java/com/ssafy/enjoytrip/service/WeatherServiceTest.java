@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class WeatherServiceTest {
 
@@ -21,16 +22,14 @@ class WeatherServiceTest {
         assertDefaultFallbackRows(result);
     }
 
-    @DisplayName("저장소가 예외를 던지면 기본 대체 날씨 행을 반환한다")
+    @DisplayName("저장소 예외는 성공 대체 응답으로 삼키지 않는다")
     @Test
-    void returnsDefaultFallbackRowsWhenRepositoryThrows() {
+    void propagatesRepositoryFailure() {
         WeatherService service = new WeatherService(() -> {
             throw new IllegalStateException("KMA를 사용할 수 없습니다.");
         });
 
-        List<WeatherSummary> result = service.findWeatherBriefings();
-
-        assertDefaultFallbackRows(result);
+        assertThrows(IllegalStateException.class, service::findWeatherBriefings);
     }
 
     @DisplayName("실제 날씨 행을 보존하고 누락된 기본 지역을 채운다")

@@ -98,7 +98,7 @@ public class MapExploreService {
                 attraction.addr1(),
                 attraction.latitude(),
                 attraction.longitude(),
-                firstNonBlank(attraction.firstImage(), attraction.firstImage2()),
+                attraction.primaryImageUrl(),
                 attraction.contentTypeId(),
                 candidate.distanceMeters(),
                 attraction.favorited(),
@@ -123,13 +123,4 @@ public class MapExploreService {
         ));
     }
 
-    private static String firstNonBlank(String first, String second) {
-        if (first != null && !first.isBlank()) {
-            return first;
-        }
-        if (second != null && !second.isBlank()) {
-            return second;
-        }
-        return null;
-    }
 }

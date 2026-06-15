@@ -123,7 +123,7 @@ class MapExploreServiceTest {
     }
 
     private static MapExploreCommand command(Double longitude, Double latitude, MapExploreFilter filter) {
-        return new MapExploreCommand("ssafy", longitude, latitude, null, null, filter, null);
+        return new MapExploreCommand("ssafy", longitude, latitude, 500.0, 50, filter, null);
     }
 
     private static Member memberWithRepresentativeLocation() {
