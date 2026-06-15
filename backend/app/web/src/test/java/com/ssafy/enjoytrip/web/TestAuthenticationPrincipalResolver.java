@@ -2,6 +2,7 @@ package com.ssafy.enjoytrip.web;
 
 import com.ssafy.enjoytrip.support.error.CoreException;
 import com.ssafy.enjoytrip.support.error.ErrorType;
+import com.ssafy.enjoytrip.web.security.AuthenticatedUserId;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
@@ -19,23 +20,22 @@ public class TestAuthenticationPrincipalResolver implements HandlerMethodArgumen
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(AuthenticationPrincipal.class);
+        return parameter.hasParameterAnnotation(AuthenticationPrincipal.class)
+                || parameter.hasParameterAnnotation(AuthenticatedUserId.class);
     }
 
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
-        Principal principal = webRequest.getUserPrincipal();
-        Jwt jwt = null;
-        if (principal instanceof JwtAuthenticationToken jwtAuth) {
-            jwt = jwtAuth.getToken();
-        } else if (principal instanceof Authentication auth) {
-            Object p = auth.getPrincipal();
-            if (p instanceof Jwt) {
-                jwt = (Jwt) p;
+        Jwt jwt = jwt(webRequest.getUserPrincipal());
+
+        if (parameter.hasParameterAnnotation(AuthenticatedUserId.class)) {
+            AuthenticatedUserId annotation = parameter.getParameterAnnotation(AuthenticatedUserId.class);
+            String userId = jwt == null ? null : jwt.getSubject();
+            if (userId == null || userId.isBlank()) {
+                return unauthenticatedValue(annotation.unauthenticated());
             }
-        } else if (principal instanceof Jwt) {
-            jwt = (Jwt) principal;
+            return userId.strip();
         }
 
         if (jwt == null) {
@@ -47,6 +47,27 @@ public class TestAuthenticationPrincipalResolver implements HandlerMethodArgumen
             }
         }
         return jwt;
+    }
+
+    private static Jwt jwt(Principal principal) {
+        if (principal instanceof JwtAuthenticationToken jwtAuth) {
+            return jwtAuth.getToken();
+        }
+        if (principal instanceof Authentication auth && auth.getPrincipal() instanceof Jwt jwt) {
+            return jwt;
+        }
+        if (principal instanceof Jwt jwt) {
+            return jwt;
+        }
+        return null;
+    }
+
+    private static String unauthenticatedValue(AuthenticatedUserId.Unauthenticated policy) {
+        return switch (policy) {
+            case THROW -> throw new CoreException(ErrorType.AUTHENTICATION_REQUIRED);
+            case NULL -> null;
+            case BLANK -> "";
+        };
     }
 
     private boolean requiresAuthentication(String method, String path) {

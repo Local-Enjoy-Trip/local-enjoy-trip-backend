@@ -1,19 +1,16 @@
 package com.ssafy.enjoytrip.web.controller;
 
-import static com.ssafy.enjoytrip.support.error.ErrorType.AUTHENTICATION_REQUIRED;
 import static com.ssafy.enjoytrip.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.domain.NoteImageUploadUrl;
 import com.ssafy.enjoytrip.service.NoteImageUploadService;
-import com.ssafy.enjoytrip.support.error.CoreException;
 import com.ssafy.enjoytrip.support.response.ApiResponse;
 import com.ssafy.enjoytrip.web.api.NoteImageApi;
 import com.ssafy.enjoytrip.web.dto.request.NoteImagePresignedUploadRequest;
 import com.ssafy.enjoytrip.web.dto.response.NoteImagePresignedUploadResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import com.ssafy.enjoytrip.web.security.AuthenticatedUserId;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,19 +26,13 @@ public class NoteImageController implements NoteImageApi {
     @Override
     public ApiResponse<NoteImagePresignedUploadResponse> createPresignedUpload(
             @Valid @RequestBody NoteImagePresignedUploadRequest request,
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticatedUserId String authenticatedUserId
     ) {
         NoteImageUploadUrl upload = service.createPresignedUpload(
-                request.toCommand(authenticatedUserId(jwt))
+                request.toCommand(authenticatedUserId)
         );
 
         return success(NoteImagePresignedUploadResponse.from(upload));
     }
 
-    private static String authenticatedUserId(Jwt jwt) {
-        if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
-            throw new CoreException(AUTHENTICATION_REQUIRED);
-        }
-        return jwt.getSubject().strip();
-    }
 }

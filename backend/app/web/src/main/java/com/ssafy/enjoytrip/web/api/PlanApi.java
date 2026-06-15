@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 @Tag(name = "Plans", description = "여행 계획 API")
 public interface PlanApi {
@@ -60,7 +59,7 @@ public interface PlanApi {
             description = "경로의 `id` 여행 계획을 조회합니다.",
             operationId = "findPlan"
     )
-    ApiResponse<PlanResponse> findOne(String id, Jwt jwt);
+    ApiResponse<PlanResponse> findOne(String id);
 
     @Operation(
             summary = "여행 계획 생성",
@@ -77,28 +76,28 @@ public interface PlanApi {
                     description = "필수 필드 또는 범위 validation 실패"
             )
     })
-    ApiResponse<Void> create(PlanCreateRequest request, Jwt jwt);
+    ApiResponse<Void> create(PlanCreateRequest request, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "여행 계획 수정",
             description = "인증 사용자의 여행 계획 메타데이터와 코스를 JSON으로 수정합니다.",
             operationId = "updatePlan"
     )
-    ApiResponse<Void> update(String id, PlanUpdateRequest request, Jwt jwt);
+    ApiResponse<Void> update(String id, PlanUpdateRequest request, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "여행 계획 코스 교체",
             description = "여행 계획의 코스 항목을 JSON 배열 순서대로 교체합니다.",
             operationId = "replacePlanItems"
     )
-    ApiResponse<Void> replaceItems(String id, PlanReplaceItemsRequest request, Jwt jwt);
+    ApiResponse<Void> replaceItems(String id, PlanReplaceItemsRequest request, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "여행 계획 코스 항목 삭제",
             description = "여행 계획의 코스 항목 하나를 삭제하고 순서를 재정렬합니다.",
             operationId = "deletePlanItem"
     )
-    ApiResponse<Void> deleteItem(String id, Long itemId, Jwt jwt);
+    ApiResponse<Void> deleteItem(String id, Long itemId, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "여행 계획 삭제",
@@ -118,6 +117,6 @@ public interface PlanApi {
     })
     ApiResponse<Void> delete(
             @Parameter(description = "삭제할 여행 계획 ID", example = "p1", required = true) String id,
-            Jwt jwt
+            @Parameter(hidden = true) String authenticatedUserId
     );
 }

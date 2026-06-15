@@ -1,7 +1,6 @@
 package com.ssafy.enjoytrip.web.controller;
 
 import static com.ssafy.enjoytrip.support.error.ErrorType.ACCESS_DENIED;
-import static com.ssafy.enjoytrip.support.error.ErrorType.AUTHENTICATION_REQUIRED;
 import static com.ssafy.enjoytrip.support.error.ErrorType.PASSWORD_LOOKUP_GONE;
 import static com.ssafy.enjoytrip.support.response.ApiResponse.success;
 
@@ -26,8 +25,7 @@ import com.ssafy.enjoytrip.web.dto.response.UsersResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import com.ssafy.enjoytrip.web.security.AuthenticatedUserId;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -116,39 +114,40 @@ public class MemberController implements MemberApi {
 
     @PutMapping("/{userId}")
     @Override
-    public ApiResponse<Void> update(@PathVariable String userId,
-                                    @Valid @RequestBody MemberUpdateRequest request,
-                                    @AuthenticationPrincipal Jwt jwt) {
-        return updateAuthenticated(userId, request, jwt);
+    public ApiResponse<Void> update(
+            @PathVariable String userId,
+            @Valid @RequestBody MemberUpdateRequest request,
+            @AuthenticatedUserId String authenticatedUserId
+    ) {
+        return updateAuthenticated(userId, request, authenticatedUserId);
     }
 
     @GetMapping("/me")
     @Override
-    public ApiResponse<UserEnvelopeResponse> me(@AuthenticationPrincipal Jwt jwt) {
-        String userId = authenticatedUserId(jwt);
-        Member member = service.findRequiredByUserId(userId);
+    public ApiResponse<UserEnvelopeResponse> me(@AuthenticatedUserId String authenticatedUserId) {
+        Member member = service.findRequiredByUserId(authenticatedUserId);
         return success(new UserEnvelopeResponse(toUserResponse(member)));
     }
 
     @PutMapping("/me")
     @Override
-    public ApiResponse<Void> updateMe(@Valid @RequestBody MemberUpdateRequest request,
-                                      @AuthenticationPrincipal Jwt jwt) {
-        String userId = authenticatedUserId(jwt);
-        return updateAuthenticated(userId, request, jwt);
+    public ApiResponse<Void> updateMe(
+            @Valid @RequestBody MemberUpdateRequest request,
+            @AuthenticatedUserId String authenticatedUserId
+    ) {
+        return updateAuthenticated(authenticatedUserId, request, authenticatedUserId);
     }
 
     @DeleteMapping("/me")
     @Override
-    public ApiResponse<Void> deleteMe(@AuthenticationPrincipal Jwt jwt) {
-        String userId = authenticatedUserId(jwt);
-        return deleteAuthenticated(userId, jwt);
+    public ApiResponse<Void> deleteMe(@AuthenticatedUserId String authenticatedUserId) {
+        return deleteAuthenticated(authenticatedUserId, authenticatedUserId);
     }
 
     private ApiResponse<Void> updateAuthenticated(String userId,
                                                   MemberUpdateRequest request,
-                                                  Jwt jwt) {
-        authorizeUser(userId, jwt);
+                                                  String authenticatedUserId) {
+        authorizeUser(userId, authenticatedUserId);
         service.update(new Member(
                 userId,
                 request.normalizedName(),
@@ -166,31 +165,20 @@ public class MemberController implements MemberApi {
 
     @DeleteMapping("/{userId}")
     @Override
-    public ApiResponse<Void> delete(@PathVariable String userId, @AuthenticationPrincipal Jwt jwt) {
-        return deleteAuthenticated(userId, jwt);
+    public ApiResponse<Void> delete(@PathVariable String userId, @AuthenticatedUserId String authenticatedUserId) {
+        return deleteAuthenticated(userId, authenticatedUserId);
     }
 
-    private ApiResponse<Void> deleteAuthenticated(String userId, Jwt jwt) {
-        authorizeUser(userId, jwt);
+    private ApiResponse<Void> deleteAuthenticated(String userId, String authenticatedUserId) {
+        authorizeUser(userId, authenticatedUserId);
         service.delete(userId);
         return success();
     }
 
-    private void authorizeUser(String userId, Jwt jwt) {
-        if (jwt == null) {
-            throw new CoreException(AUTHENTICATION_REQUIRED);
-        }
-        String authenticatedUserId = authenticatedUserId(jwt);
+    private void authorizeUser(String userId, String authenticatedUserId) {
         if (!authenticatedUserId.equals(userId)) {
             throw new CoreException(ACCESS_DENIED);
         }
-    }
-
-    private String authenticatedUserId(Jwt jwt) {
-        if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
-            throw new CoreException(AUTHENTICATION_REQUIRED);
-        }
-        return jwt.getSubject();
     }
 
     private static UserResponse toUserResponse(Member member) {

@@ -4,8 +4,8 @@ import com.ssafy.enjoytrip.support.response.ApiResponse;
 import com.ssafy.enjoytrip.web.dto.request.NoteImagePresignedUploadRequest;
 import com.ssafy.enjoytrip.web.dto.response.NoteImagePresignedUploadResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 @Tag(name = "Note Images", description = "동네핀 쪽지 이미지 업로드 API")
 public interface NoteImageApi {
@@ -16,6 +16,6 @@ public interface NoteImageApi {
     )
     ApiResponse<NoteImagePresignedUploadResponse> createPresignedUpload(
             NoteImagePresignedUploadRequest request,
-            Jwt jwt
+            @Parameter(hidden = true) String authenticatedUserId
     );
 }

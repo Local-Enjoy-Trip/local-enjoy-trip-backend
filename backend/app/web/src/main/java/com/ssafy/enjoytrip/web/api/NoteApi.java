@@ -7,13 +7,13 @@ import com.ssafy.enjoytrip.web.dto.request.NoteUpdateRequest;
 import com.ssafy.enjoytrip.web.dto.response.NoteResponse;
 import com.ssafy.enjoytrip.web.dto.response.NotesResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 @Tag(name = "Notes", description = "동네핀 쪽지 API")
 public interface NoteApi {
@@ -42,17 +42,17 @@ public interface NoteApi {
                     )
             )
     })
-    ApiResponse<NoteResponse> create(NoteCreateRequest request, Jwt jwt);
+    ApiResponse<NoteResponse> create(NoteCreateRequest request, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(summary = "쪽지 수정", description = "작성자 본인의 active 쪽지만 수정합니다.", operationId = "updateNote")
-    ApiResponse<NoteResponse> update(Long id, NoteUpdateRequest request, Jwt jwt);
+    ApiResponse<NoteResponse> update(Long id, NoteUpdateRequest request, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "쪽지 삭제",
             description = "작성자 본인의 active 쪽지를 soft delete 합니다.",
             operationId = "deleteNote"
     )
-    ApiResponse<Void> delete(Long id, Jwt jwt);
+    ApiResponse<Void> delete(Long id, @Parameter(hidden = true) String authenticatedUserId);
 
     @Operation(
             summary = "주변 최근 쪽지 조회",
@@ -77,5 +77,5 @@ public interface NoteApi {
                     )
             )
     })
-    ApiResponse<NotesResponse> nearby(@ParameterObject NearbySectionRequest request, Jwt jwt);
+    ApiResponse<NotesResponse> nearby(@ParameterObject NearbySectionRequest request, @Parameter(hidden = true) String authenticatedUserId);
 }

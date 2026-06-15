@@ -2,7 +2,7 @@ package com.ssafy.enjoytrip.web.controller;
 
 import static com.ssafy.enjoytrip.support.error.ErrorType.ATTRACTION_NOT_FOUND;
 import static com.ssafy.enjoytrip.support.error.ErrorType.ATTRACTIONS_POST_NOT_ALLOWED;
-import static com.ssafy.enjoytrip.support.error.ErrorType.AUTHENTICATION_REQUIRED;
+import static com.ssafy.enjoytrip.web.security.AuthenticatedUserId.Unauthenticated.BLANK;
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_ID;
 import static com.ssafy.enjoytrip.support.error.ErrorType.TAG_NOT_FOUND;
 import static com.ssafy.enjoytrip.support.response.ApiResponse.fail;
@@ -25,8 +25,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import com.ssafy.enjoytrip.web.security.AuthenticatedUserId;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -46,11 +45,13 @@ public class AttractionController implements AttractionApi {
 
     @GetMapping
     @Override
-    public ApiResponse<AttractionsResponse> search(@ModelAttribute AttractionSearchRequest request,
-                                                   @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<AttractionsResponse> search(
+            @ModelAttribute AttractionSearchRequest request,
+            @AuthenticatedUserId(unauthenticated = BLANK) String authenticatedUserId
+    ) {
         List<Attraction> attractions = service.searchAttractions(
                 request.toCondition(),
-                authenticatedUserIdOrBlank(jwt)
+                authenticatedUserId
         );
 
         return success(new AttractionsResponse(attractions));
@@ -60,11 +61,11 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<PopularAttractionsResponse> popularNearby(
             @Valid @ModelAttribute NearbySectionRequest request,
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticatedUserId(unauthenticated = BLANK) String authenticatedUserId
     ) {
         List<PopularAttraction> attractions = service.findPopularNearbyAttractions(
                 request.toCondition(),
-                authenticatedUserIdOrBlank(jwt)
+                authenticatedUserId
         );
 
         return success(PopularAttractionsResponse.from(attractions));
@@ -79,18 +80,18 @@ public class AttractionController implements AttractionApi {
 
     @PutMapping("/{id}/favorite")
     @Override
-    public ApiResponse<Void> favorite(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<Void> favorite(@PathVariable Long id, @AuthenticatedUserId String authenticatedUserId) {
         requireAttraction(id);
-        service.addFavorite(id, authenticatedUserId(jwt));
+        service.addFavorite(id, authenticatedUserId);
 
         return success();
     }
 
     @DeleteMapping("/{id}/favorite")
     @Override
-    public ApiResponse<Void> unfavorite(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<Void> unfavorite(@PathVariable Long id, @AuthenticatedUserId String authenticatedUserId) {
         requireAttraction(id);
-        service.removeFavorite(id, authenticatedUserId(jwt));
+        service.removeFavorite(id, authenticatedUserId);
 
         return success();
     }
@@ -99,36 +100,39 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<Void> rate(@PathVariable Long id,
                                   @Valid @RequestBody RatingRequest request,
-                                  @AuthenticationPrincipal Jwt jwt) {
+                                  @AuthenticatedUserId String authenticatedUserId) {
         requireAttraction(id);
-        service.upsertRating(id, authenticatedUserId(jwt), request.rating());
+        service.upsertRating(id, authenticatedUserId, request.rating());
 
         return success();
     }
 
     @DeleteMapping("/{id}/rating")
     @Override
-    public ApiResponse<Void> deleteRating(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<Void> deleteRating(@PathVariable Long id, @AuthenticatedUserId String authenticatedUserId) {
         requireAttraction(id);
-        service.removeRating(id, authenticatedUserId(jwt));
+        service.removeRating(id, authenticatedUserId);
 
         return success();
     }
 
     @GetMapping("/{id}/stats")
     @Override
-    public ApiResponse<AttractionStatsResponse> stats(@PathVariable Long id,
-                                                      @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<AttractionStatsResponse> stats(
+            @PathVariable Long id,
+            @AuthenticatedUserId(unauthenticated = BLANK) String authenticatedUserId
+    ) {
         requireAttraction(id);
-        return success(new AttractionStatsResponse(service.findStats(id, authenticatedUserIdOrBlank(jwt))));
+        return success(new AttractionStatsResponse(service.findStats(id, authenticatedUserId)));
     }
 
     @PutMapping("/{id}/tags")
     @Override
-    public ApiResponse<Void> replaceTags(@PathVariable Long id,
-                                         @Valid @RequestBody AttractionTagsRequest request,
-                                         @AuthenticationPrincipal Jwt jwt) {
-        authenticatedUserId(jwt);
+    public ApiResponse<Void> replaceTags(
+            @PathVariable Long id,
+            @Valid @RequestBody AttractionTagsRequest request,
+            @AuthenticatedUserId String authenticatedUserId
+    ) {
         requireAttraction(id);
 
         if (!service.replaceTags(id, request.tagIds())) {
@@ -148,28 +152,5 @@ public class AttractionController implements AttractionApi {
         }
     }
 
-    private static String authenticatedUserId(Jwt jwt) {
-        if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
-            throw new CoreException(AUTHENTICATION_REQUIRED);
-        }
-
-        return trim(jwt.getSubject());
-    }
-
-    private static String authenticatedUserIdOrBlank(Jwt jwt) {
-        if (jwt == null) {
-            return "";
-        }
-
-        return trim(jwt.getSubject());
-    }
-
-    private static String trim(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        return value.trim();
-    }
 
 }
