@@ -53,21 +53,27 @@ public class TestAuthenticationPrincipalResolver implements HandlerMethodArgumen
         if (path == null) return false;
 
         if ("GET".equalsIgnoreCase(method)) {
-            return path.equals("/api/members/me");
+            return path.equals("/api/members/me")
+                    || path.equals("/api/map/explore");
         }
         if ("POST".equalsIgnoreCase(method)) {
             return path.equals("/api/attraction-tags")
-                    || path.equals("/api/plans");
+                    || path.equals("/api/plans")
+                    || path.equals("/api/note-images/presigned-upload");
         }
         if ("PUT".equalsIgnoreCase(method)) {
             return path.startsWith("/api/members/")
-                    || (path.startsWith("/api/attractions/") && (path.endsWith("/favorite") || path.endsWith("/rating") || path.endsWith("/tags")))
+                    || (path.startsWith("/api/attractions/")
+                            && (path.endsWith("/favorite")
+                                    || path.endsWith("/rating")
+                                    || path.endsWith("/tags")))
                     || path.startsWith("/api/attraction-tags/")
                     || path.startsWith("/api/plans/");
         }
         if ("DELETE".equalsIgnoreCase(method)) {
             return path.startsWith("/api/members/")
-                    || (path.startsWith("/api/attractions/") && (path.endsWith("/favorite") || path.endsWith("/rating")))
+                    || (path.startsWith("/api/attractions/")
+                            && (path.endsWith("/favorite") || path.endsWith("/rating")))
                     || path.startsWith("/api/attraction-tags/")
                     || path.startsWith("/api/plans/");
         }

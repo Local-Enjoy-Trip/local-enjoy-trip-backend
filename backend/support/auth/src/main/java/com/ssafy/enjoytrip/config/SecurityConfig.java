@@ -68,9 +68,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/attraction-tags").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/attraction-tags/{id}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/attraction-tags/{id}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/map/explore").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/notes").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/note-images/presigned-upload").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/notes/{id}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/notes/{id}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/map/explore").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/note-images/presigned-upload").authenticated()
                         .requestMatchers("/api/friendships/**", "/api/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/plans", "/api/plans/items").authenticated()
                         .requestMatchers(

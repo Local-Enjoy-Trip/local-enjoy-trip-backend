@@ -16,6 +16,7 @@ public record NoteResponse(
         Double latitude,
         Double longitude,
         String regionName,
+        String imageObjectKey,
         NoteStatus status,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
@@ -31,6 +32,7 @@ public record NoteResponse(
                 note.latitude(),
                 note.longitude(),
                 note.regionName(),
+                note.imageObjectKey(),
                 note.status(),
                 note.createdAt(),
                 note.updatedAt()

@@ -8,6 +8,7 @@ public record CreateNoteCommand(
         NoteVisibility visibility,
         double latitude,
         double longitude,
-        String regionName
+        String regionName,
+        NoteImageReference imageReference
 ) {
 }

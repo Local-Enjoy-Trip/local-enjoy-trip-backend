@@ -59,6 +59,45 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    container_name: enjoytrip-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${ENJOYTRIP_MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${ENJOYTRIP_MINIO_SECRET_KEY:-minioadmin}
+      TZ: Asia/Seoul
+    ports:
+      - "${MINIO_API_PORT:-19000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - enjoytrip-minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  minio-bootstrap:
+    image: minio/mc:latest
+    container_name: enjoytrip-minio-bootstrap
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      ENJOYTRIP_MINIO_BUCKET: ${ENJOYTRIP_MINIO_BUCKET:-dongnepin-notes}
+      ENJOYTRIP_MINIO_ACCESS_KEY: ${ENJOYTRIP_MINIO_ACCESS_KEY:-minioadmin}
+      ENJOYTRIP_MINIO_SECRET_KEY: ${ENJOYTRIP_MINIO_SECRET_KEY:-minioadmin}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mc alias set local http://minio:9000 "$${ENJOYTRIP_MINIO_ACCESS_KEY}" "$${ENJOYTRIP_MINIO_SECRET_KEY}"
+        mc mb --ignore-existing "local/$${ENJOYTRIP_MINIO_BUCKET}"
+        mc anonymous set download "local/$${ENJOYTRIP_MINIO_BUCKET}"
+
+
   tempo:
     image: grafana/tempo:2.10.5
     container_name: enjoytrip-tempo
@@ -258,6 +297,7 @@ services:
 
 volumes:
   enjoytrip-postgres-data:
+  enjoytrip-minio-data:
   enjoytrip-pgadmin-data:
   enjoytrip-kafka-data:
   enjoytrip-clickhouse-data:

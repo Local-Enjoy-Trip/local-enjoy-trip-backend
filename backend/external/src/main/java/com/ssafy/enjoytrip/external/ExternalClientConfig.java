@@ -1,4 +1,7 @@
 package com.ssafy.enjoytrip.external;
+
+import com.ssafy.enjoytrip.external.minio.MinioProperties;
+import io.minio.MinioClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
@@ -19,5 +22,14 @@ class ExternalClientConfig {
     @Bean
     RestClient openWeatherMapRestClient() {
         return RestClient.create();
+    }
+
+    @Bean
+    MinioClient noteImageMinioClient(MinioProperties properties) {
+        return MinioClient.builder()
+                .endpoint(properties.getEndpoint())
+                .credentials(properties.getAccessKey(), properties.getSecretKey())
+                .region(properties.getRegion())
+                .build();
     }
 }

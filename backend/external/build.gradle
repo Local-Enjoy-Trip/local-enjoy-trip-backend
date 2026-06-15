@@ -11,6 +11,7 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-starter-model-openai'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.clickhouse:clickhouse-jdbc:0.9.8'
+    implementation 'io.minio:minio:8.5.17'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

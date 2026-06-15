@@ -3,6 +3,7 @@ package com.ssafy.enjoytrip.web.dto.request;
 import com.ssafy.enjoytrip.domain.CreateNoteCommand;
 import com.ssafy.enjoytrip.domain.NoteCategory;
 import com.ssafy.enjoytrip.domain.NoteVisibility;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -16,7 +17,8 @@ public record NoteCreateRequest(
         @NotNull NoteVisibility visibility,
         @NotNull @DecimalMin(value = "-90.0") @DecimalMax(value = "90.0") Double latitude,
         @NotNull @DecimalMin(value = "-180.0") @DecimalMax(value = "180.0") Double longitude,
-        @Size(max = 100) String regionName
+        @Size(max = 100) String regionName,
+        @Valid NoteImageReferenceRequest image
 ) {
     public CreateNoteCommand toCommand(String authorUserId) {
         return new CreateNoteCommand(
@@ -27,7 +29,8 @@ public record NoteCreateRequest(
                 visibility,
                 latitude,
                 longitude,
-                blankToNull(regionName)
+                blankToNull(regionName),
+                image == null ? null : image.toReference()
         );
     }
 
