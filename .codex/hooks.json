@@ -2,11 +2,24 @@
   "hooks": {
     "SessionStart": [
       {
+        "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "sh -lc 'repo=$(git rev-parse --show-toplevel 2>/dev/null || pwd); exec node \"$repo/.codex/hooks/load-backend-rule-docs.cjs\"'",
-            "statusMessage": "Loading backend CONSTITUTION.md and RULES.md"
+            "command": "sh -lc 'repo=$(git rev-parse --show-toplevel 2>/dev/null || pwd); exec node \"$repo/.codex/hooks/load-backend-constitution.cjs\"'",
+            "statusMessage": "Loading backend CONSTITUTION.md"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'repo=$(git rev-parse --show-toplevel 2>/dev/null || pwd); exec node \"$repo/.codex/hooks/check-backend-governance.cjs\"'",
+            "timeout": 30,
+            "statusMessage": "Checking backend CONSTITUTION.md and RULES.md"
           }
         ]
       }

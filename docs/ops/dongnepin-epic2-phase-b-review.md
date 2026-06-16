@@ -5,7 +5,7 @@
 
 ## Reviewed source-of-truth
 
-- `backend/CONSTITUTION.md` and `backend/RULES.md` from session-start rules.
+- `backend/CONSTITUTION.md` from session-start rules, with `backend/RULES.md` covered by the Stop governance check.
 - Applicable module rules:
   - `backend/AGENTS.md`
   - `backend/app/web/AGENTS.md`

@@ -3,10 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const REQUIRED_DOCS = [
-  "backend/CONSTITUTION.md",
-  "backend/RULES.md",
-];
+const REQUIRED_DOC = "backend/CONSTITUTION.md";
 
 function readStdin() {
   try {
@@ -33,7 +30,7 @@ function repoRoot(payload) {
     return findGitRoot(payload.cwd) || path.resolve(payload.cwd);
   }
 
-  return path.resolve(__dirname, "..", "..");
+  return findGitRoot(process.cwd()) || path.resolve(__dirname, "..", "..");
 }
 
 function findGitRoot(startDir) {
@@ -73,17 +70,17 @@ function renderDoc(root, relativePath) {
 
 function buildAdditionalContext(root, payload) {
   const source = typeof payload.source === "string" ? payload.source : "unknown";
-  const docs = REQUIRED_DOCS.map((doc) => renderDoc(root, doc)).join("\n\n---\n\n");
 
   return [
-    "[local-enjoy-trip-backend session-start rule documents]",
+    "[local-enjoy-trip-backend session-start constitution]",
     "",
-    "The repository requires these backend rule documents to be read before backend work in a new Codex session.",
-    "Treat backend/CONSTITUTION.md as the highest-priority backend rule source, and use backend/RULES.md as the concrete operating rulebook.",
+    "The repository requires backend/CONSTITUTION.md to be read before backend work in a new Codex session.",
+    "Treat backend/CONSTITUTION.md as the highest-priority backend rule source.",
+    "Operational backend/RULES.md checks run from the Stop hook before a turn finishes.",
     "For module-specific backend edits, still read the nearest applicable backend/**/AGENTS.md before changing files.",
     `SessionStart source: ${source}`,
     "",
-    docs,
+    renderDoc(root, REQUIRED_DOC),
   ].join("\n");
 }
 

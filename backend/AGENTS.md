@@ -92,7 +92,8 @@ Backend work must use the three-layer rule structure below.
 
 Session-start enforcement:
 
-- A Codex `SessionStart` hook is configured to load `backend/CONSTITUTION.md` and `backend/RULES.md` into session context for this repository.
+- A Codex `SessionStart` hook is configured to load `backend/CONSTITUTION.md` into session context for this repository.
+- A Codex `Stop` hook is configured to check changed backend files against `backend/CONSTITUTION.md` and `backend/RULES.md` before a turn finishes.
 - Even if the hook is unavailable, agents must manually read and follow `backend/CONSTITUTION.md` before backend edits.
 
 Completion reports for backend changes must state which layer was used: `CONSTITUTION.md`, `RULES.md`, and/or `PRECEDENTS.md`.

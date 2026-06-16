@@ -76,14 +76,13 @@ Content-Type: application/json
 - `backend/app/web/build/docs/asciidoc/index.html`
 
 ## DB/API Key
-기본 DB 값:
-- URL: `jdbc:postgresql://localhost:5432/enjoytrip`
-- USER: `ssafy`
-- PASSWORD: `ssafy`
+DB 접속 정보와 외부 API key는 환경변수로만 주입한다. 실제 값은 README나 커밋된 문서에 적지 않는다.
 
-환경변수:
+필수 환경변수:
 - `ENJOYTRIP_DB_URL`
 - `ENJOYTRIP_DB_USER`
 - `ENJOYTRIP_DB_PASSWORD`
 - `ENJOYTRIP_TOUR_API_KEY` 또는 `TOUR_API_KEY`
 - `EV_CHARGER_API_KEY` 또는 `ENJOYTRIP_EV_API_KEY`
+
+로컬 개발용 샘플은 `.env.example`을 복사한 뒤 개인 환경에 맞게 값을 채워 사용한다.
