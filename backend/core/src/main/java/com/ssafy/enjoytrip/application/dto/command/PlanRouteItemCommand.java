@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.service.command;
+package com.ssafy.enjoytrip.application.dto.command;
 
 public record PlanRouteItemCommand(
         Long attractionId,

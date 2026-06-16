@@ -1,11 +1,11 @@
 package com.ssafy.enjoytrip.repository;
 
 import com.ssafy.enjoytrip.domain.Attraction;
-import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
+import com.ssafy.enjoytrip.application.dto.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.AttractionStats;
 import com.ssafy.enjoytrip.domain.AttractionTag;
 import com.ssafy.enjoytrip.domain.NearbyAttractionCandidate;
-import com.ssafy.enjoytrip.domain.NearbySearchCondition;
+import com.ssafy.enjoytrip.application.dto.query.NearbySearchCondition;
 
 import java.util.List;
 

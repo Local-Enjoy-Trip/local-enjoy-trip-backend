@@ -1,6 +1,6 @@
-package com.ssafy.enjoytrip.domain;
+package com.ssafy.enjoytrip.application.dto.query;
 
-public record NearbySearchCondition(
+public record NearbyNotesCondition(
         double longitude,
         double latitude,
         double radiusMeters,

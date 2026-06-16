@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.domain;
+package com.ssafy.enjoytrip.application.dto.query;
 
 public record AttractionSearchCondition(
         String sidoCode,

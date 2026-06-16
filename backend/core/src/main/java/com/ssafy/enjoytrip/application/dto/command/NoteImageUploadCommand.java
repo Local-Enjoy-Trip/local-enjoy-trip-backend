@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.domain;
+package com.ssafy.enjoytrip.application.dto.command;
 
 public record NoteImageUploadCommand(
         String userId,

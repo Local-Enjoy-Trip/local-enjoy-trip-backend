@@ -1,11 +1,11 @@
 package com.ssafy.enjoytrip.repository;
 
-import com.ssafy.enjoytrip.domain.CreateNoteCommand;
-import com.ssafy.enjoytrip.domain.MapNotesCondition;
-import com.ssafy.enjoytrip.domain.NearbyNotesCondition;
+import com.ssafy.enjoytrip.application.dto.command.CreateNoteCommand;
+import com.ssafy.enjoytrip.application.dto.query.MapNotesCondition;
+import com.ssafy.enjoytrip.application.dto.query.NearbyNotesCondition;
 import com.ssafy.enjoytrip.domain.Note;
 import com.ssafy.enjoytrip.domain.NoteMapPin;
-import com.ssafy.enjoytrip.domain.UpdateNoteCommand;
+import com.ssafy.enjoytrip.application.dto.command.UpdateNoteCommand;
 import java.util.List;
 import java.util.Optional;
 

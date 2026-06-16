@@ -3,7 +3,7 @@ package com.ssafy.enjoytrip.storage.repository;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.ssafy.enjoytrip.domain.MapNotesCondition;
+import com.ssafy.enjoytrip.application.dto.query.MapNotesCondition;
 import com.ssafy.enjoytrip.domain.NoteCategory;
 import org.jooq.Condition;
 import org.jooq.SQLDialect;

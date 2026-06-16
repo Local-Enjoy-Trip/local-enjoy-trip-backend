@@ -42,6 +42,17 @@ existing ingress boundary first.
 - **Fallback Visibility**: Broad fallback behavior in `core` must be a product rule, not a silent defensive catch-all. If a
   service falls back after repository, external, or runtime failure, the failure must remain observable through logging,
   result metadata, or a clearly documented caller contract.
+- **Domain Behavior Extraction**: Move only object-local business meaning into domain objects:
+  status transitions, authenticated owner/participant checks, and value merge/default semantics that belong to the
+  object itself. Keep repository lookup, transaction boundaries, caller orchestration, and storage atomic guards in
+  services/adapters.
+- **Application Service Boundary**: Do not remove service methods just because a domain object gained behavior.
+  Preserve read facades and compatibility delegates until production and test callers are audited. Services should
+  fetch required persisted state first, then call domain guard methods such as `require...By(...)`, then invoke
+  repository ports.
+- **Domain Import Boundary**: Domain objects may use core/support business exceptions as existing domain precedent
+  does, but must not import repository ports, JPA/storage entities, web DTOs, controller contracts, or persistence
+  adapters.
 
 ## Verification
 

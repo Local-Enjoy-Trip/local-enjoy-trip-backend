@@ -12,11 +12,11 @@ import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.noCondition;
 
 import com.ssafy.enjoytrip.domain.Attraction;
-import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
+import com.ssafy.enjoytrip.application.dto.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.AttractionStats;
 import com.ssafy.enjoytrip.domain.AttractionTag;
 import com.ssafy.enjoytrip.domain.NearbyAttractionCandidate;
-import com.ssafy.enjoytrip.domain.NearbySearchCondition;
+import com.ssafy.enjoytrip.application.dto.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.repository.AttractionRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

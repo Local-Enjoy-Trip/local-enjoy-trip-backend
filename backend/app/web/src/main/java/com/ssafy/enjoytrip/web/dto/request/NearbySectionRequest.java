@@ -3,8 +3,8 @@ package com.ssafy.enjoytrip.web.dto.request;
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_LATITUDE_OR_LONGITUDE;
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_REQUEST;
 
-import com.ssafy.enjoytrip.domain.NearbyNotesCondition;
-import com.ssafy.enjoytrip.domain.NearbySearchCondition;
+import com.ssafy.enjoytrip.application.dto.query.NearbyNotesCondition;
+import com.ssafy.enjoytrip.application.dto.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.support.error.CoreException;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;

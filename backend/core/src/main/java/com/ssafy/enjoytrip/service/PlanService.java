@@ -1,14 +1,13 @@
 package com.ssafy.enjoytrip.service;
 
-import static com.ssafy.enjoytrip.support.error.ErrorType.ACCESS_DENIED;
 import static com.ssafy.enjoytrip.support.error.ErrorType.PLAN_NOT_FOUND;
 
+import com.ssafy.enjoytrip.application.dto.command.PlanMutationCommand;
+import com.ssafy.enjoytrip.application.dto.command.PlanRouteItemCommand;
 import com.ssafy.enjoytrip.domain.PlanItem;
 import com.ssafy.enjoytrip.domain.PlanRouteItem;
 import com.ssafy.enjoytrip.domain.TravelPlan;
 import com.ssafy.enjoytrip.repository.PlanRepository;
-import com.ssafy.enjoytrip.service.command.PlanMutationCommand;
-import com.ssafy.enjoytrip.service.command.PlanRouteItemCommand;
 import com.ssafy.enjoytrip.support.error.CoreException;
 import java.util.List;
 import java.util.Optional;
@@ -33,32 +32,26 @@ public class PlanService {
     }
 
     public void createPlan(String authenticatedUserId, PlanMutationCommand command) {
-        TravelPlan plan = new TravelPlan(
+        TravelPlan plan = TravelPlan.createOwned(
                 command.id(),
                 authenticatedUserId,
                 command.title(),
                 command.startDate(),
                 command.endDate(),
                 command.budget(),
-                command.note(),
-                "[]",
-                ""
+                command.note()
         );
         repository.insert(plan, toPlanItems(command.id(), command.routeItems()));
     }
 
     public void updatePlan(String authenticatedUserId, String planId, PlanMutationCommand command) {
         TravelPlan current = requireOwnedPlan(planId, authenticatedUserId);
-        TravelPlan next = new TravelPlan(
-                current.id(),
-                current.userId(),
-                valueOrCurrent(command.title(), current.title()),
-                valueOrCurrent(command.startDate(), current.startDate()),
-                valueOrCurrent(command.endDate(), current.endDate()),
-                valueOrCurrent(command.budget(), current.budget()),
-                valueOrCurrent(command.note(), current.note()),
-                current.routeItemsJson(),
-                current.createdAt()
+        TravelPlan next = current.merge(
+                command.title(),
+                command.startDate(),
+                command.endDate(),
+                command.budget(),
+                command.note()
         );
         boolean updated = command.routeItems() == null
                 ? repository.update(next)
@@ -82,9 +75,8 @@ public class PlanService {
     private TravelPlan requireOwnedPlan(String planId, String authenticatedUserId) {
         TravelPlan plan = repository.findById(planId)
                 .orElseThrow(() -> new CoreException(PLAN_NOT_FOUND));
-        if (!plan.userId().equals(authenticatedUserId)) {
-            throw new CoreException(ACCESS_DENIED);
-        }
+        plan.requireOwnedBy(authenticatedUserId);
+
         return plan;
     }
 
@@ -149,12 +141,5 @@ public class PlanService {
                         item.stayMinutes()
                 ))
                 .toList();
-    }
-
-    private static <T> T valueOrCurrent(T value, T current) {
-        if (value == null) {
-            return current;
-        }
-        return value;
     }
 }

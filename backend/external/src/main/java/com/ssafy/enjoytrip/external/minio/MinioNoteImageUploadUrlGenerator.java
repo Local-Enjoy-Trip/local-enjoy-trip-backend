@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.external.minio;
 
-import com.ssafy.enjoytrip.domain.NoteImageUploadCommand;
+import com.ssafy.enjoytrip.application.dto.command.NoteImageUploadCommand;
 import com.ssafy.enjoytrip.domain.NoteImageUploadUrl;
 import com.ssafy.enjoytrip.repository.NoteImageUploadUrlGenerator;
 import io.minio.GetPresignedObjectUrlArgs;

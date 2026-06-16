@@ -4,17 +4,17 @@ import com.ssafy.enjoytrip.domain.BoardPost;
 import com.ssafy.enjoytrip.domain.ChargerItem;
 import com.ssafy.enjoytrip.domain.Hotplace;
 import com.ssafy.enjoytrip.domain.Member;
-import com.ssafy.enjoytrip.domain.CreateNoteCommand;
-import com.ssafy.enjoytrip.domain.NearbyNotesCondition;
+import com.ssafy.enjoytrip.application.dto.command.CreateNoteCommand;
+import com.ssafy.enjoytrip.application.dto.query.NearbyNotesCondition;
 import com.ssafy.enjoytrip.domain.NewsItem;
 import com.ssafy.enjoytrip.domain.Note;
 import com.ssafy.enjoytrip.domain.Notice;
 import com.ssafy.enjoytrip.domain.TravelPlan;
-import com.ssafy.enjoytrip.domain.UpdateNoteCommand;
+import com.ssafy.enjoytrip.application.dto.command.UpdateNoteCommand;
 import com.ssafy.enjoytrip.domain.Attraction;
-import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
+import com.ssafy.enjoytrip.application.dto.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.NearbyAttractionCandidate;
-import com.ssafy.enjoytrip.domain.NearbySearchCondition;
+import com.ssafy.enjoytrip.application.dto.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.domain.WeatherSummary;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -213,8 +213,14 @@ class RepositoryPortContractTest {
     private static void assertAllowedType(Type type) {
         String typeName = type.getTypeName();
         FORBIDDEN_LAYER_PACKAGES.forEach(forbiddenPackage ->
-                assertTrue(!typeName.startsWith(forbiddenPackage) && !typeName.contains("<" + forbiddenPackage),
+                assertTrue(!referencesPackage(typeName, forbiddenPackage),
                         () -> "Forbidden layer type in core repository port: " + typeName)
         );
+    }
+
+    private static boolean referencesPackage(String typeName, String forbiddenPackage) {
+        return typeName.equals(forbiddenPackage)
+                || typeName.startsWith(forbiddenPackage + ".")
+                || typeName.contains("<" + forbiddenPackage + ".");
     }
 }

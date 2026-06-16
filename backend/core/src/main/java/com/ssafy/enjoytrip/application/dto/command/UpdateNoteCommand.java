@@ -1,4 +1,8 @@
-package com.ssafy.enjoytrip.domain;
+package com.ssafy.enjoytrip.application.dto.command;
+
+import com.ssafy.enjoytrip.domain.NoteCategory;
+import com.ssafy.enjoytrip.domain.NoteImageReference;
+import com.ssafy.enjoytrip.domain.NoteVisibility;
 
 public record UpdateNoteCommand(
         Long id,

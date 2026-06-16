@@ -1,14 +1,11 @@
 package com.ssafy.enjoytrip.service;
 
-import static com.ssafy.enjoytrip.support.error.ErrorType.NOTE_ACCESS_DENIED;
-import static com.ssafy.enjoytrip.support.error.ErrorType.NOTE_NOT_ACTIVE;
 import static com.ssafy.enjoytrip.support.error.ErrorType.NOTE_NOT_FOUND;
 
-import com.ssafy.enjoytrip.domain.CreateNoteCommand;
-import com.ssafy.enjoytrip.domain.NearbyNotesCondition;
+import com.ssafy.enjoytrip.application.dto.command.CreateNoteCommand;
+import com.ssafy.enjoytrip.application.dto.command.UpdateNoteCommand;
+import com.ssafy.enjoytrip.application.dto.query.NearbyNotesCondition;
 import com.ssafy.enjoytrip.domain.Note;
-import com.ssafy.enjoytrip.domain.NoteStatus;
-import com.ssafy.enjoytrip.domain.UpdateNoteCommand;
 import com.ssafy.enjoytrip.repository.NoteRepository;
 import com.ssafy.enjoytrip.support.error.CoreException;
 import java.util.List;
@@ -25,16 +22,16 @@ public class NoteService {
     }
 
     public Note updateNote(UpdateNoteCommand command) {
-        Note note = findEditableNote(command.id());
-        requireOwner(note, command.authorUserId());
+        Note note = findRequiredNote(command.id());
+        note.requireEditableBy(command.authorUserId());
 
         return repository.updateOwned(command)
                 .orElseThrow(() -> new CoreException(NOTE_NOT_FOUND));
     }
 
     public void deleteNote(Long id, String authorUserId) {
-        Note note = findEditableNote(id);
-        requireOwner(note, authorUserId);
+        Note note = findRequiredNote(id);
+        note.requireEditableBy(authorUserId);
 
         if (!repository.softDeleteOwned(id, authorUserId)) {
             throw new CoreException(NOTE_NOT_FOUND);
@@ -45,20 +42,8 @@ public class NoteService {
         return repository.findNearbyAccessible(condition, viewerUserId);
     }
 
-    private Note findEditableNote(Long id) {
-        Note note = repository.findById(id)
+    private Note findRequiredNote(Long id) {
+        return repository.findById(id)
                 .orElseThrow(() -> new CoreException(NOTE_NOT_FOUND));
-
-        if (note.status() != NoteStatus.ACTIVE) {
-            throw new CoreException(NOTE_NOT_ACTIVE);
-        }
-
-        return note;
-    }
-
-    private static void requireOwner(Note note, String authorUserId) {
-        if (!note.authorUserId().equals(authorUserId)) {
-            throw new CoreException(NOTE_ACCESS_DENIED);
-        }
     }
 }

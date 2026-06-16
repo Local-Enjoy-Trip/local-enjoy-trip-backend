@@ -3,7 +3,7 @@ package com.ssafy.enjoytrip.web.dto.request;
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_LATITUDE_OR_LONGITUDE;
 import static com.ssafy.enjoytrip.support.error.ErrorType.INVALID_REQUEST;
 
-import com.ssafy.enjoytrip.domain.MapExploreCommand;
+import com.ssafy.enjoytrip.application.dto.query.MapExploreCommand;
 import com.ssafy.enjoytrip.domain.MapExploreFilter;
 import com.ssafy.enjoytrip.domain.NoteCategory;
 import com.ssafy.enjoytrip.support.error.CoreException;

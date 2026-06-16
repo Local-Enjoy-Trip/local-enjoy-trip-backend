@@ -1,4 +1,6 @@
-package com.ssafy.enjoytrip.domain;
+package com.ssafy.enjoytrip.application.dto.query;
+
+import com.ssafy.enjoytrip.domain.NoteCategory;
 
 public record MapNotesCondition(
         double longitude,

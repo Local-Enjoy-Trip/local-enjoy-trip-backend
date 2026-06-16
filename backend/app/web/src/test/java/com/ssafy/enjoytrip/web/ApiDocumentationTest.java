@@ -6,7 +6,7 @@ import com.ssafy.enjoytrip.web.dto.response.*;
 
 import com.ssafy.enjoytrip.service.RouteOptimizationService;
 import com.ssafy.enjoytrip.domain.Attraction;
-import com.ssafy.enjoytrip.domain.AttractionSearchCondition;
+import com.ssafy.enjoytrip.application.dto.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.ChargerItem;
 import com.ssafy.enjoytrip.domain.NewsItem;
 import com.ssafy.enjoytrip.domain.NeighborhoodBriefing;
