@@ -2,8 +2,8 @@ package com.ssafy.enjoytrip.service;
 
 import static com.ssafy.enjoytrip.support.error.ErrorType.PLAN_NOT_FOUND;
 
-import com.ssafy.enjoytrip.application.dto.command.PlanMutationCommand;
-import com.ssafy.enjoytrip.application.dto.command.PlanRouteItemCommand;
+import com.ssafy.enjoytrip.dto.command.PlanMutationCommand;
+import com.ssafy.enjoytrip.dto.command.PlanRouteItemCommand;
 import com.ssafy.enjoytrip.domain.PlanItem;
 import com.ssafy.enjoytrip.domain.PlanRouteItem;
 import com.ssafy.enjoytrip.domain.TravelPlan;

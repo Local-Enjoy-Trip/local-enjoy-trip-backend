@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.web.dto.request;
 
-import com.ssafy.enjoytrip.application.dto.query.AttractionSearchCondition;
+import com.ssafy.enjoytrip.dto.query.AttractionSearchCondition;
 
 public record AttractionSearchRequest(
     String mapX,

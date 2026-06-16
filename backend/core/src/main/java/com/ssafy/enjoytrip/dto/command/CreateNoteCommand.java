@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.application.dto.command;
+package com.ssafy.enjoytrip.dto.command;
 
 import com.ssafy.enjoytrip.domain.NoteCategory;
 import com.ssafy.enjoytrip.domain.NoteImageReference;

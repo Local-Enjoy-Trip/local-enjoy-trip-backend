@@ -5,12 +5,12 @@ import static com.ssafy.enjoytrip.support.error.ErrorType.USER_NOT_FOUND;
 
 import com.ssafy.enjoytrip.domain.Attraction;
 import com.ssafy.enjoytrip.domain.MapCenter;
-import com.ssafy.enjoytrip.application.dto.query.MapExploreCommand;
+import com.ssafy.enjoytrip.dto.query.MapExploreCommand;
 import com.ssafy.enjoytrip.domain.MapExploreResult;
-import com.ssafy.enjoytrip.application.dto.query.MapNotesCondition;
+import com.ssafy.enjoytrip.dto.query.MapNotesCondition;
 import com.ssafy.enjoytrip.domain.Member;
 import com.ssafy.enjoytrip.domain.NearbyAttractionCandidate;
-import com.ssafy.enjoytrip.application.dto.query.NearbySearchCondition;
+import com.ssafy.enjoytrip.dto.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.domain.NoteMapPin;
 import com.ssafy.enjoytrip.domain.PlaceMapPin;
 import com.ssafy.enjoytrip.repository.AttractionRepository;

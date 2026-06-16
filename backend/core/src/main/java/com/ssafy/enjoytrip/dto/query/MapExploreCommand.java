@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.application.dto.query;
+package com.ssafy.enjoytrip.dto.query;
 
 import com.ssafy.enjoytrip.domain.MapExploreFilter;
 import com.ssafy.enjoytrip.domain.NoteCategory;

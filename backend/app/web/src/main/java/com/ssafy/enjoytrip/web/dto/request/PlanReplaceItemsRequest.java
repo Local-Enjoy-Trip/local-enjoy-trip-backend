@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.web.dto.request;
 
-import com.ssafy.enjoytrip.application.dto.command.PlanRouteItemCommand;
+import com.ssafy.enjoytrip.dto.command.PlanRouteItemCommand;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

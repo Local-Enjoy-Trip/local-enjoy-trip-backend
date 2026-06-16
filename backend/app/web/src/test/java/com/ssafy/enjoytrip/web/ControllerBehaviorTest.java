@@ -1,17 +1,14 @@
 package com.ssafy.enjoytrip.web;
-import com.ssafy.enjoytrip.web.api.*;
 import com.ssafy.enjoytrip.web.controller.*;
-import com.ssafy.enjoytrip.web.dto.request.*;
-import com.ssafy.enjoytrip.web.dto.response.*;
 
 import com.ssafy.enjoytrip.domain.BoardPost;
 import com.ssafy.enjoytrip.domain.Hotplace;
-import com.ssafy.enjoytrip.application.dto.query.MapExploreCommand;
+import com.ssafy.enjoytrip.dto.query.MapExploreCommand;
 import com.ssafy.enjoytrip.domain.MapExploreResult;
 import com.ssafy.enjoytrip.domain.Member;
 import com.ssafy.enjoytrip.domain.MapCenter;
 import com.ssafy.enjoytrip.domain.MapExploreFilter;
-import com.ssafy.enjoytrip.application.dto.command.NoteImageUploadCommand;
+import com.ssafy.enjoytrip.dto.command.NoteImageUploadCommand;
 import com.ssafy.enjoytrip.domain.NoteImageUploadUrl;
 import com.ssafy.enjoytrip.domain.NoteMapPin;
 import com.ssafy.enjoytrip.domain.NoteViewerRelationship;
@@ -21,17 +18,16 @@ import com.ssafy.enjoytrip.domain.Note;
 import com.ssafy.enjoytrip.domain.NoteCategory;
 import com.ssafy.enjoytrip.domain.NoteStatus;
 import com.ssafy.enjoytrip.domain.NoteVisibility;
-import com.ssafy.enjoytrip.domain.Notice;
 import com.ssafy.enjoytrip.domain.TravelPlan;
 import com.ssafy.enjoytrip.domain.Attraction;
-import com.ssafy.enjoytrip.application.dto.query.AttractionSearchCondition;
+import com.ssafy.enjoytrip.dto.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.AttractionStats;
 import com.ssafy.enjoytrip.domain.AttractionTag;
-import com.ssafy.enjoytrip.application.dto.command.CreateNoteCommand;
-import com.ssafy.enjoytrip.application.dto.query.NearbyNotesCondition;
-import com.ssafy.enjoytrip.application.dto.query.NearbySearchCondition;
+import com.ssafy.enjoytrip.dto.command.CreateNoteCommand;
+import com.ssafy.enjoytrip.dto.query.NearbyNotesCondition;
+import com.ssafy.enjoytrip.dto.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.domain.PopularAttraction;
-import com.ssafy.enjoytrip.application.dto.command.UpdateNoteCommand;
+import com.ssafy.enjoytrip.dto.command.UpdateNoteCommand;
 import com.ssafy.enjoytrip.domain.WeatherSummary;
 import com.ssafy.enjoytrip.exception.ExternalServiceException;
 import com.ssafy.enjoytrip.support.error.CoreException;
@@ -45,12 +41,11 @@ import com.ssafy.enjoytrip.service.MapExploreService;
 import com.ssafy.enjoytrip.service.MemberService;
 import com.ssafy.enjoytrip.service.NoteImageUploadService;
 import com.ssafy.enjoytrip.service.NeighborhoodBriefingService;
-import com.ssafy.enjoytrip.service.NoteImageService;
 import com.ssafy.enjoytrip.service.NoteService;
 import com.ssafy.enjoytrip.service.NoticeService;
 import com.ssafy.enjoytrip.service.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.service.PlanService;
-import com.ssafy.enjoytrip.application.dto.command.PlanMutationCommand;
+import com.ssafy.enjoytrip.dto.command.PlanMutationCommand;
 import com.ssafy.enjoytrip.service.RouteOptimizationService;
 import com.ssafy.enjoytrip.service.WeatherService;
 import org.junit.jupiter.api.BeforeEach;
@@ -1075,7 +1070,7 @@ class ControllerBehaviorTest {
         String source = Files.readString(path);
         assertThat(source)
                 .as(path.toString())
-                .doesNotContain("java.util.Map")
+                .doesNotContain("java." + "util.Map")
                 .doesNotContain("Map.of(")
                 .doesNotContain("@RequestParam Map")
                 .doesNotContain("@RequestBody Map")
