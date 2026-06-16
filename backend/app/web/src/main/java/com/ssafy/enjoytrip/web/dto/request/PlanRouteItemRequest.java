@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.web.dto.request;
 
-import com.ssafy.enjoytrip.application.dto.command.PlanRouteItemCommand;
+import com.ssafy.enjoytrip.dto.command.PlanRouteItemCommand;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

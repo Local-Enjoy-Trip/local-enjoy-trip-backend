@@ -3,7 +3,7 @@ package com.ssafy.enjoytrip.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.ssafy.enjoytrip.application.dto.command.NoteImageUploadCommand;
+import com.ssafy.enjoytrip.dto.command.NoteImageUploadCommand;
 import com.ssafy.enjoytrip.domain.NoteImageUploadUrl;
 import com.ssafy.enjoytrip.repository.NoteImageUploadUrlGenerator;
 import java.time.Instant;

@@ -2,9 +2,9 @@ package com.ssafy.enjoytrip.service;
 
 import static com.ssafy.enjoytrip.support.error.ErrorType.NOTE_NOT_FOUND;
 
-import com.ssafy.enjoytrip.application.dto.command.CreateNoteCommand;
-import com.ssafy.enjoytrip.application.dto.command.UpdateNoteCommand;
-import com.ssafy.enjoytrip.application.dto.query.NearbyNotesCondition;
+import com.ssafy.enjoytrip.dto.command.CreateNoteCommand;
+import com.ssafy.enjoytrip.dto.command.UpdateNoteCommand;
+import com.ssafy.enjoytrip.dto.query.NearbyNotesCondition;
 import com.ssafy.enjoytrip.domain.Note;
 import com.ssafy.enjoytrip.repository.NoteRepository;
 import com.ssafy.enjoytrip.support.error.CoreException;

@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.web.dto.request;
 
-import com.ssafy.enjoytrip.application.dto.command.CreateNoteCommand;
+import com.ssafy.enjoytrip.dto.command.CreateNoteCommand;
 import com.ssafy.enjoytrip.domain.NoteCategory;
 import com.ssafy.enjoytrip.domain.NoteVisibility;
 import jakarta.validation.Valid;

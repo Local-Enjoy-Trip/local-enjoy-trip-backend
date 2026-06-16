@@ -1,11 +1,11 @@
 package com.ssafy.enjoytrip.service;
 
 import com.ssafy.enjoytrip.domain.Attraction;
-import com.ssafy.enjoytrip.application.dto.query.AttractionSearchCondition;
+import com.ssafy.enjoytrip.dto.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.domain.AttractionStats;
 import com.ssafy.enjoytrip.domain.AttractionTag;
 import com.ssafy.enjoytrip.domain.NearbyAttractionCandidate;
-import com.ssafy.enjoytrip.application.dto.query.NearbySearchCondition;
+import com.ssafy.enjoytrip.dto.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.domain.PopularAttraction;
 import com.ssafy.enjoytrip.repository.AttractionPopularityRepository;
 import com.ssafy.enjoytrip.repository.AttractionRepository;

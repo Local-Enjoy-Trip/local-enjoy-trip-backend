@@ -2,7 +2,7 @@ package com.ssafy.enjoytrip.web.dto.request;
 
 import com.ssafy.enjoytrip.domain.NoteCategory;
 import com.ssafy.enjoytrip.domain.NoteVisibility;
-import com.ssafy.enjoytrip.application.dto.command.UpdateNoteCommand;
+import com.ssafy.enjoytrip.dto.command.UpdateNoteCommand;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
