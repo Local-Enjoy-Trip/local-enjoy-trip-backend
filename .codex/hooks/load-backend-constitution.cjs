@@ -3,7 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const REQUIRED_DOC = "backend/CONSTITUTION.md";
+const REQUIRED_DOC = "CONSTITUTION.md";
 
 function readStdin() {
   try {
@@ -74,10 +74,10 @@ function buildAdditionalContext(root, payload) {
   return [
     "[local-enjoy-trip-backend session-start constitution]",
     "",
-    "The repository requires backend/CONSTITUTION.md to be read before backend work in a new Codex session.",
-    "Treat backend/CONSTITUTION.md as the highest-priority backend rule source.",
-    "Operational backend/RULES.md checks run from the Stop hook before a turn finishes.",
-    "For module-specific backend edits, still read the nearest applicable backend/**/AGENTS.md before changing files.",
+    "The repository requires CONSTITUTION.md to be read before project backend/runtime work in a new Codex session.",
+    "Treat CONSTITUTION.md as the highest-priority project rule source.",
+    "Operational RULES.md checks run from the Stop hook before a turn finishes.",
+    "For module-specific backend edits, still read the nearest applicable **/AGENTS.md before changing files.",
     `SessionStart source: ${source}`,
     "",
     renderDoc(root, REQUIRED_DOC),

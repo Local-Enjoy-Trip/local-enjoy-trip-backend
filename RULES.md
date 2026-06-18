@@ -1,12 +1,12 @@
-# Backend Rules
+# Project Rules
 
 `RULES.md`는 `CONSTITUTION.md`를 현장에서 실행하기 위한 운영 규칙과 템플릿이다. 절대 규칙은 `CONSTITUTION.md`가 우선한다.
 
 ## 1. 작업 시작 체크리스트
 
-Backend 작업을 시작할 때 확인한다.
+프로젝트 서버/runtime 작업을 시작할 때 확인한다.
 
-- [ ] 변경 대상 모듈이 `app`, `app:web`, `app:worker`, `core`, `storage`, `external` 중 어디인지 식별했다.
+- [ ] 변경 대상이 active module(`core:core-api`, `core:core-enum`, `storage:db-core`, `external`, `batch`, `support:*`)인지 식별했다.
 - [ ] public API 계약 변경 여부를 확인했다.
 - [ ] DB schema 변경 여부를 확인했다.
 - [ ] 인증/인가/secret/token/redirect 관련 보안 영향이 있는지 확인했다.
@@ -14,16 +14,16 @@ Backend 작업을 시작할 때 확인한다.
 
 ## 2. 모듈별 AGENTS.md 우선 읽기
 
-`backend/` 아래 특정 모듈을 수정할 때는 해당 모듈의 `AGENTS.md`를 먼저 읽고 따른다.
+프로젝트 루트 아래 특정 모듈을 수정할 때는 해당 모듈의 `AGENTS.md`를 먼저 읽고 따른다.
 
 필수 확인 대상:
 
-- `backend/app/web/AGENTS.md` — web 모듈 수정 전
-- `backend/app/worker/AGENTS.md` — worker 모듈 수정 전
-- `backend/app/AGENTS.md` — app 조립/네임스페이스 모듈 수정 전
-- `backend/core/AGENTS.md` — core 모듈 수정 전
-- `backend/storage/AGENTS.md` — storage 모듈 수정 전
-- `backend/external/AGENTS.md` — external 모듈 수정 전
+- `core/core-api/AGENTS.md` — API/worker executable, web/controller/DTO, worker ingress, storage entity/JPA/jOOQ, external contract 수정 전
+- `core/AGENTS.md` — core 모듈 수정 전
+- `storage/AGENTS.md` — storage 모듈 수정 전
+- `storage/db-core/AGENTS.md` — db-core entity/JPA/migration/jOOQ 수정 전
+- `external/AGENTS.md` — external reference directory 수정 전
+- `batch/AGENTS.md` — batch job/launcher/config 수정 전
 
 운영 규칙:
 
@@ -89,8 +89,8 @@ Controller request/response 계약은 이름 있는 DTO로 표현한다.
 검증 예:
 
 ```bash
-./gradlew.bat :backend:app:web:test --tests '*Security*'
-./gradlew.bat :backend:app:web:test --tests '*Member*'
+./gradlew.bat :core:core-api:test --tests '*Security*'
+./gradlew.bat :core:core-api:test --tests '*Member*'
 ```
 
 ## 7. DB migration 템플릿
@@ -106,7 +106,7 @@ Migration 작성 시:
 검증:
 
 ```bash
-./gradlew.bat :backend:storage:test
+./gradlew.bat :storage:db-core:test
 ```
 
 ## 8. PRECEDENTS 승격 규칙
@@ -168,13 +168,14 @@ Migration 작성 시:
 - `core`에 남길 수 있는 방어 코드는 "HTTP가 아닌 다른 caller가 호출해도 여전히 필요한가",
   "인증 사용자나 저장 상태를 알아야 판단할 수 있는가", "도메인 값 자체를 유효하게 만드는가"에 답할 수 있어야 한다.
 - route `points` 같은 구조화된 query string, legacy form JSON blob, plan request default, batch `sourceVersion` 같은
-  job parameter는 ingress 모듈의 DTO/mapper/config에서 typed command로 변환한 뒤 `core`에 넘긴다.
+  job parameter는 `core-api`의 web/worker ingress 또는 `batch`의 DTO/config에서 typed command로 변환한 뒤
+  `core-api` service에 넘긴다.
 - repository/external/runtime 예외를 잡아 fallback 데이터를 반환하는 `core` 흐름은 무음 방어 코드로 두지 않는다.
   fallback이 제품 정책이면 로그, 결과 metadata, 응답 contract, 또는 문서화된 caller contract 중 하나로 실패 사실을 관측 가능하게 한다.
-- port, external adapter, runtime 예외는 명시적인 제품 fallback 정책이 없으면 `core` service에서 잡지 않는다.
+- external provider, runtime 예외는 명시적인 제품 fallback 정책이 없으면 `core` service에서 잡지 않는다.
   예외는 전역 예외 처리까지 전파해 서버 로그에 원인과 stack trace를 남기고, HTTP client에는 표준 내부 오류 응답만 반환한다.
   클라이언트에 원본 예외 메시지를 그대로 노출하지 않는다.
-- 외부 연동 실패나 port 실패를 `CoreException`으로 감싸지 않는다. `CoreException`은 비즈니스 규칙 위반이나
+- 외부 연동 실패나 provider 실패를 `CoreException`으로 감싸지 않는다. `CoreException`은 비즈니스 규칙 위반이나
   core가 소유한 application error에만 사용한다. 별도 HTTP status, error type, log level 분류가 필요할 때만
   외부/port 전용 예외나 전역 핸들러 매핑을 추가한다.
 - 하위 private 메서드는 각 단계의 구현 세부사항을 숨기되, `process`, `handle`, `doWork`, `check`처럼 의미가 흐린 이름만으로 추출하지 않는다.
@@ -191,6 +192,32 @@ public Member login(String userId, String password) {
     return member;
 }
 ```
+
+### 11.1 storage entity -> core domain 변환 규칙
+
+monolithic `core-api` 전환 구조에서는 `core-api` service가 `storage:db-core` entity/JPA 타입을 직접 사용할 수 있다.
+따라서 entity를 domain model로 바꿀 때 별도 mapper 계층이나 service-local `toModel`/`toDomain` helper를 두지 않는다.
+
+- 조회 결과를 domain model로 반환해야 하면 service call path에서 `new DomainModel(...)`로 직접 생성한다.
+- `stream().map(this::toModel)`, `Optional.map(this::toModel)`, `private toModel(Entity entity)` 패턴은 새로 만들지 않는다.
+- `storage:db-core` entity 내부에 core-api domain model을 반환하는 `toModel`/`toDomain` 메서드를 두지 않는다.
+  `db-core`는 JPA entity와 persistence infrastructure를 소유하고, core-api domain model 생성 책임은 service call path에 남긴다.
+- 같은 entity를 여러 유스케이스에서 반환하더라도 mapper 계층을 추가하기 전에 반환 필드와 caller contract가 정말 같은지 먼저 확인한다.
+  중복 제거보다 변환 위치와 의존 방향을 명확히 유지하는 것을 우선한다.
+
+### 11.2 web request DTO -> core service 전달 규칙
+
+`core-api` web request DTO는 HTTP request shape, validation, trimming/defaulting을 소유한다.
+하지만 그 DTO나 web 요청을 감싸기 위한 command record를 `core.domain.service` 경계 아래로 그대로 넘기지 않는다.
+
+- Controller는 request DTO에서 값을 정리한 뒤 service에 `domain model`, 기존 core query/value object, 또는 명시적으로 풀어낸
+  primitive/value 인자를 넘긴다.
+- `core.domain.command.*`처럼 web 요청 필드를 운반하기 위한 wrapper record를 새로 만들지 않는다.
+- 요청이 이미 domain model 하나로 표현되면 request/controller 경계에서 `new DomainModel(...)` 또는 domain factory로 만든 뒤 넘긴다.
+- 일부 필드만 필요한 유스케이스는 `command.id()`, `command.title()`처럼 service 내부에서 꺼내지 말고, controller에서
+  `service.method(id, title, ...)` 형태로 명시적으로 넘긴다.
+- service 내부에는 HTTP request DTO import, web DTO import, web-only command import가 남아 있으면 안 된다.
+- raw string parsing, blank/null/default 정리는 web request DTO가 처리하되, 저장된 상태/소유권/도메인 불변식 검증은 service/domain이 처리한다.
 
 ## 12. 실제 API JSON 응답 검증 규칙
 

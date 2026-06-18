@@ -1,16 +1,24 @@
 # Local Enjoy Trip Backend
 
 ## 구조
-- `backend/app`: 실행 애플리케이션을 묶는 source-free 조립/네임스페이스 모듈
-- `backend/app/web`: Spring Boot HTTP/API 진입점, REST controller, DTO, validation, security, REST Docs 테스트
-- `backend/app/worker`: Kafka/Scheduled/background worker 진입점, outbox/async 처리와 retry/error handling
-- `backend/core`: domain model, repository interface 같은 application contract
-- `backend/storage`: JPA entity, Spring Data repository, JPA-backed adapter, DB model, PostgreSQL/PostGIS schema 관리
-- `backend/external`: 한국관광공사 Tour API, EV 충전소 API, 뉴스 RSS client
 
-`backend/app` 루트에는 업무 소스를 두지 않고, 실행 경계는 `backend/app/web`과 `backend/app/worker` 아래에만 둔다. 두 실행 모듈 소스에서는 `com.ssafy.enjoytrip.storage.*`를 import하면 안 된다. 저장소 구현은 전부 `backend/storage`에 두고, `backend:app:web:check`와 `backend:app:worker:check`의 `forbidStorageReferences`가 executable module의 storage 구현 참조를 차단한다. Kafka/outbox worker 코드는 `backend/app/worker`에 두고, controller/API/REST Docs 코드는 `backend/app/web`에 둔다.
+- `core/core-api`: Spring Boot 주 실행 모듈. HTTP/API entrypoint와 worker entrypoint를 함께 소유한다.
+  - API main: `com.ssafy.enjoytrip.EnjoyTripApplication`
+  - Worker main: `com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication`
+  - Web/API 코드는 `com.ssafy.enjoytrip.core.api.web.*`에 둔다.
+  - Kafka/Scheduled/background worker 코드는 `com.ssafy.enjoytrip.core.api.worker.*`에 둔다.
+- `core/core-enum`: `core-api`와 `storage/db-core`가 공유하는 enum 전용 모듈.
+- `storage/db-core`: JPA entity, Spring Data repository, Flyway migration, jOOQ codegen/query 인프라.
+- `core`: Gradle namespace parent for `core-api` and `core-enum`; no source-bearing legacy core module.
+- `storage`: Gradle namespace parent for `db-core`; no source-bearing legacy storage module.
+- `external`: active outbound integration module for third-party API, AI, MinIO, and ClickHouse implementations.
+- `batch`: 수동/offline Spring Batch runtime.
+- `support/logging`, `support/monitoring`: runtime support resources used by active runtimes. Auth support is absorbed into `core-api`; `support/auth` is removed.
+
+`backend/` 래퍼 디렉터리는 제거했다. 새 코드는 프로젝트 루트의 위 모듈 아래에 둔다. Web package는 worker-only Kafka/Scheduled 코드를 소유하지 않고, worker package는 controller/OpenAPI/REST Docs/DTO/response envelope를 소유하지 않는다.
 
 ## API
+
 컨트롤러 요청/응답 계약은 반드시 명명된 객체 DTO를 사용한다. `@RequestParam Map`, `@RequestBody Map`, `ApiResponse<Map<...>>`, `Map.of(...)`로 만든 임시 응답 객체는 사용하지 않는다.
 
 - `GET /health`
@@ -31,12 +39,12 @@
 - `POST /api/boards?action=create|update|delete`
 
 Mutation 경로:
+
 - `POST /api/members/signup`, `POST /api/members/login`, `PUT /api/members/{userId}`, `DELETE /api/members/{userId}`
 - `POST /api/notices/items`, `PUT /api/notices/{id}`, `DELETE /api/notices/{id}`
 - `POST /api/boards/posts`, `PUT /api/boards/{id}`, `DELETE /api/boards/{id}`
 - `POST /api/hotplaces/items`, `DELETE /api/hotplaces/{id}`
 - `POST /api/plans/items` (JSON), `PUT /api/plans/{id}` (JSON), `PUT /api/plans/{id}/items` (JSON), `DELETE /api/plans/{id}`
-
 
 ### Plans canonical JSON 예시
 
@@ -60,25 +68,49 @@ Content-Type: application/json
 ```
 
 ## 실행
+
+API 실행:
+
 ```powershell
-.\gradlew :backend:app:web:bootRun
+.\gradlew :core:core-api:bootRun
 ```
 
-빌드:
+Worker 실행:
+
 ```powershell
-.\gradlew :backend:app:web:build
-.\gradlew :backend:app:worker:build
+.\gradlew :core:core-api:bootRunWorker
+```
+
+OpenTelemetry Java agent로 로컬 관측 실행:
+
+```powershell
+.\gradlew :core:core-api:bootRunOtel
+.\gradlew :core:core-api:bootRunWorkerOtel
+```
+
+위 태스크는 `infra/agent/opentelemetry-javaagent.jar`를 자동으로 준비하고 기본 OTLP endpoint를
+`http://localhost:4318`로 사용한다. IntelliJ에서는 `.run/Core API OTel.run.xml` 또는
+`.run/Core Worker OTel.run.xml` 실행 구성을 선택한다.
+
+빌드/검증:
+
+```powershell
+.\gradlew :core:core-api:check
+.\gradlew :storage:db-core:check
+.\gradlew :core:core-api:bootJar
 ```
 
 생성 결과:
-- `backend/app/web/build/libs/web-1.0.0-SNAPSHOT.jar`
-- `backend/app/worker/build/libs/worker-1.0.0-SNAPSHOT.jar`
-- `backend/app/web/build/docs/asciidoc/index.html`
+
+- `core/core-api/build/libs/core-api-1.0.0-SNAPSHOT.jar`
+- `core/core-api/build/docs/asciidoc/index.html`
 
 ## DB/API Key
+
 DB 접속 정보와 외부 API key는 환경변수로만 주입한다. 실제 값은 README나 커밋된 문서에 적지 않는다.
 
 필수 환경변수:
+
 - `ENJOYTRIP_DB_URL`
 - `ENJOYTRIP_DB_USER`
 - `ENJOYTRIP_DB_PASSWORD`

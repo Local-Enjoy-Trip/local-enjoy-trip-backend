@@ -5,9 +5,21 @@ const fs = require("fs");
 const path = require("path");
 
 const GOVERNANCE_DOCS = [
-  "backend/CONSTITUTION.md",
-  "backend/RULES.md",
+  "CONSTITUTION.md",
+  "RULES.md",
 ];
+
+const GOVERNED_PREFIXES = [
+  "core/",
+  "storage/",
+  "external/",
+  "batch/",
+  "support/",
+];
+
+function isGovernedPath(file) {
+  return GOVERNED_PREFIXES.some((prefix) => file.startsWith(prefix));
+}
 
 function readStdin() {
   try {
@@ -116,7 +128,7 @@ function validateGovernanceDocs(root, failures) {
 
 function modifiedJavaFiles(root, paths) {
   return paths
-    .filter((file) => file.startsWith("backend/"))
+    .filter(isGovernedPath)
     .filter((file) => file.endsWith(".java"))
     .filter((file) => fileExists(root, file));
 }
@@ -129,54 +141,28 @@ function hasForbiddenFullyQualifiedName(content) {
 }
 
 function validateChangedFiles(root, paths, failures, warnings) {
-  const backendPaths = paths.filter((file) => file.startsWith("backend/"));
+  const governedPaths = paths.filter(isGovernedPath);
 
-  if (backendPaths.length === 0) {
+  if (governedPaths.length === 0) {
     return;
   }
 
-  const forbiddenAppSources = backendPaths.filter((file) => (
-    file.startsWith("backend/app/src/main/")
-      || file.startsWith("backend/app/src/test/")
-  ));
-  failIf(
-    forbiddenAppSources.length > 0,
-    failures,
-    `backend/app must stay source-free; changed forbidden path(s): ${forbiddenAppSources.join(", ")}`,
-  );
-
-  const lingeringAppSources = [
-    ...listFiles(root, "backend/app/src/main"),
-    ...listFiles(root, "backend/app/src/test"),
-  ];
-  if (lingeringAppSources.length > 0) {
-    warnings.push(`Existing backend/app source-free violation is present: ${lingeringAppSources.join(", ")}`);
-  }
-
-  for (const file of modifiedJavaFiles(root, backendPaths)) {
+  for (const file of modifiedJavaFiles(root, governedPaths)) {
     const content = readFile(root, file);
 
-    if (file.startsWith("backend/app/web/src/main/") || file.startsWith("backend/app/worker/src/main/")) {
+    if (file.startsWith("core/core-api/src/main/java/com/ssafy/enjoytrip/core/api/web/")) {
       failIf(
-        /\bcom\.ssafy\.enjoytrip\.storage\./.test(content),
+        /@KafkaListener\b|@Scheduled\b|DefaultErrorHandler\b|ConcurrentKafkaListenerContainerFactory\b/.test(content),
         failures,
-        `${file} references storage implementation packages from an executable module.`,
+        `${file} appears to contain worker-only Kafka/Scheduled logic inside core-api web package.`,
       );
     }
 
-    if (file.startsWith("backend/app/web/src/main/")) {
-      failIf(
-        /@KafkaListener\b|@Scheduled\b/.test(content),
-        failures,
-        `${file} appears to contain worker-only Kafka/Scheduled logic inside app:web.`,
-      );
-    }
-
-    if (file.startsWith("backend/app/worker/src/main/")) {
+    if (file.startsWith("core/core-api/src/main/java/com/ssafy/enjoytrip/core/api/worker/")) {
       failIf(
         /@(?:Rest)?Controller\b|RestController\b|ApiResponse<|org\.springframework\.web\.bind\.annotation\./.test(content),
         failures,
-        `${file} appears to contain web/controller contract code inside app:worker.`,
+        `${file} appears to contain web/controller contract code inside core-api worker package.`,
       );
     }
 
@@ -197,22 +183,21 @@ function validateChangedFiles(root, paths, failures, warnings) {
   }
 
   const moduleHints = [
-    ["backend/app/web/", "backend/app/web/AGENTS.md"],
-    ["backend/app/worker/", "backend/app/worker/AGENTS.md"],
-    ["backend/app/", "backend/app/AGENTS.md"],
-    ["backend/core/", "backend/core/AGENTS.md"],
-    ["backend/storage/", "backend/storage/AGENTS.md"],
-    ["backend/external/", "backend/external/AGENTS.md"],
-    ["backend/batch/", "backend/batch/AGENTS.md"],
+    ["core/core-api/", "core/core-api/AGENTS.md"],
+    ["storage/db-core/", "storage/db-core/AGENTS.md"],
+    ["core/", "core/AGENTS.md"],
+    ["storage/", "storage/AGENTS.md"],
+    ["external/", "external/AGENTS.md"],
+    ["batch/", "batch/AGENTS.md"],
   ]
-    .filter(([prefix]) => backendPaths.some((file) => file.startsWith(prefix)))
+    .filter(([prefix]) => governedPaths.some((file) => file.startsWith(prefix)))
     .map(([, agent]) => agent);
 
   if (moduleHints.length > 0) {
     warnings.push(`Confirm the nearest module guidance was applied: ${[...new Set(moduleHints)].join(", ")}`);
   }
 
-  warnings.push("Before final response, explicitly check backend/CONSTITUTION.md and backend/RULES.md against the changed files.");
+  warnings.push("Before final response, explicitly check CONSTITUTION.md and RULES.md against the changed files.");
   warnings.push("If public API behavior changed, verify actual JSON over HTTP or state why runtime API validation was not applicable.");
 }
 
