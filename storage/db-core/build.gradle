@@ -1,0 +1,82 @@
+plugins {
+    id "io.spring.dependency-management"
+    id "java-library"
+}
+
+configurations {
+    jooqGenerator
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:${rootProject.ext.springBootVersion}"
+    }
+}
+
+dependencies {
+    api project(":core:core-enum")
+    api "org.springframework.boot:spring-boot-starter-data-jpa"
+    api "org.springframework.boot:spring-boot-starter-jooq"
+    implementation "org.springframework.boot:spring-boot-flyway"
+
+    jooqGenerator "org.jooq:jooq-codegen"
+    jooqGenerator "org.jooq:jooq-meta-extensions"
+
+    runtimeOnly "org.flywaydb:flyway-database-postgresql"
+    runtimeOnly "org.postgresql:postgresql"
+}
+
+def generatedJooqDir = layout.buildDirectory.dir("generated-src/jooq/main")
+def jooqDdlDir = layout.buildDirectory.dir("jooq-ddl")
+
+tasks.register("prepareJooqDdl", Copy) {
+    description = "Prepares PostgreSQL/PostGIS/pgvector migrations in a jOOQ OSS parser-friendly form."
+    from(layout.projectDirectory.dir("src/main/resources/db/migration")) {
+        include "*.sql"
+        filter { line ->
+            line
+                    .replace("location geometry(Point, 4326)", "location varchar(255)")
+                    .replace("route_line geometry(LineString, 4326)", "route_line varchar(255)")
+                    .replaceAll(/\bjsonb\b/, "varchar(4000)")
+                    .replaceAll(/\bvector\s*\(\s*\d+\s*\)/, "varchar(255)")
+                    .replaceAll(/create index (idx_.*) on (.*) using gist \((location|route_line)\);/, '-- skipped for jOOQ code generation: create index $1 on $2 using gist index;')
+                    .replaceAll(/create index (idx_.*) on (.*) using (ivfflat|hnsw) \(.*\);/, "-- skipped for jOOQ code generation: vector ANN index")
+                    .replaceAll(/create unique index uk_friendships_user_pair_active .*/, "-- skipped for jOOQ code generation: expression partial unique index")
+        }
+    }
+    into jooqDdlDir
+}
+
+tasks.register("generateJooq", JavaExec) {
+    description = "Generates jOOQ table classes from Flyway DDL."
+    group = "jooq"
+    classpath = configurations.jooqGenerator
+    mainClass = "org.jooq.codegen.GenerationTool"
+    args layout.projectDirectory.file("src/main/jooq/jooq-codegen.xml").asFile.absolutePath
+    inputs.file layout.projectDirectory.file("src/main/jooq/jooq-codegen.xml")
+    inputs.files fileTree(layout.projectDirectory.dir("src/main/resources/db/migration")) {
+        include "*.sql"
+    }
+    inputs.dir jooqDdlDir
+    outputs.dir generatedJooqDir
+    dependsOn tasks.named("prepareJooqDdl")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir generatedJooqDir
+        }
+    }
+}
+
+tasks.named("compileJava") {
+    dependsOn tasks.named("generateJooq")
+}
+
+tasks.named("test") {
+    useJUnitPlatform {
+        excludeTags "postgis", "suite"
+        excludeEngines "junit-platform-suite"
+    }
+}
