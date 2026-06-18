@@ -1,0 +1,36 @@
+apply plugin: "java"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+dependencies {
+    compileOnly "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+    testCompileOnly "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+    testImplementation platform("org.junit:junit-bom:${rootProject.ext.junitVersion}")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+    testImplementation "org.junit.platform:junit-platform-suite"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+tasks.named("test") {
+    useJUnitPlatform {
+        excludeTags "suite"
+        excludeEngines "junit-platform-suite"
+    }
+}
+
+tasks.register("moduleTestSuite", Test) {
+    description = "Runs the ${project.path} JUnit suite classes."
+    group = "verification"
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    shouldRunAfter tasks.named("test")
+    useJUnitPlatform {
+        includeEngines "junit-platform-suite"
+    }
+}

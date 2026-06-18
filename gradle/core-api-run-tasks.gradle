@@ -1,0 +1,82 @@
+configurations {
+    otelJavaAgent
+}
+
+bootJar {
+    mainClass = "com.ssafy.enjoytrip.EnjoyTripApplication"
+}
+
+jar {
+    enabled = false
+}
+
+bootRun {
+    mainClass = "com.ssafy.enjoytrip.EnjoyTripApplication"
+}
+
+def otelAgentJar = rootProject.layout.projectDirectory.file("infra/agent/opentelemetry-javaagent.jar")
+
+tasks.register("copyOpenTelemetryJavaAgent", Copy) {
+    description = "Copies the OpenTelemetry Java agent used by local IntelliJ run configurations."
+    group = "observability"
+    from configurations.otelJavaAgent
+    into otelAgentJar.asFile.parentFile
+    rename { "opentelemetry-javaagent.jar" }
+}
+
+def otelValue = { String propertyName, String environmentName, String defaultValue ->
+    providers.gradleProperty(propertyName)
+            .orElse(providers.environmentVariable(environmentName))
+            .orElse(defaultValue)
+            .get()
+}
+
+def otelJvmArgs = { String defaultServiceName ->
+    [
+            "-javaagent:${otelAgentJar.asFile.absolutePath}",
+            "-Dotel.service.name=${otelValue("otel.service.name", "OTEL_SERVICE_NAME", defaultServiceName)}",
+            "-Dotel.exporter.otlp.endpoint=${otelValue("otel.exporter.otlp.endpoint", "OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")}",
+            "-Dotel.exporter.otlp.protocol=${otelValue("otel.exporter.otlp.protocol", "OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf")}",
+            "-Dotel.traces.exporter=${otelValue("otel.traces.exporter", "OTEL_TRACES_EXPORTER", "otlp")}",
+            "-Dotel.metrics.exporter=${otelValue("otel.metrics.exporter", "OTEL_METRICS_EXPORTER", "none")}",
+            "-Dotel.logs.exporter=${otelValue("otel.logs.exporter", "OTEL_LOGS_EXPORTER", "none")}",
+    ]
+}
+
+tasks.register("bootRunOtel", tasks.named("bootRun").get().class) {
+    group = "application"
+    description = "Runs the core-api HTTP entrypoint with the OpenTelemetry Java agent."
+    dependsOn tasks.named("copyOpenTelemetryJavaAgent")
+    mainClass = "com.ssafy.enjoytrip.EnjoyTripApplication"
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = otelJvmArgs("enjoytrip-core-api")
+}
+
+tasks.register("bootRunWorker", tasks.named("bootRun").get().class) {
+    group = "application"
+    description = "Runs the core-api embedded background worker entrypoint."
+    mainClass = "com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication"
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+tasks.register("bootRunWorkerOtel", tasks.named("bootRun").get().class) {
+    group = "application"
+    description = "Runs the core-api embedded background worker entrypoint with the OpenTelemetry Java agent."
+    dependsOn tasks.named("copyOpenTelemetryJavaAgent")
+    mainClass = "com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication"
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = otelJvmArgs("enjoytrip-core-worker")
+}
+
+ext {
+    snippetsDir = file("build/generated-snippets")
+}
+
+tasks.named("test") {
+    outputs.dir snippetsDir
+
+    useJUnitPlatform {
+        excludeTags "suite"
+        excludeEngines "junit-platform-suite"
+    }
+}

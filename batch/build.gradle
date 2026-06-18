@@ -1,6 +1,6 @@
 plugins {
-    id 'org.springframework.boot'
-    id 'io.spring.dependency-management'
+    id "org.springframework.boot"
+    id "io.spring.dependency-management"
 }
 
 dependencyManagement {
@@ -10,18 +10,15 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation project(':core:core-api')
-    implementation project(':storage:db-core')
-    implementation project(":external")
+    implementation project(":storage:db-core")
 
-    runtimeOnly project(':support:logging')
+    implementation "org.springframework.boot:spring-boot-starter-batch"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
 
-    implementation 'org.springframework.boot:spring-boot-starter-batch'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.batch:spring-batch-test'
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.springframework.batch:spring-batch-test"
 }
 
-tasks.named('test') {
+tasks.named("test") {
     useJUnitPlatform()
 }

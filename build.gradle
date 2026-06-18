@@ -1,59 +1,28 @@
 plugins {
-    id 'org.springframework.boot' version '4.0.6' apply false
-    id 'io.spring.dependency-management' version '1.1.6' apply false
+    id "org.springframework.boot" version "${springBootVersion}" apply false
+    id "io.spring.dependency-management" version "${springDependencyManagementVersion}" apply false
 }
 
 ext {
-    springBootVersion = '4.0.6'
-    springAiVersion = '2.0.0'
-    lombokVersion = '1.18.46'
-    junitVersion = '6.0.3'
+    springBootVersion = findProperty("springBootVersion")
+    springAiVersion = findProperty("springAiVersion")
+    lombokVersion = findProperty("lombokVersion")
+    junitVersion = findProperty("junitVersion")
+    springdocOpenapiVersion = findProperty("springdocOpenapiVersion")
+    opentelemetryJavaagentVersion = findProperty("opentelemetryJavaagentVersion")
+    clickhouseJdbcVersion = findProperty("clickhouseJdbcVersion")
+    minioVersion = findProperty("minioVersion")
 }
 
 allprojects {
-    group = 'com.ssafy'
-    version = '1.0.0-SNAPSHOT'
-    
+    group = "com.ssafy"
+    version = "1.0.0-SNAPSHOT"
+
     repositories {
         mavenCentral()
     }
 }
 
 subprojects {
-    apply plugin: 'java'
-
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(25)
-        }
-    }
-
-    dependencies {
-        compileOnly "org.projectlombok:lombok:${lombokVersion}"
-        annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-        testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
-        testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-        testImplementation platform("org.junit:junit-bom:${junitVersion}")
-        testImplementation 'org.junit.jupiter:junit-jupiter'
-        testImplementation 'org.junit.platform:junit-platform-suite'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    }
-
-    tasks.named('test') {
-        useJUnitPlatform {
-            excludeTags 'suite'
-            excludeEngines 'junit-platform-suite'
-        }
-    }
-
-    tasks.register('moduleTestSuite', Test) {
-        description = "Runs the ${project.path} JUnit suite classes."
-        group = 'verification'
-        testClassesDirs = sourceSets.test.output.classesDirs
-        classpath = sourceSets.test.runtimeClasspath
-        shouldRunAfter tasks.named('test')
-        useJUnitPlatform {
-            includeEngines 'junit-platform-suite'
-        }
-    }
+    apply from: "${rootDir}/gradle/java-test-conventions.gradle"
 }

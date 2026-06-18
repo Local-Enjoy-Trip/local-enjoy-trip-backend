@@ -3,23 +3,18 @@ plugins {
     id "io.spring.dependency-management"
 }
 
-configurations {
-    otelJavaAgent
-}
+apply from: "${rootDir}/gradle/core-api-run-tasks.gradle"
 
 dependencyManagement {
     imports {
         mavenBom "org.springframework.boot:spring-boot-dependencies:${rootProject.ext.springBootVersion}"
+        mavenBom "org.springframework.ai:spring-ai-bom:${rootProject.ext.springAiVersion}"
     }
 }
 
 dependencies {
     implementation project(":core:core-enum")
     implementation project(":storage:db-core")
-    runtimeOnly project(":external")
-
-    runtimeOnly project(":support:logging")
-    runtimeOnly project(":support:monitoring")
 
     implementation "org.springframework.boot:spring-boot-starter-web"
     implementation "org.springframework.boot:spring-boot-starter-validation"
@@ -28,92 +23,15 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
     implementation "org.springframework.boot:spring-boot-starter-data-redis"
     implementation "org.springframework.kafka:spring-kafka"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${rootProject.ext.springdocOpenapiVersion}"
+    implementation "org.springframework.ai:spring-ai-starter-model-openai:${rootProject.ext.springAiVersion}"
     implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "com.clickhouse:clickhouse-jdbc:${rootProject.ext.clickhouseJdbcVersion}"
+    implementation "io.minio:minio:${rootProject.ext.minioVersion}"
 
-    otelJavaAgent "io.opentelemetry.javaagent:opentelemetry-javaagent:2.28.1"
+    otelJavaAgent "io.opentelemetry.javaagent:opentelemetry-javaagent:${rootProject.ext.opentelemetryJavaagentVersion}"
 
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.springframework.security:spring-security-test"
     testImplementation "org.springframework.restdocs:spring-restdocs-mockmvc"
-}
-
-bootJar {
-    enabled = true
-    mainClass = "com.ssafy.enjoytrip.EnjoyTripApplication"
-}
-
-jar {
-    enabled = true
-}
-
-bootRun {
-    mainClass = "com.ssafy.enjoytrip.EnjoyTripApplication"
-}
-
-def otelAgentJar = rootProject.layout.projectDirectory.file("infra/agent/opentelemetry-javaagent.jar")
-
-tasks.register("copyOpenTelemetryJavaAgent", Copy) {
-    description = "Copies the OpenTelemetry Java agent used by local IntelliJ run configurations."
-    group = "observability"
-    from configurations.otelJavaAgent
-    into otelAgentJar.asFile.parentFile
-    rename { "opentelemetry-javaagent.jar" }
-}
-
-def otelValue = { String propertyName, String environmentName, String defaultValue ->
-    providers.gradleProperty(propertyName)
-            .orElse(providers.environmentVariable(environmentName))
-            .orElse(defaultValue)
-            .get()
-}
-
-def otelJvmArgs = { String defaultServiceName ->
-    [
-            "-javaagent:${otelAgentJar.asFile.absolutePath}",
-            "-Dotel.service.name=${otelValue("otel.service.name", "OTEL_SERVICE_NAME", defaultServiceName)}",
-            "-Dotel.exporter.otlp.endpoint=${otelValue("otel.exporter.otlp.endpoint", "OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")}",
-            "-Dotel.exporter.otlp.protocol=${otelValue("otel.exporter.otlp.protocol", "OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf")}",
-            "-Dotel.traces.exporter=${otelValue("otel.traces.exporter", "OTEL_TRACES_EXPORTER", "otlp")}",
-            "-Dotel.metrics.exporter=${otelValue("otel.metrics.exporter", "OTEL_METRICS_EXPORTER", "none")}",
-            "-Dotel.logs.exporter=${otelValue("otel.logs.exporter", "OTEL_LOGS_EXPORTER", "none")}",
-    ]
-}
-
-tasks.register("bootRunOtel", org.springframework.boot.gradle.tasks.run.BootRun) {
-    group = "application"
-    description = "Runs the core-api HTTP entrypoint with the OpenTelemetry Java agent."
-    dependsOn tasks.named("copyOpenTelemetryJavaAgent")
-    mainClass = "com.ssafy.enjoytrip.EnjoyTripApplication"
-    classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = otelJvmArgs("enjoytrip-core-api")
-}
-
-tasks.register("bootRunWorker", org.springframework.boot.gradle.tasks.run.BootRun) {
-    group = "application"
-    description = "Runs the core-api embedded background worker entrypoint."
-    mainClass = "com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication"
-    classpath = sourceSets.main.runtimeClasspath
-}
-
-tasks.register("bootRunWorkerOtel", org.springframework.boot.gradle.tasks.run.BootRun) {
-    group = "application"
-    description = "Runs the core-api embedded background worker entrypoint with the OpenTelemetry Java agent."
-    dependsOn tasks.named("copyOpenTelemetryJavaAgent")
-    mainClass = "com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication"
-    classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = otelJvmArgs("enjoytrip-core-worker")
-}
-
-ext {
-    snippetsDir = file("build/generated-snippets")
-}
-
-tasks.named("test") {
-    outputs.dir snippetsDir
-
-    useJUnitPlatform {
-        excludeTags "suite"
-        excludeEngines "junit-platform-suite"
-    }
 }
