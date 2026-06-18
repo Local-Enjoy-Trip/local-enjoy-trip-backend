@@ -7,11 +7,31 @@
                <choose><when test="aroundSearch">ST_Distance(location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography)</when><otherwise>null</otherwise></choose> as distanceMeters
         from attractions
         <where>
-            <if test="contentTypeId != null">content_type_id = #{contentTypeId}</if>
-            <if test="keyword != null"><if test="contentTypeId != null">and</if>(title ilike concat('%', #{keyword}, '%') or coalesce(addr1, '') ilike concat('%', #{keyword}, '%') or coalesce(addr2, '') ilike concat('%', #{keyword}, '%') or coalesce(overview, '') ilike concat('%', #{keyword}, '%'))</if>
-            <if test="aroundSearch"><if test="contentTypeId != null or keyword != null">and</if>location is not null and ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography, #{radiusMeters})</if>
-            <if test="!aroundSearch and sidoCode != null"><if test="contentTypeId != null or keyword != null">and</if>sido_code = #{sidoCode}</if>
-            <if test="!aroundSearch and gugunCode != null"><if test="contentTypeId != null or keyword != null or sidoCode != null">and</if>gugun_code = #{gugunCode}</if>
+            <if test="contentTypeId != null">
+                content_type_id = #{contentTypeId}
+            </if>
+            <if test="keyword != null">
+                and (
+                    title ilike concat('%', #{keyword}, '%')
+                    or coalesce(addr1, '') ilike concat('%', #{keyword}, '%')
+                    or coalesce(addr2, '') ilike concat('%', #{keyword}, '%')
+                    or coalesce(overview, '') ilike concat('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="aroundSearch">
+                and location is not null
+                and ST_DWithin(
+                    location::geography,
+                    ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography,
+                    #{radiusMeters}
+                )
+            </if>
+            <if test="!aroundSearch and sidoCode != null">
+                and sido_code = #{sidoCode}
+            </if>
+            <if test="!aroundSearch and gugunCode != null">
+                and gugun_code = #{gugunCode}
+            </if>
         </where>
         <choose><when test="aroundSearch">order by location &lt;-&gt; ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326), title asc</when><otherwise>order by read_count desc nulls last, title asc</otherwise></choose>
         limit #{limit}
