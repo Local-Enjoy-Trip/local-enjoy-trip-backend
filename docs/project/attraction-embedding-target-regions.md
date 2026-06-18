@@ -7,7 +7,7 @@
 | 강원특별자치도 | 강릉시 | 32 | 1 | 한국관광공사 TourAPI KorService2 `areaCode2`/`areaBasedList2`; 공개 코드 예시는 `area --area-code 32 --sigungu-code 1`을 강릉 조회 예로 제시한다. 한국관광공사 API 출처 데이터 샘플도 `강릉 솔향수목원` 주소에 `AREACODE=32`, `SIGUNGUCODE=1`을 싣고 있다. |
 | 전북특별자치도 | 전주시 | 37 | 12 | 한국관광공사 TourAPI KorService2 `areaCode2`/`areaBasedList2`; 한국관광공사 API 출처 데이터 샘플은 전주시 주소 행들에 `AREACODE=37`, `SIGUNGUCODE=12`를 싣고 있다. |
 
-Canonical runtime artifact는 `backend/batch/src/main/resources/embedding-target-regions.yml`이다.
+Canonical runtime artifact는 `batch/src/main/resources/embedding-target-regions.yml`이다.
 Live batch는 이 파일에 두 지역 외 entry가 있거나 코드 pair가 다르면 실행하지 않는다.
 
 ## Checked proof references

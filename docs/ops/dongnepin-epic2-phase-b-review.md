@@ -5,23 +5,23 @@
 
 ## Reviewed source-of-truth
 
-- `backend/CONSTITUTION.md` from session-start rules, with `backend/RULES.md` covered by the Stop governance check.
+- `CONSTITUTION.md` from session-start rules, with `RULES.md` covered by the Stop governance check.
 - Applicable module rules:
-  - `backend/AGENTS.md`
-  - `backend/app/web/AGENTS.md`
-  - `backend/core/AGENTS.md`
-  - `backend/storage/AGENTS.md`
-  - `backend/external/AGENTS.md`
+  - `AGENTS.md`
+  - `app/web/AGENTS.md`
+  - `core/AGENTS.md`
+  - `storage/AGENTS.md`
+  - `external/AGENTS.md`
 - Phase B section of `.omx/plans/dongnepin-epic2-backend-plan.md`.
 
 ## Boundary checklist for implementation review
 
-- `backend/app/web` may own controllers, request/response DTOs, OpenAPI contracts, validation, and response envelopes.
-- `backend/app/web/src/main` must not import `com.ssafy.enjoytrip.storage.*`.
-- `backend/core` owns representative-location fallback decision, business error, commands/projections, and service flow.
-- `backend/storage` owns jOOQ/PostGIS queries, visibility/friend relationship projection, note image persistence, and migration.
-- `backend/external` owns MinIO/S3-compatible presigned upload client and config binding.
-- `backend/support/auth` owns security matcher protection for the new authenticated routes.
+- `app/web` may own controllers, request/response DTOs, OpenAPI contracts, validation, and response envelopes.
+- `app/web/src/main` must not import `com.ssafy.enjoytrip.storage.*`.
+- `core` owns representative-location fallback decision, business error, commands/projections, and service flow.
+- `storage` owns jOOQ/PostGIS queries, visibility/friend relationship projection, note image persistence, and migration.
+- `external` owns MinIO/S3-compatible presigned upload client and config binding.
+- `support/auth` owns security matcher protection for the new authenticated routes.
 
 ## Current baseline gaps before peer implementation integration
 
@@ -67,14 +67,14 @@ Use this block in completion reports after implementation integration:
 
 ```text
 Verification:
-- PASS ./gradlew :backend:storage:generateJooq
-- PASS ./gradlew :backend:core:test
-- PASS ./gradlew :backend:storage:test
-- PASS ./gradlew :backend:app:web:test
-- PASS ./gradlew :backend:app:web:check
-- PASS ./gradlew :backend:support:auth:check
-- PASS ./gradlew :backend:app:check
-- PASS rg -n "System\\.(getenv|getProperty)" backend/external backend/app/web (no MinIO secret reads)
+- PASS ./gradlew :storage:db-core:generateJooq
+- PASS ./gradlew :core:core-api:test
+- PASS ./gradlew :storage:db-core:test
+- PASS ./gradlew :core:core-api:test
+- PASS ./gradlew :core:core-api:check
+- PASS ./gradlew :support:auth:check
+- PASS ./gradlew :core:core-api:check
+- PASS rg -n "System\\.(getenv|getProperty)" external app/web (no MinIO secret reads)
 - PASS HTTP JSON proof: GET /api/map/explore unauthenticated -> 401 UNAUTHORIZED envelope
 - PASS HTTP JSON proof: POST /api/note-images/presigned-upload unauthenticated -> 401 UNAUTHORIZED envelope
 - PASS HTTP JSON proof: map partial coordinate -> 400 envelope
@@ -93,7 +93,7 @@ Verification:
 - `NearbySectionRequest` hardcodes Seoul fallback and should remain legacy-only.
 - Representative-location fields already exist end-to-end in member request/domain/entity/repository/response code.
 - The current schema still includes multi-row `note_photos`; Phase B must replace or constrain this to one image per note.
-- No MinIO/S3 symbols were visible in `application.yml` or `backend/external` before Phase B implementation integration.
+- No MinIO/S3 symbols were visible in `application.yml` or `external` before Phase B implementation integration.
 
 ### Review probe
 
@@ -106,4 +106,4 @@ Verification:
 
 - Existing tests cover legacy note create/update/delete, legacy nearby fallback, JWT/security support, and SQL visibility predicate fragments.
 - Missing tests include map endpoint auth, representative-location fallback/error, SELF/FRIEND/NONE privacy shaping, non-ACCEPTED friendship exclusion, one-image schema validation, and MinIO config binding.
-- Focused checks after implementation should include `:backend:core:test`, `:backend:storage:test`, `:backend:app:web:test`, `:backend:app:web:check`, `:backend:support:auth:check`, `:backend:app:check`, plus `:backend:external:test` if MinIO client code is added.
+- Focused checks after implementation should include `:core:core-api:test`, `:storage:db-core:test`, `:core:core-api:test`, `:core:core-api:check`, `:support:auth:check`, `:core:core-api:check`, plus `:external:test` if MinIO client code is added.

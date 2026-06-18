@@ -1,6 +1,6 @@
 ﻿# Notices API
 
-> Source: `backend/app/web/src/docs/asciidoc/index.adoc`
+> Source: `core/core-api/src/docs/asciidoc/index.adoc`
 
 ### HTTP Request
 

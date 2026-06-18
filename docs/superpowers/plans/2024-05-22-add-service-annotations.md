@@ -99,4 +99,4 @@ public class BoardService {
 
 ---
 **Verification:**
-- Run `./gradlew build` in `backend/core` to ensure no compilation errors.
+- Run `./gradlew build` in `core` to ensure no compilation errors.

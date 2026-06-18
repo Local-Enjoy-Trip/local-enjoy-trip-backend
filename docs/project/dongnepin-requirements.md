@@ -570,7 +570,7 @@
 | TS-03 | 초기 큐레이션 데이터 운영하기 | Must | 미구현 | 운영자 큐레이션 데이터 등록, 수정, AI 생성 데이터 구분 모델이 없다. |
 | TS-04 | 쪽지와 사용자 생성 데이터 관리하기 | Must | 미구현 | 쪽지 moderation, 신고, 숨김, 위치 데이터 보관 정책 모델이 없다. |
 | TS-05 | 공개 범위 권한 검증하기 | Must | 미구현 | 쪽지/코스의 전체공개, 친구공개, 나만보기 권한 검증 정책과 테스트가 없다. |
-| TS-06 | 임베딩 대상 지역 제한하기 | Must | 부분 구현 | `backend/batch/src/main/resources/embedding-target-regions.yml`과 validator 기반은 있으나 실제 MVP 지역 축은 결정 필요다. |
+| TS-06 | 임베딩 대상 지역 제한하기 | Must | 부분 구현 | `batch/src/main/resources/embedding-target-regions.yml`과 validator 기반은 있으나 실제 MVP 지역 축은 결정 필요다. |
 | TS-07 | 이미지 업로드 관리하기 | Must | 부분 구현 | 이미지 저장 기반 확인이 필요하며 쪽지 사진 첨부와 코스 공유 이미지 저장 계약은 없다. |
 
 ### TS-01. 공식 관광 데이터 연동하기
@@ -641,7 +641,7 @@
 
 **Acceptance Criteria**
 
-- Given `backend/batch/src/main/resources/embedding-target-regions.yml`이 있을 때, Then 지정된 지역 외 entry가 있으면 live batch는 실행되지 않아야 한다.
+- Given `batch/src/main/resources/embedding-target-regions.yml`이 있을 때, Then 지정된 지역 외 entry가 있으면 live batch는 실행되지 않아야 한다.
 - Then 동네핀 MVP 후보 지역은 서울 동 단위 후보 지역을 우선 검토한다.
 - Then 기존 강릉/전주 대상 문서는 PoC 성격인지 실제 MVP 축인지 별도 결정해야 한다.
 

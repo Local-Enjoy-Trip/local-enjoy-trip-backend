@@ -5,7 +5,7 @@
 This branch is the Phase A migration cleanup for `.omx/plans/dongnepin-epic2-backend-plan.md`.
 It consolidates the previous `V1..V15` Flyway migrations into a single fresh-database baseline:
 
-- `backend/storage/src/main/resources/db/migration/V1__create_storage_schema.sql`
+- `storage/src/main/resources/db/migration/V1__create_storage_schema.sql`
 
 No Epic 2 API, MinIO, map exploration, or note image feature code is implemented in this phase.
 
@@ -25,10 +25,10 @@ not the right delivery shape; keep the old migrations and add a new corrective m
 
 Phase A is complete only after recording fresh evidence for:
 
-1. `./gradlew :backend:storage:generateJooq`
-2. `./gradlew :backend:storage:test`
-3. `./gradlew :backend:app:web:check`
-4. `./gradlew :backend:app:check`
+1. `./gradlew :storage:db-core:generateJooq`
+2. `./gradlew :storage:db-core:test`
+3. `./gradlew :core:core-api:check`
+4. `./gradlew :core:core-api:check`
 5. Fresh database Flyway migration and direct schema inspection when local Docker/Postgres is available.
 
 
@@ -36,9 +36,9 @@ Phase A is complete only after recording fresh evidence for:
 
 Executed in fresh worktree `feature/dongnepin-migration-cleanup` with a disposable Docker PostgreSQL/PostGIS/pgvector container on `localhost:15433`.
 
-- `./gradlew :backend:storage:generateJooq` → `BUILD SUCCESSFUL`.
-- `./gradlew :backend:storage:test :backend:app:web:check :backend:app:check` → `BUILD SUCCESSFUL`.
-- Runtime/Flyway proof used `./gradlew :backend:app:bootRun` with:
+- `./gradlew :storage:db-core:generateJooq` → `BUILD SUCCESSFUL`.
+- `./gradlew :storage:db-core:test :core:core-api:check :core:core-api:check` → `BUILD SUCCESSFUL`.
+- Runtime/Flyway proof used `./gradlew :core:core-api:bootRun` with:
   - `ENJOYTRIP_DB_URL=jdbc:postgresql://localhost:15433/enjoytrip`
   - `NOTIFICATION_OUTBOX_CDC_ENABLED=false`
   - dummy Google OAuth client values for local boot only.

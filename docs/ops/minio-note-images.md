@@ -4,7 +4,7 @@
 
 ## Required Spring properties
 
-`backend/app/web/src/main/resources/application.yml` should expose MinIO through Spring configuration binding:
+`core/core-api/src/main/resources/application.yml` should expose MinIO through Spring configuration binding:
 
 ```yaml
 enjoytrip:
@@ -19,8 +19,8 @@ enjoytrip:
 
 Rules:
 
-- Keep MinIO/S3 client code in `backend/external`.
-- Keep the HTTP presign endpoint thin in `backend/app/web`.
+- Keep MinIO/S3 client code in `core/core-api`.
+- Keep the HTTP presign endpoint thin in `core/core-api`.
 - Do not call `System.getenv()` or `System.getProperty()` from Java for MinIO secrets.
 - Add a config binding smoke test for `enjoytrip.minio.*`.
 
@@ -54,10 +54,9 @@ mc anonymous set download enjoytrip-local/dongnepin-notes
 ## Verification checklist
 
 ```bash
-./gradlew :backend:external:test
-./gradlew :backend:app:web:test
-./gradlew :backend:app:web:check
-rg -n "System\\.(getenv|getProperty)" backend/external backend/app/web
+./gradlew :core:core-api:test
+./gradlew :core:core-api:check
+rg -n "System\\.(getenv|getProperty)" core/core-api
 ```
 
 Runtime proof should include:
