@@ -1,18 +1,18 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
-import com.ssafy.enjoytrip.storage.db.core.entity.BoardPostEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.BoardPostRecord;
 import java.util.List;
 
 public interface BoardPostMapper {
-    List<BoardPostEntity> findAllOrderByCreatedAtDesc();
+    List<BoardPostRecord> findAllOrderByCreatedAtDesc();
 
-    BoardPostEntity findById(String id);
+    BoardPostRecord findById(String id);
 
     int existsById(String id);
 
-    int insert(BoardPostEntity entity);
+    int insert(BoardPostRecord record);
 
-    int update(BoardPostEntity entity);
+    int update(BoardPostRecord record);
 
     int deleteById(String id);
 }

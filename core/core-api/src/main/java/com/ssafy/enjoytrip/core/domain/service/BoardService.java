@@ -1,7 +1,7 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.BoardPost;
-import com.ssafy.enjoytrip.storage.db.core.entity.BoardPostEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.BoardPostRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.BoardPostMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -15,29 +15,29 @@ public class BoardService {
 
     public List<BoardPost> findAllPosts() {
         return boardPostMapper.findAllOrderByCreatedAtDesc().stream()
-                .map(entity -> new BoardPost(
-                        entity.getId(),
-                        entity.getTitle(),
-                        entity.getContent(),
-                        entity.getAuthor(),
-                        stringValue(entity.getCreatedAt()),
-                        stringValue(entity.getUpdatedAt())
+                .map(record -> new BoardPost(
+                        record.getId(),
+                        record.getTitle(),
+                        record.getContent(),
+                        record.getAuthor(),
+                        stringValue(record.getCreatedAt()),
+                        stringValue(record.getUpdatedAt())
                 ))
                 .toList();
     }
 
     public void insertPost(BoardPost post) {
-        boardPostMapper.insert(new BoardPostEntity(post.id(), post.title(), post.content(), post.author()));
+        boardPostMapper.insert(new BoardPostRecord(post.id(), post.title(), post.content(), post.author()));
     }
 
     @Transactional
     public boolean updatePost(BoardPost post) {
-        BoardPostEntity entity = boardPostMapper.findById(post.id());
-        if (entity == null) {
+        BoardPostRecord record = boardPostMapper.findById(post.id());
+        if (record == null) {
             return false;
         }
-        entity.update(post.title(), post.content());
-        return boardPostMapper.update(entity) > 0;
+        record.update(post.title(), post.content());
+        return boardPostMapper.update(record) > 0;
     }
 
     @Transactional

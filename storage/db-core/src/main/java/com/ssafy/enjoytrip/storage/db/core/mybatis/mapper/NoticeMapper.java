@@ -1,18 +1,18 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
-import com.ssafy.enjoytrip.storage.db.core.entity.NoticeEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.NoticeRecord;
 import java.util.List;
 
 public interface NoticeMapper {
-    List<NoticeEntity> findAllOrderByCreatedAtDesc();
+    List<NoticeRecord> findAllOrderByCreatedAtDesc();
 
-    NoticeEntity findById(Long id);
+    NoticeRecord findById(Long id);
 
     int existsById(Long id);
 
-    int insert(NoticeEntity entity);
+    int insert(NoticeRecord record);
 
-    int update(NoticeEntity entity);
+    int update(NoticeRecord record);
 
     int deleteById(Long id);
 }

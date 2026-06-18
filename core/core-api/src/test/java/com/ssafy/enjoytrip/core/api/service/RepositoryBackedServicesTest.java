@@ -17,10 +17,10 @@ import com.ssafy.enjoytrip.core.domain.Member;
 import com.ssafy.enjoytrip.core.domain.Notice;
 import com.ssafy.enjoytrip.core.domain.TravelPlan;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
-import com.ssafy.enjoytrip.storage.db.core.entity.HotplaceEntity;
-import com.ssafy.enjoytrip.storage.db.core.entity.MemberEntity;
-import com.ssafy.enjoytrip.storage.db.core.entity.NoticeEntity;
-import com.ssafy.enjoytrip.storage.db.core.entity.TravelPlanEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.HotplaceRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.NoticeRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.TravelPlanRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AuthLogMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.BoardPostMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.HotplaceMapper;
@@ -41,9 +41,9 @@ class RepositoryBackedServicesTest {
         private final BoardPostMapper mapper = mock(BoardPostMapper.class);
         private final BoardService service = new BoardService(mapper);
 
-        @DisplayName("게시글 등록은 db-core BoardPostEntity를 MyBatis mapper로 저장한다")
+        @DisplayName("게시글 등록은 db-core BoardPostRecord를 MyBatis mapper로 저장한다")
         @Test
-        void savesBoardPostEntity() {
+        void savesBoardPostRecord() {
             BoardPost post = new BoardPost("b1", "title", "content", "author", "created", "updated");
 
             service.insertPost(post);
@@ -59,7 +59,7 @@ class RepositoryBackedServicesTest {
 
         @DisplayName("핫플레이스 등록과 삭제는 MyBatis mapper를 사용한다")
         @Test
-        void savesAndDeletesHotplaceEntity() {
+        void savesAndDeletesHotplaceRecord() {
             Hotplace hotplace = new Hotplace("h1", "ssafy", "남산", "view", "2026-05-14", 37.55,
                     126.99, "night", "", "created");
             when(mapper.existsById("h1")).thenReturn(1);
@@ -68,7 +68,7 @@ class RepositoryBackedServicesTest {
             service.insertHotplace(hotplace);
             assertThat(service.deleteHotplace("h1")).isTrue();
 
-            verify(mapper).insert(any(HotplaceEntity.class));
+            verify(mapper).insert(any(HotplaceRecord.class));
             verify(mapper).deleteById("h1");
         }
     }
@@ -78,18 +78,18 @@ class RepositoryBackedServicesTest {
         private final NoticeMapper mapper = mock(NoticeMapper.class);
         private final NoticeService service = new NoticeService(mapper);
 
-        @DisplayName("공지 수정은 db-core NoticeEntity를 조회한 뒤 mapper로 갱신한다")
+        @DisplayName("공지 수정은 db-core NoticeRecord를 조회한 뒤 mapper로 갱신한다")
         @Test
-        void updatesNoticeEntity() {
+        void updatesNoticeRecord() {
             Notice notice = new Notice(1L, "공지", "내용", "admin", "created", "updated");
-            NoticeEntity entity = new NoticeEntity("기존", "이전", "admin");
-            when(mapper.findById(1L)).thenReturn(entity);
-            when(mapper.update(entity)).thenReturn(1);
+            NoticeRecord record = new NoticeRecord("기존", "이전", "admin");
+            when(mapper.findById(1L)).thenReturn(record);
+            when(mapper.update(record)).thenReturn(1);
 
             assertThat(service.updateNotice(notice)).isTrue();
 
-            assertThat(entity.getTitle()).isEqualTo("공지");
-            assertThat(entity.getContent()).isEqualTo("내용");
+            assertThat(record.getTitle()).isEqualTo("공지");
+            assertThat(record.getContent()).isEqualTo("내용");
         }
     }
 
@@ -98,15 +98,15 @@ class RepositoryBackedServicesTest {
         private final PlanMapper mapper = mock(PlanMapper.class);
         private final PlanService service = new PlanService(mapper);
 
-        @DisplayName("여행 계획 등록은 db-core TravelPlanEntity를 MyBatis mapper로 저장한다")
+        @DisplayName("여행 계획 등록은 db-core TravelPlanRecord를 MyBatis mapper로 저장한다")
         @Test
-        void savesTravelPlanEntity() {
+        void savesTravelPlanRecord() {
             TravelPlan plan = new TravelPlan("p1", "ssafy", "서울", "2026-05-14", "2026-05-15",
                     1000, "note", "[]", "created");
 
             service.insertPlan(plan);
 
-            verify(mapper).insertPlan(any(TravelPlanEntity.class));
+            verify(mapper).insertPlan(any(TravelPlanRecord.class));
         }
     }
 
@@ -133,9 +133,9 @@ class RepositoryBackedServicesTest {
         @Test
         void loginRejectsMissingMemberBlankPasswordAndBlankStoredPassword() {
             when(mapper.findByUserId("missing")).thenReturn(null);
-            when(mapper.findByUserId("blank-input")).thenReturn(new MemberEntity(
+            when(mapper.findByUserId("blank-input")).thenReturn(new MemberRecord(
                     "blank-input", "A", null, "a@example.com", passwordEncoder.encode("secret"), "", null, null, null));
-            when(mapper.findByUserId("blank-stored")).thenReturn(new MemberEntity(
+            when(mapper.findByUserId("blank-stored")).thenReturn(new MemberRecord(
                     "blank-stored", "A", null, "a@example.com", " ", "", null, null, null));
 
             assertThatThrownBy(() -> service.login("missing", "secret"))
@@ -154,13 +154,13 @@ class RepositoryBackedServicesTest {
         @DisplayName("회원 수정은 값이 있는 비밀번호만 인코딩하고 빈 비밀번호는 비워 둔다")
         @Test
         void updateEncodesNonBlankPasswordAndLeavesBlankPasswordBlank() {
-            MemberEntity entity = new MemberEntity("ssafy", "SSAFY", null, "old@example.com", "old", "",
+            MemberRecord record = new MemberRecord("ssafy", "SSAFY", null, "old@example.com", "old", "",
                     null, null, null);
-            when(mapper.findByUserId("ssafy")).thenReturn(entity);
-            when(mapper.update(entity)).thenReturn(1);
+            when(mapper.findByUserId("ssafy")).thenReturn(record);
+            when(mapper.update(record)).thenReturn(1);
 
             service.update(new Member("ssafy", "SSAFY", "ssafy@example.com", "new-secret", ""));
-            assertThat(passwordEncoder.matches("new-secret", entity.getPassword())).isTrue();
+            assertThat(passwordEncoder.matches("new-secret", record.getPassword())).isTrue();
 
             when(mapper.findByUserId("missing")).thenReturn(null);
             assertThatThrownBy(() -> service.update(new Member("missing", "SSAFY", "ssafy@example.com", " ", "")))

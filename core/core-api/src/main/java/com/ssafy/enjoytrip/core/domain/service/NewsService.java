@@ -14,13 +14,13 @@ public class NewsService {
 
     public List<NewsItem> findNews() {
         return newsMapper.findLatest(DEFAULT_LIMIT).stream()
-                .map(row -> new NewsItem(
-                        row.id(),
-                        row.title(),
-                        row.link(),
-                        row.summary(),
-                        row.source(),
-                        row.publishedAt()
+                .map(record -> new NewsItem(
+                        record.id(),
+                        record.title(),
+                        record.link(),
+                        record.summary(),
+                        record.source(),
+                        record.publishedAt()
                 ))
                 .toList();
     }

@@ -1,8 +1,8 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.NewsItemRow;
+import com.ssafy.enjoytrip.storage.db.core.model.NewsItemRecord;
 import java.util.List;
 
 public interface NewsMapper {
-    List<NewsItemRow> findLatest(int limit);
+    List<NewsItemRecord> findLatest(int limit);
 }

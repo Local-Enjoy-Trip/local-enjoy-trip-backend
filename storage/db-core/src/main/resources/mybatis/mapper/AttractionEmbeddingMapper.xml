@@ -6,7 +6,7 @@
             (a.sido_code = #{region.sidoCode} and a.gugun_code = #{region.gugunCode})
         </foreach>
     </sql>
-    <select id="findTargets" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionEmbeddingSourceRow">
+    <select id="findTargets" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingSourceRecord">
         select a.id as attractionId, a.title, a.addr1, a.addr2, a.overview, a.sido_code as sidoCode, a.gugun_code as gugunCode
         from attractions a
         where <include refid="regionCondition"/>

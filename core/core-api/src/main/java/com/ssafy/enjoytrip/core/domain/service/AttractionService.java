@@ -9,12 +9,12 @@ import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.external.ClickHouseAttractionPopularityClient;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionAverageRatingRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionCountRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionRatingRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionSearchRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionTagRow;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionAverageRatingRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionRatingRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -115,13 +115,13 @@ public class AttractionService {
 
     public List<AttractionTag> findAllTags() {
         return attractionMapper.findAllTags().stream()
-                .map(row -> new AttractionTag(row.id(), row.name()))
+                .map(record -> new AttractionTag(record.id(), record.name()))
                 .toList();
     }
 
     public AttractionTag insertTag(String name) {
-        AttractionTagRow row = attractionMapper.insertTag(name);
-        return new AttractionTag(row.id(), row.name());
+        AttractionTagRecord record = attractionMapper.insertTag(name);
+        return new AttractionTag(record.id(), record.name());
     }
 
     public boolean updateTag(Long tagId, String name) {
@@ -168,23 +168,23 @@ public class AttractionService {
                         aroundSearch,
                         200
                 ).stream()
-                .map(row -> new Attraction(
-                        row.id(),
-                        row.title(),
-                        row.addr1(),
-                        row.addr2(),
-                        row.zipcode(),
-                        row.tel(),
-                        row.firstImage(),
-                        row.firstImage2(),
-                        row.readCount(),
-                        row.sidoCode(),
-                        row.gugunCode(),
-                        row.latitude(),
-                        row.longitude(),
-                        row.mlevel(),
-                        row.contentTypeId(),
-                        row.overview(),
+                .map(record -> new Attraction(
+                        record.id(),
+                        record.title(),
+                        record.addr1(),
+                        record.addr2(),
+                        record.zipcode(),
+                        record.tel(),
+                        record.firstImage(),
+                        record.firstImage2(),
+                        record.readCount(),
+                        record.sidoCode(),
+                        record.gugunCode(),
+                        record.latitude(),
+                        record.longitude(),
+                        record.mlevel(),
+                        record.contentTypeId(),
+                        record.overview(),
                         0,
                         0.0,
                         0,
@@ -198,30 +198,30 @@ public class AttractionService {
 
     private List<NearbyAttractionCandidate> findNearbyAttractionCandidates(NearbySearchCondition condition,
                                                                            String userId) {
-        List<AttractionSearchRow> rows = attractionMapper.findNearby(
+        List<AttractionSearchRecord> records = attractionMapper.findNearby(
                 condition.longitude(),
                 condition.latitude(),
                 condition.radiusMeters(),
                 condition.limit()
         );
-        List<Attraction> enriched = enrich(rows.stream()
-                .map(row -> new Attraction(
-                        row.id(),
-                        row.title(),
-                        row.addr1(),
-                        row.addr2(),
-                        row.zipcode(),
-                        row.tel(),
-                        row.firstImage(),
-                        row.firstImage2(),
-                        row.readCount(),
-                        row.sidoCode(),
-                        row.gugunCode(),
-                        row.latitude(),
-                        row.longitude(),
-                        row.mlevel(),
-                        row.contentTypeId(),
-                        row.overview(),
+        List<Attraction> enriched = enrich(records.stream()
+                .map(record -> new Attraction(
+                        record.id(),
+                        record.title(),
+                        record.addr1(),
+                        record.addr2(),
+                        record.zipcode(),
+                        record.tel(),
+                        record.firstImage(),
+                        record.firstImage2(),
+                        record.readCount(),
+                        record.sidoCode(),
+                        record.gugunCode(),
+                        record.latitude(),
+                        record.longitude(),
+                        record.mlevel(),
+                        record.contentTypeId(),
+                        record.overview(),
                         0,
                         0.0,
                         0,
@@ -230,8 +230,8 @@ public class AttractionService {
                         null
                 ))
                 .toList(), userId);
-        Map<Long, Double> distanceByAttractionId = rows.stream()
-                .collect(Collectors.toMap(AttractionSearchRow::id, AttractionSearchRow::distanceMeters));
+        Map<Long, Double> distanceByAttractionId = records.stream()
+                .collect(Collectors.toMap(AttractionSearchRecord::id, AttractionSearchRecord::distanceMeters));
 
         return enriched.stream()
                 .map(attraction -> new NearbyAttractionCandidate(
@@ -259,27 +259,27 @@ public class AttractionService {
             return Map.of();
         }
         Map<Long, Integer> favoriteCounts = attractionMapper.findFavoriteCounts(attractionIds).stream()
-                .collect(Collectors.toMap(AttractionCountRow::attractionId, AttractionCountRow::count));
-        Map<Long, AttractionAverageRatingRow> ratingStats = attractionMapper.findRatingStats(attractionIds).stream()
-                .collect(Collectors.toMap(AttractionAverageRatingRow::attractionId, row -> row));
+                .collect(Collectors.toMap(AttractionCountRecord::attractionId, AttractionCountRecord::count));
+        Map<Long, AttractionAverageRatingRecord> ratingStats = attractionMapper.findRatingStats(attractionIds).stream()
+                .collect(Collectors.toMap(AttractionAverageRatingRecord::attractionId, record -> record));
         Set<Long> favoritedIds = new HashSet<>();
         Map<Long, Integer> myRatings = Map.of();
         if (blankToNull(userId) != null) {
             favoritedIds = new HashSet<>(attractionMapper.findFavoritedIds(attractionIds, userId));
             myRatings = attractionMapper.findMyRatings(attractionIds, userId).stream()
-                    .collect(Collectors.toMap(AttractionRatingRow::attractionId, AttractionRatingRow::rating));
+                    .collect(Collectors.toMap(AttractionRatingRecord::attractionId, AttractionRatingRecord::rating));
         }
 
         Map<Long, AttractionStats> result = new HashMap<>();
         for (Long attractionId : attractionIds) {
-            AttractionAverageRatingRow rating = ratingStats.get(attractionId);
+            AttractionAverageRatingRecord rating = ratingStats.get(attractionId);
             result.put(attractionId, new AttractionStats(
                     attractionId,
                     favoriteCounts.getOrDefault(attractionId, 0),
                     rating == null ? 0.0 : rating.average(),
                     rating == null ? 0 : rating.count(),
                     attractionMapper.findTagsByAttractionId(attractionId).stream()
-                            .map(row -> new AttractionTag(row.id(), row.name()))
+                            .map(record -> new AttractionTag(record.id(), record.name()))
                             .toList(),
                     favoritedIds.contains(attractionId),
                     myRatings.get(attractionId)

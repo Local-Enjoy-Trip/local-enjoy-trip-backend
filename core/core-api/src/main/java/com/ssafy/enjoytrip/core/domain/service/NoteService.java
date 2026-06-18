@@ -11,7 +11,7 @@ import com.ssafy.enjoytrip.core.domain.NoteVisibility;
 import com.ssafy.enjoytrip.core.domain.query.MapNotesCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbyNotesCondition;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
-import com.ssafy.enjoytrip.storage.db.core.entity.NoteEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,19 +26,19 @@ public class NoteService {
     private final NoteMapper noteMapper;
 
     public Note createNote(Note note) {
-        NoteEntity entity = new NoteEntity();
-        entity.setAuthorUserId(note.authorUserId());
-        entity.setTitle(note.title());
-        entity.setContent(note.content());
-        entity.setCategory(note.category().name());
-        entity.setVisibility(note.visibility().name());
-        entity.setLatitude(BigDecimal.valueOf(note.latitude()));
-        entity.setLongitude(BigDecimal.valueOf(note.longitude()));
-        entity.setRegionName(blankToNull(note.regionName()));
-        entity.setImageObjectKey(blankToNull(note.imageObjectKey()));
-        entity.setImageUrl(blankToNull(note.imageUrl()));
-        entity.setImageContentType(blankToNull(note.imageContentType()));
-        NoteEntity saved = noteMapper.insert(entity);
+        NoteRecord record = new NoteRecord();
+        record.setAuthorUserId(note.authorUserId());
+        record.setTitle(note.title());
+        record.setContent(note.content());
+        record.setCategory(note.category().name());
+        record.setVisibility(note.visibility().name());
+        record.setLatitude(BigDecimal.valueOf(note.latitude()));
+        record.setLongitude(BigDecimal.valueOf(note.longitude()));
+        record.setRegionName(blankToNull(note.regionName()));
+        record.setImageObjectKey(blankToNull(note.imageObjectKey()));
+        record.setImageUrl(blankToNull(note.imageUrl()));
+        record.setImageContentType(blankToNull(note.imageContentType()));
+        NoteRecord saved = noteMapper.insert(record);
 
         return new Note(
                 saved.getId(),
@@ -66,20 +66,20 @@ public class NoteService {
                 .orElseThrow(() -> new CoreException(NOTE_NOT_FOUND));
         note.requireEditableBy(requestedNote.authorUserId());
 
-        NoteEntity entity = new NoteEntity();
-        entity.setId(requestedNote.id());
-        entity.setAuthorUserId(requestedNote.authorUserId());
-        entity.setTitle(requestedNote.title());
-        entity.setContent(requestedNote.content());
-        entity.setCategory(requestedNote.category().name());
-        entity.setVisibility(requestedNote.visibility().name());
-        entity.setLatitude(BigDecimal.valueOf(requestedNote.latitude()));
-        entity.setLongitude(BigDecimal.valueOf(requestedNote.longitude()));
-        entity.setRegionName(blankToNull(requestedNote.regionName()));
-        entity.setImageObjectKey(blankToNull(requestedNote.imageObjectKey()));
-        entity.setImageUrl(blankToNull(requestedNote.imageUrl()));
-        entity.setImageContentType(blankToNull(requestedNote.imageContentType()));
-        NoteEntity updated = noteMapper.updateOwned(entity);
+        NoteRecord record = new NoteRecord();
+        record.setId(requestedNote.id());
+        record.setAuthorUserId(requestedNote.authorUserId());
+        record.setTitle(requestedNote.title());
+        record.setContent(requestedNote.content());
+        record.setCategory(requestedNote.category().name());
+        record.setVisibility(requestedNote.visibility().name());
+        record.setLatitude(BigDecimal.valueOf(requestedNote.latitude()));
+        record.setLongitude(BigDecimal.valueOf(requestedNote.longitude()));
+        record.setRegionName(blankToNull(requestedNote.regionName()));
+        record.setImageObjectKey(blankToNull(requestedNote.imageObjectKey()));
+        record.setImageUrl(blankToNull(requestedNote.imageUrl()));
+        record.setImageContentType(blankToNull(requestedNote.imageContentType()));
+        NoteRecord updated = noteMapper.updateOwned(record);
         if (updated == null) {
             throw new CoreException(NOTE_NOT_FOUND);
         }
@@ -123,23 +123,23 @@ public class NoteService {
                         condition.limit(),
                         blankToNull(viewerUserId)
                 ).stream()
-                .map(entity -> new Note(
-                        entity.getId(),
-                        entity.getAuthorUserId(),
-                        entity.getTitle(),
-                        entity.getContent(),
-                        NoteCategory.valueOf(entity.getCategory()),
-                        NoteVisibility.valueOf(entity.getVisibility()),
-                        entity.getLatitude().doubleValue(),
-                        entity.getLongitude().doubleValue(),
-                        entity.getRegionName(),
-                        entity.getImageObjectKey(),
-                        entity.getImageUrl(),
-                        entity.getImageContentType(),
-                        NoteStatus.valueOf(entity.getStatus()),
-                        entity.getCreatedAt(),
-                        entity.getUpdatedAt(),
-                        entity.getDeletedAt()
+                .map(record -> new Note(
+                        record.getId(),
+                        record.getAuthorUserId(),
+                        record.getTitle(),
+                        record.getContent(),
+                        NoteCategory.valueOf(record.getCategory()),
+                        NoteVisibility.valueOf(record.getVisibility()),
+                        record.getLatitude().doubleValue(),
+                        record.getLongitude().doubleValue(),
+                        record.getRegionName(),
+                        record.getImageObjectKey(),
+                        record.getImageUrl(),
+                        record.getImageContentType(),
+                        NoteStatus.valueOf(record.getStatus()),
+                        record.getCreatedAt(),
+                        record.getUpdatedAt(),
+                        record.getDeletedAt()
                 ))
                 .toList();
     }
@@ -154,21 +154,21 @@ public class NoteService {
                         condition.category() == null ? null : condition.category().name(),
                         condition.friendOnly()
                 ).stream()
-                .map(row -> new NoteMapPin(
-                        row.id(),
-                        row.title(),
-                        NoteCategory.valueOf(row.category()),
-                        NoteVisibility.valueOf(row.visibility()),
-                        row.latitude().doubleValue(),
-                        row.longitude().doubleValue(),
-                        row.regionName(),
-                        row.distanceMeters(),
-                        row.imageObjectKey(),
-                        row.authorUserId(),
-                        row.authorNickname(),
-                        row.authorProfileImageUrl(),
-                        NoteViewerRelationship.valueOf(row.relationship()),
-                        row.createdAt()
+                .map(record -> new NoteMapPin(
+                        record.id(),
+                        record.title(),
+                        NoteCategory.valueOf(record.category()),
+                        NoteVisibility.valueOf(record.visibility()),
+                        record.latitude().doubleValue(),
+                        record.longitude().doubleValue(),
+                        record.regionName(),
+                        record.distanceMeters(),
+                        record.imageObjectKey(),
+                        record.authorUserId(),
+                        record.authorNickname(),
+                        record.authorProfileImageUrl(),
+                        NoteViewerRelationship.valueOf(record.relationship()),
+                        record.createdAt()
                 ))
                 .toList();
     }
@@ -177,27 +177,27 @@ public class NoteService {
         if (id == null) {
             return Optional.empty();
         }
-        NoteEntity entity = noteMapper.findById(id);
-        if (entity == null) {
+        NoteRecord record = noteMapper.findById(id);
+        if (record == null) {
             return Optional.empty();
         }
         return Optional.of(new Note(
-                entity.getId(),
-                entity.getAuthorUserId(),
-                entity.getTitle(),
-                entity.getContent(),
-                NoteCategory.valueOf(entity.getCategory()),
-                NoteVisibility.valueOf(entity.getVisibility()),
-                entity.getLatitude().doubleValue(),
-                entity.getLongitude().doubleValue(),
-                entity.getRegionName(),
-                entity.getImageObjectKey(),
-                entity.getImageUrl(),
-                entity.getImageContentType(),
-                NoteStatus.valueOf(entity.getStatus()),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt(),
-                entity.getDeletedAt()
+                record.getId(),
+                record.getAuthorUserId(),
+                record.getTitle(),
+                record.getContent(),
+                NoteCategory.valueOf(record.getCategory()),
+                NoteVisibility.valueOf(record.getVisibility()),
+                record.getLatitude().doubleValue(),
+                record.getLongitude().doubleValue(),
+                record.getRegionName(),
+                record.getImageObjectKey(),
+                record.getImageUrl(),
+                record.getImageContentType(),
+                NoteStatus.valueOf(record.getStatus()),
+                record.getCreatedAt(),
+                record.getUpdatedAt(),
+                record.getDeletedAt()
         ));
     }
 

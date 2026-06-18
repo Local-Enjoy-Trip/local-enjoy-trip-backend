@@ -51,7 +51,7 @@ public class NeighborhoodBriefingService {
         }
 
         return neighborhoodBriefingMapper.findPublicReadyCandidates(region, COURSE_CANDIDATE_LIMIT).stream()
-                .map(row -> new CourseBriefingCandidate(row.id(), row.title(), row.regionName()))
+                .map(record -> new CourseBriefingCandidate(record.id(), record.title(), record.regionName()))
                 .toList();
     }
 

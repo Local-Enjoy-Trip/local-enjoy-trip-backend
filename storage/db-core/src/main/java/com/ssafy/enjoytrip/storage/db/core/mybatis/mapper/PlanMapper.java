@@ -1,35 +1,35 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
-import com.ssafy.enjoytrip.storage.db.core.entity.PlanItemEntity;
-import com.ssafy.enjoytrip.storage.db.core.entity.TravelPlanEntity;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionRow;
+import com.ssafy.enjoytrip.storage.db.core.model.PlanItemRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.TravelPlanRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 public interface PlanMapper {
-    List<TravelPlanEntity> findAllOrderByCreatedAtDesc();
+    List<TravelPlanRecord> findAllOrderByCreatedAtDesc();
 
-    List<TravelPlanEntity> findByUserIdOrderByCreatedAtDesc(String userId);
+    List<TravelPlanRecord> findByUserIdOrderByCreatedAtDesc(String userId);
 
-    TravelPlanEntity findById(String id);
+    TravelPlanRecord findById(String id);
 
     int existsById(String id);
 
-    int insertPlan(TravelPlanEntity entity);
+    int insertPlan(TravelPlanRecord record);
 
-    int updatePlan(TravelPlanEntity entity);
+    int updatePlan(TravelPlanRecord record);
 
     int deletePlanById(String id);
 
-    List<PlanItemEntity> findItemsByPlanIdOrderByPositionAsc(String planId);
+    List<PlanItemRecord> findItemsByPlanIdOrderByPositionAsc(String planId);
 
-    PlanItemEntity findItemById(Long id);
+    PlanItemRecord findItemById(Long id);
 
-    int insertItem(PlanItemEntity entity);
+    int insertItem(PlanItemRecord record);
 
     int deleteItemsByPlanId(String planId);
 
     int deleteItemById(Long id);
 
-    List<AttractionRow> findAttractionsByIds(@Param("ids") List<Long> ids);
+    List<AttractionRecord> findAttractionsByIds(@Param("ids") List<Long> ids);
 }

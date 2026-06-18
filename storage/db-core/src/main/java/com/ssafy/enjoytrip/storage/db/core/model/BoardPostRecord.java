@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.storage.db.core.entity;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -8,8 +8,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class NoticeEntity extends BaseEntity {
-    private Long id;
+public class BoardPostRecord extends BaseRecord {
+    private String id;
 
     private String title;
 
@@ -17,7 +17,8 @@ public class NoticeEntity extends BaseEntity {
 
     private String author;
 
-    public NoticeEntity(String title, String content, String author) {
+    public BoardPostRecord(String id, String title, String content, String author) {
+        this.id = id;
         this.title = title;
         this.content = content;
         this.author = author;

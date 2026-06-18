@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.storage.db.core.entity;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PlanItemEntity extends BaseEntity {
+public class PlanItemRecord extends BaseRecord {
     private Long id;
 
     private String planId;
@@ -23,7 +23,7 @@ public class PlanItemEntity extends BaseEntity {
 
     private int stayMinutes;
 
-    public PlanItemEntity(String planId, Long attractionId, int position, int day, String memo, int stayMinutes) {
+    public PlanItemRecord(String planId, Long attractionId, int position, int day, String memo, int stayMinutes) {
         this.planId = planId;
         this.attractionId = attractionId;
         this.position = position;

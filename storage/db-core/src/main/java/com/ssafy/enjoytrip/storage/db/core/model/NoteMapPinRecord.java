@@ -1,9 +1,9 @@
-package com.ssafy.enjoytrip.storage.db.core.mybatis.row;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record NoteMapPinRow(
+public record NoteMapPinRecord(
         Long id,
         String title,
         String category,

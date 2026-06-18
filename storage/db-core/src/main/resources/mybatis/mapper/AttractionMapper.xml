@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper">
     <sql id="baseColumns">id, title, addr1, addr2, zipcode, tel, first_image as firstImage, first_image2 as firstImage2, read_count as readCount, sido_code as sidoCode, gugun_code as gugunCode, ST_Y(location) as latitude, ST_X(location) as longitude, mlevel, content_type_id as contentTypeId, overview</sql>
-    <select id="search" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionSearchRow">
+    <select id="search" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
         select <include refid="baseColumns"/>,
                <choose><when test="aroundSearch">ST_Distance(location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography)</when><otherwise>null</otherwise></choose> as distanceMeters
         from attractions
@@ -16,23 +16,23 @@
         <choose><when test="aroundSearch">order by location &lt;-&gt; ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326), title asc</when><otherwise>order by read_count desc nulls last, title asc</otherwise></choose>
         limit #{limit}
     </select>
-    <select id="findNearby" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionSearchRow">select <include refid="baseColumns"/>, ST_Distance(location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography) as distanceMeters from attractions where location is not null and ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography, #{radiusMeters}) order by distanceMeters asc, title asc, id asc limit #{limit}</select>
+    <select id="findNearby" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">select <include refid="baseColumns"/>, ST_Distance(location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography) as distanceMeters from attractions where location is not null and ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography, #{radiusMeters}) order by distanceMeters asc, title asc, id asc limit #{limit}</select>
     <select id="existsById" resultType="int">select count(*) from attractions where id = #{attractionId}</select>
     <insert id="insertFavorite">insert into attraction_favorites (attraction_id, user_id) values (#{attractionId}, #{userId}) on conflict (attraction_id, user_id) do nothing</insert>
     <delete id="deleteFavorite">delete from attraction_favorites where attraction_id = #{attractionId} and user_id = #{userId}</delete>
     <insert id="upsertRating">insert into attraction_ratings (attraction_id, user_id, rating) values (#{attractionId}, #{userId}, #{rating}) on conflict (attraction_id, user_id) do update set rating = excluded.rating, updated_at = current_timestamp</insert>
     <delete id="deleteRating">delete from attraction_ratings where attraction_id = #{attractionId} and user_id = #{userId}</delete>
-    <select id="findAllTags" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionTagRow">select id, name from attraction_tags order by name asc</select>
-    <select id="insertTag" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionTagRow">insert into attraction_tags (name) values (#{name}) returning id, name</select>
+    <select id="findAllTags" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord">select id, name from attraction_tags order by name asc</select>
+    <select id="insertTag" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord">insert into attraction_tags (name) values (#{name}) returning id, name</select>
     <update id="updateTag">update attraction_tags set name = #{name} where id = #{tagId}</update>
     <delete id="deleteTag">delete from attraction_tags where id = #{tagId}</delete>
     <select id="countTagsByIds" resultType="int">select count(*) from attraction_tags where id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>
     <delete id="deleteTagMappings">delete from attraction_tag_mappings where attraction_id = #{attractionId}</delete>
     <insert id="insertTagMapping">insert into attraction_tag_mappings (attraction_id, tag_id) values (#{attractionId}, #{tagId})</insert>
-    <select id="findFavoriteCounts" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionCountRow">select attraction_id as attractionId, count(*)::int as count from attraction_favorites where attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach> group by attraction_id</select>
-    <select id="findRatingStats" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionAverageRatingRow">select attraction_id as attractionId, coalesce(avg(rating), 0)::float8 as average, count(*)::int as count from attraction_ratings where attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach> group by attraction_id</select>
-    <select id="findTagsByAttractionId" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionTagRow">select t.id, t.name from attraction_tags t join attraction_tag_mappings m on m.tag_id = t.id where m.attraction_id = #{attractionId} order by t.name asc</select>
-    <select id="findMyRatings" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionRatingRow">select attraction_id as attractionId, rating from attraction_ratings where user_id = #{userId} and attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>
+    <select id="findFavoriteCounts" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord">select attraction_id as attractionId, count(*)::int as count from attraction_favorites where attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach> group by attraction_id</select>
+    <select id="findRatingStats" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionAverageRatingRecord">select attraction_id as attractionId, coalesce(avg(rating), 0)::float8 as average, count(*)::int as count from attraction_ratings where attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach> group by attraction_id</select>
+    <select id="findTagsByAttractionId" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord">select t.id, t.name from attraction_tags t join attraction_tag_mappings m on m.tag_id = t.id where m.attraction_id = #{attractionId} order by t.name asc</select>
+    <select id="findMyRatings" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionRatingRecord">select attraction_id as attractionId, rating from attraction_ratings where user_id = #{userId} and attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>
     <select id="findFavoritedIds" resultType="long">select attraction_id from attraction_favorites where user_id = #{userId} and attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>
-    <select id="findByIds" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionRow">select <include refid="baseColumns"/> from attractions where id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>
+    <select id="findByIds" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord">select <include refid="baseColumns"/> from attractions where id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>
 </mapper>

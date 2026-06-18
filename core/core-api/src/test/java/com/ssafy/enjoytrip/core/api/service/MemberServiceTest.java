@@ -12,8 +12,8 @@ import static org.mockito.Mockito.when;
 
 import com.ssafy.enjoytrip.core.domain.Member;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
-import com.ssafy.enjoytrip.storage.db.core.entity.AuthLogEntity;
-import com.ssafy.enjoytrip.storage.db.core.entity.MemberEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.AuthLogRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AuthLogMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +37,7 @@ class MemberServiceTest {
         service = new MemberService(passwordEncoder, memberMapper, authLogMapper);
     }
 
-    @DisplayName("회원가입은 BCrypt 비밀번호를 db-core MemberEntity로 저장한다")
+    @DisplayName("회원가입은 BCrypt 비밀번호를 db-core MemberRecord로 저장한다")
     @Test
     void signupStoresBcryptPassword() {
         when(memberMapper.existsByUserId("ssafy")).thenReturn(0);
@@ -45,9 +45,9 @@ class MemberServiceTest {
 
         service.signup(new Member("ssafy", "SSAFY", "ssafy@example.com", "secret", ""));
 
-        ArgumentCaptor<MemberEntity> memberCaptor = ArgumentCaptor.forClass(MemberEntity.class);
+        ArgumentCaptor<MemberRecord> memberCaptor = ArgumentCaptor.forClass(MemberRecord.class);
         verify(memberMapper).insert(memberCaptor.capture());
-        MemberEntity saved = memberCaptor.getValue();
+        MemberRecord saved = memberCaptor.getValue();
         assertThat(saved.getPassword()).isNotEqualTo("secret");
         assertThat(passwordEncoder.matches("secret", saved.getPassword())).isTrue();
     }
@@ -69,23 +69,23 @@ class MemberServiceTest {
     @Test
     void loginReturnsMemberWhenPasswordMatches() {
         String encodedPassword = passwordEncoder.encode("secret");
-        MemberEntity entity = new MemberEntity("ssafy", "SSAFY", null, "ssafy@example.com", encodedPassword,
+        MemberRecord record = new MemberRecord("ssafy", "SSAFY", null, "ssafy@example.com", encodedPassword,
                 "", null, null, null);
-        when(memberMapper.findByUserId("ssafy")).thenReturn(entity);
+        when(memberMapper.findByUserId("ssafy")).thenReturn(record);
 
         Member loggedIn = service.login("ssafy", "secret");
 
         assertThat(loggedIn.userId()).isEqualTo("ssafy");
-        verify(authLogMapper).insert(any(AuthLogEntity.class));
+        verify(authLogMapper).insert(any(AuthLogRecord.class));
         verify(memberMapper, never()).update(any());
     }
 
     @DisplayName("로그인은 비밀번호가 일치하지 않으면 실패한다")
     @Test
     void loginFailsWhenPasswordDoesNotMatch() {
-        MemberEntity entity = new MemberEntity("ssafy", "SSAFY", null, "ssafy@example.com",
+        MemberRecord record = new MemberRecord("ssafy", "SSAFY", null, "ssafy@example.com",
                 passwordEncoder.encode("secret"), "", null, null, null);
-        when(memberMapper.findByUserId("ssafy")).thenReturn(entity);
+        when(memberMapper.findByUserId("ssafy")).thenReturn(record);
 
         assertThatThrownBy(() -> service.login("ssafy", "wrong"))
                 .isInstanceOfSatisfying(CoreException.class,

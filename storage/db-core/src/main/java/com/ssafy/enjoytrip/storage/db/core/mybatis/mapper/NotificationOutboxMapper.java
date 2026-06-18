@@ -1,13 +1,13 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
-import com.ssafy.enjoytrip.storage.db.core.entity.NotificationOutboxEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.NotificationOutboxRecord;
 
 public interface NotificationOutboxMapper {
-    NotificationOutboxEntity findById(Long id);
+    NotificationOutboxRecord findById(Long id);
 
-    int insert(NotificationOutboxEntity entity);
+    int insert(NotificationOutboxRecord record);
 
-    int markProcessed(NotificationOutboxEntity entity);
+    int markProcessed(NotificationOutboxRecord record);
 
-    int markFailed(NotificationOutboxEntity entity);
+    int markFailed(NotificationOutboxRecord record);
 }

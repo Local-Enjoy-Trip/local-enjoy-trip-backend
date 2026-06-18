@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.storage.db.core.entity;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TravelPlanEntity extends BaseEntity {
+public class TravelPlanRecord extends BaseRecord {
     private String id;
 
     private String userId;
@@ -25,7 +25,7 @@ public class TravelPlanEntity extends BaseEntity {
 
     private String routeItemsJson;
 
-    public TravelPlanEntity(String id, String userId, String title, String startDate, String endDate,
+    public TravelPlanRecord(String id, String userId, String title, String startDate, String endDate,
                             int budget, String note, String routeItemsJson) {
         this.id = id;
         this.userId = userId;

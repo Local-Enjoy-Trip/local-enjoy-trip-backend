@@ -1,16 +1,16 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionAverageRatingRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionCountRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionRatingRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionSearchRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionTagRow;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionAverageRatingRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionRatingRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 public interface AttractionMapper {
-    List<AttractionSearchRow> search(@Param("contentTypeId") String contentTypeId,
+    List<AttractionSearchRecord> search(@Param("contentTypeId") String contentTypeId,
                                      @Param("keyword") String keyword,
                                      @Param("sidoCode") Integer sidoCode,
                                      @Param("gugunCode") Integer gugunCode,
@@ -20,7 +20,7 @@ public interface AttractionMapper {
                                      @Param("aroundSearch") boolean aroundSearch,
                                      @Param("limit") int limit);
 
-    List<AttractionSearchRow> findNearby(@Param("longitude") double longitude,
+    List<AttractionSearchRecord> findNearby(@Param("longitude") double longitude,
                                          @Param("latitude") double latitude,
                                          @Param("radiusMeters") double radiusMeters,
                                          @Param("limit") int limit);
@@ -37,9 +37,9 @@ public interface AttractionMapper {
 
     int deleteRating(@Param("attractionId") Long attractionId, @Param("userId") String userId);
 
-    List<AttractionTagRow> findAllTags();
+    List<AttractionTagRecord> findAllTags();
 
-    AttractionTagRow insertTag(String name);
+    AttractionTagRecord insertTag(String name);
 
     int updateTag(@Param("tagId") Long tagId, @Param("name") String name);
 
@@ -51,15 +51,15 @@ public interface AttractionMapper {
 
     int insertTagMapping(@Param("attractionId") Long attractionId, @Param("tagId") Long tagId);
 
-    List<AttractionCountRow> findFavoriteCounts(@Param("ids") List<Long> ids);
+    List<AttractionCountRecord> findFavoriteCounts(@Param("ids") List<Long> ids);
 
-    List<AttractionAverageRatingRow> findRatingStats(@Param("ids") List<Long> ids);
+    List<AttractionAverageRatingRecord> findRatingStats(@Param("ids") List<Long> ids);
 
-    List<AttractionTagRow> findTagsByAttractionId(Long attractionId);
+    List<AttractionTagRecord> findTagsByAttractionId(Long attractionId);
 
-    List<AttractionRatingRow> findMyRatings(@Param("ids") List<Long> ids, @Param("userId") String userId);
+    List<AttractionRatingRecord> findMyRatings(@Param("ids") List<Long> ids, @Param("userId") String userId);
 
     List<Long> findFavoritedIds(@Param("ids") List<Long> ids, @Param("userId") String userId);
 
-    List<AttractionRow> findByIds(@Param("ids") List<Long> ids);
+    List<AttractionRecord> findByIds(@Param("ids") List<Long> ids);
 }

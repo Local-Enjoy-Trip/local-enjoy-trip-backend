@@ -18,7 +18,7 @@
 
 필수 확인 대상:
 
-- `core/core-api/AGENTS.md` — API/worker executable, web/controller/DTO, worker ingress, storage entity/MyBatis, external contract 수정 전
+- `core/core-api/AGENTS.md` — API/worker executable, web/controller/DTO, worker ingress, storage Record/MyBatis, external contract 수정 전
 - `core/AGENTS.md` — core 모듈 수정 전
 - `storage/AGENTS.md` — storage 모듈 수정 전
 - `storage/db-core/AGENTS.md` — db-core storage contract/MyBatis/migration 수정 전
@@ -56,7 +56,7 @@ Controller request/response 계약은 이름 있는 DTO로 표현한다.
 - PostGIS, pg_vector, `on conflict`, `returning`, 동적 조건, projection은 mapper XML에 명시 SQL로 표현한다.
 - `JdbcTemplate`, Spring Data JPA repository, jOOQ runtime/codegen은 새 persistence 경로에 사용하지 않는다.
 - schema 변경은 Flyway migration으로 남긴다.
-- container가 필요한 PostGIS/pg_vector 검증은 기본 `test`가 아니라 모듈별 `containerTest`에서 실행한다.
+- container가 필요한 PostGIS/pg_vector 검증은 별도 sourceSet을 만들지 않고 `src/test`에 `@Tag("container")`로 둔다. 기본 `test`는 container/slow/postgis/pgvector tag를 제외하고, 필요할 때만 `-PincludeContainerTests=true`로 명시 실행한다.
 
 ## 5. 보안과 인증 규칙
 
@@ -195,16 +195,16 @@ public Member login(String userId, String password) {
 }
 ```
 
-### 11.1 storage entity -> core domain 변환 규칙
+### 11.1 storage Record -> core domain 변환 규칙
 
-monolithic `core-api` 전환 구조에서는 `core-api` service가 `storage:db-core` storage entity/MyBatis row 타입을 직접 사용할 수 있다.
-따라서 entity를 domain model로 바꿀 때 별도 mapper 계층이나 service-local `toModel`/`toDomain` helper를 두지 않는다.
+monolithic `core-api` 전환 구조에서는 `core-api` service가 `storage:db-core` storage Record/MyBatis 타입을 직접 사용할 수 있다.
+따라서 storage Record를 domain model로 바꿀 때 별도 mapper 계층이나 service-local `toModel`/`toDomain` helper를 두지 않는다.
 
 - 조회 결과를 domain model로 반환해야 하면 service call path에서 `new DomainModel(...)`로 직접 생성한다.
-- `stream().map(this::toModel)`, `Optional.map(this::toModel)`, `private toModel(Entity entity)` 패턴은 새로 만들지 않는다.
-- `storage:db-core` entity 내부에 core-api domain model을 반환하는 `toModel`/`toDomain` 메서드를 두지 않는다.
-  `db-core`는 storage row/entity contract와 persistence infrastructure를 소유하고, core-api domain model 생성 책임은 service call path에 남긴다.
-- 같은 entity를 여러 유스케이스에서 반환하더라도 mapper 계층을 추가하기 전에 반환 필드와 caller contract가 정말 같은지 먼저 확인한다.
+- `stream().map(this::toModel)`, `Optional.map(this::toModel)`, `private toModel(StorageRecord record)` 패턴은 새로 만들지 않는다.
+- `storage:db-core` Record 내부에 core-api domain model을 반환하는 `toModel`/`toDomain` 메서드를 두지 않는다.
+  `db-core`는 storage Record contract와 persistence infrastructure를 소유하고, core-api domain model 생성 책임은 service call path에 남긴다.
+- 같은 Record를 여러 유스케이스에서 반환하더라도 mapper 계층을 추가하기 전에 반환 필드와 caller contract가 정말 같은지 먼저 확인한다.
   중복 제거보다 변환 위치와 의존 방향을 명확히 유지하는 것을 우선한다.
 
 ### 11.2 web request DTO -> core service 전달 규칙

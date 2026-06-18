@@ -7,8 +7,8 @@ import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_NOT_FOUND;
 
 import com.ssafy.enjoytrip.core.domain.Member;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
-import com.ssafy.enjoytrip.storage.db.core.entity.AuthLogEntity;
-import com.ssafy.enjoytrip.storage.db.core.entity.MemberEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.AuthLogRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AuthLogMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import java.util.List;
@@ -28,56 +28,56 @@ public class MemberService {
 
     public List<Member> findAllUsers() {
         return memberMapper.findAllOrderByCreatedAtDesc().stream()
-                .map(entity -> new Member(
-                        entity.getUserId(),
-                        entity.getName(),
-                        entity.getNickname(),
-                        entity.getEmail(),
-                        entity.getPassword(),
-                        entity.getProfileImageUrl(),
-                        entity.getRepresentativeLatitude(),
-                        entity.getRepresentativeLongitude(),
-                        entity.getRepresentativeRegionName(),
-                        stringValue(entity.getCreatedAt())
+                .map(record -> new Member(
+                        record.getUserId(),
+                        record.getName(),
+                        record.getNickname(),
+                        record.getEmail(),
+                        record.getPassword(),
+                        record.getProfileImageUrl(),
+                        record.getRepresentativeLatitude(),
+                        record.getRepresentativeLongitude(),
+                        record.getRepresentativeRegionName(),
+                        stringValue(record.getCreatedAt())
                 ))
                 .toList();
     }
 
     public Member findByUserId(String userId) {
-        MemberEntity entity = memberMapper.findByUserId(userId);
-        if (entity == null) {
+        MemberRecord record = memberMapper.findByUserId(userId);
+        if (record == null) {
             return null;
         }
         return new Member(
-                entity.getUserId(),
-                entity.getName(),
-                entity.getNickname(),
-                entity.getEmail(),
-                entity.getPassword(),
-                entity.getProfileImageUrl(),
-                entity.getRepresentativeLatitude(),
-                entity.getRepresentativeLongitude(),
-                entity.getRepresentativeRegionName(),
-                stringValue(entity.getCreatedAt())
+                record.getUserId(),
+                record.getName(),
+                record.getNickname(),
+                record.getEmail(),
+                record.getPassword(),
+                record.getProfileImageUrl(),
+                record.getRepresentativeLatitude(),
+                record.getRepresentativeLongitude(),
+                record.getRepresentativeRegionName(),
+                stringValue(record.getCreatedAt())
         );
     }
 
     public Member findByEmail(String email) {
-        MemberEntity entity = memberMapper.findByEmail(email);
-        if (entity == null) {
+        MemberRecord record = memberMapper.findByEmail(email);
+        if (record == null) {
             return null;
         }
         return new Member(
-                entity.getUserId(),
-                entity.getName(),
-                entity.getNickname(),
-                entity.getEmail(),
-                entity.getPassword(),
-                entity.getProfileImageUrl(),
-                entity.getRepresentativeLatitude(),
-                entity.getRepresentativeLongitude(),
-                entity.getRepresentativeRegionName(),
-                stringValue(entity.getCreatedAt())
+                record.getUserId(),
+                record.getName(),
+                record.getNickname(),
+                record.getEmail(),
+                record.getPassword(),
+                record.getProfileImageUrl(),
+                record.getRepresentativeLatitude(),
+                record.getRepresentativeLongitude(),
+                record.getRepresentativeRegionName(),
+                stringValue(record.getCreatedAt())
         );
     }
 
@@ -99,7 +99,7 @@ public class MemberService {
     public Member login(String userId, String password) {
         Member member = findAuthenticatableMember(userId, password);
         upgradeLegacyPasswordIfNeeded(member, password);
-        authLogMapper.insert(new AuthLogEntity(member.userId(), "LOGIN"));
+        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
         return member;
     }
 
@@ -107,13 +107,13 @@ public class MemberService {
     public Member loginWithOAuth(String provider, String providerUserId, String email, String name) {
         Member existing = findByEmail(email);
         if (existing != null) {
-            authLogMapper.insert(new AuthLogEntity(existing.userId(), "LOGIN"));
+            authLogMapper.insert(new AuthLogRecord(existing.userId(), "LOGIN"));
             return existing;
         }
 
         Member member = createOAuthMember(provider, providerUserId, email, name);
         saveMember(member);
-        authLogMapper.insert(new AuthLogEntity(member.userId(), "LOGIN"));
+        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
         return member;
     }
 
@@ -123,18 +123,18 @@ public class MemberService {
     }
 
     public void logout(String userId) {
-        authLogMapper.insert(new AuthLogEntity(userId, "LOGOUT"));
+        authLogMapper.insert(new AuthLogRecord(userId, "LOGOUT"));
     }
 
     public String findPassword(String userId, String email) {
-        MemberEntity entity = memberMapper.findByUserIdAndEmail(userId, email);
-        return entity == null ? null : entity.getPassword();
+        MemberRecord record = memberMapper.findByUserIdAndEmail(userId, email);
+        return record == null ? null : record.getPassword();
     }
 
     @Transactional
     public void update(Member member) {
         validateEmailOwner(member);
-        if (!updateMemberEntity(member.withPassword(encodedPasswordWhenPresent(member.password())))) {
+        if (!updateMemberRecord(member.withPassword(encodedPasswordWhenPresent(member.password())))) {
             throw new CoreException(USER_NOT_FOUND);
         }
     }
@@ -176,7 +176,7 @@ public class MemberService {
 
     private void upgradeLegacyPasswordIfNeeded(Member member, String password) {
         if (shouldUpgradePassword(member.password())) {
-            updateMemberEntity(member.withPassword(passwordEncoder.encode(password)));
+            updateMemberRecord(member.withPassword(passwordEncoder.encode(password)));
         }
     }
 
@@ -240,7 +240,7 @@ public class MemberService {
     }
 
     private void saveMember(Member member) {
-        memberMapper.insert(new MemberEntity(
+        memberMapper.insert(new MemberRecord(
                 member.userId(),
                 member.name(),
                 member.nickname(),
@@ -253,12 +253,12 @@ public class MemberService {
         ));
     }
 
-    private boolean updateMemberEntity(Member member) {
-        MemberEntity entity = memberMapper.findByUserId(member.userId());
-        if (entity == null) {
+    private boolean updateMemberRecord(Member member) {
+        MemberRecord record = memberMapper.findByUserId(member.userId());
+        if (record == null) {
             return false;
         }
-        entity.update(
+        record.update(
                 member.name(),
                 member.nickname(),
                 member.email(),
@@ -268,7 +268,7 @@ public class MemberService {
                 member.representativeLongitude(),
                 member.representativeRegionName()
         );
-        return memberMapper.update(entity) > 0;
+        return memberMapper.update(record) > 0;
     }
 
     private static boolean isBlank(String value) {

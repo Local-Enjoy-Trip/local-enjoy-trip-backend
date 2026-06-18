@@ -1,6 +1,6 @@
-package com.ssafy.enjoytrip.storage.db.core.mybatis.row;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
-public record NewsItemRow(
+public record NewsItemRecord(
         String id,
         String title,
         String link,

@@ -1,6 +1,6 @@
-package com.ssafy.enjoytrip.storage.db.core.mybatis.row;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
-public record ChargerItemRow(
+public record ChargerItemRecord(
         String statId,
         String statNm,
         String chgerId,

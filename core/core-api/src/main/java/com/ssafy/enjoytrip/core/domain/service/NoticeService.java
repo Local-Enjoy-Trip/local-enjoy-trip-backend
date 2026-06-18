@@ -1,7 +1,7 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.Notice;
-import com.ssafy.enjoytrip.storage.db.core.entity.NoticeEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.NoticeRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoticeMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -15,29 +15,29 @@ public class NoticeService {
 
     public List<Notice> findAllNotices() {
         return noticeMapper.findAllOrderByCreatedAtDesc().stream()
-                .map(entity -> new Notice(
-                        entity.getId(),
-                        entity.getTitle(),
-                        entity.getContent(),
-                        entity.getAuthor(),
-                        stringValue(entity.getCreatedAt()),
-                        stringValue(entity.getUpdatedAt())
+                .map(record -> new Notice(
+                        record.getId(),
+                        record.getTitle(),
+                        record.getContent(),
+                        record.getAuthor(),
+                        stringValue(record.getCreatedAt()),
+                        stringValue(record.getUpdatedAt())
                 ))
                 .toList();
     }
 
     public void insertNotice(Notice notice) {
-        noticeMapper.insert(new NoticeEntity(notice.title(), notice.content(), notice.author()));
+        noticeMapper.insert(new NoticeRecord(notice.title(), notice.content(), notice.author()));
     }
 
     @Transactional
     public boolean updateNotice(Notice notice) {
-        NoticeEntity entity = noticeMapper.findById(notice.id());
-        if (entity == null) {
+        NoticeRecord record = noticeMapper.findById(notice.id());
+        if (record == null) {
             return false;
         }
-        entity.update(notice.title(), notice.content());
-        return noticeMapper.update(entity) > 0;
+        record.update(notice.title(), notice.content());
+        return noticeMapper.update(record) > 0;
     }
 
     @Transactional

@@ -17,23 +17,17 @@ dependencies {
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
-sourceSets {
-    containerTest {
-        java.srcDir file("src/containerTest/java")
-        resources.srcDir file("src/containerTest/resources")
-        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
-        runtimeClasspath += output + compileClasspath
-    }
-}
-
-configurations {
-    containerTestImplementation.extendsFrom testImplementation
-    containerTestRuntimeOnly.extendsFrom testRuntimeOnly
-}
+def includeContainerTests = providers.gradleProperty("includeContainerTests")
+        .map { it.toBoolean() }
+        .orElse(false)
 
 tasks.named("test") {
     useJUnitPlatform {
-        excludeTags "suite", "container", "slow", "postgis", "pgvector"
+        if (includeContainerTests.get()) {
+            includeTags "container"
+        } else {
+            excludeTags "suite", "container", "slow", "postgis", "pgvector"
+        }
         excludeEngines "junit-platform-suite"
     }
 }
@@ -46,16 +40,5 @@ tasks.register("moduleTestSuite", Test) {
     shouldRunAfter tasks.named("test")
     useJUnitPlatform {
         includeEngines "junit-platform-suite"
-    }
-}
-
-tasks.register("containerTest", Test) {
-    description = "Runs the ${project.path} tests tagged as container/slow database tests."
-    group = "verification"
-    testClassesDirs = sourceSets.containerTest.output.classesDirs
-    classpath = sourceSets.containerTest.runtimeClasspath
-    shouldRunAfter tasks.named("test"), tasks.named("moduleTestSuite")
-    useJUnitPlatform {
-        includeTags "container"
     }
 }

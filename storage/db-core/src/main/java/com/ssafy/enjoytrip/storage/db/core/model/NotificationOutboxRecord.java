@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.storage.db.core.entity;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
 import com.ssafy.enjoytrip.core.domain.NotificationOutboxStatus;
 import com.ssafy.enjoytrip.core.domain.NotificationReferenceType;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class NotificationOutboxEntity extends BaseEntity {
+public class NotificationOutboxRecord extends BaseRecord {
     private Long id;
 
     private NotificationType eventType;
@@ -33,7 +33,7 @@ public class NotificationOutboxEntity extends BaseEntity {
 
     private LocalDateTime processedAt;
 
-    public NotificationOutboxEntity(NotificationType eventType,
+    public NotificationOutboxRecord(NotificationType eventType,
                                     String recipientUserId,
                                     NotificationReferenceType aggregateType,
                                     Long aggregateId,

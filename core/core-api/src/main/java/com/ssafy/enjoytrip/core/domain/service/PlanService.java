@@ -7,10 +7,10 @@ import com.ssafy.enjoytrip.core.domain.PlanItem;
 import com.ssafy.enjoytrip.core.domain.PlanRouteItem;
 import com.ssafy.enjoytrip.core.domain.TravelPlan;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
-import com.ssafy.enjoytrip.storage.db.core.entity.PlanItemEntity;
-import com.ssafy.enjoytrip.storage.db.core.entity.TravelPlanEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.PlanItemRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.TravelPlanRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.PlanMapper;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionRow;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,48 +26,48 @@ public class PlanService {
 
     public List<TravelPlan> findAllPlans() {
         return planMapper.findAllOrderByCreatedAtDesc().stream()
-                .map(entity -> new TravelPlan(
-                        entity.getId(),
-                        entity.getUserId(),
-                        entity.getTitle(),
-                        entity.getStartDate(),
-                        entity.getEndDate(),
-                        entity.getBudget(),
-                        entity.getNote(),
-                        entity.getRouteItemsJson(),
-                        stringValue(entity.getCreatedAt())
+                .map(record -> new TravelPlan(
+                        record.getId(),
+                        record.getUserId(),
+                        record.getTitle(),
+                        record.getStartDate(),
+                        record.getEndDate(),
+                        record.getBudget(),
+                        record.getNote(),
+                        record.getRouteItemsJson(),
+                        stringValue(record.getCreatedAt())
                 ))
                 .toList();
     }
 
     public List<TravelPlan> findPlansByUser(String userId) {
         return planMapper.findByUserIdOrderByCreatedAtDesc(userId).stream()
-                .map(entity -> new TravelPlan(
-                        entity.getId(),
-                        entity.getUserId(),
-                        entity.getTitle(),
-                        entity.getStartDate(),
-                        entity.getEndDate(),
-                        entity.getBudget(),
-                        entity.getNote(),
-                        entity.getRouteItemsJson(),
-                        stringValue(entity.getCreatedAt())
+                .map(record -> new TravelPlan(
+                        record.getId(),
+                        record.getUserId(),
+                        record.getTitle(),
+                        record.getStartDate(),
+                        record.getEndDate(),
+                        record.getBudget(),
+                        record.getNote(),
+                        record.getRouteItemsJson(),
+                        stringValue(record.getCreatedAt())
                 ))
                 .toList();
     }
 
     public Optional<TravelPlan> findPlan(String id) {
         return Optional.ofNullable(planMapper.findById(id))
-                .map(entity -> new TravelPlan(
-                        entity.getId(),
-                        entity.getUserId(),
-                        entity.getTitle(),
-                        entity.getStartDate(),
-                        entity.getEndDate(),
-                        entity.getBudget(),
-                        entity.getNote(),
-                        entity.getRouteItemsJson(),
-                        stringValue(entity.getCreatedAt())
+                .map(record -> new TravelPlan(
+                        record.getId(),
+                        record.getUserId(),
+                        record.getTitle(),
+                        record.getStartDate(),
+                        record.getEndDate(),
+                        record.getBudget(),
+                        record.getNote(),
+                        record.getRouteItemsJson(),
+                        stringValue(record.getCreatedAt())
                 ));
     }
 
@@ -142,12 +142,12 @@ public class PlanService {
     }
 
     public List<PlanRouteItem> findPlanItems(String planId) {
-        List<PlanItemEntity> items = planMapper.findItemsByPlanIdOrderByPositionAsc(planId);
+        List<PlanItemRecord> items = planMapper.findItemsByPlanIdOrderByPositionAsc(planId);
         if (items.isEmpty()) {
             return List.of();
         }
         Map<Long, Attraction> attractions = findAttractions(items.stream()
-                .map(PlanItemEntity::getAttractionId)
+                .map(PlanItemRecord::getAttractionId)
                 .distinct()
                 .toList());
         return items.stream()
@@ -182,7 +182,7 @@ public class PlanService {
     }
 
     private void savePlan(TravelPlan plan) {
-        planMapper.insertPlan(new TravelPlanEntity(
+        planMapper.insertPlan(new TravelPlanRecord(
                 plan.id(),
                 plan.userId(),
                 plan.title(),
@@ -200,11 +200,11 @@ public class PlanService {
     }
 
     private boolean updateStoredPlan(TravelPlan plan) {
-        TravelPlanEntity entity = planMapper.findById(plan.id());
-        if (entity == null) {
+        TravelPlanRecord record = planMapper.findById(plan.id());
+        if (record == null) {
             return false;
         }
-        entity.update(
+        record.update(
                 plan.title(),
                 plan.startDate(),
                 plan.endDate(),
@@ -212,7 +212,7 @@ public class PlanService {
                 plan.note(),
                 plan.routeItemsJson()
         );
-        return planMapper.updatePlan(entity) > 0;
+        return planMapper.updatePlan(record) > 0;
     }
 
     private boolean updateStoredPlanWithItems(TravelPlan plan, List<PlanItem> items) {
@@ -237,7 +237,7 @@ public class PlanService {
         planMapper.deleteItemsByPlanId(planId);
         for (int index = 0; index < items.size(); index++) {
             PlanItem item = items.get(index);
-            planMapper.insertItem(new PlanItemEntity(
+            planMapper.insertItem(new PlanItemRecord(
                     planId,
                     item.attractionId(),
                     index + 1,
@@ -250,7 +250,7 @@ public class PlanService {
     }
 
     private boolean deleteStoredPlanItem(String planId, Long itemId) {
-        PlanItemEntity found = planMapper.findItemById(itemId);
+        PlanItemRecord found = planMapper.findItemById(itemId);
         if (found == null || !found.getPlanId().equals(planId)) {
             return false;
         }
@@ -276,23 +276,23 @@ public class PlanService {
             return Map.of();
         }
         return planMapper.findAttractionsByIds(attractionIds).stream()
-                .map(row -> new Attraction(
-                        row.id(),
-                        row.title(),
-                        row.addr1(),
-                        row.addr2(),
-                        row.zipcode(),
-                        row.tel(),
-                        row.firstImage(),
-                        row.firstImage2(),
-                        row.readCount(),
-                        row.sidoCode(),
-                        row.gugunCode(),
-                        row.latitude(),
-                        row.longitude(),
-                        row.mlevel(),
-                        row.contentTypeId(),
-                        row.overview(),
+                .map(record -> new Attraction(
+                        record.id(),
+                        record.title(),
+                        record.addr1(),
+                        record.addr2(),
+                        record.zipcode(),
+                        record.tel(),
+                        record.firstImage(),
+                        record.firstImage2(),
+                        record.readCount(),
+                        record.sidoCode(),
+                        record.gugunCode(),
+                        record.latitude(),
+                        record.longitude(),
+                        record.mlevel(),
+                        record.contentTypeId(),
+                        record.overview(),
                         0,
                         0.0,
                         0,

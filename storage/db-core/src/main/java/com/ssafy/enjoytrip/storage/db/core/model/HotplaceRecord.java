@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.storage.db.core.entity;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class HotplaceEntity extends BaseEntity {
+public class HotplaceRecord extends BaseRecord {
     private String id;
 
     private String userId;
@@ -27,7 +27,7 @@ public class HotplaceEntity extends BaseEntity {
 
     private String photo;
 
-    public HotplaceEntity(String id, String userId, String title, String type, String visitDate,
+    public HotplaceRecord(String id, String userId, String title, String type, String visitDate,
                           Double lat, Double lng, String description, String photo) {
         this.id = id;
         this.userId = userId;

@@ -1,16 +1,16 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
-import com.ssafy.enjoytrip.storage.db.core.entity.HotplaceEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.HotplaceRecord;
 import java.util.List;
 
 public interface HotplaceMapper {
-    List<HotplaceEntity> findAllOrderByCreatedAtDesc();
+    List<HotplaceRecord> findAllOrderByCreatedAtDesc();
 
-    List<HotplaceEntity> findByUserIdOrderByCreatedAtDesc(String userId);
+    List<HotplaceRecord> findByUserIdOrderByCreatedAtDesc(String userId);
 
     int existsById(String id);
 
-    int insert(HotplaceEntity entity);
+    int insert(HotplaceRecord record);
 
     int deleteById(String id);
 }

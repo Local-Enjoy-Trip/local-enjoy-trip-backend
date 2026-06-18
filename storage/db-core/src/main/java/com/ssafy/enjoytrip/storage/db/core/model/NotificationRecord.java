@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.storage.db.core.entity;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
 import com.ssafy.enjoytrip.core.domain.NotificationReferenceType;
 import com.ssafy.enjoytrip.core.domain.NotificationType;
@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class NotificationEntity extends BaseEntity {
+public class NotificationRecord extends BaseRecord {
     private Long id;
 
     private String recipientUserId;
@@ -28,7 +28,7 @@ public class NotificationEntity extends BaseEntity {
 
     private Long outboxEventId;
 
-    public NotificationEntity(String recipientUserId,
+    public NotificationRecord(String recipientUserId,
                               NotificationType type,
                               NotificationReferenceType referenceType,
                               Long referenceId,

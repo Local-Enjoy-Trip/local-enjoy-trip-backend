@@ -76,7 +76,11 @@ tasks.named("test") {
     outputs.dir snippetsDir
 
     useJUnitPlatform {
-        excludeTags "suite", "container", "slow", "postgis", "pgvector"
+        if (providers.gradleProperty("includeContainerTests").map { it.toBoolean() }.orElse(false).get()) {
+            includeTags "container"
+        } else {
+            excludeTags "suite", "container", "slow", "postgis", "pgvector"
+        }
         excludeEngines "junit-platform-suite"
     }
 }

@@ -1,6 +1,6 @@
-package com.ssafy.enjoytrip.storage.db.core.mybatis.row;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
-public record AttractionRow(
+public record AttractionSearchRecord(
         Long id,
         String title,
         String addr1,
@@ -16,6 +16,7 @@ public record AttractionRow(
         Double longitude,
         String mlevel,
         String contentTypeId,
-        String overview
+        String overview,
+        Double distanceMeters
 ) {
 }

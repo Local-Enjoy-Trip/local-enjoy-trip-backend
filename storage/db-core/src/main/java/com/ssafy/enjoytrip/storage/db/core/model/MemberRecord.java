@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.storage.db.core.entity;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MemberEntity extends BaseEntity {
+public class MemberRecord extends BaseRecord {
     private Long id;
 
     private String userId;
@@ -31,7 +31,7 @@ public class MemberEntity extends BaseEntity {
 
     private String representativeRegionName;
 
-    public MemberEntity(String userId,
+    public MemberRecord(String userId,
                         String name,
                         String nickname,
                         String email,

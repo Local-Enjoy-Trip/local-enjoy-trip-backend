@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.storage.db.core.entity;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
 import com.ssafy.enjoytrip.core.domain.FriendshipStatus;
 import java.time.LocalDateTime;
@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class FriendshipEntity extends BaseEntity {
+public class FriendshipRecord extends BaseRecord {
     private Long id;
 
     private String requesterUserId;
@@ -23,7 +23,7 @@ public class FriendshipEntity extends BaseEntity {
 
     private LocalDateTime respondedAt;
 
-    public FriendshipEntity(String requesterUserId, String addresseeUserId) {
+    public FriendshipRecord(String requesterUserId, String addresseeUserId) {
         this.requesterUserId = requesterUserId;
         this.addresseeUserId = addresseeUserId;
         this.status = FriendshipStatus.PENDING;

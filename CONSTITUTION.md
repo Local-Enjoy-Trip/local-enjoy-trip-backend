@@ -25,12 +25,12 @@
   - HTTP/API 코드는 `com.ssafy.enjoytrip.core.api.web.*` 아래에 둔다.
   - Kafka/Scheduled/background worker ingress는 `com.ssafy.enjoytrip.core.api.worker.*` 아래에 둔다.
   - domain model, service/application logic, external client 계약, support contract를 소유한다.
-  - database access는 `storage:db-core`의 MyBatis mapper와 storage row/entity contract를 service 경계에서 직접 사용한다.
+  - database access는 `storage:db-core`의 MyBatis mapper와 storage Record contract를 service 경계에서 직접 사용한다.
   - 기본 API main class는 `com.ssafy.enjoytrip.EnjoyTripApplication`이다.
   - worker main class는 `com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication`이며 worker 전용 설정은
     `application-worker.yml`에 둔다.
 - `core:core-enum`: `core-api`와 `db-core`가 함께 참조해야 하는 enum만 소유한다.
-- `storage:db-core`: MyBatis mapper/XML/type handler, storage row/entity contract, persistence infrastructure, Flyway migration만
+- `storage:db-core`: MyBatis mapper/XML/type handler, storage Record contract, persistence infrastructure, Flyway migration만
   소유한다.
 - `external`: 현재 core 의존을 갖지 않는 독립 모듈로 유지한다. API-facing outbound integration 구현체와 설정은 `core-api` 안에서 소유하고, batch-only outbound 구현체와 설정은 `batch` 안에서 소유한다. `external`은 `core-api`를 의존하지 않는다.
 - `batch`: 별도 batch runtime으로 보존한다. batch ingress, job parameter parsing, batch-only service, batch-only outbound client는 batch 경계에 둔다.
@@ -54,13 +54,13 @@
 기본 HTTP 흐름:
 
 ```text
-core-api web controller -> core-api service -> storage entity/MyBatis
+core-api web controller -> core-api service -> storage Record/MyBatis
 ```
 
 기본 worker 흐름:
 
 ```text
-core-api worker ingress -> core-api service/processor -> storage entity/MyBatis
+core-api worker ingress -> core-api service/processor -> storage Record/MyBatis
 ```
 
 ## 3. 구체 운영 규칙은 RULES.md에 둔다
@@ -68,7 +68,7 @@ core-api worker ingress -> core-api service/processor -> storage entity/MyBatis
 `CONSTITUTION.md`에는 프로젝트의 최상위 원칙과 경계만 둔다. 다음처럼 현장에서 바로 적용하는 구체 규칙은 `RULES.md`에 둔다.
 
 - API DTO 계약 세부 규칙
-- MyBatis/containerTest/native query 선택 규칙
+- MyBatis/tagged container test/native query 선택 규칙
 - 인증/인가/token/redirect 세부 보안 규칙
 - migration, 테스트, 완료 보고 템플릿
 

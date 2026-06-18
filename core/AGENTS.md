@@ -61,15 +61,15 @@ existing ingress boundary first.
   Preserve read facades and compatibility delegates until production and test callers are audited. Services should
   fetch required persisted state first, then call domain guard methods such as `require...By(...)`, then invoke
   storage persistence types.
-- **Entity to Domain Conversion**: In `core-api` services, convert storage entities to domain models directly with
+- **Record to Domain Conversion**: In `core-api` services, convert storage Records to domain models directly with
   `new DomainModel(...)` at the service call path. Do not add service-local `toModel`/`toDomain` helpers, and do not
-  move those conversions onto storage entities.
+  move those conversions onto storage Records.
 - **Domain Import Boundary**: Domain objects may use core/support business exceptions as existing domain precedent
-  does, but must not import JPA/storage entities, web DTOs, controller contracts, or persistence primitives.
+  does, but must not import JPA/storage Records, web DTOs, controller contracts, or persistence primitives.
 
 ## Verification
 
 - **Unit Testing**: All business logic in services and domain objects should be covered by JUnit 5 tests.
 - **Domain Package Isolation**: Spring stereotype annotations are allowed by this module's component model, but domain
-  pure domain model packages must not import web MVC, security-web, request DTO, JPA, JDBC, or storage entities.
-  Application services may import storage entity/JPA/jOOQ types directly; do not reintroduce core-domain repository interfaces.
+  pure domain model packages must not import web MVC, security-web, request DTO, JPA, JDBC, or storage Records.
+  Application services may import storage Record/MyBatis types directly; do not reintroduce core-domain repository interfaces.

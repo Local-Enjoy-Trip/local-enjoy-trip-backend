@@ -1,7 +1,7 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.Hotplace;
-import com.ssafy.enjoytrip.storage.db.core.entity.HotplaceEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.HotplaceRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.HotplaceMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -15,40 +15,40 @@ public class HotplaceService {
 
     public List<Hotplace> findAllHotplaces() {
         return hotplaceMapper.findAllOrderByCreatedAtDesc().stream()
-                 .map(entity -> new Hotplace(
-                        entity.getId(),
-                        entity.getUserId(),
-                        entity.getTitle(),
-                        entity.getType(),
-                        entity.getVisitDate(),
-                        entity.getLat(),
-                        entity.getLng(),
-                        entity.getDescription(),
-                        entity.getPhoto(),
-                        stringValue(entity.getCreatedAt())
+                 .map(record -> new Hotplace(
+                        record.getId(),
+                        record.getUserId(),
+                        record.getTitle(),
+                        record.getType(),
+                        record.getVisitDate(),
+                        record.getLat(),
+                        record.getLng(),
+                        record.getDescription(),
+                        record.getPhoto(),
+                        stringValue(record.getCreatedAt())
                 ))
                 .toList();
     }
 
     public List<Hotplace> findHotplacesByUser(String userId) {
         return hotplaceMapper.findByUserIdOrderByCreatedAtDesc(userId).stream()
-                 .map(entity -> new Hotplace(
-                        entity.getId(),
-                        entity.getUserId(),
-                        entity.getTitle(),
-                        entity.getType(),
-                        entity.getVisitDate(),
-                        entity.getLat(),
-                        entity.getLng(),
-                        entity.getDescription(),
-                        entity.getPhoto(),
-                        stringValue(entity.getCreatedAt())
+                 .map(record -> new Hotplace(
+                        record.getId(),
+                        record.getUserId(),
+                        record.getTitle(),
+                        record.getType(),
+                        record.getVisitDate(),
+                        record.getLat(),
+                        record.getLng(),
+                        record.getDescription(),
+                        record.getPhoto(),
+                        stringValue(record.getCreatedAt())
                 ))
                 .toList();
     }
 
     public void insertHotplace(Hotplace hotplace) {
-        hotplaceMapper.insert(new HotplaceEntity(
+        hotplaceMapper.insert(new HotplaceRecord(
                 hotplace.id(),
                 hotplace.userId(),
                 hotplace.title(),

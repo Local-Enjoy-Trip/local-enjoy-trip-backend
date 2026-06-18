@@ -23,11 +23,11 @@ The project is organized around the monolithic `core-api` target shape plus lowe
   - Worker entrypoint: `com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication`.
   - HTTP/API code lives under `com.ssafy.enjoytrip.core.api.web.*`.
   - Kafka/Scheduled/background worker ingress lives under `com.ssafy.enjoytrip.core.api.worker.*`.
-  - Domain models, application services, outbound integration clients, and support contracts live here; database access uses storage entity/MyBatis types directly.
+  - Domain models, application services, outbound integration clients, and support contracts live here; database access uses storage Record/MyBatis types directly.
   - Concrete outbound integration clients used by the API are compiled in `core-api`; batch-only embedding clients are compiled in `batch`; the `external` module must not depend on `core-api`.
   - `:core:core-api:check` is the primary executable-module verification command.
 - `core:core-enum`: enum-only shared module for values used by both `core-api` and `db-core`.
-- `storage:db-core`: storage row/entity contracts, MyBatis mapper interfaces/XML/type handlers, Flyway migrations, and database configuration.
+- `storage:db-core`: storage Record contracts, MyBatis mapper interfaces/XML/type handlers, Flyway migrations, and database configuration.
   - Do not place web/controller, worker ingress, domain service, or external API client code here.
 - `external`: independent placeholder module with no `core-api` dependency. API-facing third-party clients live in `core-api`; batch-only embedding clients live in `batch`.
 - `batch`: separate batch runtime. Batch job ingress, parameter parsing, batch-only services, and batch-only outbound clients stay in `batch`.
@@ -38,13 +38,13 @@ them back.
 Default request flow:
 
 ```text
-core-api web controller -> core-api service -> storage entity/MyBatis
+core-api web controller -> core-api service -> storage Record/MyBatis
 ```
 
 Default worker flow:
 
 ```text
-core-api worker ingress -> core-api service/processor -> storage entity/MyBatis
+core-api worker ingress -> core-api service/processor -> storage Record/MyBatis
 ```
 
 Layering rules:
@@ -55,8 +55,8 @@ Layering rules:
 - Web packages must not own Kafka listener, scheduled worker, or background-only retry/error handler code.
 - Worker packages must not own controllers, OpenAPI contracts, REST Docs, web DTOs, or REST response envelopes.
 - Controllers and workers must not call persistence/MyBatis mappers directly.
-- Services may import storage entity/MyBatis types; web controllers and worker ingress must not call storage/MyBatis mappers directly.
-- When services convert storage entities into core domain models, instantiate the domain model directly with `new` at the
+- Services may import storage Record/MyBatis types; web controllers and worker ingress must not call storage/MyBatis mappers directly.
+- When services convert storage Records into core domain models, instantiate the domain model directly with `new` at the
   service call path. Do not hide entity-to-domain conversion behind service-local `toModel`/`toDomain` helpers, and do
   not put core-api domain model conversion methods on `storage:db-core` entities.
 - Web request DTOs must not be passed into `core.domain.service` methods, and web-only command wrapper records should

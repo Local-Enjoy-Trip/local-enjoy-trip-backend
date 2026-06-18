@@ -1,6 +1,6 @@
-package com.ssafy.enjoytrip.storage.db.core.mybatis.row;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
-public record AttractionEmbeddingSourceRow(
+public record AttractionEmbeddingSourceRecord(
         Long attractionId,
         String title,
         String addr1,

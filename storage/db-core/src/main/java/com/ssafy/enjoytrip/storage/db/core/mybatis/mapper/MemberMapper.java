@@ -1,24 +1,24 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
-import com.ssafy.enjoytrip.storage.db.core.entity.MemberEntity;
+import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import java.util.List;
 
 public interface MemberMapper {
-    List<MemberEntity> findAllOrderByCreatedAtDesc();
+    List<MemberRecord> findAllOrderByCreatedAtDesc();
 
-    MemberEntity findByUserId(String userId);
+    MemberRecord findByUserId(String userId);
 
-    MemberEntity findByEmail(String email);
+    MemberRecord findByEmail(String email);
 
-    MemberEntity findByUserIdAndEmail(String userId, String email);
+    MemberRecord findByUserIdAndEmail(String userId, String email);
 
     int existsByUserId(String userId);
 
     int existsByEmail(String email);
 
-    int insert(MemberEntity entity);
+    int insert(MemberRecord record);
 
-    int update(MemberEntity entity);
+    int update(MemberRecord record);
 
     int deleteByUserId(String userId);
 }

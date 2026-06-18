@@ -1,6 +1,6 @@
-package com.ssafy.enjoytrip.storage.db.core.mybatis.row;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
-public record PlanRouteItemRow(
+public record PlanRouteItemRecord(
         Long routeItemId,
         Long attractionId,
         String routeId,
@@ -8,6 +8,6 @@ public record PlanRouteItemRow(
         int day,
         String memo,
         int stayMinutes,
-        AttractionRow attraction
+        AttractionRecord attraction
 ) {
 }

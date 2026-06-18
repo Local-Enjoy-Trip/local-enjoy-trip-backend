@@ -2,19 +2,19 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper">
     <sql id="noteColumns">id, author_user_id as authorUserId, title, content, category, visibility, latitude, longitude, region_name as regionName, image_object_key as imageObjectKey, image_url as imageUrl, image_content_type as imageContentType, status, created_at as createdAt, updated_at as updatedAt, deleted_at as deletedAt</sql>
-    <select id="insert" resultType="com.ssafy.enjoytrip.storage.db.core.entity.NoteEntity">
+    <select id="insert" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
         insert into notes (author_user_id, title, content, category, visibility, location, latitude, longitude, region_name, image_object_key, image_url, image_content_type)
         values (#{authorUserId}, #{title}, #{content}, #{category}, #{visibility}, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326), #{latitude}, #{longitude}, #{regionName}, #{imageObjectKey}, #{imageUrl}, #{imageContentType})
         returning <include refid="noteColumns"/>
     </select>
-    <select id="findById" resultType="com.ssafy.enjoytrip.storage.db.core.entity.NoteEntity">select <include refid="noteColumns"/> from notes where id = #{id}</select>
-    <select id="updateOwned" resultType="com.ssafy.enjoytrip.storage.db.core.entity.NoteEntity">
+    <select id="findById" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">select <include refid="noteColumns"/> from notes where id = #{id}</select>
+    <select id="updateOwned" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
         update notes set title = #{title}, content = #{content}, category = #{category}, visibility = #{visibility}, location = ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326), latitude = #{latitude}, longitude = #{longitude}, region_name = #{regionName}, image_object_key = #{imageObjectKey}, image_url = #{imageUrl}, image_content_type = #{imageContentType}, updated_at = current_timestamp
         where id = #{id} and author_user_id = #{authorUserId} and status = 'ACTIVE'
         returning <include refid="noteColumns"/>
     </select>
     <update id="softDeleteOwned">update notes set status = 'DELETED', updated_at = current_timestamp, deleted_at = current_timestamp where id = #{id} and author_user_id = #{authorUserId} and status = 'ACTIVE'</update>
-    <select id="findNearbyAccessible" resultType="com.ssafy.enjoytrip.storage.db.core.entity.NoteEntity">
+    <select id="findNearbyAccessible" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
         select <include refid="noteColumns"/> from notes n
         where n.status = 'ACTIVE'
           and ST_DWithin(n.location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography, #{radiusMeters})
@@ -27,7 +27,7 @@
         order by n.created_at desc, n.id desc
         limit #{limit}
     </select>
-    <select id="findMapPins" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.NoteMapPinRow">
+    <select id="findMapPins" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord">
         select n.id, n.title, n.category, n.visibility, n.latitude, n.longitude, n.region_name as regionName, n.image_object_key as imageObjectKey, n.author_user_id as authorUserId, coalesce(m.nickname, m.name, m.user_id) as authorNickname,
                case when #{viewerUserId} is not null and (n.author_user_id = #{viewerUserId} or exists (select 1 from friendships f where f.status = 'ACCEPTED' and ((f.requester_user_id = #{viewerUserId} and f.addressee_user_id = n.author_user_id) or (f.requester_user_id = n.author_user_id and f.addressee_user_id = #{viewerUserId})))) then m.profile_image_url else null end as authorProfileImageUrl,
                case when #{viewerUserId} is not null and n.author_user_id = #{viewerUserId} then 'SELF' when #{viewerUserId} is not null and exists (select 1 from friendships f where f.status = 'ACCEPTED' and ((f.requester_user_id = #{viewerUserId} and f.addressee_user_id = n.author_user_id) or (f.requester_user_id = n.author_user_id and f.addressee_user_id = #{viewerUserId}))) then 'FRIEND' else 'NONE' end as relationship,

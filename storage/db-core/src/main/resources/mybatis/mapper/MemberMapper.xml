@@ -2,10 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper">
     <sql id="columns">id, user_id as userId, name, nickname, email, password, profile_image_url as profileImageUrl, representative_latitude as representativeLatitude, representative_longitude as representativeLongitude, representative_region_name as representativeRegionName, created_at as createdAt, updated_at as updatedAt</sql>
-    <select id="findAllOrderByCreatedAtDesc" resultType="com.ssafy.enjoytrip.storage.db.core.entity.MemberEntity">select <include refid="columns"/> from members order by created_at desc</select>
-    <select id="findByUserId" resultType="com.ssafy.enjoytrip.storage.db.core.entity.MemberEntity">select <include refid="columns"/> from members where user_id = #{userId}</select>
-    <select id="findByEmail" resultType="com.ssafy.enjoytrip.storage.db.core.entity.MemberEntity">select <include refid="columns"/> from members where email = #{email}</select>
-    <select id="findByUserIdAndEmail" resultType="com.ssafy.enjoytrip.storage.db.core.entity.MemberEntity">select <include refid="columns"/> from members where user_id = #{userId} and email = #{email}</select>
+    <select id="findAllOrderByCreatedAtDesc" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">select <include refid="columns"/> from members order by created_at desc</select>
+    <select id="findByUserId" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">select <include refid="columns"/> from members where user_id = #{userId}</select>
+    <select id="findByEmail" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">select <include refid="columns"/> from members where email = #{email}</select>
+    <select id="findByUserIdAndEmail" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">select <include refid="columns"/> from members where user_id = #{userId} and email = #{email}</select>
     <select id="existsByUserId" resultType="int">select count(*) from members where user_id = #{userId}</select>
     <select id="existsByEmail" resultType="int">select count(*) from members where email = #{email}</select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">

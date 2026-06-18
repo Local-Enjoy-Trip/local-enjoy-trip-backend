@@ -15,8 +15,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.List;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper.TargetRegionRow;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionEmbeddingSourceRow;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper.TargetRegionRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingSourceRecord;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -262,24 +262,24 @@ private final AttractionEmbeddingMapper attractionEmbeddingMapper;
         return attractionEmbeddingMapper.countOutsideTargetRegions(toRows(targetRegions));
     }
 
-    private static List<TargetRegionRow> toRows(List<AttractionEmbeddingTargetRegion> targetRegions) {
+    private static List<TargetRegionRecord> toRows(List<AttractionEmbeddingTargetRegion> targetRegions) {
         if (targetRegions == null || targetRegions.isEmpty()) {
             throw new IllegalArgumentException("targetRegions가 필요합니다.");
         }
         return targetRegions.stream()
-                .map(region -> new TargetRegionRow(region.sidoCode(), region.gugunCode()))
+                .map(region -> new TargetRegionRecord(region.sidoCode(), region.gugunCode()))
                 .toList();
     }
 
-    private static AttractionEmbeddingSource toSource(AttractionEmbeddingSourceRow row) {
+    private static AttractionEmbeddingSource toSource(AttractionEmbeddingSourceRecord record) {
         return new AttractionEmbeddingSource(
-                row.attractionId(),
-                row.title(),
-                row.addr1(),
-                row.addr2(),
-                row.overview(),
-                row.sidoCode(),
-                row.gugunCode()
+                record.attractionId(),
+                record.title(),
+                record.addr1(),
+                record.addr2(),
+                record.overview(),
+                record.sidoCode(),
+                record.gugunCode()
         );
     }
 

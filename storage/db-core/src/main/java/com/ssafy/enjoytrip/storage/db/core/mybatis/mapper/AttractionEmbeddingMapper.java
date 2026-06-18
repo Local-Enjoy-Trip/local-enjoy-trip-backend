@@ -1,11 +1,11 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
-import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionEmbeddingSourceRow;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingSourceRecord;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 public interface AttractionEmbeddingMapper {
-    List<AttractionEmbeddingSourceRow> findTargets(@Param("regions") List<TargetRegionRow> regions,
+    List<AttractionEmbeddingSourceRecord> findTargets(@Param("regions") List<TargetRegionRecord> regions,
                                                    @Param("limit") int limit);
 
     int existsEmbeddedWithSameSource(@Param("attractionId") Long attractionId,
@@ -27,8 +27,8 @@ public interface AttractionEmbeddingMapper {
                      @Param("failureCode") String failureCode,
                      @Param("failureMessage") String failureMessage);
 
-    long countOutsideTargetRegions(@Param("regions") List<TargetRegionRow> regions);
+    long countOutsideTargetRegions(@Param("regions") List<TargetRegionRecord> regions);
 
-    record TargetRegionRow(Integer sidoCode, Integer gugunCode) {
+    record TargetRegionRecord(Integer sidoCode, Integer gugunCode) {
     }
 }

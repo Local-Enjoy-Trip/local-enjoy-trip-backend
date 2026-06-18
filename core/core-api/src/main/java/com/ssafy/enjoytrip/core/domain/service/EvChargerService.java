@@ -39,19 +39,19 @@ public class EvChargerService {
 
         return evChargerMapper.findChargers(region, blankToNull(keyword), limit, (page - 1) * limit)
                 .stream()
-                .map(row -> new ChargerItem(
-                        row.statId(),
-                        row.statNm(),
-                        row.chgerId(),
-                        row.chgerType(),
-                        row.addr(),
-                        row.location(),
-                        row.lat(),
-                        row.lng(),
-                        row.useTime(),
-                        row.busiNm(),
-                        row.busiCall(),
-                        row.stat()
+                .map(record -> new ChargerItem(
+                        record.statId(),
+                        record.statNm(),
+                        record.chgerId(),
+                        record.chgerType(),
+                        record.addr(),
+                        record.location(),
+                        record.lat(),
+                        record.lng(),
+                        record.useTime(),
+                        record.busiNm(),
+                        record.busiCall(),
+                        record.stat()
                 ))
                 .toList();
     }
