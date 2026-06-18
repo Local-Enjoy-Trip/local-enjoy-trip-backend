@@ -1,0 +1,69 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../../.env[.properties]
+      - classpath:monitoring.yml
+  application:
+    name: enjoytrip-web
+  datasource:
+    url: ${ENJOYTRIP_DB_URL:jdbc:postgresql://localhost:5432/enjoytrip}
+    username: ${ENJOYTRIP_DB_USER:ssafy}
+    password: ${ENJOYTRIP_DB_PASSWORD:ssafy}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    baseline-on-migrate: true
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+  ai:
+    model:
+      chat: openai
+    openai:
+      api-key: ${GMS_KEY:local-fallback-disabled}
+      chat:
+        base-url: ${GMS_CHAT_BASE_URL:https://gms.ssafy.io/gmsapi/api.openai.com}
+        api-key: ${GMS_KEY:local-fallback-disabled}
+        model: ${GMS_CHAT_MODEL:gpt-5.4}
+
+enjoytrip:
+  ai:
+    briefing:
+      gms:
+        api-key: ${GMS_KEY:}
+        max-length: ${GMS_BRIEFING_MAX_LENGTH:160}
+  external:
+    tour-api:
+      service-key: ${ENJOYTRIP_TOUR_API_KEY:${TOUR_API_KEY:}}
+    ev-charger:
+      api-key: ${DATA_PORTAL_API_KEY:${EV_CHARGER_API_KEY:${ENJOYTRIP_EV_API_KEY:${TOUR_API_KEY:}}}}
+    open-weather-map:
+      api-key: ${OPENWEATHERMAP_API_KEY:${OPENWEATHER_API_KEY:}}
+    clickhouse:
+      url: ${CLICKHOUSE_JDBC_URL:jdbc:clickhouse://localhost:8123/default}
+      username: ${CLICKHOUSE_USER:default}
+      password: ${CLICKHOUSE_PASSWORD:enjoytrip_clickhouse}
+      query-timeout: ${CLICKHOUSE_QUERY_TIMEOUT:3s}
+  jwt:
+    secret: ${ENJOYTRIP_JWT_SECRET:dev-only-enjoytrip-jwt-secret-change-me-please-32b}
+    expiration-seconds: ${ENJOYTRIP_JWT_EXPIRATION_SECONDS:7200}
+  oauth2:
+    authorized-redirect-uri: ${ENJOYTRIP_OAUTH2_REDIRECT_URI:http://localhost:5173/oauth/callback}
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}
+      client-secret: ${GOOGLE_CLIENT_SECRET:}
+  minio:
+    endpoint: ${ENJOYTRIP_MINIO_ENDPOINT:http://localhost:9000}
+    bucket: ${ENJOYTRIP_MINIO_BUCKET:dongnepin-notes}
+    access-key: ${ENJOYTRIP_MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${ENJOYTRIP_MINIO_SECRET_KEY:minioadmin}
+    region: ${ENJOYTRIP_MINIO_REGION:ap-northeast-2}
+    public-base-url: ${ENJOYTRIP_MINIO_PUBLIC_BASE_URL:http://localhost:9000/dongnepin-notes}
+    upload-expiry: ${ENJOYTRIP_MINIO_UPLOAD_EXPIRY:10m}

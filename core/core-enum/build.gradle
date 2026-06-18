@@ -1,0 +1,2 @@
+// Shared enum target for the deliberate core-api migration.
+// Keep empty until Phase 2/3 proves an enum is genuinely reused across target modules.
