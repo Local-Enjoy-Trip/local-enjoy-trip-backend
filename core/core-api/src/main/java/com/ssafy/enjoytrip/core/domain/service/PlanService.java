@@ -1,8 +1,6 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.PLAN_NOT_FOUND;
-import static com.ssafy.enjoytrip.storage.db.core.jooq.tables.Attractions.ATTRACTIONS;
-import static org.jooq.impl.DSL.field;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.PlanItem;
@@ -11,24 +9,23 @@ import com.ssafy.enjoytrip.core.domain.TravelPlan;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.entity.PlanItemEntity;
 import com.ssafy.enjoytrip.storage.db.core.entity.TravelPlanEntity;
-import com.ssafy.enjoytrip.storage.db.core.jpa.PlanItemJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.TravelPlanJpaRepository;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.PlanMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionRow;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class PlanService {
+    private final PlanMapper planMapper;
 
     public List<TravelPlan> findAllPlans() {
-        return jpaRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
+        return planMapper.findAllOrderByCreatedAtDesc().stream()
                 .map(entity -> new TravelPlan(
                         entity.getId(),
                         entity.getUserId(),
@@ -44,8 +41,7 @@ public class PlanService {
     }
 
     public List<TravelPlan> findPlansByUser(String userId) {
-        return jpaRepository.findByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
+        return planMapper.findByUserIdOrderByCreatedAtDesc(userId).stream()
                 .map(entity -> new TravelPlan(
                         entity.getId(),
                         entity.getUserId(),
@@ -61,7 +57,7 @@ public class PlanService {
     }
 
     public Optional<TravelPlan> findPlan(String id) {
-        return jpaRepository.findById(id)
+        return Optional.ofNullable(planMapper.findById(id))
                 .map(entity -> new TravelPlan(
                         entity.getId(),
                         entity.getUserId(),
@@ -81,61 +77,28 @@ public class PlanService {
     }
 
     @Transactional
-    public void updatePlan(
-            String authenticatedUserId,
-            String planId,
-            String title,
-            String startDate,
-            String endDate,
-            Integer budget,
-            String note,
-            List<PlanItem> routeItems
-    ) {
+    public void updatePlan(String authenticatedUserId,
+                           String planId,
+                           String title,
+                           String startDate,
+                           String endDate,
+                           Integer budget,
+                           String note,
+                           List<PlanItem> routeItems) {
         TravelPlan current = requireOwnedPlan(planId, authenticatedUserId);
-        TravelPlan next = current.merge(
-                title,
-                startDate,
-                endDate,
-                budget,
-                note
-        );
-        boolean updated = routeItems == null
-                ? updateStoredPlan(next)
-                : updateStoredPlanWithItems(next, routeItems);
+        TravelPlan next = current.merge(title, startDate, endDate, budget, note);
+        boolean updated = routeItems == null ? updateStoredPlan(next) : updateStoredPlanWithItems(next, routeItems);
         if (!updated) {
             throw new CoreException(PLAN_NOT_FOUND);
         }
     }
 
     @Transactional
-    public void replacePlanItems(
-            String authenticatedUserId,
-            String planId,
-            List<PlanItem> items
-    ) {
+    public void replacePlanItems(String authenticatedUserId, String planId, List<PlanItem> items) {
         TravelPlan plan = requireOwnedPlan(planId, authenticatedUserId);
         if (!replaceStoredPlanItems(plan.id(), items)) {
             throw new CoreException(PLAN_NOT_FOUND);
         }
-    }
-
-    private TravelPlan requireOwnedPlan(String planId, String authenticatedUserId) {
-        TravelPlan plan = jpaRepository.findById(planId)
-                .map(entity -> new TravelPlan(
-                        entity.getId(),
-                        entity.getUserId(),
-                        entity.getTitle(),
-                        entity.getStartDate(),
-                        entity.getEndDate(),
-                        entity.getBudget(),
-                        entity.getNote(),
-                        entity.getRouteItemsJson(),
-                        stringValue(entity.getCreatedAt())
-                ))
-                .orElseThrow(() -> new CoreException(PLAN_NOT_FOUND));
-        plan.requireOwnedBy(authenticatedUserId);
-
-        return plan;
     }
 
     @Transactional
@@ -179,7 +142,7 @@ public class PlanService {
     }
 
     public List<PlanRouteItem> findPlanItems(String planId) {
-        List<PlanItemEntity> items = itemJpaRepository.findByPlanIdOrderByPositionAsc(planId);
+        List<PlanItemEntity> items = planMapper.findItemsByPlanIdOrderByPositionAsc(planId);
         if (items.isEmpty()) {
             return List.of();
         }
@@ -212,8 +175,14 @@ public class PlanService {
         return deleteStoredPlanItem(planId, itemId);
     }
 
+    private TravelPlan requireOwnedPlan(String planId, String authenticatedUserId) {
+        TravelPlan plan = findPlan(planId).orElseThrow(() -> new CoreException(PLAN_NOT_FOUND));
+        plan.requireOwnedBy(authenticatedUserId);
+        return plan;
+    }
+
     private void savePlan(TravelPlan plan) {
-        jpaRepository.save(new TravelPlanEntity(
+        planMapper.insertPlan(new TravelPlanEntity(
                 plan.id(),
                 plan.userId(),
                 plan.title(),
@@ -231,19 +200,19 @@ public class PlanService {
     }
 
     private boolean updateStoredPlan(TravelPlan plan) {
-        return jpaRepository.findById(plan.id())
-                .map(entity -> {
-                    entity.update(
-                            plan.title(),
-                            plan.startDate(),
-                            plan.endDate(),
-                            plan.budget(),
-                            plan.note(),
-                            plan.routeItemsJson()
-                    );
-                    return true;
-                })
-                .orElse(false);
+        TravelPlanEntity entity = planMapper.findById(plan.id());
+        if (entity == null) {
+            return false;
+        }
+        entity.update(
+                plan.title(),
+                plan.startDate(),
+                plan.endDate(),
+                plan.budget(),
+                plan.note(),
+                plan.routeItemsJson()
+        );
+        return planMapper.updatePlan(entity) > 0;
     }
 
     private boolean updateStoredPlanWithItems(TravelPlan plan, List<PlanItem> items) {
@@ -255,22 +224,20 @@ public class PlanService {
     }
 
     private boolean deleteStoredPlan(String id) {
-        if (!jpaRepository.existsById(id)) {
+        if (planMapper.existsById(id) <= 0) {
             return false;
         }
-        jpaRepository.deleteById(id);
-        return true;
+        return planMapper.deletePlanById(id) > 0;
     }
 
     private boolean replaceStoredPlanItems(String planId, List<PlanItem> items) {
-        if (!jpaRepository.existsById(planId)) {
+        if (planMapper.existsById(planId) <= 0) {
             return false;
         }
-        itemJpaRepository.deleteByPlanId(planId);
-        itemJpaRepository.flush();
+        planMapper.deleteItemsByPlanId(planId);
         for (int index = 0; index < items.size(); index++) {
             PlanItem item = items.get(index);
-            itemJpaRepository.save(new PlanItemEntity(
+            planMapper.insertItem(new PlanItemEntity(
                     planId,
                     item.attractionId(),
                     index + 1,
@@ -283,12 +250,11 @@ public class PlanService {
     }
 
     private boolean deleteStoredPlanItem(String planId, Long itemId) {
-        Optional<PlanItemEntity> found = itemJpaRepository.findById(itemId)
-                .filter(item -> item.getPlanId().equals(planId));
-        if (found.isEmpty()) {
+        PlanItemEntity found = planMapper.findItemById(itemId);
+        if (found == null || !found.getPlanId().equals(planId)) {
             return false;
         }
-        List<PlanItem> remaining = itemJpaRepository.findByPlanIdOrderByPositionAsc(planId).stream()
+        List<PlanItem> remaining = planMapper.findItemsByPlanIdOrderByPositionAsc(planId).stream()
                 .filter(item -> !item.getId().equals(itemId))
                 .map(item -> new PlanItem(
                         item.getId(),
@@ -300,55 +266,33 @@ public class PlanService {
                         item.getStayMinutes()
                 ))
                 .toList();
-        itemJpaRepository.deleteById(itemId);
-        itemJpaRepository.flush();
+        planMapper.deleteItemById(itemId);
         replaceStoredPlanItems(planId, remaining);
         return true;
     }
 
-    private final TravelPlanJpaRepository jpaRepository;
-    private final PlanItemJpaRepository itemJpaRepository;
-    private final DSLContext dslContext;
-
-
     private Map<Long, Attraction> findAttractions(List<Long> attractionIds) {
-        return dslContext.select(
-                        ATTRACTIONS.ID,
-                        ATTRACTIONS.TITLE,
-                        ATTRACTIONS.ADDR1,
-                        ATTRACTIONS.ADDR2,
-                        ATTRACTIONS.ZIPCODE,
-                        ATTRACTIONS.TEL,
-                        ATTRACTIONS.FIRST_IMAGE.as("firstImage"),
-                        ATTRACTIONS.FIRST_IMAGE2.as("firstImage2"),
-                        ATTRACTIONS.READ_COUNT.as("readcount"),
-                        ATTRACTIONS.SIDO_CODE.as("sidoCode"),
-                        ATTRACTIONS.GUGUN_CODE.as("gugunCode"),
-                        field("ST_Y({0})", Double.class, ATTRACTIONS.LOCATION).as("latitude"),
-                        field("ST_X({0})", Double.class, ATTRACTIONS.LOCATION).as("longitude"),
-                        ATTRACTIONS.MLEVEL,
-                        ATTRACTIONS.CONTENT_TYPE_ID.as("contentTypeId"),
-                        ATTRACTIONS.OVERVIEW
-                )
-                .from(ATTRACTIONS)
-                .where(ATTRACTIONS.ID.in(attractionIds))
-                .fetch(record -> new Attraction(
-                        record.get(ATTRACTIONS.ID),
-                        record.get(ATTRACTIONS.TITLE),
-                        record.get(ATTRACTIONS.ADDR1),
-                        record.get(ATTRACTIONS.ADDR2),
-                        record.get(ATTRACTIONS.ZIPCODE),
-                        record.get(ATTRACTIONS.TEL),
-                        record.get("firstImage", String.class),
-                        record.get("firstImage2", String.class),
-                        record.get("readcount", Integer.class),
-                        record.get("sidoCode", Integer.class),
-                        record.get("gugunCode", Integer.class),
-                        record.get("latitude", Double.class),
-                        record.get("longitude", Double.class),
-                        record.get(ATTRACTIONS.MLEVEL),
-                        record.get("contentTypeId", String.class),
-                        record.get(ATTRACTIONS.OVERVIEW),
+        if (attractionIds.isEmpty()) {
+            return Map.of();
+        }
+        return planMapper.findAttractionsByIds(attractionIds).stream()
+                .map(row -> new Attraction(
+                        row.id(),
+                        row.title(),
+                        row.addr1(),
+                        row.addr2(),
+                        row.zipcode(),
+                        row.tel(),
+                        row.firstImage(),
+                        row.firstImage2(),
+                        row.readCount(),
+                        row.sidoCode(),
+                        row.gugunCode(),
+                        row.latitude(),
+                        row.longitude(),
+                        row.mlevel(),
+                        row.contentTypeId(),
+                        row.overview(),
                         0,
                         0.0,
                         0,
@@ -356,7 +300,6 @@ public class PlanService {
                         false,
                         null
                 ))
-                .stream()
                 .collect(Collectors.toMap(Attraction::id, attraction -> attraction));
     }
 

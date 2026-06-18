@@ -1,56 +1,34 @@
 package com.ssafy.enjoytrip.storage.db.core.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "members", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_members_user_id", columnNames = "user_id"),
-        @UniqueConstraint(name = "uk_members_email", columnNames = "email")
-})
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberEntity extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false, unique = true, length = 64)
     private String userId;
 
-    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(length = 30)
     private String nickname;
 
-    @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false)
     private String password;
 
-    @Column(name = "profile_image_url", length = 512)
     private String profileImageUrl;
 
-    @Column(name = "representative_latitude", precision = 10, scale = 7)
     private BigDecimal representativeLatitude;
 
-    @Column(name = "representative_longitude", precision = 10, scale = 7)
     private BigDecimal representativeLongitude;
 
-    @Column(name = "representative_region_name", length = 100)
     private String representativeRegionName;
 
     public MemberEntity(String userId,

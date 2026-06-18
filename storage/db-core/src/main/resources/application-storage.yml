@@ -1,0 +1,5 @@
+mybatis:
+  mapper-locations: classpath*:mybatis/mapper/**/*.xml
+  type-aliases-package: com.ssafy.enjoytrip.storage.db.core.entity,com.ssafy.enjoytrip.storage.db.core.mybatis.row
+  configuration:
+    map-underscore-to-camel-case: true

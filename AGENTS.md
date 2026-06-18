@@ -8,8 +8,8 @@ USE CODEX NATIVE SUBAGENTS FOR INDEPENDENT PARALLEL SUBTASKS WHEN THAT IMPROVES 
 ## Stack
 
 - Spring MVC
-- Spring Data JPA
-- jOOQ for complex SQL and native mutations
+- MyBatis mapper/XML for persistence SQL
+- Testcontainers for PostGIS/pg_vector integration verification
 - Lombok (Required: Use `@RequiredArgsConstructor`, `@AllArgsConstructor`, or `@NoArgsConstructor` to eliminate constructor boilerplate)
 - PostgreSQL/PostGIS
 - Multi Module
@@ -23,11 +23,11 @@ The project is organized around the monolithic `core-api` target shape plus lowe
   - Worker entrypoint: `com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication`.
   - HTTP/API code lives under `com.ssafy.enjoytrip.core.api.web.*`.
   - Kafka/Scheduled/background worker ingress lives under `com.ssafy.enjoytrip.core.api.worker.*`.
-  - Domain models, application services, outbound integration clients, and support contracts live here; database access uses storage entity/JPA/jOOQ types directly.
+  - Domain models, application services, outbound integration clients, and support contracts live here; database access uses storage entity/MyBatis types directly.
   - Concrete outbound integration clients used by the API are compiled in `core-api`; batch-only embedding clients are compiled in `batch`; the `external` module must not depend on `core-api`.
   - `:core:core-api:check` is the primary executable-module verification command.
 - `core:core-enum`: enum-only shared module for values used by both `core-api` and `db-core`.
-- `storage:db-core`: JPA entities, Spring Data repositories, Flyway migrations, and jOOQ codegen/query infrastructure.
+- `storage:db-core`: storage row/entity contracts, MyBatis mapper interfaces/XML/type handlers, Flyway migrations, and database configuration.
   - Do not place web/controller, worker ingress, domain service, or external API client code here.
 - `external`: independent placeholder module with no `core-api` dependency. API-facing third-party clients live in `core-api`; batch-only embedding clients live in `batch`.
 - `batch`: separate batch runtime. Batch job ingress, parameter parsing, batch-only services, and batch-only outbound clients stay in `batch`.
@@ -38,13 +38,13 @@ them back.
 Default request flow:
 
 ```text
-core-api web controller -> core-api service -> storage entity/JPA/jOOQ
+core-api web controller -> core-api service -> storage entity/MyBatis
 ```
 
 Default worker flow:
 
 ```text
-core-api worker ingress -> core-api service/processor -> storage entity/JPA/jOOQ
+core-api worker ingress -> core-api service/processor -> storage entity/MyBatis
 ```
 
 Layering rules:
@@ -54,8 +54,8 @@ Layering rules:
 - Worker ingress should only translate runtime messages/events into service or processor calls.
 - Web packages must not own Kafka listener, scheduled worker, or background-only retry/error handler code.
 - Worker packages must not own controllers, OpenAPI contracts, REST Docs, web DTOs, or REST response envelopes.
-- Controllers and workers must not call persistence/JPA repositories directly.
-- Services may import storage entity/JPA/jOOQ types; web controllers and worker ingress must not call storage/JPA repositories directly.
+- Controllers and workers must not call persistence/MyBatis mappers directly.
+- Services may import storage entity/MyBatis types; web controllers and worker ingress must not call storage/MyBatis mappers directly.
 - When services convert storage entities into core domain models, instantiate the domain model directly with `new` at the
   service call path. Do not hide entity-to-domain conversion behind service-local `toModel`/`toDomain` helpers, and do
   not put core-api domain model conversion methods on `storage:db-core` entities.

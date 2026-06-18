@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NotificationOutboxMapper">
+    <sql id="columns">id, event_type as eventType, recipient_user_id as recipientUserId, aggregate_type as aggregateType, aggregate_id as aggregateId, payload, status, attempt_count as attemptCount, last_error as lastError, created_at as createdAt, processed_at as processedAt, updated_at as updatedAt</sql>
+    <select id="findById" resultType="com.ssafy.enjoytrip.storage.db.core.entity.NotificationOutboxEntity">select <include refid="columns"/> from notification_outbox where id = #{id}</select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">insert into notification_outbox (event_type, recipient_user_id, aggregate_type, aggregate_id, payload, status, attempt_count, created_at) values (#{eventType}, #{recipientUserId}, #{aggregateType}, #{aggregateId}, #{payload}::jsonb, #{status}, #{attemptCount}, current_timestamp)</insert>
+    <update id="markProcessed">update notification_outbox set status = #{status}, processed_at = #{processedAt}, last_error = null, updated_at = current_timestamp where id = #{id}</update>
+    <update id="markFailed">update notification_outbox set status = #{status}, attempt_count = #{attemptCount}, last_error = #{lastError}, updated_at = current_timestamp where id = #{id}</update>
+</mapper>

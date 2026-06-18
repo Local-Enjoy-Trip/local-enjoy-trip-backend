@@ -1,0 +1,22 @@
+package com.ssafy.enjoytrip.storage.db.core.mybatis.row;
+
+public record AttractionSearchRow(
+        Long id,
+        String title,
+        String addr1,
+        String addr2,
+        String zipcode,
+        String tel,
+        String firstImage,
+        String firstImage2,
+        Integer readCount,
+        Integer sidoCode,
+        Integer gugunCode,
+        Double latitude,
+        Double longitude,
+        String mlevel,
+        String contentTypeId,
+        String overview,
+        Double distanceMeters
+) {
+}

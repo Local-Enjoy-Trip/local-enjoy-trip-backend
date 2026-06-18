@@ -3,8 +3,6 @@ plugins {
     id "java-library"
 }
 
-apply from: "${rootDir}/gradle/db-core-jooq.gradle"
-
 dependencyManagement {
     imports {
         mavenBom "org.springframework.boot:spring-boot-dependencies:${rootProject.ext.springBootVersion}"
@@ -13,13 +11,14 @@ dependencyManagement {
 
 dependencies {
     api project(":core:core-enum")
-    api "org.springframework.boot:spring-boot-starter-data-jpa"
-    api "org.springframework.boot:spring-boot-starter-jooq"
+    api "org.mybatis.spring.boot:mybatis-spring-boot-starter:${rootProject.ext.mybatisSpringBootVersion}"
     implementation "org.springframework.boot:spring-boot-flyway"
-
-    jooqGenerator "org.jooq:jooq-codegen"
-    jooqGenerator "org.jooq:jooq-meta-extensions"
 
     runtimeOnly "org.flywaydb:flyway-database-postgresql"
     runtimeOnly "org.postgresql:postgresql"
+
+    testImplementation "org.mybatis.spring.boot:mybatis-spring-boot-starter-test:${rootProject.ext.mybatisSpringBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-testcontainers"
+    testImplementation "org.testcontainers:testcontainers-junit-jupiter"
+    testImplementation "org.testcontainers:testcontainers-postgresql"
 }

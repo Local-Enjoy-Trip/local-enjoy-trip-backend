@@ -7,42 +7,42 @@ import static com.ssafy.enjoytrip.core.domain.NotificationType.FRIEND_REQUEST_RE
 import com.ssafy.enjoytrip.core.domain.Notification;
 import com.ssafy.enjoytrip.core.domain.NotificationOutboxEvent;
 import com.ssafy.enjoytrip.core.domain.NotificationReferenceType;
+import com.ssafy.enjoytrip.storage.db.core.entity.FriendshipEntity;
 import com.ssafy.enjoytrip.storage.db.core.entity.NotificationEntity;
 import com.ssafy.enjoytrip.storage.db.core.entity.NotificationOutboxEntity;
-import com.ssafy.enjoytrip.storage.db.core.jpa.FriendshipJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.NotificationJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.NotificationOutboxJpaRepository;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.FriendshipMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NotificationMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NotificationOutboxMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
-    private final NotificationJpaRepository notificationJpaRepository;
-    private final NotificationOutboxJpaRepository outboxJpaRepository;
-    private final FriendshipJpaRepository friendshipJpaRepository;
+    private final NotificationMapper notificationMapper;
+    private final NotificationOutboxMapper outboxMapper;
+    private final FriendshipMapper friendshipMapper;
 
     public List<Notification> findNotifications(String recipientUserId, int limit) {
         return findUnreadByRecipient(recipientUserId, limit);
     }
 
     public boolean hasUnreadNotification(String recipientUserId) {
-        return notificationJpaRepository.existsUnreadFriendRequest(
+        return notificationMapper.existsUnreadFriendRequest(
                 recipientUserId,
                 FRIEND_REQUEST_RECEIVED,
                 FRIENDSHIP,
                 PENDING
-        );
+        ) > 0;
     }
 
     public boolean existsByOutboxEventId(Long outboxEventId) {
-        return notificationJpaRepository.existsByOutboxEventId(outboxEventId);
+        return notificationMapper.existsByOutboxEventId(outboxEventId) > 0;
     }
 
     @Transactional
@@ -57,71 +57,46 @@ public class NotificationService {
                     event.id()
             );
             markReadIfFriendRequestAlreadyHandled(event, entity);
-            NotificationEntity saved = notificationJpaRepository.saveAndFlush(entity);
-
+            notificationMapper.insert(entity);
             return new Notification(
-                    saved.getId(),
-                    saved.getRecipientUserId(),
-                    saved.getType(),
-                    saved.getReferenceType(),
-                    saved.getReferenceId(),
-                    saved.getPayload(),
-                    saved.getOutboxEventId(),
-                    saved.getReadAt(),
-                    saved.getCreatedAt(),
-                    saved.getUpdatedAt()
-            );
-        } catch (DataIntegrityViolationException duplicate) {
-            return notificationJpaRepository.findByOutboxEventId(event.id())
-                    .map(entity -> {
-                        markReadIfFriendRequestAlreadyHandled(event, entity);
-                        return new Notification(
-                                entity.getId(),
-                                entity.getRecipientUserId(),
-                                entity.getType(),
-                                entity.getReferenceType(),
-                                entity.getReferenceId(),
-                                entity.getPayload(),
-                                entity.getOutboxEventId(),
-                                entity.getReadAt(),
-                                entity.getCreatedAt(),
-                                entity.getUpdatedAt()
-                        );
-                    })
-                    .orElseThrow(() -> duplicate);
-        }
-    }
-
-    private List<Notification> findUnreadByRecipient(String recipientUserId, int limit) {
-        PageRequest page = PageRequest.of(0, limit);
-        List<NotificationEntity> entities = notificationJpaRepository.findUnreadFriendRequests(
-                recipientUserId,
-                FRIEND_REQUEST_RECEIVED,
-                FRIENDSHIP,
-                PENDING,
-                page
+                entity.getId(),
+                entity.getRecipientUserId(),
+                entity.getType(),
+                entity.getReferenceType(),
+                entity.getReferenceId(),
+                entity.getPayload(),
+                entity.getOutboxEventId(),
+                entity.getReadAt(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
         );
-        return entities.stream()
-                .map(entity -> new Notification(
-                        entity.getId(),
-                        entity.getRecipientUserId(),
-                        entity.getType(),
-                        entity.getReferenceType(),
-                        entity.getReferenceId(),
-                        entity.getPayload(),
-                        entity.getOutboxEventId(),
-                        entity.getReadAt(),
-                        entity.getCreatedAt(),
-                        entity.getUpdatedAt()
-                ))
-                .toList();
+        } catch (DataIntegrityViolationException duplicate) {
+            NotificationEntity entity = notificationMapper.findByOutboxEventId(event.id());
+            if (entity == null) {
+                throw duplicate;
+            }
+            markReadIfFriendRequestAlreadyHandled(event, entity);
+            notificationMapper.updateReadAt(entity);
+            return new Notification(
+                entity.getId(),
+                entity.getRecipientUserId(),
+                entity.getType(),
+                entity.getReferenceType(),
+                entity.getReferenceId(),
+                entity.getPayload(),
+                entity.getOutboxEventId(),
+                entity.getReadAt(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
+        );
+        }
     }
 
     @Transactional
     public int markReadByReference(String recipientUserId,
                                    NotificationReferenceType referenceType,
                                    Long referenceId) {
-        return notificationJpaRepository.markReadByReference(
+        return notificationMapper.markReadByReference(
                 recipientUserId,
                 referenceType,
                 referenceId,
@@ -141,59 +116,84 @@ public class NotificationService {
                 friendshipId,
                 payload
         );
-        NotificationOutboxEntity saved = outboxJpaRepository.save(entity);
-
+        outboxMapper.insert(entity);
         return new NotificationOutboxEvent(
-                saved.getId(),
-                saved.getEventType(),
-                saved.getRecipientUserId(),
-                saved.getAggregateType(),
-                saved.getAggregateId(),
-                saved.getPayload(),
-                saved.getStatus(),
-                saved.getAttemptCount(),
-                saved.getLastError(),
-                saved.getCreatedAt(),
-                saved.getProcessedAt(),
-                saved.getUpdatedAt()
+                entity.getId(),
+                entity.getEventType(),
+                entity.getRecipientUserId(),
+                entity.getAggregateType(),
+                entity.getAggregateId(),
+                entity.getPayload(),
+                entity.getStatus(),
+                entity.getAttemptCount(),
+                entity.getLastError(),
+                entity.getCreatedAt(),
+                entity.getProcessedAt(),
+                entity.getUpdatedAt()
         );
     }
 
     public Optional<NotificationOutboxEvent> findOutboxEventById(Long id) {
-        return outboxJpaRepository.findById(id)
+        return Optional.ofNullable(outboxMapper.findById(id))
                 .map(entity -> new NotificationOutboxEvent(
-                        entity.getId(),
-                        entity.getEventType(),
-                        entity.getRecipientUserId(),
-                        entity.getAggregateType(),
-                        entity.getAggregateId(),
-                        entity.getPayload(),
-                        entity.getStatus(),
-                        entity.getAttemptCount(),
-                        entity.getLastError(),
-                        entity.getCreatedAt(),
-                        entity.getProcessedAt(),
-                        entity.getUpdatedAt()
-                ));
+                                entity.getId(),
+                                entity.getEventType(),
+                                entity.getRecipientUserId(),
+                                entity.getAggregateType(),
+                                entity.getAggregateId(),
+                                entity.getPayload(),
+                                entity.getStatus(),
+                                entity.getAttemptCount(),
+                                entity.getLastError(),
+                                entity.getCreatedAt(),
+                                entity.getProcessedAt(),
+                                entity.getUpdatedAt()
+                        ));
     }
 
     @Transactional
     public void markOutboxProcessed(Long id) {
         NotificationOutboxEntity entity = findOutboxEntity(id);
         entity.markProcessed();
+        outboxMapper.markProcessed(entity);
     }
 
     @Transactional
     public void markOutboxFailed(Long id, String lastError) {
         NotificationOutboxEntity entity = findOutboxEntity(id);
         entity.markFailed(lastError);
+        outboxMapper.markFailed(entity);
+    }
+
+    private List<Notification> findUnreadByRecipient(String recipientUserId, int limit) {
+        return notificationMapper.findUnreadFriendRequests(
+                        recipientUserId,
+                        FRIEND_REQUEST_RECEIVED,
+                        FRIENDSHIP,
+                        PENDING,
+                        limit
+                ).stream()
+                .map(entity -> new Notification(
+                                entity.getId(),
+                                entity.getRecipientUserId(),
+                                entity.getType(),
+                                entity.getReferenceType(),
+                                entity.getReferenceId(),
+                                entity.getPayload(),
+                                entity.getOutboxEventId(),
+                                entity.getReadAt(),
+                                entity.getCreatedAt(),
+                                entity.getUpdatedAt()
+                        ))
+                .toList();
     }
 
     private NotificationOutboxEntity findOutboxEntity(Long id) {
-        return outboxJpaRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException(
-                        "알림 outbox를 찾을 수 없습니다: " + id
-                ));
+        NotificationOutboxEntity entity = outboxMapper.findById(id);
+        if (entity == null) {
+            throw new IllegalStateException("알림 outbox를 찾을 수 없습니다: " + id);
+        }
+        return entity;
     }
 
     private void markReadIfFriendRequestAlreadyHandled(NotificationOutboxEvent event,
@@ -201,9 +201,10 @@ public class NotificationService {
         if (!isFriendRequestReceived(event)) {
             return;
         }
-        friendshipJpaRepository.findById(event.aggregateId())
-                .filter(friendship -> friendship.getStatus() != PENDING)
-                .ifPresent(ignored -> entity.markRead());
+        FriendshipEntity friendship = friendshipMapper.findById(event.aggregateId());
+        if (friendship != null && friendship.getStatus() != PENDING) {
+            entity.markRead();
+        }
     }
 
     private static boolean isFriendRequestReceived(NotificationOutboxEvent event) {

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper">
+    <sql id="regionCondition">
+        <foreach collection="regions" item="region" separator=" or " open="(" close=")">
+            (a.sido_code = #{region.sidoCode} and a.gugun_code = #{region.gugunCode})
+        </foreach>
+    </sql>
+    <select id="findTargets" resultType="com.ssafy.enjoytrip.storage.db.core.mybatis.row.AttractionEmbeddingSourceRow">
+        select a.id as attractionId, a.title, a.addr1, a.addr2, a.overview, a.sido_code as sidoCode, a.gugun_code as gugunCode
+        from attractions a
+        where <include refid="regionCondition"/>
+        order by a.id asc
+        <if test="limit &gt; 0">limit #{limit}</if>
+    </select>
+    <select id="existsEmbeddedWithSameSource" resultType="int">select count(*) from attraction_embeddings where attraction_id = #{attractionId} and source_version = #{sourceVersion} and source_text_hash = #{sourceTextHash} and status = 'EMBEDDED'</select>
+    <insert id="upsertEmbedded">
+        insert into attraction_embeddings (attraction_id, embedding, source_version, source_text_hash, embedding_dimension, embedding_input, provider, model, status, failure_code, failure_message, attempt_count, last_attempted_at, embedded_at, updated_at)
+        values (#{attractionId}, #{vectorLiteral}::vector, #{sourceVersion}, #{sourceTextHash}, #{dimension}, #{embeddingInput}, #{provider}, #{model}, 'EMBEDDED', null, null, 1, current_timestamp, current_timestamp, current_timestamp)
+        on conflict (attraction_id) do update set embedding = excluded.embedding, source_version = excluded.source_version, source_text_hash = excluded.source_text_hash, embedding_dimension = excluded.embedding_dimension, embedding_input = excluded.embedding_input, provider = excluded.provider, model = excluded.model, status = 'EMBEDDED', failure_code = null, failure_message = null, attempt_count = attraction_embeddings.attempt_count + 1, last_attempted_at = current_timestamp, embedded_at = current_timestamp, updated_at = current_timestamp
+    </insert>
+    <insert id="upsertFailed">
+        insert into attraction_embeddings (attraction_id, source_version, source_text_hash, embedding_dimension, provider, model, status, failure_code, failure_message, attempt_count, last_attempted_at, updated_at)
+        values (#{attractionId}, #{sourceVersion}, #{sourceTextHash}, 3072, 'gms', 'text-embedding-3-large', 'FAILED', #{failureCode}, #{failureMessage}, 1, current_timestamp, current_timestamp)
+        on conflict (attraction_id) do update set source_version = excluded.source_version, source_text_hash = excluded.source_text_hash, embedding_dimension = 3072, provider = 'gms', model = 'text-embedding-3-large', status = 'FAILED', embedding = null, failure_code = excluded.failure_code, failure_message = excluded.failure_message, attempt_count = attraction_embeddings.attempt_count + 1, last_attempted_at = current_timestamp, embedded_at = null, updated_at = current_timestamp
+    </insert>
+    <select id="countOutsideTargetRegions" resultType="long">
+        select count(*) from attraction_embeddings e join attractions a on e.attraction_id = a.id
+        where not <include refid="regionCondition"/>
+    </select>
+</mapper>

@@ -1,22 +1,15 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
-import static com.ssafy.enjoytrip.storage.db.core.jooq.tables.EvChargers.EV_CHARGERS;
-import static org.jooq.impl.DSL.coalesce;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.noCondition;
-
 import com.ssafy.enjoytrip.core.domain.ChargerItem;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.EvChargerMapper;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class EvChargerService {
-
     private static final Map<String, String> ZCODE_REGIONS = Map.ofEntries(
             Map.entry("11", "서울"),
             Map.entry("26", "부산"),
@@ -37,57 +30,42 @@ public class EvChargerService {
             Map.entry("50", "제주")
     );
 
-    private final DSLContext dslContext;
+    private final EvChargerMapper evChargerMapper;
 
     public List<ChargerItem> findChargers(String zcode, String keyword, int pageNo, int numOfRows) {
         int limit = Math.max(10, Math.min(500, numOfRows));
         int page = Math.max(1, pageNo);
-
         String region = ZCODE_REGIONS.get(trim(zcode));
 
-        return dslContext.select(
-                        EV_CHARGERS.STAT_ID.as("statId"),
-                        EV_CHARGERS.STAT_NM.as("statNm"),
-                        EV_CHARGERS.CHGER_ID.as("chgerId"),
-                        EV_CHARGERS.CHGER_TYPE.as("chgerType"),
-                        EV_CHARGERS.ADDR.as("addr"),
-                        EV_CHARGERS.LOCATION_DESC.as("location"),
-                        field("ST_Y({0})", Double.class, EV_CHARGERS.LOCATION).as("lat"),
-                        field("ST_X({0})", Double.class, EV_CHARGERS.LOCATION).as("lng"),
-                        EV_CHARGERS.USE_TIME.as("useTime"),
-                        EV_CHARGERS.BUSI_NM.as("busiNm"),
-                        EV_CHARGERS.BUSI_CALL.as("busiCall"),
-                        EV_CHARGERS.STAT.as("stat")
-                )
-                .from(EV_CHARGERS)
-                .where(regionCondition(region))
-                .and(keywordCondition(keyword))
-                .orderBy(EV_CHARGERS.STAT_NM.asc(), EV_CHARGERS.STAT_ID.asc(), EV_CHARGERS.CHGER_ID.asc())
-                .limit(limit)
-                .offset((page - 1) * limit)
-                .fetchInto(ChargerItem.class);
-    }
-
-    private Condition regionCondition(String region) {
-        if (region == null || region.isBlank()) {
-            return noCondition();
-        }
-        return coalesce(EV_CHARGERS.ADDR, "").likeIgnoreCase("%" + region.trim() + "%");
-    }
-
-    private Condition keywordCondition(String keyword) {
-        if (keyword == null || keyword.isBlank()) {
-            return noCondition();
-        }
-        String pattern = "%" + keyword.trim() + "%";
-        return EV_CHARGERS.STAT_NM.likeIgnoreCase(pattern)
-                .or(coalesce(EV_CHARGERS.ADDR, "").likeIgnoreCase(pattern))
-                .or(coalesce(EV_CHARGERS.LOCATION_DESC, "").likeIgnoreCase(pattern));
+        return evChargerMapper.findChargers(region, blankToNull(keyword), limit, (page - 1) * limit)
+                .stream()
+                .map(row -> new ChargerItem(
+                        row.statId(),
+                        row.statNm(),
+                        row.chgerId(),
+                        row.chgerType(),
+                        row.addr(),
+                        row.location(),
+                        row.lat(),
+                        row.lng(),
+                        row.useTime(),
+                        row.busiNm(),
+                        row.busiCall(),
+                        row.stat()
+                ))
+                .toList();
     }
 
     private static String trim(String value) {
         if (value == null) {
             return "";
+        }
+        return value.trim();
+    }
+
+    private static String blankToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
         }
         return value.trim();
     }

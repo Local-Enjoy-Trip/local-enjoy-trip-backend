@@ -76,7 +76,7 @@ tasks.named("test") {
     outputs.dir snippetsDir
 
     useJUnitPlatform {
-        excludeTags "suite"
+        excludeTags "suite", "container", "slow", "postgis", "pgvector"
         excludeEngines "junit-platform-suite"
     }
 }

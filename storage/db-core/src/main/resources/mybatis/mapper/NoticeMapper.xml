@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoticeMapper">
+    <select id="findAllOrderByCreatedAtDesc" resultType="com.ssafy.enjoytrip.storage.db.core.entity.NoticeEntity">
+        select id, title, content, author, created_at as createdAt, updated_at as updatedAt
+        from notices
+        order by created_at desc
+    </select>
+    <select id="findById" resultType="com.ssafy.enjoytrip.storage.db.core.entity.NoticeEntity">
+        select id, title, content, author, created_at as createdAt, updated_at as updatedAt from notices where id = #{id}
+    </select>
+    <select id="existsById" resultType="int">select count(*) from notices where id = #{id}</select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into notices (title, content, author, created_at) values (#{title}, #{content}, #{author}, current_timestamp)
+    </insert>
+    <update id="update">update notices set title = #{title}, content = #{content}, updated_at = current_timestamp where id = #{id}</update>
+    <delete id="deleteById">delete from notices where id = #{id}</delete>
+</mapper>

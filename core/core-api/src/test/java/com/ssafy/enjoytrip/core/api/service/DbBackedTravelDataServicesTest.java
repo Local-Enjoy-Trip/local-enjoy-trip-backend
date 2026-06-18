@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.ssafy.enjoytrip.external.ClickHouseAttractionPopularityClient;
-import org.jooq.DSLContext;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.EvChargerMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NewsMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -15,12 +17,12 @@ class DbBackedTravelDataServicesTest {
 
     @Nested
     class AttractionServiceTests {
-        @DisplayName("AttractionService는 Store 없이 popularity client와 jOOQ DSLContext로 생성된다")
+        @DisplayName("AttractionService는 MyBatis mapper와 popularity client로 생성된다")
         @Test
-        void constructsWithDirectDbCoreDependencies() {
+        void constructsWithMyBatisMapperDependencies() {
             AttractionService service = new AttractionService(
                     mock(ClickHouseAttractionPopularityClient.class),
-                    mock(DSLContext.class)
+                    mock(AttractionMapper.class)
             );
 
             assertThat(service).isNotNull();
@@ -29,19 +31,19 @@ class DbBackedTravelDataServicesTest {
 
     @Nested
     class EvChargerServiceTests {
-        @DisplayName("EvChargerService는 Store 없이 jOOQ DSLContext로 생성된다")
+        @DisplayName("EvChargerService는 MyBatis mapper로 생성된다")
         @Test
-        void constructsWithDirectDslContext() {
-            assertThat(new EvChargerService(mock(DSLContext.class))).isNotNull();
+        void constructsWithMyBatisMapper() {
+            assertThat(new EvChargerService(mock(EvChargerMapper.class))).isNotNull();
         }
     }
 
     @Nested
     class NewsServiceTests {
-        @DisplayName("NewsService는 Store 없이 jOOQ DSLContext로 생성된다")
+        @DisplayName("NewsService는 MyBatis mapper로 생성된다")
         @Test
-        void constructsWithDirectDslContext() {
-            assertThat(new NewsService(mock(DSLContext.class))).isNotNull();
+        void constructsWithMyBatisMapper() {
+            assertThat(new NewsService(mock(NewsMapper.class))).isNotNull();
         }
     }
 }

@@ -1,21 +1,13 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
-import static com.ssafy.enjoytrip.storage.db.core.jooq.tables.Courses.COURSES;
-import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.when;
-
 import com.ssafy.enjoytrip.core.domain.CourseBriefingCandidate;
-import com.ssafy.enjoytrip.core.domain.CourseStatus;
-import com.ssafy.enjoytrip.core.domain.CourseVisibility;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefingPrompt;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import com.ssafy.enjoytrip.external.briefing.SpringAiNeighborhoodBriefingGenerator;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NeighborhoodBriefingMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
-import org.jooq.SortField;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,6 +16,7 @@ public class NeighborhoodBriefingService {
     private static final int COURSE_CANDIDATE_LIMIT = 3;
     private final WeatherService weatherService;
     private final SpringAiNeighborhoodBriefingGenerator generator;
+    private final NeighborhoodBriefingMapper neighborhoodBriefingMapper;
 
     public NeighborhoodBriefing brief(String regionName) {
         WeatherSummary weather = findWeatherForRegion(regionName);
@@ -33,12 +26,7 @@ public class NeighborhoodBriefingService {
             return fallbackBriefing(regionName, weather, candidates);
         }
 
-        NeighborhoodBriefingPrompt prompt = new NeighborhoodBriefingPrompt(
-                regionName,
-                weather,
-                candidates
-        );
-
+        NeighborhoodBriefingPrompt prompt = new NeighborhoodBriefingPrompt(regionName, weather, candidates);
         String generated = normalizeGeneratedBriefing(generator.generate(prompt));
         if (generated.isBlank()) {
             return fallbackBriefing(regionName, weather, candidates);
@@ -62,16 +50,9 @@ public class NeighborhoodBriefingService {
             return List.of();
         }
 
-        return dslContext.select(COURSES.ID, COURSES.TITLE, COURSES.REGION_NAME)
-                .from(COURSES)
-                .where(publicReadyCandidateCondition())
-                .orderBy(regionMatchFirst(region), COURSES.CREATED_AT.desc(), COURSES.ID.asc())
-                .limit(COURSE_CANDIDATE_LIMIT)
-                .fetch(record -> new CourseBriefingCandidate(
-                        record.get(COURSES.ID),
-                        record.get(COURSES.TITLE),
-                        record.get(COURSES.REGION_NAME)
-                ));
+        return neighborhoodBriefingMapper.findPublicReadyCandidates(region, COURSE_CANDIDATE_LIMIT).stream()
+                .map(row -> new CourseBriefingCandidate(row.id(), row.title(), row.regionName()))
+                .toList();
     }
 
     private NeighborhoodBriefing fallbackBriefing(String region,
@@ -101,24 +82,5 @@ public class NeighborhoodBriefingService {
                 .replaceAll("[\t ]+", " ")
                 .replaceAll(" *[\r\n]+ *", "\n");
         return normalized.length() > 160 ? normalized.substring(0, 160).strip() : normalized;
-    }
-
-    private final DSLContext dslContext;
-
-
-    static Condition publicReadyCandidateCondition() {
-        return COURSES.VISIBILITY.eq(CourseVisibility.PUBLIC.name())
-                .and(COURSES.STATUS.eq(CourseStatus.READY.name()))
-                .and(COURSES.DELETED_AT.isNull());
-    }
-
-    static SortField<Integer> regionMatchFirst(String regionName) {
-        if (regionName == null || regionName.isBlank()) {
-            return inline(0).asc();
-        }
-
-        return when(COURSES.REGION_NAME.eq(regionName), 0)
-                .otherwise(1)
-                .asc();
     }
 }

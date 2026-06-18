@@ -18,10 +18,10 @@
 
 필수 확인 대상:
 
-- `core/core-api/AGENTS.md` — API/worker executable, web/controller/DTO, worker ingress, storage entity/JPA/jOOQ, external contract 수정 전
+- `core/core-api/AGENTS.md` — API/worker executable, web/controller/DTO, worker ingress, storage entity/MyBatis, external contract 수정 전
 - `core/AGENTS.md` — core 모듈 수정 전
 - `storage/AGENTS.md` — storage 모듈 수정 전
-- `storage/db-core/AGENTS.md` — db-core entity/JPA/migration/jOOQ 수정 전
+- `storage/db-core/AGENTS.md` — db-core storage contract/MyBatis/migration 수정 전
 - `external/AGENTS.md` — external reference directory 수정 전
 - `batch/AGENTS.md` — batch job/launcher/config 수정 전
 
@@ -50,11 +50,13 @@ Controller request/response 계약은 이름 있는 DTO로 표현한다.
 
 ## 4. 저장소 기술 선택 규칙
 
-- 단순 CRUD와 단순 조회는 Spring Data JPA를 사용한다.
-- 동적 조건, join, projection, PostGIS, 복잡한 native SQL은 jOOQ를 사용한다.
-- `JdbcTemplate`은 사용하지 않는다.
-- JPA `@Query(nativeQuery = true)` 기반 native mutation은 금지한다.
+- 저장소 표준은 MyBatis mapper interface + XML SQL이다.
+- mapper/XML/type handler는 `storage:db-core`가 소유하고, core-api/batch service가 필요한 mapper를 주입받아 사용한다.
+- controller/worker ingress는 MyBatis mapper를 직접 호출하지 않는다.
+- PostGIS, pg_vector, `on conflict`, `returning`, 동적 조건, projection은 mapper XML에 명시 SQL로 표현한다.
+- `JdbcTemplate`, Spring Data JPA repository, jOOQ runtime/codegen은 새 persistence 경로에 사용하지 않는다.
 - schema 변경은 Flyway migration으로 남긴다.
+- container가 필요한 PostGIS/pg_vector 검증은 기본 `test`가 아니라 모듈별 `containerTest`에서 실행한다.
 
 ## 5. 보안과 인증 규칙
 
@@ -127,12 +129,12 @@ Migration 작성 시:
 - **생성자 오염 금지**: 테스트에서 객체를 쉽게 생성하기 위해 운영 코드에 불필요한 생성자(예: 테스트 전용 파라미터 생성자 등)를 다수 선언하지 않는다.
 - **PSA 우선**: HTTP, MVC, Security, DB, Cache처럼 Spring이 Portable Service Abstraction과 테스트 지원을 제공하는 영역은
   `MockMvc`, `MockRestServiceServer`, `spring-security-test`, Testcontainers,
-  Spring Data/JPA 테스트 slice 등 공식 테스트 표면을 먼저 사용한다.
+  MyBatis test slice, Testcontainers 등 공식 테스트 표면을 먼저 사용한다.
   운영 코드에 테스트 전용 분기, profile 조건, setter, sleep/timeout 우회 플래그를 추가하지 않는다.
 - **DI 우선**: 외부 클라이언트, 시간/랜덤/ID 생성, encoder/decoder, repository, gateway처럼 교체 가능한 협력자는 constructor DI와
   `@ConfigurationProperties`/`@Value` 주입으로 경계를 만든다. 테스트는 그 경계에 fake/mock/stub bean 또는 테스트용 구현체를 주입한다.
 - **인터페이스 활용**: 복잡한 의존성을 모킹하거나 테스트 대역을 만들어야 한다면, 해당 책임을 인터페이스로 추출하고 다형성을 활용하여 테스트용 구현체를 작성한다.
-- **리플렉션은 최후 수단**: JPA lifecycle/audit처럼 생성·주입 경계가 아니라 persistence framework 상태 자체를 검증하는 경우를 제외하고,
+- **리플렉션은 최후 수단**: persistence lifecycle/audit처럼 생성·주입 경계가 아니라 persistence framework 상태 자체를 검증하는 경우를 제외하고,
   테스트가 운영 객체의 private field를 리플렉션으로 갈아끼우는 방식은 피한다. 먼저 PSA와 DI로 테스트 가능한 경계를 만든다.
 - **캡슐화 유지**: 테스트 코드에서 필드나 상태를 검증하기 위해 무분별한 `setter`나 `@Setter`, 혹은
   불필요한 getter를 public으로 열지 않는다. 필요 시 리플렉션이나 테스트 유틸을 활용하거나 패키지
@@ -143,7 +145,7 @@ Migration 작성 시:
 긴 한 줄 코드는 리뷰와 유지보수를 방해하므로 작성하지 않는다.
 
 - 메서드 선언, 생성자 호출, 메서드 호출 인자가 길어지면 인자별로 줄바꿈한다.
-- `stream`, `builder`, `HttpRequest`, `jOOQ` 체이닝은 단계별로 줄바꿈한다.
+- `stream`, `builder`, `HttpRequest`, MyBatis SQL text block은 단계별로 줄바꿈한다.
 - 메서드 내부에서 논리적인 흐름 단위(예: `if`, `for`, `while`, `try-catch` 등 제어문이 시작/종료되는 경계, 또는 비즈니스 로직의 변환/처리 단계가 바뀌는 지점)마다 빈 줄(Blank Line)을 삽입하여 시각적으로 흐름을 분리한다.
 - SQL text block 내부도 한 줄에 과도한 컬럼/값을 몰아넣지 말고 논리 단위로 줄바꿈한다.
 - 테스트 코드도 운영 코드와 동일하게 가독성을 우선한다. fixture 생성자가 길면 필드 단위로 줄바꿈한다.
@@ -195,13 +197,13 @@ public Member login(String userId, String password) {
 
 ### 11.1 storage entity -> core domain 변환 규칙
 
-monolithic `core-api` 전환 구조에서는 `core-api` service가 `storage:db-core` entity/JPA 타입을 직접 사용할 수 있다.
+monolithic `core-api` 전환 구조에서는 `core-api` service가 `storage:db-core` storage entity/MyBatis row 타입을 직접 사용할 수 있다.
 따라서 entity를 domain model로 바꿀 때 별도 mapper 계층이나 service-local `toModel`/`toDomain` helper를 두지 않는다.
 
 - 조회 결과를 domain model로 반환해야 하면 service call path에서 `new DomainModel(...)`로 직접 생성한다.
 - `stream().map(this::toModel)`, `Optional.map(this::toModel)`, `private toModel(Entity entity)` 패턴은 새로 만들지 않는다.
 - `storage:db-core` entity 내부에 core-api domain model을 반환하는 `toModel`/`toDomain` 메서드를 두지 않는다.
-  `db-core`는 JPA entity와 persistence infrastructure를 소유하고, core-api domain model 생성 책임은 service call path에 남긴다.
+  `db-core`는 storage row/entity contract와 persistence infrastructure를 소유하고, core-api domain model 생성 책임은 service call path에 남긴다.
 - 같은 entity를 여러 유스케이스에서 반환하더라도 mapper 계층을 추가하기 전에 반환 필드와 caller contract가 정말 같은지 먼저 확인한다.
   중복 제거보다 변환 위치와 의존 방향을 명확히 유지하는 것을 우선한다.
 

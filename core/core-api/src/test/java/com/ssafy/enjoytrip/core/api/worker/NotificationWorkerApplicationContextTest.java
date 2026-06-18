@@ -3,12 +3,11 @@ package com.ssafy.enjoytrip.core.api.worker;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import com.ssafy.enjoytrip.core.api.worker.NotificationWorkerConfiguration;
 import com.ssafy.enjoytrip.core.domain.service.NotificationOutboxProcessor;
 import com.ssafy.enjoytrip.core.domain.service.NotificationService;
-import com.ssafy.enjoytrip.storage.db.core.jpa.FriendshipJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.NotificationJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.NotificationOutboxJpaRepository;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.FriendshipMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NotificationMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NotificationOutboxMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -23,7 +22,7 @@ class NotificationWorkerApplicationContextTest {
                     "enjoytrip.notification.outbox.cdc.enabled=false"
             );
 
-    @DisplayName("worker context는 Store 없이 NotificationWorkerConfiguration과 processor를 조립한다")
+    @DisplayName("worker context는 MyBatis mapper 기반 NotificationWorkerConfiguration과 processor를 조립한다")
     @Test
     void workerContextWiresNotificationProcessorWithoutStoreImports() {
         contextRunner.run(context -> {
@@ -41,10 +40,10 @@ class NotificationWorkerApplicationContextTest {
         }
 
         @Bean
-        NotificationService notificationService(NotificationJpaRepository notificationRepository,
-                                                NotificationOutboxJpaRepository outboxRepository,
-                                                FriendshipJpaRepository friendshipRepository) {
-            return new NotificationService(notificationRepository, outboxRepository, friendshipRepository);
+        NotificationService notificationService(NotificationMapper notificationMapper,
+                                                NotificationOutboxMapper outboxMapper,
+                                                FriendshipMapper friendshipMapper) {
+            return new NotificationService(notificationMapper, outboxMapper, friendshipMapper);
         }
 
         @Bean
@@ -53,18 +52,18 @@ class NotificationWorkerApplicationContextTest {
         }
 
         @Bean
-        NotificationJpaRepository notificationRepository() {
-            return mock(NotificationJpaRepository.class);
+        NotificationMapper notificationMapper() {
+            return mock(NotificationMapper.class);
         }
 
         @Bean
-        NotificationOutboxJpaRepository outboxRepository() {
-            return mock(NotificationOutboxJpaRepository.class);
+        NotificationOutboxMapper outboxMapper() {
+            return mock(NotificationOutboxMapper.class);
         }
 
         @Bean
-        FriendshipJpaRepository friendshipRepository() {
-            return mock(FriendshipJpaRepository.class);
+        FriendshipMapper friendshipMapper() {
+            return mock(FriendshipMapper.class);
         }
     }
 }

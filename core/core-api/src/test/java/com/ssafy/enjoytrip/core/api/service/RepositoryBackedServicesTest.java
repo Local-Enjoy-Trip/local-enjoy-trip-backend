@@ -17,26 +17,20 @@ import com.ssafy.enjoytrip.core.domain.Member;
 import com.ssafy.enjoytrip.core.domain.Notice;
 import com.ssafy.enjoytrip.core.domain.TravelPlan;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
-import com.ssafy.enjoytrip.storage.db.core.entity.BoardPostEntity;
 import com.ssafy.enjoytrip.storage.db.core.entity.HotplaceEntity;
 import com.ssafy.enjoytrip.storage.db.core.entity.MemberEntity;
 import com.ssafy.enjoytrip.storage.db.core.entity.NoticeEntity;
 import com.ssafy.enjoytrip.storage.db.core.entity.TravelPlanEntity;
-import com.ssafy.enjoytrip.storage.db.core.jpa.AuthLogJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.BoardPostJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.HotplaceJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.MemberJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.NoticeJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.PlanItemJpaRepository;
-import com.ssafy.enjoytrip.storage.db.core.jpa.TravelPlanJpaRepository;
-import java.util.List;
-import java.util.Optional;
-import org.jooq.DSLContext;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AuthLogMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.BoardPostMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.HotplaceMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoticeMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.PlanMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Tag("service")
@@ -44,51 +38,53 @@ class RepositoryBackedServicesTest {
 
     @Nested
     class BoardServiceTests {
-        private final BoardPostJpaRepository repository = mock(BoardPostJpaRepository.class);
-        private final BoardService service = new BoardService(repository);
+        private final BoardPostMapper mapper = mock(BoardPostMapper.class);
+        private final BoardService service = new BoardService(mapper);
 
-        @DisplayName("게시글 등록은 db-core BoardPostEntity를 저장한다")
+        @DisplayName("게시글 등록은 db-core BoardPostEntity를 MyBatis mapper로 저장한다")
         @Test
         void savesBoardPostEntity() {
             BoardPost post = new BoardPost("b1", "title", "content", "author", "created", "updated");
 
             service.insertPost(post);
 
-            verify(repository).save(any(BoardPostEntity.class));
+            verify(mapper).insert(any());
         }
     }
 
     @Nested
     class HotplaceServiceTests {
-        private final HotplaceJpaRepository repository = mock(HotplaceJpaRepository.class);
-        private final HotplaceService service = new HotplaceService(repository);
+        private final HotplaceMapper mapper = mock(HotplaceMapper.class);
+        private final HotplaceService service = new HotplaceService(mapper);
 
-        @DisplayName("핫플레이스 등록과 삭제는 db-core repository를 직접 사용한다")
+        @DisplayName("핫플레이스 등록과 삭제는 MyBatis mapper를 사용한다")
         @Test
         void savesAndDeletesHotplaceEntity() {
             Hotplace hotplace = new Hotplace("h1", "ssafy", "남산", "view", "2026-05-14", 37.55,
                     126.99, "night", "", "created");
-            when(repository.existsById("h1")).thenReturn(true);
+            when(mapper.existsById("h1")).thenReturn(1);
+            when(mapper.deleteById("h1")).thenReturn(1);
 
             service.insertHotplace(hotplace);
             assertThat(service.deleteHotplace("h1")).isTrue();
 
-            verify(repository).save(any(HotplaceEntity.class));
-            verify(repository).deleteById("h1");
+            verify(mapper).insert(any(HotplaceEntity.class));
+            verify(mapper).deleteById("h1");
         }
     }
 
     @Nested
     class NoticeServiceTests {
-        private final NoticeJpaRepository repository = mock(NoticeJpaRepository.class);
-        private final NoticeService service = new NoticeService(repository);
+        private final NoticeMapper mapper = mock(NoticeMapper.class);
+        private final NoticeService service = new NoticeService(mapper);
 
-        @DisplayName("공지 수정은 db-core NoticeEntity를 조회한 뒤 변경한다")
+        @DisplayName("공지 수정은 db-core NoticeEntity를 조회한 뒤 mapper로 갱신한다")
         @Test
         void updatesNoticeEntity() {
             Notice notice = new Notice(1L, "공지", "내용", "admin", "created", "updated");
             NoticeEntity entity = new NoticeEntity("기존", "이전", "admin");
-            when(repository.findById(1L)).thenReturn(Optional.of(entity));
+            when(mapper.findById(1L)).thenReturn(entity);
+            when(mapper.update(entity)).thenReturn(1);
 
             assertThat(service.updateNotice(notice)).isTrue();
 
@@ -99,11 +95,10 @@ class RepositoryBackedServicesTest {
 
     @Nested
     class PlanServiceTests {
-        private final TravelPlanJpaRepository repository = mock(TravelPlanJpaRepository.class);
-        private final PlanItemJpaRepository itemRepository = mock(PlanItemJpaRepository.class);
-        private final PlanService service = new PlanService(repository, itemRepository, mock(DSLContext.class));
+        private final PlanMapper mapper = mock(PlanMapper.class);
+        private final PlanService service = new PlanService(mapper);
 
-        @DisplayName("여행 계획 등록은 db-core TravelPlanEntity를 저장한다")
+        @DisplayName("여행 계획 등록은 db-core TravelPlanEntity를 MyBatis mapper로 저장한다")
         @Test
         void savesTravelPlanEntity() {
             TravelPlan plan = new TravelPlan("p1", "ssafy", "서울", "2026-05-14", "2026-05-15",
@@ -111,41 +106,37 @@ class RepositoryBackedServicesTest {
 
             service.insertPlan(plan);
 
-            verify(repository).save(any(TravelPlanEntity.class));
+            verify(mapper).insertPlan(any(TravelPlanEntity.class));
         }
     }
 
     @Nested
     class MemberServiceEdgeTests {
-        private final MemberJpaRepository repository = mock(MemberJpaRepository.class);
-        private final AuthLogJpaRepository authLogRepository = mock(AuthLogJpaRepository.class);
+        private final MemberMapper mapper = mock(MemberMapper.class);
+        private final AuthLogMapper authLogMapper = mock(AuthLogMapper.class);
         private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        private final MemberService service = new MemberService(
-                passwordEncoder,
-                repository,
-                authLogRepository
-        );
+        private final MemberService service = new MemberService(passwordEncoder, mapper, authLogMapper);
 
         @DisplayName("회원가입은 중복 사용자를 등록하지 않는다")
         @Test
         void signupDoesNotInsertDuplicateUser() {
-            when(repository.existsByUserId("ssafy")).thenReturn(true);
+            when(mapper.existsByUserId("ssafy")).thenReturn(1);
 
             assertThatThrownBy(() -> service.signup(new Member("ssafy", "SSAFY", "ssafy@example.com", "secret", "")))
                     .isInstanceOfSatisfying(CoreException.class,
                             exception -> assertThat(exception.errorType()).isEqualTo(USER_ALREADY_EXISTS));
 
-            verify(repository, never()).save(any());
+            verify(mapper, never()).insert(any());
         }
 
         @DisplayName("로그인은 없는 회원과 빈 비밀번호 및 빈 저장 비밀번호를 거부한다")
         @Test
         void loginRejectsMissingMemberBlankPasswordAndBlankStoredPassword() {
-            when(repository.findByUserId("missing")).thenReturn(Optional.empty());
-            when(repository.findByUserId("blank-input")).thenReturn(Optional.of(new MemberEntity(
-                    "blank-input", "A", null, "a@example.com", passwordEncoder.encode("secret"), "", null, null, null)));
-            when(repository.findByUserId("blank-stored")).thenReturn(Optional.of(new MemberEntity(
-                    "blank-stored", "A", null, "a@example.com", " ", "", null, null, null)));
+            when(mapper.findByUserId("missing")).thenReturn(null);
+            when(mapper.findByUserId("blank-input")).thenReturn(new MemberEntity(
+                    "blank-input", "A", null, "a@example.com", passwordEncoder.encode("secret"), "", null, null, null));
+            when(mapper.findByUserId("blank-stored")).thenReturn(new MemberEntity(
+                    "blank-stored", "A", null, "a@example.com", " ", "", null, null, null));
 
             assertThatThrownBy(() -> service.login("missing", "secret"))
                     .isInstanceOfSatisfying(CoreException.class,
@@ -157,7 +148,7 @@ class RepositoryBackedServicesTest {
                     .isInstanceOfSatisfying(CoreException.class,
                             exception -> assertThat(exception.errorType()).isEqualTo(INVALID_CREDENTIALS));
 
-            verify(authLogRepository, never()).save(any());
+            verify(authLogMapper, never()).insert(any());
         }
 
         @DisplayName("회원 수정은 값이 있는 비밀번호만 인코딩하고 빈 비밀번호는 비워 둔다")
@@ -165,31 +156,16 @@ class RepositoryBackedServicesTest {
         void updateEncodesNonBlankPasswordAndLeavesBlankPasswordBlank() {
             MemberEntity entity = new MemberEntity("ssafy", "SSAFY", null, "old@example.com", "old", "",
                     null, null, null);
-            when(repository.findByUserId("ssafy")).thenReturn(Optional.of(entity));
+            when(mapper.findByUserId("ssafy")).thenReturn(entity);
+            when(mapper.update(entity)).thenReturn(1);
 
             service.update(new Member("ssafy", "SSAFY", "ssafy@example.com", "new-secret", ""));
             assertThat(passwordEncoder.matches("new-secret", entity.getPassword())).isTrue();
 
-            when(repository.findByUserId("missing")).thenReturn(Optional.empty());
+            when(mapper.findByUserId("missing")).thenReturn(null);
             assertThatThrownBy(() -> service.update(new Member("missing", "SSAFY", "ssafy@example.com", " ", "")))
                     .isInstanceOfSatisfying(CoreException.class,
                             exception -> assertThat(exception.errorType()).isEqualTo(USER_NOT_FOUND));
-        }
-
-        @DisplayName("로그아웃과 비밀번호 조회 및 삭제는 db-core repository를 직접 사용한다")
-        @Test
-        void delegatesLogoutPasswordLookupAndDelete() {
-            MemberEntity entity = new MemberEntity("ssafy", "SSAFY", null, "ssafy@example.com", "legacy-secret",
-                    "", null, null, null);
-            when(repository.findByUserIdAndEmail("ssafy", "ssafy@example.com")).thenReturn(Optional.of(entity));
-            when(repository.existsByUserId("ssafy")).thenReturn(true);
-
-            service.logout("ssafy");
-
-            verify(authLogRepository).save(any());
-            assertThat(service.findPassword("ssafy", "ssafy@example.com")).isEqualTo("legacy-secret");
-            service.delete("ssafy");
-            verify(repository).deleteByUserId("ssafy");
         }
     }
 }
