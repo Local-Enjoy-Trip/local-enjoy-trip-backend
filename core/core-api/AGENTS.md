@@ -6,7 +6,7 @@
 - It owns both entrypoints:
   - API: `com.ssafy.enjoytrip.EnjoyTripApplication`
   - Worker: `com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication`
-- It also owns domain/application logic, external client contracts, and support contracts. Concrete outbound integration clients live in the active `external` module. Database access uses storage entity/JPA/jOOQ types directly.
+- It also owns domain/application logic, API-facing outbound integration clients, and support contracts. Batch-only embedding clients live in `batch`. The `external` module must not depend on `core-api`. Database access uses storage entity/JPA/jOOQ types directly.
 
 ## Package Boundaries
 
@@ -17,7 +17,7 @@
 - Domain/application logic belongs under `com.ssafy.enjoytrip.core.domain.*`.
 - Do not create repository packages under `com.ssafy.enjoytrip.core.domain`; use `storage:db-core` entity/JPA/jOOQ types from core-api when persistence is needed.
 - Shared support contracts belong under `com.ssafy.enjoytrip.core.support.*`.
-- External integration contracts belong under `com.ssafy.enjoytrip.core.domain.external.*`; concrete external implementations must not live in `core-api`.
+- API-facing concrete outbound integration clients belong under `com.ssafy.enjoytrip.external.*` inside `core-api`; batch-only clients belong under `batch`. Do not reintroduce `core.domain.external.*` contract packages just to preserve the old external-module split.
 
 ## Forbidden
 

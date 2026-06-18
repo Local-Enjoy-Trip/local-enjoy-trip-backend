@@ -169,7 +169,7 @@ Migration 작성 시:
   "인증 사용자나 저장 상태를 알아야 판단할 수 있는가", "도메인 값 자체를 유효하게 만드는가"에 답할 수 있어야 한다.
 - route `points` 같은 구조화된 query string, legacy form JSON blob, plan request default, batch `sourceVersion` 같은
   job parameter는 `core-api`의 web/worker ingress 또는 `batch`의 DTO/config에서 typed command로 변환한 뒤
-  `core-api` service에 넘긴다.
+  해당 모듈의 service에 넘긴다.
 - repository/external/runtime 예외를 잡아 fallback 데이터를 반환하는 `core` 흐름은 무음 방어 코드로 두지 않는다.
   fallback이 제품 정책이면 로그, 결과 metadata, 응답 contract, 또는 문서화된 caller contract 중 하나로 실패 사실을 관측 가능하게 한다.
 - external provider, runtime 예외는 명시적인 제품 fallback 정책이 없으면 `core` service에서 잡지 않는다.

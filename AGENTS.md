@@ -23,15 +23,14 @@ The project is organized around the monolithic `core-api` target shape plus lowe
   - Worker entrypoint: `com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication`.
   - HTTP/API code lives under `com.ssafy.enjoytrip.core.api.web.*`.
   - Kafka/Scheduled/background worker ingress lives under `com.ssafy.enjoytrip.core.api.worker.*`.
-  - Domain models, application services, external client contracts, and support contracts live here; database access uses storage entity/JPA/jOOQ types directly.
-  - Concrete outbound integration clients live in the active `external` module and are runtime-wired into `core-api`.
+  - Domain models, application services, outbound integration clients, and support contracts live here; database access uses storage entity/JPA/jOOQ types directly.
+  - Concrete outbound integration clients used by the API are compiled in `core-api`; batch-only embedding clients are compiled in `batch`; the `external` module must not depend on `core-api`.
   - `:core:core-api:check` is the primary executable-module verification command.
 - `core:core-enum`: enum-only shared module for values used by both `core-api` and `db-core`.
 - `storage:db-core`: JPA entities, Spring Data repositories, Flyway migrations, and jOOQ codegen/query infrastructure.
   - Do not place web/controller, worker ingress, domain service, or external API client code here.
-- `external`: active outbound integration module for third-party API, AI, MinIO, and ClickHouse implementations.
-  `core-api` must not compile against external implementation types; use core-domain contracts and runtime wiring.
-- `batch`: separate batch runtime. Batch job ingress and parameter parsing stay in `batch`.
+- `external`: independent placeholder module with no `core-api` dependency. API-facing third-party clients live in `core-api`; batch-only embedding clients live in `batch`.
+- `batch`: separate batch runtime. Batch job ingress, parameter parsing, batch-only services, and batch-only outbound clients stay in `batch`.
 
 The legacy `app`, `app/web`, and `app/worker` modules are removed in the target shape. Do not add
 them back.

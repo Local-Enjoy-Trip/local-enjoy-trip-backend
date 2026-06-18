@@ -32,9 +32,8 @@
 - `core:core-enum`: `core-api`와 `db-core`가 함께 참조해야 하는 enum만 소유한다.
 - `storage:db-core`: JPA entity, Spring Data repository, persistence infrastructure, migration, jOOQ query/codegen만
   소유한다.
-- `external`: third-party API/AI/MinIO/ClickHouse 등 outbound integration 구현체와 external configuration을 소유하는 active module이다.
-  `core-api`는 compileClasspath에서 external 구현체를 참조하지 않고, 실행 runtimeClasspath에서 구현체를 조립한다.
-- `batch`: 별도 batch runtime으로 보존한다. batch ingress와 job parameter parsing은 batch 경계에 둔다.
+- `external`: 현재 core 의존을 갖지 않는 독립 모듈로 유지한다. API-facing outbound integration 구현체와 설정은 `core-api` 안에서 소유하고, batch-only outbound 구현체와 설정은 `batch` 안에서 소유한다. `external`은 `core-api`를 의존하지 않는다.
+- `batch`: 별도 batch runtime으로 보존한다. batch ingress, job parameter parsing, batch-only service, batch-only outbound client는 batch 경계에 둔다.
 
 `app`, `app/web`, `app/worker` 모듈은 target 구조에서 제거한다. 새 코드는 이 경로에
 추가하지 않는다.

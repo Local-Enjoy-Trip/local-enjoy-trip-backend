@@ -56,8 +56,6 @@
 | `com.ssafy.enjoytrip.dto.command.*` | `com.ssafy.enjoytrip.core.domain.command.*` |
 | `com.ssafy.enjoytrip.dto.query.*` | `com.ssafy.enjoytrip.core.domain.query.*` |
 | `com.ssafy.enjoytrip.support.error.*` | `com.ssafy.enjoytrip.core.support.error.*` |
-| `com.ssafy.enjoytrip.security.PasswordCodec` | `com.ssafy.enjoytrip.core.domain.auth.PasswordCodec` |
-| `com.ssafy.enjoytrip.security.SpringSecurityPasswordCodec` | `com.ssafy.enjoytrip.core.api.security.password.SpringSecurityPasswordCodec` |
 | `com.ssafy.enjoytrip.support.response.*` | `com.ssafy.enjoytrip.core.support.response.*` |
 | external implementation classes | active `external` module under `com.ssafy.enjoytrip.external.*` |
 | `com.ssafy.enjoytrip.notification.*` | `com.ssafy.enjoytrip.core.api.worker.notification.*` |
