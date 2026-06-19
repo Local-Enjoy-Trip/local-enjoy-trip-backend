@@ -1,7 +1,6 @@
 package com.ssafy.enjoytrip.external.minio;
 
 
-import com.ssafy.enjoytrip.core.domain.NoteImageUploadUrl;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.http.Method;
@@ -17,7 +16,7 @@ public class MinioNoteImageUploadUrlGenerator {
     private final MinioClient minioClient;
     private final MinioProperties properties;
 
-    public NoteImageUploadUrl generate(String userId, String contentType, String fileExtension) {
+    public NoteImageUploadResult generate(String userId, String contentType, String fileExtension) {
         String objectKey = objectKey(userId, fileExtension);
         Instant expiresAt = Instant.now().plus(properties.getUploadExpiry());
 
@@ -30,7 +29,7 @@ public class MinioNoteImageUploadUrlGenerator {
                     .extraHeaders(Map.of("Content-Type", contentType))
                     .build());
 
-            return new NoteImageUploadUrl(objectKey, uploadUrl, expiresAt, publicUrl(objectKey));
+            return new NoteImageUploadResult(objectKey, uploadUrl, expiresAt, publicUrl(objectKey));
         } catch (Exception exception) {
             throw new IllegalStateException("쪽지 이미지 업로드 URL 생성에 실패했습니다.", exception);
         }

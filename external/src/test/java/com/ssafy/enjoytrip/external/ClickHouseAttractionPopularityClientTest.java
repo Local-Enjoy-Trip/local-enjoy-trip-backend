@@ -18,7 +18,9 @@ class ClickHouseAttractionPopularityClientTest {
         properties.setUsername("default");
         properties.setPassword("wrong");
         properties.setQueryTimeout(Duration.ofSeconds(1));
-        ClickHouseAttractionPopularityClient repository = new ClickHouseAttractionPopularityClient(properties);
+        ClickHouseAttractionPopularityClient repository = new ClickHouseAttractionPopularityClient(
+                properties
+        );
 
         Map<Long, Long> result = repository.findFavoriteCounts(List.of(1L, 2L));
 

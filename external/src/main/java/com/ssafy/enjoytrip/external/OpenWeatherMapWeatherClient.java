@@ -1,7 +1,6 @@
 package com.ssafy.enjoytrip.external;
 
 
-import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -41,7 +40,7 @@ public class OpenWeatherMapWeatherClient {
         this.apiKey = apiKey;
     }
 
-    public List<WeatherSummary> findWeatherBriefings() {
+    public List<WeatherBriefingResult> findWeatherBriefings() {
         if (!notBlank(apiKey)) {
             throw new IllegalStateException(
                     "OpenWeatherMap API 키가 없습니다. enjoytrip.external.open-weather-map.api-key, "
@@ -49,11 +48,11 @@ public class OpenWeatherMapWeatherClient {
             );
         }
 
-        List<WeatherSummary> rows = new ArrayList<>();
+        List<WeatherBriefingResult> rows = new ArrayList<>();
         for (RegionCoordinate region : DEFAULT_REGIONS) {
             String currentBody = fetch(currentWeatherUri(apiKey, region));
             String forecastBody = fetch(forecastUri(apiKey, region));
-            WeatherSummary summary = toWeatherSummary(region.name(), currentBody, forecastBody);
+            WeatherBriefingResult summary = toWeatherSummary(region.name(), currentBody, forecastBody);
             if (hasLiveValue(summary)) {
                 rows.add(summary);
             }
@@ -88,11 +87,11 @@ public class OpenWeatherMapWeatherClient {
                 + "&lang=kr";
     }
 
-    private WeatherSummary toWeatherSummary(String region, String currentBody, String forecastBody) {
+    private WeatherBriefingResult toWeatherSummary(String region, String currentBody, String forecastBody) {
         try {
             requireJsonObject(currentBody, "weather");
             requireJsonObject(forecastBody, "list");
-            return new WeatherSummary(
+            return new WeatherBriefingResult(
                     region,
                     condition(currentBody, forecastBody),
                     roundedInteger(numberValue(currentBody, "temp")),
@@ -131,7 +130,7 @@ public class OpenWeatherMapWeatherClient {
         return TIME_FORMAT.format(Instant.ofEpochSecond(value.longValue()));
     }
 
-    private static boolean hasLiveValue(WeatherSummary summary) {
+    private static boolean hasLiveValue(WeatherBriefingResult summary) {
         return notBlank(summary.condition())
                 || summary.temperature() != null
                 || summary.rainChance() != null

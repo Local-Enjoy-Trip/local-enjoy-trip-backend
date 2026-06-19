@@ -1,6 +1,5 @@
 package com.ssafy.enjoytrip.external;
 
-import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -31,7 +30,7 @@ class OpenWeatherMapWeatherClientTest {
 
     @DisplayName("현재 날씨와 예보 응답을 날씨 요약 행으로 매핑한다")
     @Test
-    void mapsCurrentAndForecastResponsesToWeatherSummaryRows() {
+    void mapsCurrentAndForecastResponsesToWeatherBriefingResultRows() {
         RestClient.Builder builder = RestClient.builder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         OpenWeatherMapWeatherClient repository = new OpenWeatherMapWeatherClient(
@@ -66,19 +65,19 @@ class OpenWeatherMapWeatherClientTest {
                             """, MediaType.APPLICATION_JSON));
         }
 
-        List<WeatherSummary> result = repository.findWeatherBriefings();
+        List<WeatherBriefingResult> result = repository.findWeatherBriefings();
 
         assertThat(result)
-                .extracting(WeatherSummary::region)
+                .extracting(WeatherBriefingResult::region)
                 .containsExactly("서울", "부산", "제주");
         assertThat(result)
-                .extracting(WeatherSummary::condition)
+                .extracting(WeatherBriefingResult::condition)
                 .containsExactly("맑음", "맑음", "맑음");
         assertThat(result)
-                .extracting(WeatherSummary::temperature)
+                .extracting(WeatherBriefingResult::temperature)
                 .containsExactly(18, 18, 18);
         assertThat(result)
-                .extracting(WeatherSummary::rainChance)
+                .extracting(WeatherBriefingResult::rainChance)
                 .containsExactly(70, 70, 70);
         assertThat(result)
                 .allSatisfy(row -> {

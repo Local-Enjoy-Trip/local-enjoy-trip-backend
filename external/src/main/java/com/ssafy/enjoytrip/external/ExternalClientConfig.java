@@ -10,7 +10,7 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 
 @Configuration
-class ExternalClientConfig {
+public class ExternalClientConfig {
 
     @Bean
     HttpClient externalHttpClient() {

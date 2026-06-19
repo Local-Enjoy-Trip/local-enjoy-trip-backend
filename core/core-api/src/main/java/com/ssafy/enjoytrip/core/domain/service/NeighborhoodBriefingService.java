@@ -2,8 +2,10 @@ package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.CourseBriefingCandidate;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
-import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefingPrompt;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
+import com.ssafy.enjoytrip.external.WeatherBriefingResult;
+import com.ssafy.enjoytrip.external.briefing.CourseBriefingCandidateData;
+import com.ssafy.enjoytrip.external.briefing.NeighborhoodBriefingPromptData;
 import com.ssafy.enjoytrip.external.briefing.SpringAiNeighborhoodBriefingGenerator;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NeighborhoodBriefingMapper;
 import java.util.List;
@@ -26,7 +28,24 @@ public class NeighborhoodBriefingService {
             return fallbackBriefing(regionName, weather, candidates);
         }
 
-        NeighborhoodBriefingPrompt prompt = new NeighborhoodBriefingPrompt(regionName, weather, candidates);
+        NeighborhoodBriefingPromptData prompt = new NeighborhoodBriefingPromptData(
+                regionName,
+                new WeatherBriefingResult(
+                        weather.region(),
+                        weather.condition(),
+                        weather.temperature(),
+                        weather.rainChance(),
+                        weather.sunrise(),
+                        weather.sunset()
+                ),
+                candidates.stream()
+                        .map(candidate -> new CourseBriefingCandidateData(
+                                candidate.id(),
+                                candidate.title(),
+                                candidate.regionName()
+                        ))
+                        .toList()
+        );
         String generated = normalizeGeneratedBriefing(generator.generate(prompt));
         if (generated.isBlank()) {
             return fallbackBriefing(regionName, weather, candidates);
@@ -69,7 +88,12 @@ public class NeighborhoodBriefingService {
         return new NeighborhoodBriefing(
                 region,
                 "오늘 %s은 %s이고 기온은 %d도예요. 저장된 %s 코스 어떠세요?"
-                        .formatted(region, weather.condition(), weather.temperature(), candidates.getFirst().title())
+                        .formatted(
+                                region,
+                                weather.condition(),
+                                weather.temperature(),
+                                candidates.getFirst().title()
+                        )
         );
     }
 

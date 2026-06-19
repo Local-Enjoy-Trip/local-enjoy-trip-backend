@@ -21,7 +21,16 @@ public class WeatherService {
     private final OpenWeatherMapWeatherClient weatherClient;
 
     public List<WeatherSummary> findWeatherBriefings() {
-        return completeWithFallback(weatherClient.findWeatherBriefings());
+        return completeWithFallback(weatherClient.findWeatherBriefings().stream()
+                .map(briefing -> new WeatherSummary(
+                        briefing.region(),
+                        briefing.condition(),
+                        briefing.temperature(),
+                        briefing.rainChance(),
+                        briefing.sunrise(),
+                        briefing.sunset()
+                ))
+                .toList());
     }
 
     private List<WeatherSummary> completeWithFallback(List<WeatherSummary> liveBriefings) {

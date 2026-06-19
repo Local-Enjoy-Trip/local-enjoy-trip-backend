@@ -1,8 +1,6 @@
 package com.ssafy.enjoytrip.external.briefing;
 
-import com.ssafy.enjoytrip.core.domain.CourseBriefingCandidate;
-import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefingPrompt;
-import com.ssafy.enjoytrip.core.domain.WeatherSummary;
+import com.ssafy.enjoytrip.external.WeatherBriefingResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -79,11 +77,11 @@ class SpringAiNeighborhoodBriefingGeneratorTest {
                 .hasMessageContaining("ChatClient.Builder를 사용할 수 없습니다");
     }
 
-    private static NeighborhoodBriefingPrompt prompt() {
-        return new NeighborhoodBriefingPrompt(
+    private static NeighborhoodBriefingPromptData prompt() {
+        return new NeighborhoodBriefingPromptData(
                 "서울",
-                new WeatherSummary("서울", "맑음", 27, 10, "05:10", "19:50"),
-                List.of(new CourseBriefingCandidate("course-1", "한강 저녁 산책", "서울"))
+                new WeatherBriefingResult("서울", "맑음", 27, 10, "05:10", "19:50"),
+                List.of(new CourseBriefingCandidateData("course-1", "한강 저녁 산책", "서울"))
         );
     }
 

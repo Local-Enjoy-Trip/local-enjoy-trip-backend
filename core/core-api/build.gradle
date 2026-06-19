@@ -15,6 +15,7 @@ dependencyManagement {
 dependencies {
     implementation project(":core:core-enum")
     implementation project(":storage:db-core")
+    implementation project(":external")
 
     implementation "org.springframework.boot:spring-boot-starter-web"
     implementation "org.springframework.boot:spring-boot-starter-validation"
@@ -24,10 +25,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-data-redis"
     implementation "org.springframework.kafka:spring-kafka"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${rootProject.ext.springdocOpenapiVersion}"
-    implementation "org.springframework.ai:spring-ai-starter-model-openai:${rootProject.ext.springAiVersion}"
     implementation "com.fasterxml.jackson.core:jackson-databind"
-    implementation "com.clickhouse:clickhouse-jdbc:${rootProject.ext.clickhouseJdbcVersion}"
-    implementation "io.minio:minio:${rootProject.ext.minioVersion}"
 
     otelJavaAgent "io.opentelemetry.javaagent:opentelemetry-javaagent:${rootProject.ext.opentelemetryJavaagentVersion}"
 

@@ -1,7 +1,5 @@
 package com.ssafy.enjoytrip.external.briefing;
 
-import com.ssafy.enjoytrip.core.domain.CourseBriefingCandidate;
-import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefingPrompt;
 
 import java.util.stream.Collectors;
 
@@ -21,7 +19,7 @@ public final class NeighborhoodBriefingPromptTemplate {
     private NeighborhoodBriefingPromptTemplate() {
     }
 
-    public static String userPrompt(NeighborhoodBriefingPrompt prompt) {
+    public static String userPrompt(NeighborhoodBriefingPromptData prompt) {
         return """
                 지역: %s
                 날씨: %s, 기온 %d도, 강수확률 %d%%
@@ -61,9 +59,9 @@ public final class NeighborhoodBriefingPromptTemplate {
                 : normalized;
     }
 
-    private static String courseTitles(NeighborhoodBriefingPrompt prompt) {
+    private static String courseTitles(NeighborhoodBriefingPromptData prompt) {
         return prompt.courseCandidates().stream()
-                .map(CourseBriefingCandidate::title)
+                .map(CourseBriefingCandidateData::title)
                 .map(title -> "- " + title)
                 .collect(Collectors.joining("\n"));
     }

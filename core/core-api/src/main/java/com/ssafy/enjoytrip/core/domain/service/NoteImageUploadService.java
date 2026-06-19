@@ -2,6 +2,7 @@ package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.NoteImageUploadUrl;
 import com.ssafy.enjoytrip.external.minio.MinioNoteImageUploadUrlGenerator;
+import com.ssafy.enjoytrip.external.minio.NoteImageUploadResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,13 @@ public class NoteImageUploadService {
             String contentType,
             String fileExtension
     ) {
-        return uploadUrlGenerator.generate(userId, contentType, fileExtension);
+        NoteImageUploadResult generated = uploadUrlGenerator.generate(userId, contentType, fileExtension);
+
+        return new NoteImageUploadUrl(
+                generated.objectKey(),
+                generated.uploadUrl(),
+                generated.expiresAt(),
+                generated.publicUrl()
+        );
     }
 }

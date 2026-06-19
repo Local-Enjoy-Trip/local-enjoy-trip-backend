@@ -1,8 +1,6 @@
 package com.ssafy.enjoytrip.external.briefing;
 
-import com.ssafy.enjoytrip.core.domain.CourseBriefingCandidate;
-import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefingPrompt;
-import com.ssafy.enjoytrip.core.domain.WeatherSummary;
+import com.ssafy.enjoytrip.external.WeatherBriefingResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,10 +13,10 @@ class NeighborhoodBriefingPromptTemplateTest {
     @DisplayName("프롬프트에 지역 날씨와 저장된 코스 제목을 포함한다")
     @Test
     void promptContainsWeatherAndCourseTitles() {
-        NeighborhoodBriefingPrompt prompt = new NeighborhoodBriefingPrompt(
+        NeighborhoodBriefingPromptData prompt = new NeighborhoodBriefingPromptData(
                 "서울",
-                new WeatherSummary("서울", "맑음", 27, 10, "05:10", "19:50"),
-                List.of(new CourseBriefingCandidate("course-1", "한강 저녁 산책", "서울"))
+                new WeatherBriefingResult("서울", "맑음", 27, 10, "05:10", "19:50"),
+                List.of(new CourseBriefingCandidateData("course-1", "한강 저녁 산책", "서울"))
         );
 
         String userPrompt = NeighborhoodBriefingPromptTemplate.userPrompt(prompt);

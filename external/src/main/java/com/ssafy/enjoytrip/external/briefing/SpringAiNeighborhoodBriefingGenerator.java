@@ -1,7 +1,6 @@
 package com.ssafy.enjoytrip.external.briefing;
 
 
-import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefingPrompt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.ObjectProvider;
@@ -13,7 +12,7 @@ public class SpringAiNeighborhoodBriefingGenerator {
     private final ObjectProvider<ChatClient.Builder> chatClientBuilderProvider;
     private final GmsNeighborhoodBriefingProperties properties;
 
-    public String generate(NeighborhoodBriefingPrompt prompt) {
+    public String generate(NeighborhoodBriefingPromptData prompt) {
         properties.assertLiveReady();
         ChatClient.Builder builder = chatClientBuilderProvider.getIfAvailable();
         if (builder == null) {
