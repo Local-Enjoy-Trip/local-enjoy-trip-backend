@@ -34,31 +34,14 @@ public class NoteService {
                 note.visibility().name(),
                 BigDecimal.valueOf(note.latitude()),
                 BigDecimal.valueOf(note.longitude()),
-                blankToNull(note.regionName()),
-                blankToNull(note.imageObjectKey()),
-                blankToNull(note.imageUrl()),
-                blankToNull(note.imageContentType())
+                note.regionName(),
+                note.imageObjectKey(),
+                note.imageUrl(),
+                note.imageContentType()
         );
         NoteRecord saved = noteMapper.insert(record);
 
-        return new Note(
-                saved.getId(),
-                saved.getAuthorUserId(),
-                saved.getTitle(),
-                saved.getContent(),
-                NoteCategory.valueOf(saved.getCategory()),
-                NoteVisibility.valueOf(saved.getVisibility()),
-                saved.getLatitude().doubleValue(),
-                saved.getLongitude().doubleValue(),
-                saved.getRegionName(),
-                saved.getImageObjectKey(),
-                saved.getImageUrl(),
-                saved.getImageContentType(),
-                NoteStatus.valueOf(saved.getStatus()),
-                saved.getCreatedAt(),
-                saved.getUpdatedAt(),
-                saved.getDeletedAt()
-        );
+        return getNote(saved);
     }
 
     @Transactional
@@ -76,34 +59,17 @@ public class NoteService {
                 requestedNote.visibility().name(),
                 BigDecimal.valueOf(requestedNote.latitude()),
                 BigDecimal.valueOf(requestedNote.longitude()),
-                blankToNull(requestedNote.regionName()),
-                blankToNull(requestedNote.imageObjectKey()),
-                blankToNull(requestedNote.imageUrl()),
-                blankToNull(requestedNote.imageContentType())
+                requestedNote.regionName(),
+                requestedNote.imageObjectKey(),
+                requestedNote.imageUrl(),
+                requestedNote.imageContentType()
         );
         NoteRecord updated = noteMapper.updateOwned(record);
         if (updated == null) {
             throw new CoreException(NOTE_NOT_FOUND);
         }
 
-        return new Note(
-                updated.getId(),
-                updated.getAuthorUserId(),
-                updated.getTitle(),
-                updated.getContent(),
-                NoteCategory.valueOf(updated.getCategory()),
-                NoteVisibility.valueOf(updated.getVisibility()),
-                updated.getLatitude().doubleValue(),
-                updated.getLongitude().doubleValue(),
-                updated.getRegionName(),
-                updated.getImageObjectKey(),
-                updated.getImageUrl(),
-                updated.getImageContentType(),
-                NoteStatus.valueOf(updated.getStatus()),
-                updated.getCreatedAt(),
-                updated.getUpdatedAt(),
-                updated.getDeletedAt()
-        );
+        return getNote(updated);
     }
 
     @Transactional
@@ -123,7 +89,7 @@ public class NoteService {
                         condition.latitude(),
                         condition.radiusMeters(),
                         condition.limit(),
-                        blankToNull(viewerUserId)
+                        viewerUserId
                 ).stream()
                 .map(record -> new Note(
                         record.getId(),
@@ -152,7 +118,7 @@ public class NoteService {
                         condition.latitude(),
                         condition.radiusMeters(),
                         condition.limit(),
-                        blankToNull(condition.viewerUserId()),
+                        condition.viewerUserId(),
                         condition.category() == null ? null : condition.category().name(),
                         condition.friendOnly()
                 ).stream()
@@ -203,10 +169,25 @@ public class NoteService {
         ));
     }
 
-    private static String blankToNull(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        return value.trim();
+    private static Note getNote(NoteRecord record) {
+        return new Note(
+                record.getId(),
+                record.getAuthorUserId(),
+                record.getTitle(),
+                record.getContent(),
+                NoteCategory.valueOf(record.getCategory()),
+                NoteVisibility.valueOf(record.getVisibility()),
+                record.getLatitude().doubleValue(),
+                record.getLongitude().doubleValue(),
+                record.getRegionName(),
+                record.getImageObjectKey(),
+                record.getImageUrl(),
+                record.getImageContentType(),
+                NoteStatus.valueOf(record.getStatus()),
+                record.getCreatedAt(),
+                record.getUpdatedAt(),
+                record.getDeletedAt()
+        );
     }
+
 }
