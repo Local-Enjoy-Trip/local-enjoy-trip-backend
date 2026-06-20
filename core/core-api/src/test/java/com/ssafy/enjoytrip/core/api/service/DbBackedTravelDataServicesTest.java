@@ -30,6 +30,7 @@ class DbBackedTravelDataServicesTest {
             AttractionService service = new AttractionService(
                     attractionMapper,
                     new AttractionStatsService(attractionMapper),
+                    new AttractionPopularityStatsService(attractionMapper),
                     mock(AttractionPopularityDeltaBuffer.class)
             );
 

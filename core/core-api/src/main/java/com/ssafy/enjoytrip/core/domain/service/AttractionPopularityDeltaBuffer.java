@@ -6,34 +6,28 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 @Slf4j
-@Component
+@Service
 @RequiredArgsConstructor
 public class AttractionPopularityDeltaBuffer {
-    private static final String FAVORITE_DELTA_KEY = "enjoytrip:attraction-popularity:favorite-deltas";
-    private static final RedisScript<List> DRAIN_SCRIPT = RedisScript.of("""
-            local entries = redis.call('HGETALL', KEYS[1])
-            if next(entries) ~= nil then
-                redis.call('DEL', KEYS[1])
-            end
-            return entries
-            """, List.class);
+    private static final String DIRTY_IDS_KEY = "enjoytrip:attraction-popularity:dirty";
+    private static final String DELTA_KEY_PREFIX = "enjoytrip:attraction-popularity:delta:";
 
     private final StringRedisTemplate redisTemplate;
 
-    public void recordFavoriteDelta(Long attractionId, int delta) {
+    public void recordFavoriteDelta(Long attractionId, long delta) {
         if (attractionId == null || delta == 0) {
             return;
         }
 
         try {
-            redisTemplate.opsForHash().increment(FAVORITE_DELTA_KEY, attractionId.toString(), delta);
+            redisTemplate.opsForValue().increment(deltaKey(attractionId), delta);
+            redisTemplate.opsForSet().add(DIRTY_IDS_KEY, attractionId.toString());
         } catch (RuntimeException exception) {
             log.warn(
-                    "Attraction popularity delta buffering failed. attractionId={}, delta={}",
+                    "Failed to record attraction popularity delta. attractionId={}, delta={}",
                     attractionId,
                     delta,
                     exception
@@ -41,34 +35,59 @@ public class AttractionPopularityDeltaBuffer {
         }
     }
 
-    public Map<Long, Integer> drainFavoriteDeltas() {
-        List<?> entries = redisTemplate.execute(DRAIN_SCRIPT, List.of(FAVORITE_DELTA_KEY));
-        if (entries == null || entries.isEmpty()) {
+    public Map<Long, Long> drainDirtyDeltas(int batchSize) {
+        if (batchSize <= 0) {
             return Map.of();
         }
 
-        Map<Long, Integer> deltas = new LinkedHashMap<>();
-        for (int index = 0; index + 1 < entries.size(); index += 2) {
-            addDelta(deltas, entries.get(index), entries.get(index + 1));
-        }
+        try {
+            List<String> dirtyIds = redisTemplate.opsForSet().pop(DIRTY_IDS_KEY, batchSize);
+            if (dirtyIds == null || dirtyIds.isEmpty()) {
+                return Map.of();
+            }
 
-        return deltas;
+            Map<Long, Long> deltas = new LinkedHashMap<>();
+            for (String dirtyId : dirtyIds) {
+                Long attractionId = parseAttractionId(dirtyId);
+                if (attractionId == null) {
+                    continue;
+                }
+                Long delta = drainDelta(attractionId);
+                if (delta != null && delta != 0) {
+                    deltas.put(attractionId, delta);
+                }
+            }
+            return deltas;
+        } catch (RuntimeException exception) {
+            log.warn("Failed to drain attraction popularity deltas", exception);
+            return Map.of();
+        }
     }
 
-    private void addDelta(Map<Long, Integer> deltas, Object rawAttractionId, Object rawDelta) {
-        try {
-            Long attractionId = Long.valueOf(rawAttractionId.toString());
-            int delta = Integer.parseInt(rawDelta.toString());
-            if (delta != 0) {
-                deltas.merge(attractionId, delta, Integer::sum);
-            }
-        } catch (NumberFormatException exception) {
-            log.warn(
-                    "Invalid attraction popularity delta entry skipped. attractionId={}, delta={}",
-                    rawAttractionId,
-                    rawDelta,
-                    exception
-            );
+    private Long drainDelta(Long attractionId) {
+        String key = deltaKey(attractionId);
+        String value = redisTemplate.opsForValue().getAndDelete(key);
+        if (value == null) {
+            return null;
         }
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException exception) {
+            log.warn("Invalid attraction popularity delta value. key={}, value={}", key, value);
+            return null;
+        }
+    }
+
+    private static Long parseAttractionId(String value) {
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException exception) {
+            log.warn("Invalid dirty attraction id. value={}", value);
+            return null;
+        }
+    }
+
+    private static String deltaKey(Long attractionId) {
+        return DELTA_KEY_PREFIX + attractionId;
     }
 }

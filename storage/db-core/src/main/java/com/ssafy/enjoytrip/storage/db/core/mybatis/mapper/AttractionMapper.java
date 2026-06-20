@@ -65,20 +65,6 @@ public interface AttractionMapper {
 
     int insertMissingPopularityFavoriteCountsFromFavorites();
 
-    default int incrementPopularityFavoriteCount(Long attractionId, int delta) {
-        Long deltaValue = (long) delta;
-        int updated = updatePopularityFavoriteDelta(attractionId, deltaValue);
-        if (updated > 0) {
-            return updated;
-        }
-        return insertPopularityFavoriteDeltaIfAbsent(attractionId, deltaValue);
-    }
-
-    default int reconcilePopularityFavoriteCounts() {
-        return resetPopularityFavoriteCountsFromFavorites()
-                + insertMissingPopularityFavoriteCountsFromFavorites();
-    }
-
     List<AttractionAverageRatingRecord> findRatingStats(@Param("ids") List<Long> ids);
 
     List<AttractionTagRecord> findTagsByAttractionId(Long attractionId);

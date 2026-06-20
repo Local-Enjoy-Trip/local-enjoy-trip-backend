@@ -73,10 +73,9 @@ public interface AttractionApi {
                     - 좌표를 전달하지 않으면 서울 시청 좌표(`mapX=126.9780`, `mapY=37.5665`)를 사용합니다.
                     - `radius` 기본값은 500m이며 쪽지 주변 조회와 동일한 기본 반경입니다.
                     - 먼저 PostGIS로 반경 안 후보를 찾고, RDB `attraction_popularity_stats.favorite_count`를
-                      `popularityCount`로 매핑합니다.
-                    - 응답은 `popularityCount` 내림차순, 거리, 제목/ID 순으로 정렬합니다.
-                    - 기존 `favoriteCount`는 PostgreSQL 찜 수 의미를 유지하고,
-                      홈 인기 섹션 전용 집계 값은 `popularityCount`로만 노출합니다.
+                      `popularityCount`로 채운 뒤 내림차순, 거리, 제목/ID 순으로 정렬합니다.
+                    - 집계 행이 없는 후보의 `popularityCount`는 0으로 반환합니다.
+                    - 기존 `favoriteCount`는 PostgreSQL 찜 원장 기준 현재 찜 수 의미를 유지합니다.
                     """,
             operationId = "getPopularNearbyAttractions"
     )

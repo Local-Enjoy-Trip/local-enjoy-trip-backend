@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AttractionService {
     private final AttractionMapper attractionMapper;
     private final AttractionStatsService attractionStatsService;
+    private final AttractionPopularityStatsService popularityStatsService;
     private final AttractionPopularityDeltaBuffer popularityDeltaBuffer;
 
     public List<PopularAttraction> findPopularNearbyAttractions(NearbySearchCondition condition,
@@ -34,14 +35,11 @@ public class AttractionService {
             return List.of();
         }
 
-        Map<Long, Long> popularityCounts = attractionMapper.findPopularityFavoriteCounts(candidates.stream()
+        Map<Long, Long> popularityCounts = popularityStatsService.findPopularityFavoriteCounts(
+                candidates.stream()
                         .map(candidate -> candidate.attraction().id())
-                        .toList())
-                .stream()
-                .collect(Collectors.toMap(
-                        AttractionCountRecord::attractionId,
-                        record -> (long) record.count()
-                ));
+                        .toList()
+        );
 
         return candidates.stream()
                 .map(candidate -> new PopularAttraction(
@@ -84,18 +82,16 @@ public class AttractionService {
         if (userId == null) {
             return;
         }
-        int insertedCount = attractionMapper.insertFavorite(attractionId, userId);
-        if (insertedCount > 0) {
-            popularityDeltaBuffer.recordFavoriteDelta(attractionId, 1);
+        if (attractionMapper.insertFavorite(attractionId, userId) > 0) {
+            popularityDeltaBuffer.recordFavoriteDelta(attractionId, 1L);
         }
     }
 
     public boolean removeFavorite(Long attractionId, String userId) {
         boolean deleted = attractionMapper.deleteFavorite(attractionId, userId) > 0;
         if (deleted) {
-            popularityDeltaBuffer.recordFavoriteDelta(attractionId, -1);
+            popularityDeltaBuffer.recordFavoriteDelta(attractionId, -1L);
         }
-
         return deleted;
     }
 
