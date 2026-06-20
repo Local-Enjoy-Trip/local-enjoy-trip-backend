@@ -21,7 +21,7 @@
 
 ## Forbidden
 
-- Do not place Kafka listeners, scheduled workers, or background-only retry/error handler infrastructure under
+- Do not place scheduled workers or background-only retry/error handler infrastructure under
   `com.ssafy.enjoytrip.core.api.web.*`.
 - Do not place controllers, OpenAPI contracts, REST Docs, web DTOs, or REST response envelopes under
   `com.ssafy.enjoytrip.core.api.worker.*`.
@@ -40,10 +40,10 @@
 
 - Worker-specific properties live in `src/main/resources/application-worker.yml`.
 - `EnjoyTripWorkerApplication` activates the `worker` profile and must keep `spring.main.web-application-type: none`.
-- Kafka CDC behavior must remain observable through logs and durable outbox status/attempt/error updates.
+- Scheduled/background worker behavior must remain observable through logs and durable storage state when retry or reconciliation is required.
 
 ## Verification
 
 - Run `./gradlew :core:core-api:check` after modifying this module.
-- If worker ingress changes, ensure `NotificationOutboxCdcConsumerTest` or equivalent worker tests cover ack/retry/failure behavior.
+- If worker ingress changes, ensure equivalent worker tests cover scheduler/retry/failure behavior.
 - If public API changes, also prove the JSON response shape with a real HTTP request when local runtime dependencies are available.

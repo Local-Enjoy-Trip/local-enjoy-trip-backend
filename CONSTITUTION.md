@@ -23,7 +23,7 @@
 
 - `core:core-api`: Spring Boot HTTP/API executable이자 background worker entrypoint를 함께 소유하는 주 실행 모듈.
   - HTTP/API 코드는 `com.ssafy.enjoytrip.core.api.web.*` 아래에 둔다.
-  - Kafka/Scheduled/background worker ingress는 `com.ssafy.enjoytrip.core.api.worker.*` 아래에 둔다.
+  - Scheduled/background worker ingress는 `com.ssafy.enjoytrip.core.api.worker.*` 아래에 둔다.
   - domain model, service/application logic, support contract를 소유한다.
   - API-facing outbound client는 `external`이 공개한 concrete client와 neutral result DTO를 service 경계에서 직접 사용한다.
   - database access는 `storage:db-core`의 MyBatis mapper와 storage Record contract를 service 경계에서 직접 사용한다.
@@ -44,7 +44,7 @@
 - `settings.gradle`에 `app`, `app:web`, `app:worker` include를 되살리는 것 금지.
 - `app/**` 아래에 새 source/resource/build script를 두는 것 금지.
 - `core-api`의 controller/API/REST Docs/REST response DTO 코드와 worker ingress 코드를 같은 package에 섞는 것 금지.
-- `com.ssafy.enjoytrip.core.api.web.*`에서 Kafka CDC listener, scheduled worker, background-only retry/error handler
+- `com.ssafy.enjoytrip.core.api.web.*`에서 scheduled worker, background-only retry/error handler
   infrastructure를 소유하는 것 금지.
 - `com.ssafy.enjoytrip.core.api.worker.*`에서 controller, OpenAPI contract, REST Docs, web DTO, REST response envelope를
   소유하는 것 금지.
