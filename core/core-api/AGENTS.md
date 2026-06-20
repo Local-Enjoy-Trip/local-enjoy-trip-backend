@@ -50,10 +50,8 @@
 
 ## Worker Runtime
 
-- Worker-specific properties live in `src/main/resources/application-worker.yml` only when the worker runtime has
-  properties that differ from the normal core-api runtime. Do not keep an empty profile file just because the worker
-  profile exists.
-- `EnjoyTripWorkerApplication` activates the `worker` profile and must keep `spring.main.web-application-type: none`.
+- `EnjoyTripWorkerApplication` must not activate a Spring profile just to distinguish the worker runtime.
+- Distinguish the worker runtime by its main class and `WebApplicationType.NONE`, not by profile-specific resources.
 - Scheduled/background worker behavior must remain observable through logs and durable storage state when retry or reconciliation is required.
 
 ## Verification

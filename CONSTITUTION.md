@@ -29,7 +29,7 @@
   - database access는 `storage:db-core`의 MyBatis mapper와 storage Record contract를 service 경계에서 직접 사용한다.
   - 기본 API main class는 `com.ssafy.enjoytrip.EnjoyTripApplication`이다.
   - worker main class는 `com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication`이다.
-    worker 전용 설정이 실제로 필요할 때만 `application-worker.yml`을 둔다.
+    worker entrypoint는 별도 Spring profile을 활성화하지 않고 `WebApplicationType.NONE`으로 실행한다.
 - `core:core-enum`: `core-api`와 `db-core`가 함께 참조해야 하는 enum만 소유한다.
 - `storage:db-core`: MyBatis mapper/XML/type handler, storage Record contract, persistence infrastructure, Flyway migration만
   소유한다.

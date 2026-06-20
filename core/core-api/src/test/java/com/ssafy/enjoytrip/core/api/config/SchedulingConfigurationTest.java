@@ -19,9 +19,9 @@ class SchedulingConfigurationTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withUserConfiguration(TestSchedulingContextConfiguration.class);
 
-    @DisplayName("일반 core-api context는 worker profile 없이 popularity flush scheduler를 조립한다")
+    @DisplayName("일반 core-api context는 별도 프로파일 없이 popularity flush scheduler를 조립한다")
     @Test
-    void coreApiContextWiresPopularityFlushSchedulerWithoutWorkerProfile() {
+    void coreApiContextWiresPopularityFlushSchedulerWithoutRuntimeProfile() {
         contextRunner.run(context -> {
             assertThat(context).hasSingleBean(SchedulingConfiguration.class);
             assertThat(context).hasSingleBean(AsyncEventConfiguration.class);

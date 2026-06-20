@@ -22,9 +22,6 @@
         <logger name="org.hibernate.SQL" level="WARN"/>
     </springProfile>
 
-    <springProfile name="worker">
-        <logger name="com.ssafy.enjoytrip.core.api.worker" level="INFO"/>
-    </springProfile>
 
     <springProfile name="test">
         <logger name="com.ssafy.enjoytrip" level="WARN"/>

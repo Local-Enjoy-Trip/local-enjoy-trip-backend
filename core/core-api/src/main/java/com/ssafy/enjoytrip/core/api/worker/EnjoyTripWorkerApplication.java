@@ -1,16 +1,15 @@
 package com.ssafy.enjoytrip.core.api.worker;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Import;
 
-@SpringBootApplication
-@Import(WorkerConfiguration.class)
+@SpringBootApplication(scanBasePackages = "com.ssafy.enjoytrip")
 public class EnjoyTripWorkerApplication {
 
     public static void main(String[] args) {
         SpringApplication application = new SpringApplication(EnjoyTripWorkerApplication.class);
-        application.setAdditionalProfiles("worker");
+        application.setWebApplicationType(WebApplicationType.NONE);
         application.run(args);
     }
 }

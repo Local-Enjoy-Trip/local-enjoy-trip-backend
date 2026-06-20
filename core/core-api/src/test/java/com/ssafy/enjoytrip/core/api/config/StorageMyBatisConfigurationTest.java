@@ -3,8 +3,6 @@ package com.ssafy.enjoytrip.core.api.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
@@ -19,16 +17,6 @@ class StorageMyBatisConfigurationTest {
         String content = resourceContent("classpath:application.yml");
 
         assertThat(content).doesNotContain("optional:file:", ".env");
-    }
-
-    @Test
-    @DisplayName("core-api는 worker profile 전용 application-worker.yml을 남기지 않는다")
-    void workerProfileApplicationResourceIsRemoved() {
-        Path workerResource = projectRoot().resolve(
-                "core/core-api/src/main/resources/application-worker.yml"
-        );
-
-        assertThat(Files.exists(workerResource)).isFalse();
     }
 
     @Test
@@ -87,18 +75,5 @@ class StorageMyBatisConfigurationTest {
 
     private String resourceContent(String location) throws Exception {
         return resolver.getResource(location).getContentAsString(StandardCharsets.UTF_8);
-    }
-
-    private static Path projectRoot() {
-        Path current = Path.of(System.getProperty("user.dir")).toAbsolutePath();
-
-        while (current != null) {
-            if (Files.exists(current.resolve("settings.gradle"))) {
-                return current;
-            }
-            current = current.getParent();
-        }
-
-        throw new IllegalStateException("settings.gradle 기준 프로젝트 루트를 찾을 수 없습니다.");
     }
 }
