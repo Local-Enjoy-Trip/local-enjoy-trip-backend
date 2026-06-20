@@ -18,9 +18,3 @@ spring:
   data:
     redis:
       url: ${REDIS_URL:redis://localhost:6379}
-
-enjoytrip:
-  attraction:
-    popularity:
-      flush-delay-ms: ${ATTRACTION_POPULARITY_FLUSH_DELAY_MS:1000}
-      flush-batch-size: ${ATTRACTION_POPULARITY_FLUSH_BATCH_SIZE:500}

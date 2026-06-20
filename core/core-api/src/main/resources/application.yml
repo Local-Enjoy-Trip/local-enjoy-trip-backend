@@ -31,6 +31,10 @@ spring:
         model: ${GMS_CHAT_MODEL:gpt-5.4}
 
 enjoytrip:
+  attraction:
+    popularity:
+      flush-delay-ms: ${ATTRACTION_POPULARITY_FLUSH_DELAY_MS:1000}
+      flush-batch-size: ${ATTRACTION_POPULARITY_FLUSH_BATCH_SIZE:500}
   ai:
     briefing:
       gms:

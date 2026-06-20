@@ -1,10 +1,11 @@
-package com.ssafy.enjoytrip.core.api.worker;
+package com.ssafy.enjoytrip.core.api.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.ssafy.enjoytrip.core.api.worker.attraction.AttractionPopularityFlushScheduler;
-import com.ssafy.enjoytrip.core.domain.service.AttractionPopularityDeltaCache;
+import com.ssafy.enjoytrip.core.domain.service.AttractionPopularityStatsService;
+import com.ssafy.enjoytrip.core.domain.service.RedisAttractionPopularityDeltaCache;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,27 +15,27 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-class WorkerApplicationContextTest {
+class SchedulingConfigurationTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withUserConfiguration(TestWorkerContextConfiguration.class)
-            .withPropertyValues(
-                    "spring.main.web-application-type=none",
-                    "spring.profiles.active=worker"
-            );
+            .withUserConfiguration(TestSchedulingContextConfiguration.class);
 
-    @DisplayName("worker context는 popularity scheduler를 조립한다")
+    @DisplayName("일반 core-api context는 worker profile 없이 popularity flush scheduler를 조립한다")
     @Test
-    void workerContextWiresPopularityFlushScheduler() {
+    void coreApiContextWiresPopularityFlushSchedulerWithoutWorkerProfile() {
         contextRunner.run(context -> {
-            assertThat(context).hasSingleBean(WorkerConfiguration.class);
-            assertThat(context).hasSingleBean(AttractionPopularityDeltaCache.class);
+            assertThat(context).hasSingleBean(SchedulingConfiguration.class);
             assertThat(context).hasSingleBean(AttractionPopularityFlushScheduler.class);
         });
     }
 
     @Configuration
-    @Import(WorkerConfiguration.class)
-    static class TestWorkerContextConfiguration {
+    @Import({
+            SchedulingConfiguration.class,
+            RedisAttractionPopularityDeltaCache.class,
+            AttractionPopularityStatsService.class,
+            AttractionPopularityFlushScheduler.class
+    })
+    static class TestSchedulingContextConfiguration {
         @Bean
         StringRedisTemplate stringRedisTemplate() {
             return mock(StringRedisTemplate.class);
