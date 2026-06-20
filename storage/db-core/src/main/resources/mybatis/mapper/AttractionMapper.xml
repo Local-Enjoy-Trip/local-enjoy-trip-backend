@@ -49,14 +49,16 @@
     <select id="countTagsByIds" resultType="int">select count(*) from attraction_tags where id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>
     <delete id="deleteTagMappings">delete from attraction_tag_mappings where attraction_id = #{attractionId}</delete>
     <insert id="insertTagMapping">insert into attraction_tag_mappings (attraction_id, tag_id) values (#{attractionId}, #{tagId})</insert>
-    <select id="findFavoriteCounts" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord">
+    <select id="findFavoriteCounts"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord">
         select attraction_id as attractionId, count(*)::int as count
         from attraction_favorites
         where attraction_id in
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
         group by attraction_id
     </select>
-    <select id="findPopularityFavoriteCounts" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord">
+    <select id="findPopularityFavoriteCounts"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord">
         select attraction_id as attractionId, favorite_count::int as count
         from attraction_popularity_stats
         where attraction_id in

@@ -108,8 +108,10 @@ public interface AttractionApi {
                     )
             )
     })
-    ApiResponse<PopularAttractionsResponse> popularNearby(@ParameterObject NearbySectionRequest request,
-                                                          @Parameter(hidden = true) String authenticatedUserId);
+    ApiResponse<PopularAttractionsResponse> popularNearby(
+            @ParameterObject NearbySectionRequest request,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "관광지 POST 차단",
