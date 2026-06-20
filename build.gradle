@@ -10,6 +10,7 @@ ext {
     junitVersion = findProperty("junitVersion")
     springdocOpenapiVersion = findProperty("springdocOpenapiVersion")
     opentelemetryJavaagentVersion = findProperty("opentelemetryJavaagentVersion")
+    clickhouseJdbcVersion = findProperty("clickhouseJdbcVersion")
     minioVersion = findProperty("minioVersion")
 }
 

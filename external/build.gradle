@@ -16,6 +16,7 @@ dependencies {
     api "org.springframework.boot:spring-boot-autoconfigure"
     api "org.springframework.ai:spring-ai-starter-model-openai:${rootProject.ext.springAiVersion}"
 
+    implementation "com.clickhouse:clickhouse-jdbc:${rootProject.ext.clickhouseJdbcVersion}"
     implementation "io.minio:minio:${rootProject.ext.minioVersion}"
 
     testImplementation "org.springframework.boot:spring-boot-starter-test"
