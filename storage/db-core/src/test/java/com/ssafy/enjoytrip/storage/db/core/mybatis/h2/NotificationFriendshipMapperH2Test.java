@@ -1,6 +1,7 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.h2;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ssafy.enjoytrip.core.domain.FriendshipStatus;
 import com.ssafy.enjoytrip.core.domain.NotificationReferenceType;
@@ -82,7 +83,7 @@ class NotificationFriendshipMapperH2Test extends H2MapperTestSupport {
                 "{\"message\":\"hello\"}"
         );
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> notificationMapper.insert(duplicate))
+        assertThatThrownBy(() -> notificationMapper.insert(duplicate))
                 .isInstanceOf(DataIntegrityViolationException.class);
         assertThat(notificationMapper.findByBusinessKey(
                 recipient,
@@ -139,4 +140,3 @@ class NotificationFriendshipMapperH2Test extends H2MapperTestSupport {
         assertThat(saved.getReadAt()).isNotNull();
     }
 }
-EOF'
