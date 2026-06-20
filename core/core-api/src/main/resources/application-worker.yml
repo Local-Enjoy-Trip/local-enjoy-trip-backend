@@ -5,6 +5,7 @@ spring:
     import:
       - optional:file:.env[.properties]
       - optional:file:../../.env[.properties]
+      - classpath:application-storage.yml
   application:
     name: enjoytrip-worker
   datasource:
@@ -12,25 +13,16 @@ spring:
     username: ${ENJOYTRIP_DB_USER:ssafy}
     password: ${ENJOYTRIP_DB_PASSWORD:ssafy}
     driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    open-in-view: false
   flyway:
     baseline-on-migrate: true
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      auto-offset-reset: earliest
-    listener:
-      ack-mode: manual
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
 
 enjoytrip:
-  notification:
-    outbox:
-      cdc:
-        enabled: ${NOTIFICATION_OUTBOX_CDC_ENABLED:true}
-        topic: ${NOTIFICATION_OUTBOX_CDC_TOPIC:enjoytrip.public.notification_outbox}
-        group-id: ${NOTIFICATION_OUTBOX_CDC_GROUP_ID:enjoytrip-notification-outbox}
+  attraction:
+    popularity:
+      flush-delay-ms: ${ATTRACTION_POPULARITY_FLUSH_DELAY_MS:1000}
+      flush-batch-size: ${ATTRACTION_POPULARITY_FLUSH_BATCH_SIZE:500}
+      reconcile-initial-delay-ms: ${ATTRACTION_POPULARITY_RECONCILE_INITIAL_DELAY_MS:10000}
+      reconcile-delay-ms: ${ATTRACTION_POPULARITY_RECONCILE_DELAY_MS:3600000}

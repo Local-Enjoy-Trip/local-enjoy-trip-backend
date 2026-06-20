@@ -43,11 +43,6 @@ enjoytrip:
       api-key: ${DATA_PORTAL_API_KEY:${EV_CHARGER_API_KEY:${ENJOYTRIP_EV_API_KEY:${TOUR_API_KEY:}}}}
     open-weather-map:
       api-key: ${OPENWEATHERMAP_API_KEY:${OPENWEATHER_API_KEY:}}
-    clickhouse:
-      url: ${CLICKHOUSE_JDBC_URL:jdbc:clickhouse://localhost:8123/default}
-      username: ${CLICKHOUSE_USER:default}
-      password: ${CLICKHOUSE_PASSWORD:enjoytrip_clickhouse}
-      query-timeout: ${CLICKHOUSE_QUERY_TIMEOUT:3s}
   jwt:
     secret: ${ENJOYTRIP_JWT_SECRET:dev-only-enjoytrip-jwt-secret-change-me-please-32b}
     expiration-seconds: ${ENJOYTRIP_JWT_EXPIRATION_SECONDS:7200}
