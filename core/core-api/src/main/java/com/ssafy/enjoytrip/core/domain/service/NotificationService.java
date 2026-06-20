@@ -42,7 +42,7 @@ public class NotificationService {
                 FRIEND_REQUEST_RECEIVED,
                 FRIENDSHIP,
                 friendshipId,
-                friendRequestPayload(friendshipId, requesterUserId)
+                requesterUserId
         );
         markReadIfFriendRequestAlreadyHandled(record);
 
@@ -102,15 +102,4 @@ public class NotificationService {
         );
     }
 
-    private static String friendRequestPayload(Long friendshipId, String requesterUserId) {
-        return "{\"requesterUserId\":\"" + escape(requesterUserId) + "\","
-                + "\"friendshipId\":" + friendshipId + "}";
-    }
-
-    private static String escape(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
-    }
 }

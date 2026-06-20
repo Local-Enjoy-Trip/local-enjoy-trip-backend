@@ -150,7 +150,7 @@ class FriendshipNotificationControllerTest {
                 NotificationType.FRIEND_REQUEST_RECEIVED,
                 NotificationReferenceType.FRIENDSHIP,
                 1L,
-                "{\"requesterUserId\":\"alice\"}",
+                "alice",
                 readAt,
                 LocalDateTime.of(2026, 6, 12, 10, 0),
                 null

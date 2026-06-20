@@ -6,7 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.ssafy.enjoytrip.core.domain.event.FriendshipRequestedEvent;
-import com.ssafy.enjoytrip.core.domain.service.FriendshipNotificationEventListener;
+import com.ssafy.enjoytrip.core.domain.event.listener.FriendshipNotificationEventListener;
 import com.ssafy.enjoytrip.core.domain.service.FriendshipService;
 import com.ssafy.enjoytrip.core.domain.service.NotificationService;
 import com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord;

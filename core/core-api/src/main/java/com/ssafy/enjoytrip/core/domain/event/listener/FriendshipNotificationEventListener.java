@@ -1,6 +1,7 @@
-package com.ssafy.enjoytrip.core.domain.service;
+package com.ssafy.enjoytrip.core.domain.event.listener;
 
 import com.ssafy.enjoytrip.core.domain.event.FriendshipRequestedEvent;
+import com.ssafy.enjoytrip.core.domain.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;

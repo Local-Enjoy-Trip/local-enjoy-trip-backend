@@ -42,7 +42,7 @@ class PostgresUpsertMapperContainerTest extends StorageContainerTestSupport {
                 NotificationType.FRIEND_REQUEST_RECEIVED,
                 NotificationReferenceType.FRIENDSHIP,
                 friendship.getId(),
-                "{\"message\":\"hello\"}"
+                requester
         );
 
         notificationMapper.upsertFriendRequest(notification);
@@ -57,7 +57,7 @@ class PostgresUpsertMapperContainerTest extends StorageContainerTestSupport {
                 NotificationType.FRIEND_REQUEST_RECEIVED,
                 NotificationReferenceType.FRIENDSHIP,
                 friendship.getId(),
-                "{\"message\":\"updated\"}"
+                "updated"
         );
 
         notificationMapper.upsertFriendRequest(duplicate);
@@ -69,7 +69,7 @@ class PostgresUpsertMapperContainerTest extends StorageContainerTestSupport {
         );
 
         assertThat(updated.getId()).isEqualTo(inserted.getId());
-        assertThat(updated.getPayload()).isEqualTo("{\"message\":\"updated\"}");
+        assertThat(updated.getPayload()).isEqualTo("updated");
     }
 
     @DisplayName("AttractionMapper는 PostgreSQL on conflict로 favorite delta를 0 미만으로 내리지 않는다")

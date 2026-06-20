@@ -78,7 +78,7 @@ class NotificationFriendshipMapperH2Test extends H2MapperTestSupport {
                 NotificationType.FRIEND_REQUEST_RECEIVED.name(),
                 NotificationReferenceType.FRIENDSHIP.name(),
                 friendship.getId(),
-                "{\"message\":\"hello\"}"
+                requester
         );
         notificationMapper.markReadByReference(
                 recipient,
