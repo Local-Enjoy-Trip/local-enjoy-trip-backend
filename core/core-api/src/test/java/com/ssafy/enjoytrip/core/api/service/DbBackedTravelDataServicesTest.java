@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.ssafy.enjoytrip.core.domain.PopularAttraction;
+import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
@@ -40,12 +42,7 @@ class DbBackedTravelDataServicesTest {
         void popularNearbyAttractionsUseRdbPopularityStatsForOrdering() {
             AttractionMapper attractionMapper = mock(AttractionMapper.class);
             AttractionStatsService statsService = mock(AttractionStatsService.class);
-            AttractionService service = new AttractionService(
-                    attractionMapper,
-                    statsService,
-                    new AttractionPopularityStatsService(attractionMapper),
-                    mock(AttractionPopularityDeltaBuffer.class)
-            );
+            AttractionService service = new AttractionService(attractionMapper, statsService);
             NearbySearchCondition condition = new NearbySearchCondition(126.9780, 37.5665, 500.0, 20);
 
             when(attractionMapper.findNearby(126.9780, 37.5665, 500.0, 20))

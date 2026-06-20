@@ -8,6 +8,7 @@ import com.ssafy.enjoytrip.core.domain.PopularAttraction;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord;
 import java.util.Comparator;
@@ -34,9 +35,14 @@ public class AttractionService {
             return List.of();
         }
 
-        Map<Long, Long> popularityCounts = popularityStatsService.findPopularityFavoriteCounts(candidates.stream()
-                .map(candidate -> candidate.attraction().id())
-                .toList());
+        Map<Long, Long> popularityCounts = attractionMapper.findPopularityFavoriteCounts(candidates.stream()
+                        .map(candidate -> candidate.attraction().id())
+                        .toList())
+                .stream()
+                .collect(Collectors.toMap(
+                        AttractionCountRecord::attractionId,
+                        record -> (long) record.count()
+                ));
 
         return candidates.stream()
                 .map(candidate -> new PopularAttraction(
