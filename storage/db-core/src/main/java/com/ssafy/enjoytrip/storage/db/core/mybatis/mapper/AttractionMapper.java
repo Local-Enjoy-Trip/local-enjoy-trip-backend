@@ -53,10 +53,17 @@ public interface AttractionMapper {
 
     List<AttractionCountRecord> findFavoriteCounts(@Param("ids") List<Long> ids);
 
-    int incrementPopularityFavoriteCount(@Param("attractionId") Long attractionId,
-                                         @Param("delta") int delta);
+    List<AttractionCountRecord> findPopularityFavoriteCounts(@Param("ids") List<Long> ids);
 
-    int reconcilePopularityFavoriteCounts();
+    int updatePopularityFavoriteDelta(@Param("attractionId") Long attractionId,
+                                      @Param("delta") Long delta);
+
+    int insertPopularityFavoriteDeltaIfAbsent(@Param("attractionId") Long attractionId,
+                                              @Param("delta") Long delta);
+
+    int resetPopularityFavoriteCountsFromFavorites();
+
+    int insertMissingPopularityFavoriteCountsFromFavorites();
 
     List<AttractionAverageRatingRecord> findRatingStats(@Param("ids") List<Long> ids);
 

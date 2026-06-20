@@ -104,6 +104,69 @@
             current_timestamp
         )
     </update>
+    <update id="updatePopularityFavoriteDelta">
+        update attraction_popularity_stats
+        set favorite_count = greatest(0, favorite_count + #{delta}),
+            popularity_score = greatest(0, favorite_count + #{delta}),
+            updated_at = current_timestamp
+        where attraction_id = #{attractionId}
+    </update>
+    <insert id="insertPopularityFavoriteDeltaIfAbsent">
+        insert into attraction_popularity_stats (
+            attraction_id,
+            favorite_count,
+            popularity_score,
+            updated_at
+        )
+        select
+            #{attractionId},
+            greatest(0, #{delta}),
+            greatest(0, #{delta}),
+            current_timestamp
+        where not exists (
+            select 1
+            from attraction_popularity_stats
+            where attraction_id = #{attractionId}
+        )
+    </insert>
+    <update id="resetPopularityFavoriteCountsFromFavorites">
+        update attraction_popularity_stats
+        set favorite_count = coalesce((
+                select cast(count(*) as integer)
+                from attraction_favorites
+                where attraction_id = attraction_popularity_stats.attraction_id
+            ), 0),
+            popularity_score = coalesce((
+                select cast(count(*) as integer)
+                from attraction_favorites
+                where attraction_id = attraction_popularity_stats.attraction_id
+            ), 0),
+            updated_at = current_timestamp
+    </update>
+    <insert id="insertMissingPopularityFavoriteCountsFromFavorites">
+        insert into attraction_popularity_stats (
+            attraction_id,
+            favorite_count,
+            popularity_score,
+            updated_at
+        )
+        select
+            a.id,
+            coalesce(f.favorite_count, 0),
+            coalesce(f.favorite_count, 0),
+            current_timestamp
+        from attractions a
+        left join (
+            select attraction_id, cast(count(*) as integer) as favorite_count
+            from attraction_favorites
+            group by attraction_id
+        ) f on f.attraction_id = a.id
+        where not exists (
+            select 1
+            from attraction_popularity_stats s
+            where s.attraction_id = a.id
+        )
+    </insert>
     <select id="findRatingStats" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionAverageRatingRecord">select attraction_id as attractionId, coalesce(avg(rating), 0)::float8 as average, count(*)::int as count from attraction_ratings where attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach> group by attraction_id</select>
     <select id="findTagsByAttractionId" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord">select t.id, t.name from attraction_tags t join attraction_tag_mappings m on m.tag_id = t.id where m.attraction_id = #{attractionId} order by t.name asc</select>
     <select id="findMyRatings" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionRatingRecord">select attraction_id as attractionId, rating from attraction_ratings where user_id = #{userId} and attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>

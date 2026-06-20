@@ -1,7 +1,7 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.h2;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ssafy.enjoytrip.core.domain.FriendshipStatus;
 import com.ssafy.enjoytrip.core.domain.NotificationReferenceType;
