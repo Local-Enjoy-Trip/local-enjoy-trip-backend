@@ -25,7 +25,7 @@ public class AttractionService {
     private final AttractionMapper attractionMapper;
     private final AttractionStatsService attractionStatsService;
     private final AttractionPopularityStatsService popularityStatsService;
-    private final AttractionPopularityDeltaBuffer popularityDeltaBuffer;
+    private final AttractionPopularityDeltaCache popularityDeltaCache;
 
     public List<PopularAttraction> findPopularNearbyAttractions(NearbySearchCondition condition,
                                                                 String userId) {
@@ -83,14 +83,14 @@ public class AttractionService {
             return;
         }
         if (attractionMapper.insertFavorite(attractionId, userId) > 0) {
-            popularityDeltaBuffer.recordFavoriteDelta(attractionId, 1L);
+            popularityDeltaCache.recordFavoriteDelta(attractionId, 1L);
         }
     }
 
     public boolean removeFavorite(Long attractionId, String userId) {
         boolean deleted = attractionMapper.deleteFavorite(attractionId, userId) > 0;
         if (deleted) {
-            popularityDeltaBuffer.recordFavoriteDelta(attractionId, -1L);
+            popularityDeltaCache.recordFavoriteDelta(attractionId, -1L);
         }
         return deleted;
     }

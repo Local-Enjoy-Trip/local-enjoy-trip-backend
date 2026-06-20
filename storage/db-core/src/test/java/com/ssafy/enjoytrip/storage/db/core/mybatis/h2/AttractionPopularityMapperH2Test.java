@@ -43,32 +43,4 @@ class AttractionPopularityMapperH2Test extends H2MapperTestSupport {
         assertThat(counts).extracting(AttractionCountRecord::count).containsExactly(0);
     }
 
-    @DisplayName("AttractionMapper는 favorite 원장을 기준으로 popularity stats를 보정한다")
-    @Test
-    void reconcilePopularityFavoriteCountsFromFavoriteLedger() {
-        seedAttraction(1L, "첫 번째 관광지");
-        seedAttraction(2L, "두 번째 관광지");
-        seedMember("member-a", "member-a@example.com");
-        seedMember("member-b", "member-b@example.com");
-        jdbcTemplate.update("""
-                insert into attraction_popularity_stats (attraction_id, favorite_count, updated_at)
-                values (?, ?, current_timestamp)
-                """, 2L, 4);
-        jdbcTemplate.update("""
-                insert into attraction_favorites (attraction_id, user_id, created_at)
-                values (?, ?, current_timestamp), (?, ?, current_timestamp)
-                """, 1L, "member-a", 1L, "member-b");
-
-        attractionMapper.resetPopularityFavoriteCountsFromFavorites();
-        attractionMapper.insertMissingPopularityFavoriteCountsFromFavorites();
-
-        List<AttractionCountRecord> counts = attractionMapper.findPopularityFavoriteCounts(List.of(1L, 2L));
-
-        assertThat(counts)
-                .extracting(AttractionCountRecord::attractionId, AttractionCountRecord::count)
-                .containsExactlyInAnyOrder(
-                        tuple(1L, 2),
-                        tuple(2L, 0)
-                );
-    }
 }

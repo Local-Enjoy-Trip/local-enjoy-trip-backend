@@ -24,5 +24,3 @@ enjoytrip:
     popularity:
       flush-delay-ms: ${ATTRACTION_POPULARITY_FLUSH_DELAY_MS:1000}
       flush-batch-size: ${ATTRACTION_POPULARITY_FLUSH_BATCH_SIZE:500}
-      reconcile-initial-delay-ms: ${ATTRACTION_POPULARITY_RECONCILE_INITIAL_DELAY_MS:10000}
-      reconcile-delay-ms: ${ATTRACTION_POPULARITY_RECONCILE_DELAY_MS:3600000}

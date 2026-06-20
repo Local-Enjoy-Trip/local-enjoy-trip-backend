@@ -39,13 +39,6 @@ public class AttractionPopularityStatsService {
         return applied;
     }
 
-    @Transactional
-    public int reconcileFavoriteCounts() {
-        int updated = attractionMapper.resetPopularityFavoriteCountsFromFavorites();
-        int inserted = attractionMapper.insertMissingPopularityFavoriteCountsFromFavorites();
-        return updated + inserted;
-    }
-
     private int applyFavoriteDelta(Long attractionId, Long delta) {
         if (attractionId == null || delta == null || delta == 0) {
             return 0;

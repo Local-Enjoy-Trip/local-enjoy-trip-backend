@@ -1,9 +1,8 @@
 package com.ssafy.enjoytrip.core.api.worker;
 
 import com.ssafy.enjoytrip.core.api.worker.attraction.AttractionPopularityFlushScheduler;
-import com.ssafy.enjoytrip.core.api.worker.attraction.AttractionPopularityReconcileScheduler;
-import com.ssafy.enjoytrip.core.domain.service.AttractionPopularityDeltaBuffer;
 import com.ssafy.enjoytrip.core.domain.service.AttractionPopularityStatsService;
+import com.ssafy.enjoytrip.core.domain.service.RedisAttractionPopularityDeltaCache;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
@@ -13,10 +12,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @Profile("worker")
 @Import({
-        AttractionPopularityDeltaBuffer.class,
+        RedisAttractionPopularityDeltaCache.class,
         AttractionPopularityStatsService.class,
-        AttractionPopularityFlushScheduler.class,
-        AttractionPopularityReconcileScheduler.class
+        AttractionPopularityFlushScheduler.class
 })
 public class WorkerConfiguration {
 }

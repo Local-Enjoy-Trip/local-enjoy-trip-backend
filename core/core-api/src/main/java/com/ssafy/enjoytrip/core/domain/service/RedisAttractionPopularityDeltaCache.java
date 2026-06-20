@@ -11,12 +11,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AttractionPopularityDeltaBuffer {
+public class RedisAttractionPopularityDeltaCache implements AttractionPopularityDeltaCache {
     private static final String DIRTY_IDS_KEY = "enjoytrip:attraction-popularity:dirty";
     private static final String DELTA_KEY_PREFIX = "enjoytrip:attraction-popularity:delta:";
 
     private final StringRedisTemplate redisTemplate;
 
+    @Override
     public void recordFavoriteDelta(Long attractionId, long delta) {
         if (attractionId == null || delta == 0) {
             return;
@@ -35,6 +36,7 @@ public class AttractionPopularityDeltaBuffer {
         }
     }
 
+    @Override
     public Map<Long, Long> drainDirtyDeltas(int batchSize) {
         if (batchSize <= 0) {
             return Map.of();

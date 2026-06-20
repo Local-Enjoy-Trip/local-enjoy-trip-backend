@@ -61,10 +61,6 @@ public interface AttractionMapper {
     int insertPopularityFavoriteDeltaIfAbsent(@Param("attractionId") Long attractionId,
                                               @Param("delta") Long delta);
 
-    int resetPopularityFavoriteCountsFromFavorites();
-
-    int insertMissingPopularityFavoriteCountsFromFavorites();
-
     List<AttractionAverageRatingRecord> findRatingStats(@Param("ids") List<Long> ids);
 
     List<AttractionTagRecord> findTagsByAttractionId(Long attractionId);

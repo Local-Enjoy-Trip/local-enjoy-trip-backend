@@ -78,28 +78,6 @@
             where attraction_id = #{attractionId}
         )
     </insert>
-    <update id="resetPopularityFavoriteCountsFromFavorites">
-        update attraction_popularity_stats
-        set favorite_count = (
-                select count(*)
-                from attraction_favorites
-                where attraction_favorites.attraction_id = attraction_popularity_stats.attraction_id
-            ),
-            updated_at = current_timestamp
-    </update>
-    <insert id="insertMissingPopularityFavoriteCountsFromFavorites">
-        insert into attraction_popularity_stats (attraction_id, favorite_count, updated_at)
-        select attraction_id,
-               count(*),
-               current_timestamp
-        from attraction_favorites favorites
-        where not exists (
-            select 1
-            from attraction_popularity_stats stats
-            where stats.attraction_id = favorites.attraction_id
-        )
-        group by attraction_id
-    </insert>
     <select id="findRatingStats" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionAverageRatingRecord">select attraction_id as attractionId, coalesce(avg(rating), 0)::float8 as average, count(*)::int as count from attraction_ratings where attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach> group by attraction_id</select>
     <select id="findTagsByAttractionId" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord">select t.id, t.name from attraction_tags t join attraction_tag_mappings m on m.tag_id = t.id where m.attraction_id = #{attractionId} order by t.name asc</select>
     <select id="findMyRatings" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionRatingRecord">select attraction_id as attractionId, rating from attraction_ratings where user_id = #{userId} and attraction_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>
