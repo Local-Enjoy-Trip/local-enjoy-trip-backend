@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AttractionService {
     private final AttractionMapper attractionMapper;
     private final AttractionStatsService attractionStatsService;
-    private final AttractionPopularityStatsService popularityStatsService;
     private final AttractionPopularityDeltaBuffer popularityDeltaBuffer;
 
     public List<PopularAttraction> findPopularNearbyAttractions(NearbySearchCondition condition,
@@ -85,16 +84,18 @@ public class AttractionService {
         if (userId == null) {
             return;
         }
-        if (attractionMapper.insertFavorite(attractionId, userId) > 0) {
-            popularityDeltaBuffer.recordFavoriteDelta(attractionId, 1L);
+        int insertedCount = attractionMapper.insertFavorite(attractionId, userId);
+        if (insertedCount > 0) {
+            popularityDeltaBuffer.recordFavoriteDelta(attractionId, 1);
         }
     }
 
     public boolean removeFavorite(Long attractionId, String userId) {
         boolean deleted = attractionMapper.deleteFavorite(attractionId, userId) > 0;
         if (deleted) {
-            popularityDeltaBuffer.recordFavoriteDelta(attractionId, -1L);
+            popularityDeltaBuffer.recordFavoriteDelta(attractionId, -1);
         }
+
         return deleted;
     }
 

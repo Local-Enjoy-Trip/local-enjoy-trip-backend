@@ -2,10 +2,12 @@ package com.ssafy.enjoytrip.core.domain.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.ssafy.enjoytrip.core.domain.PopularAttraction;
-import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
+import com.ssafy.enjoytrip.core.domain.service.AttractionPopularityDeltaBuffer;
+import com.ssafy.enjoytrip.external.ClickHouseAttractionPopularityClient;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
@@ -30,64 +32,73 @@ class DbBackedTravelDataServicesTest {
             AttractionService service = new AttractionService(
                     attractionMapper,
                     new AttractionStatsService(attractionMapper),
-                    new AttractionPopularityStatsService(attractionMapper),
                     mock(AttractionPopularityDeltaBuffer.class)
             );
 
             assertThat(service).isNotNull();
         }
 
-        @DisplayName("인기 주변 관광지는 RDB 인기 통계의 favorite_count 기준으로 정렬한다")
+        @DisplayName("AttractionService는 찜이 새로 저장된 경우에만 popularity 델타를 기록한다")
         @Test
-        void popularNearbyAttractionsUseRdbPopularityStatsForOrdering() {
+        void recordsPopularityDeltaWhenFavoriteInserted() {
             AttractionMapper attractionMapper = mock(AttractionMapper.class);
-            AttractionStatsService statsService = mock(AttractionStatsService.class);
-            AttractionService service = new AttractionService(attractionMapper, statsService);
-            NearbySearchCondition condition = new NearbySearchCondition(126.9780, 37.5665, 500.0, 20);
+            AttractionPopularityDeltaBuffer deltaBuffer = mock(AttractionPopularityDeltaBuffer.class);
+            AttractionService service = newAttractionService(attractionMapper, deltaBuffer);
+            when(attractionMapper.insertFavorite(1L, "ssafy")).thenReturn(1);
 
-            when(attractionMapper.findNearby(126.9780, 37.5665, 500.0, 20))
-                    .thenReturn(List.of(
-                            attractionSearchRecord(1L, "가까운 0점", 10.0),
-                            attractionSearchRecord(2L, "먼 5점", 100.0),
-                            attractionSearchRecord(3L, "가까운 5점", 50.0)
-                    ));
-            when(statsService.findStatsByAttractionId(List.of(1L, 2L, 3L), null))
-                    .thenReturn(Map.of());
-            when(attractionMapper.findPopularityFavoriteCounts(List.of(1L, 2L, 3L)))
-                    .thenReturn(List.of(
-                            new AttractionCountRecord(2L, 5),
-                            new AttractionCountRecord(3L, 5)
-                    ));
+            service.addFavorite(1L, "ssafy");
 
-            List<PopularAttraction> attractions = service.findPopularNearbyAttractions(condition, null);
-
-            assertThat(attractions)
-                    .extracting(attraction -> attraction.attraction().id())
-                    .containsExactly(3L, 2L, 1L);
-            assertThat(attractions)
-                    .extracting(PopularAttraction::popularityCount)
-                    .containsExactly(5L, 5L, 0L);
+            verify(deltaBuffer).recordFavoriteDelta(1L, 1);
         }
 
-        private AttractionSearchRecord attractionSearchRecord(Long id, String title, Double distanceMeters) {
-            return new AttractionSearchRecord(
-                    id,
-                    title,
-                    "서울 중구",
-                    "",
-                    "zip",
-                    "tel",
-                    "image",
-                    "image2",
-                    10,
-                    1,
-                    1,
-                    37.5665,
-                    126.9780,
-                    "6",
-                    "12",
-                    "overview",
-                    distanceMeters
+        @DisplayName("AttractionService는 중복 찜 저장이면 popularity 델타를 기록하지 않는다")
+        @Test
+        void skipsPopularityDeltaWhenFavoriteAlreadyExists() {
+            AttractionMapper attractionMapper = mock(AttractionMapper.class);
+            AttractionPopularityDeltaBuffer deltaBuffer = mock(AttractionPopularityDeltaBuffer.class);
+            AttractionService service = newAttractionService(attractionMapper, deltaBuffer);
+            when(attractionMapper.insertFavorite(1L, "ssafy")).thenReturn(0);
+
+            service.addFavorite(1L, "ssafy");
+
+            verify(deltaBuffer, never()).recordFavoriteDelta(1L, 1);
+        }
+
+        @DisplayName("AttractionService는 찜 삭제가 실제 반영된 경우에만 popularity 감소 델타를 기록한다")
+        @Test
+        void recordsPopularityDeltaWhenFavoriteDeleted() {
+            AttractionMapper attractionMapper = mock(AttractionMapper.class);
+            AttractionPopularityDeltaBuffer deltaBuffer = mock(AttractionPopularityDeltaBuffer.class);
+            AttractionService service = newAttractionService(attractionMapper, deltaBuffer);
+            when(attractionMapper.deleteFavorite(1L, "ssafy")).thenReturn(1);
+
+            boolean deleted = service.removeFavorite(1L, "ssafy");
+
+            assertThat(deleted).isTrue();
+            verify(deltaBuffer).recordFavoriteDelta(1L, -1);
+        }
+
+        @DisplayName("AttractionService는 삭제할 찜이 없으면 popularity 감소 델타를 기록하지 않는다")
+        @Test
+        void skipsPopularityDeltaWhenFavoriteDoesNotExist() {
+            AttractionMapper attractionMapper = mock(AttractionMapper.class);
+            AttractionPopularityDeltaBuffer deltaBuffer = mock(AttractionPopularityDeltaBuffer.class);
+            AttractionService service = newAttractionService(attractionMapper, deltaBuffer);
+            when(attractionMapper.deleteFavorite(1L, "ssafy")).thenReturn(0);
+
+            boolean deleted = service.removeFavorite(1L, "ssafy");
+
+            assertThat(deleted).isFalse();
+            verify(deltaBuffer, never()).recordFavoriteDelta(1L, -1);
+        }
+
+        private AttractionService newAttractionService(AttractionMapper attractionMapper,
+                                                       AttractionPopularityDeltaBuffer deltaBuffer) {
+            return new AttractionService(
+                    mock(ClickHouseAttractionPopularityClient.class),
+                    attractionMapper,
+                    new AttractionStatsService(attractionMapper),
+                    deltaBuffer
             );
         }
     }
