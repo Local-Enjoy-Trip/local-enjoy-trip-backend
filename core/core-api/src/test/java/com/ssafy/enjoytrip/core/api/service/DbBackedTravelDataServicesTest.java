@@ -96,6 +96,7 @@ class DbBackedTravelDataServicesTest {
             return new AttractionService(
                     attractionMapper,
                     new AttractionStatsService(attractionMapper),
+                    new AttractionPopularityStatsService(attractionMapper),
                     deltaBuffer
             );
         }
