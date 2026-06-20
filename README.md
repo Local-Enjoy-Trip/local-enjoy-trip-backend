@@ -8,14 +8,14 @@
   - Web/API 코드는 `com.ssafy.enjoytrip.core.api.web.*`에 둔다.
   - Scheduled/background worker 코드는 `com.ssafy.enjoytrip.core.api.worker.*`에 둔다.
 - `core/core-enum`: `core-api`와 `storage/db-core`가 공유하는 enum 전용 모듈.
-- `storage/db-core`: JPA entity, Spring Data repository, Flyway migration, jOOQ codegen/query 인프라.
+- `storage/db-core`: MyBatis mapper/XML, storage Record, Flyway migration 인프라.
 - `core`: Gradle namespace parent for `core-api` and `core-enum`; no source-bearing legacy core module.
 - `storage`: Gradle namespace parent for `db-core`; no source-bearing legacy storage module.
 - `external`: active outbound integration module for third-party API, AI, and MinIO implementations.
 - `batch`: 수동/offline Spring Batch runtime.
 - `support/logging`, `support/monitoring`: runtime support resources used by active runtimes. Auth support is absorbed into `core-api`; `support/auth` is removed.
 
-`backend/` 래퍼 디렉터리는 제거했다. 새 코드는 프로젝트 루트의 위 모듈 아래에 둔다. Web package는 worker-only Scheduled/background 코드를 소유하지 않고, worker package는 controller/OpenAPI/REST Docs/DTO/response envelope를 소유하지 않는다.
+`backend/` 래퍼 디렉터리는 제거했다. 새 코드는 프로젝트 루트의 위 모듈 아래에 둔다. Web package는 worker-only Scheduled 코드를 소유하지 않고, worker package는 controller/OpenAPI/REST Docs/DTO/response envelope를 소유하지 않는다.
 
 ## API
 
