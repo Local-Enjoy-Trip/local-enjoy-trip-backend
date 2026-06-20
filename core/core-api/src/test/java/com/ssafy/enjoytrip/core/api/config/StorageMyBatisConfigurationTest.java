@@ -28,6 +28,6 @@ class StorageMyBatisConfigurationTest {
 
         assertThat(mapperResources)
                 .extracting(Resource::getFilename)
-                .contains("AttractionMapper.xml", "MemberMapper.xml", "NotificationOutboxMapper.xml");
+                .contains("AttractionMapper.xml", "MemberMapper.xml", "NotificationMapper.xml");
     }
 }
