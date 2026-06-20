@@ -42,7 +42,7 @@ public class AttractionPopularityScheduler {
 
     private void runSingleFlight(String operation, Runnable task) {
         if (!running.compareAndSet(false, true)) {
-            log.debug("Attraction popularity {} skipped because another maintenance run is active", operation);
+            log.debug("Attraction popularity {} skipped; another maintenance run is active", operation);
             return;
         }
 
