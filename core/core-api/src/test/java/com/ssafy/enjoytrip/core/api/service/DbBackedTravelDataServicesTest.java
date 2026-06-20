@@ -40,7 +40,12 @@ class DbBackedTravelDataServicesTest {
         void popularNearbyAttractionsUseRdbPopularityStatsForOrdering() {
             AttractionMapper attractionMapper = mock(AttractionMapper.class);
             AttractionStatsService statsService = mock(AttractionStatsService.class);
-            AttractionService service = new AttractionService(attractionMapper, statsService);
+            AttractionService service = new AttractionService(
+                    attractionMapper,
+                    statsService,
+                    new AttractionPopularityStatsService(attractionMapper),
+                    mock(AttractionPopularityDeltaBuffer.class)
+            );
             NearbySearchCondition condition = new NearbySearchCondition(126.9780, 37.5665, 500.0, 20);
 
             when(attractionMapper.findNearby(126.9780, 37.5665, 500.0, 20))

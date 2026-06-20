@@ -1,6 +1,7 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.h2;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
@@ -26,7 +27,7 @@ class AttractionPopularityMapperH2Test extends H2MapperTestSupport {
 
         assertThat(counts)
                 .extracting(AttractionCountRecord::attractionId, AttractionCountRecord::count)
-                .containsExactly(org.assertj.core.groups.Tuple.tuple(1L, 7));
+                .containsExactly(tuple(1L, 7));
     }
 
     @DisplayName("AttractionMapper는 favorite delta를 0 미만으로 내려가지 않게 반영한다")
@@ -66,8 +67,8 @@ class AttractionPopularityMapperH2Test extends H2MapperTestSupport {
         assertThat(counts)
                 .extracting(AttractionCountRecord::attractionId, AttractionCountRecord::count)
                 .containsExactlyInAnyOrder(
-                        org.assertj.core.groups.Tuple.tuple(1L, 2),
-                        org.assertj.core.groups.Tuple.tuple(2L, 0)
+                        tuple(1L, 2),
+                        tuple(2L, 0)
                 );
     }
 }
