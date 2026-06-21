@@ -93,4 +93,21 @@ class MemberServiceTest {
 
         verify(authLogMapper, never()).insert(any());
     }
+
+    @DisplayName("OAuth 회원가입은 이름과 닉네임을 분리해 저장한다")
+    @Test
+    void oauthSignupStoresNicknameSeparatelyFromName() {
+        when(memberMapper.findByEmail("google@example.com")).thenReturn(null);
+        when(memberMapper.existsByUserId("google_123")).thenReturn(0);
+
+        Member member = service.signupWithOAuth("google", "123", "google@example.com", "김구글", "트래블러");
+
+        ArgumentCaptor<MemberRecord> memberCaptor = ArgumentCaptor.forClass(MemberRecord.class);
+        verify(memberMapper).insert(memberCaptor.capture());
+        MemberRecord saved = memberCaptor.getValue();
+        assertThat(member.name()).isEqualTo("김구글");
+        assertThat(member.nickname()).isEqualTo("트래블러");
+        assertThat(saved.getName()).isEqualTo("김구글");
+        assertThat(saved.getNickname()).isEqualTo("트래블러");
+    }
 }

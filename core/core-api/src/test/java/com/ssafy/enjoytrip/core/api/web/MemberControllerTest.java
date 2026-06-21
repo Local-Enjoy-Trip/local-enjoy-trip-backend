@@ -121,10 +121,28 @@ class MemberControllerTest {
     @DisplayName("OAuth 회원가입은 티켓으로 회원을 만들고 JWT 토큰을 반환한다")
     @Test
     void oauthSignupCreatesMemberFromTicketAndReturnsJwtToken() throws Exception {
-        Member member = new Member("google_123", "트래블러", "google@example.com", "hidden", "2026-05-14 11:00:00");
+        Member member = new Member(
+                "google_123",
+                "김구글",
+                "트래블러",
+                "google@example.com",
+                "hidden",
+                null,
+                null,
+                null,
+                null,
+                "2026-05-14 11:00:00"
+        );
         when(oauthSignupTicketService.verify("ticket"))
                 .thenReturn(new PendingOAuthSignup("google", "123", "google@example.com", "Google Name"));
-        when(memberService.signupWithOAuth("google", "123", "google@example.com", "트래블러")).thenReturn(member);
+        when(memberService.signupWithOAuth(
+                "google",
+                "123",
+                "google@example.com",
+                "김구글",
+                "트래블러"
+        ))
+                .thenReturn(member);
         when(tokenService.issue(member)).thenReturn(new IssuedToken("jwt-token", "Bearer", 7200));
 
         mockMvc.perform(post("/api/members/oauth")
@@ -132,12 +150,14 @@ class MemberControllerTest {
                         .content("""
                                 {
                                   "oauthSignupTicket": "ticket",
-                                  "name": "트래블러"
+                                  "name": "김구글",
+                                  "nickname": "트래블러"
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
-                .andExpect(jsonPath("$.data.user.name").value("트래블러"));
+                .andExpect(jsonPath("$.data.user.name").value("김구글"))
+                .andExpect(jsonPath("$.data.user.nickname").value("트래블러"));
     }
 
     @DisplayName("잘못된 OAuth 가입 티켓은 클라이언트 입력 오류로 응답한다")
@@ -151,12 +171,28 @@ class MemberControllerTest {
                         .content("""
                                 {
                                   "oauthSignupTicket": "broken-ticket",
-                                  "name": "트래블러"
+                                  "name": "김구글",
+                                  "nickname": "트래블러"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.code").value("C400"))
                 .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
+    }
+
+    @DisplayName("OAuth 회원가입은 닉네임을 필수로 요구한다")
+    @Test
+    void oauthSignupRequiresNickname() throws Exception {
+        mockMvc.perform(post("/api/members/oauth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "oauthSignupTicket": "ticket",
+                                  "name": "김구글"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("C400"));
     }
 
     @DisplayName("내 정보 조회는 인증된 사용자를 반환한다")

@@ -3,6 +3,7 @@ package com.ssafy.enjoytrip.core.api.web.api;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberLoginRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberLogoutRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.MemberOAuthSignupRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberSignupRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberUpdateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.LoginResponse;
@@ -93,6 +94,27 @@ public interface MemberApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "아이디 또는 비밀번호 불일치")
     })
     ApiResponse<LoginResponse> login(MemberLoginRequest request);
+
+    @Operation(
+            summary = "OAuth 회원가입 완료",
+            description = "OAuth 로그인 콜백에서 받은 가입 티켓과 이름, 닉네임으로 회원을 생성하고 JWT access token을 발급합니다.",
+            operationId = "completeOAuthSignup"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "OAuth 회원가입 완료",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = LoginResponse.class)
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "필수 필드 누락 또는 유효하지 않은 가입 티켓"
+            )
+    })
+    ApiResponse<LoginResponse> completeOAuthSignup(MemberOAuthSignupRequest request);
 
     @Operation(summary = "로그아웃", description = "`userId` 기준으로 로그아웃 처리를 수행합니다.", operationId = "logout")
     @ApiResponses({

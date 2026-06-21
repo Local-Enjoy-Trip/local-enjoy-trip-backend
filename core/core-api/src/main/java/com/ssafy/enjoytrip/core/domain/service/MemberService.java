@@ -112,21 +112,16 @@ public class MemberService {
 
     @Transactional
     public Member loginWithOAuth(String provider, String providerUserId, String email, String name) {
-        Member existing = findByEmail(email);
-        if (existing != null) {
-            authLogMapper.insert(new AuthLogRecord(existing.userId(), "LOGIN"));
-            return existing;
-        }
-
-        Member member = createOAuthMember(provider, providerUserId, email, name);
-        saveMember(member);
-        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
-        return member;
+        return loginOrCreateOAuthMember(provider, providerUserId, email, name, name);
     }
 
     @Transactional
-    public Member signupWithOAuth(String provider, String providerUserId, String email, String name) {
-        return loginWithOAuth(provider, providerUserId, email, name);
+    public Member signupWithOAuth(String provider,
+                                  String providerUserId,
+                                  String email,
+                                  String name,
+                                  String nickname) {
+        return loginOrCreateOAuthMember(provider, providerUserId, email, name, nickname);
     }
 
     public void logout(String userId) {
@@ -212,14 +207,40 @@ public class MemberService {
         return password != null && password.startsWith("$2");
     }
 
-    private Member createOAuthMember(String provider, String providerUserId, String email, String name) {
+    private Member createOAuthMember(String provider,
+                                     String providerUserId,
+                                     String email,
+                                     String name,
+                                     String nickname) {
         return new Member(
                 oauthUserId(provider, providerUserId),
                 name,
+                nickname,
                 email,
                 passwordEncoder.encode(UUID.randomUUID().toString()),
+                null,
+                null,
+                null,
+                null,
                 ""
         );
+    }
+
+    private Member loginOrCreateOAuthMember(String provider,
+                                            String providerUserId,
+                                            String email,
+                                            String name,
+                                            String nickname) {
+        Member existing = findByEmail(email);
+        if (existing != null) {
+            authLogMapper.insert(new AuthLogRecord(existing.userId(), "LOGIN"));
+            return existing;
+        }
+
+        Member member = createOAuthMember(provider, providerUserId, email, name, nickname);
+        saveMember(member);
+        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
+        return member;
     }
 
     private String oauthUserId(String provider, String providerUserId) {

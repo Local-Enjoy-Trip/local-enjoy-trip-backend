@@ -80,13 +80,15 @@ public class MemberController implements MemberApi {
     }
 
     @PostMapping("/oauth")
+    @Override
     public ApiResponse<LoginResponse> completeOAuthSignup(@Valid @RequestBody MemberOAuthSignupRequest request) {
         PendingOAuthSignup pending = oauthSignupTicketService.verify(request.oauthSignupTicket().trim());
         Member member = service.signupWithOAuth(
                 pending.provider(),
                 pending.providerUserId(),
                 pending.email(),
-                request.name().trim()
+                request.name().trim(),
+                request.nickname().trim()
         );
         IssuedToken token = tokenService.issue(member);
         return success(new LoginResponse(
