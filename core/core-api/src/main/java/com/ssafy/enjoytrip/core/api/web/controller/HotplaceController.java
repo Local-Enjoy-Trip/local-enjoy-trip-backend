@@ -1,11 +1,9 @@
 package com.ssafy.enjoytrip.core.api.web.controller;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.HOTPLACE_NOT_FOUND;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.Hotplace;
 import com.ssafy.enjoytrip.core.domain.service.HotplaceService;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.HotplaceApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.HotplaceCreateRequest;
@@ -64,11 +62,8 @@ public class HotplaceController implements HotplaceApi {
     @DeleteMapping("/{id}")
     @Override
     public ApiResponse<Void> delete(@PathVariable String id) {
-        if (service.deleteHotplace(id.strip())) {
-            return success();
-        }
-
-        throw new CoreException(HOTPLACE_NOT_FOUND);
+        service.deleteHotplaceOrThrow(id.strip());
+        return success();
     }
 
     private static String trim(String value) {

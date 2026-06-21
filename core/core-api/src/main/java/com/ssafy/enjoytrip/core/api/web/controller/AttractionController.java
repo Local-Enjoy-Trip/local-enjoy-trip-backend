@@ -1,18 +1,13 @@
 package com.ssafy.enjoytrip.core.api.web.controller;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.ATTRACTION_NOT_FOUND;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.ATTRACTIONS_POST_NOT_ALLOWED;
-import static com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId.Unauthenticated.BLANK;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_ID;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_NOT_FOUND;
-import static com.ssafy.enjoytrip.core.support.response.ApiResponse.fail;
+import static com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId.Unauthenticated.NULL;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.PopularAttraction;
 import com.ssafy.enjoytrip.core.domain.service.AttractionService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
+import com.ssafy.enjoytrip.core.support.error.ErrorCode;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.AttractionApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.AttractionTagsRequest;
@@ -49,11 +44,11 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<AttractionsResponse> search(
             @ModelAttribute AttractionSearchRequest request,
-            @AuthenticatedUserId(unauthenticated = BLANK) String authenticatedUserId
+            @AuthenticatedUserId(unauthenticated = NULL) String authenticatedUserId
     ) {
         List<Attraction> attractions = service.searchAttractions(
                 request.toCondition(),
-                optionalUserId(authenticatedUserId)
+                authenticatedUserId
         );
 
         return success(new AttractionsResponse(attractions));
@@ -63,11 +58,11 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<PopularAttractionsResponse> popularNearby(
             @Valid @ModelAttribute NearbySectionRequest request,
-            @AuthenticatedUserId(unauthenticated = BLANK) String authenticatedUserId
+            @AuthenticatedUserId(unauthenticated = NULL) String authenticatedUserId
     ) {
         List<PopularAttraction> attractions = service.findPopularNearbyAttractions(
                 request.toCondition(),
-                optionalUserId(authenticatedUserId)
+                authenticatedUserId
         );
 
         return success(PopularAttractionsResponse.from(attractions));
@@ -77,7 +72,7 @@ public class AttractionController implements AttractionApi {
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     @Override
     public ApiResponse<Void> rejectPost() {
-        return fail(ATTRACTIONS_POST_NOT_ALLOWED);
+        return ApiResponse.fail(ErrorCode.C405, "GET /api/attractions를 사용하세요.");
     }
 
     @PutMapping("/{id}/favorite")
@@ -86,7 +81,6 @@ public class AttractionController implements AttractionApi {
             @PathVariable Long id,
             @AuthenticatedUserId String authenticatedUserId
     ) {
-        requireAttraction(id);
         service.addFavorite(id, authenticatedUserId);
 
         return success();
@@ -98,7 +92,6 @@ public class AttractionController implements AttractionApi {
             @PathVariable Long id,
             @AuthenticatedUserId String authenticatedUserId
     ) {
-        requireAttraction(id);
         service.removeFavorite(id, authenticatedUserId);
 
         return success();
@@ -109,7 +102,6 @@ public class AttractionController implements AttractionApi {
     public ApiResponse<Void> rate(@PathVariable Long id,
                                   @Valid @RequestBody RatingRequest request,
                                   @AuthenticatedUserId String authenticatedUserId) {
-        requireAttraction(id);
         service.upsertRating(id, authenticatedUserId, request.rating());
 
         return success();
@@ -121,7 +113,6 @@ public class AttractionController implements AttractionApi {
             @PathVariable Long id,
             @AuthenticatedUserId String authenticatedUserId
     ) {
-        requireAttraction(id);
         service.removeRating(id, authenticatedUserId);
 
         return success();
@@ -131,11 +122,10 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<AttractionStatsResponse> stats(
             @PathVariable Long id,
-            @AuthenticatedUserId(unauthenticated = BLANK) String authenticatedUserId
+            @AuthenticatedUserId(unauthenticated = NULL) String authenticatedUserId
     ) {
-        requireAttraction(id);
         return success(new AttractionStatsResponse(
-                statsService.findStats(id, optionalUserId(authenticatedUserId))
+                statsService.findStats(id, authenticatedUserId)
         ));
     }
 
@@ -146,31 +136,9 @@ public class AttractionController implements AttractionApi {
             @Valid @RequestBody AttractionTagsRequest request,
             @AuthenticatedUserId String authenticatedUserId
     ) {
-        requireAttraction(id);
-
-        if (!service.replaceTags(id, request.tagIds())) {
-            throw new CoreException(TAG_NOT_FOUND);
-        }
+        service.replaceTagsOrThrow(id, request.tagIds());
 
         return success();
-    }
-
-    private void requireAttraction(Long id) {
-        if (id == null || id <= 0) {
-            throw new CoreException(INVALID_ID);
-        }
-
-        if (!service.existsById(id)) {
-            throw new CoreException(ATTRACTION_NOT_FOUND);
-        }
-    }
-
-    private static String optionalUserId(String userId) {
-        if (userId == null || userId.isBlank()) {
-            return null;
-        }
-
-        return userId;
     }
 
 }

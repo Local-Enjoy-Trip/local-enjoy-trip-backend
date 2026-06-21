@@ -1,11 +1,9 @@
 package com.ssafy.enjoytrip.core.api.web.controller;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.POST_NOT_FOUND;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.BoardPost;
 import com.ssafy.enjoytrip.core.domain.service.BoardService;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.BoardApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.BoardCreateRequest;
@@ -55,27 +53,22 @@ public class BoardController implements BoardApi {
     @PutMapping("/{id}")
     @Override
     public ApiResponse<Void> update(@PathVariable String id, @Valid @RequestBody BoardUpdateRequest request) {
-        if (service.updatePost(new BoardPost(
+        service.updatePost(new BoardPost(
                 id.strip(),
                 request.normalizedTitle(),
                 request.normalizedContent(),
                 "",
                 "",
                 ""
-        ))) {
-            return success();
-        }
+        ));
 
-        throw new CoreException(POST_NOT_FOUND);
+        return success();
     }
 
     @DeleteMapping("/{id}")
     @Override
     public ApiResponse<Void> delete(@PathVariable String id) {
-        if (service.deletePost(id.strip())) {
-            return success();
-        }
-
-        throw new CoreException(POST_NOT_FOUND);
+        service.deletePost(id.strip());
+        return success();
     }
 }

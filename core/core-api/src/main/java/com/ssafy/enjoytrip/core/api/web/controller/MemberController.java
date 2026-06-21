@@ -1,7 +1,5 @@
 package com.ssafy.enjoytrip.core.api.web.controller;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.ACCESS_DENIED;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.PASSWORD_LOOKUP_GONE;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.Member;
@@ -9,7 +7,7 @@ import com.ssafy.enjoytrip.core.domain.service.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
 import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService.PendingOAuthSignup;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
+import com.ssafy.enjoytrip.core.support.error.exception.DeprecatedEndpointException;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.MemberApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberLoginRequest;
@@ -109,7 +107,9 @@ public class MemberController implements MemberApi {
     @PostMapping("/password-lookup-requests")
     @Override
     public ApiResponse<Void> findPassword() {
-        throw new CoreException(PASSWORD_LOOKUP_GONE);
+        throw new DeprecatedEndpointException(
+                "비밀번호 찾기는 더 이상 지원하지 않습니다. 비밀번호를 재설정하세요."
+        );
     }
 
     @PutMapping("/{userId}")
@@ -176,9 +176,7 @@ public class MemberController implements MemberApi {
     }
 
     private void authorizeUser(String userId, String authenticatedUserId) {
-        if (!authenticatedUserId.equals(userId)) {
-            throw new CoreException(ACCESS_DENIED);
-        }
+        service.requireSameUser(userId, authenticatedUserId);
     }
 
     private static UserResponse toUserResponse(Member member) {

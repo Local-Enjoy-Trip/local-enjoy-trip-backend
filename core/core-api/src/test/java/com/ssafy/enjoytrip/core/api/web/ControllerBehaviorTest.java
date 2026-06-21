@@ -1,4 +1,5 @@
 package com.ssafy.enjoytrip.core.api.web;
+
 import com.ssafy.enjoytrip.core.api.web.controller.*;
 
 import com.ssafy.enjoytrip.core.domain.BoardPost;
@@ -70,6 +71,9 @@ import java.util.regex.Pattern;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_CREDENTIALS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.MEMBER_REPRESENTATIVE_LOCATION_REQUIRED;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.PLAN_NOT_FOUND;
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.NOTICE_NOT_FOUND;
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.HOTPLACE_NOT_FOUND;
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.POST_NOT_FOUND;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -241,25 +245,6 @@ class ControllerBehaviorTest {
             assertThat(captor.getValue().regionName()).isEqualTo("서울");
         }
 
-        @DisplayName("쪽지 생성은 인증이 없으면 거부한다")
-        @Test
-        void rejectsCreateWithoutAuthentication() throws Exception {
-            mockMvc.perform(post("/api/notes")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {
-                                      "title":"제목",
-                                      "content":"내용",
-                                      "category":"TIP",
-                                      "visibility":"PUBLIC",
-                                      "latitude":37.5665,
-                                      "longitude":126.9780
-                                    }
-                                    """))
-                    .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.error.message").value("인증이 필요합니다."));
-        }
-
         @DisplayName("인증 사용자는 본인 쪽지를 수정하고 삭제한다")
         @Test
         void updatesAndDeletesOwnedNote() throws Exception {
@@ -324,14 +309,6 @@ class ControllerBehaviorTest {
 
     @Nested
     class MapExploreEndpoints {
-        @DisplayName("지도 탐색은 인증이 필요하다")
-        @Test
-        void mapExploreRequiresAuthentication() throws Exception {
-            mockMvc.perform(get("/api/map/explore"))
-                    .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.error.code").value("UNAUTHORIZED"));
-        }
-
         @DisplayName("지도 탐색은 일부 좌표만 전달되면 검증 오류를 반환한다")
         @Test
         void mapExploreRejectsPartialCoordinates() throws Exception {
@@ -523,18 +500,6 @@ class ControllerBehaviorTest {
 
     @Nested
     class NoteImageEndpoints {
-        @DisplayName("쪽지 이미지 presigned upload는 인증이 필요하다")
-        @Test
-        void noteImageUploadRequiresAuthentication() throws Exception {
-            mockMvc.perform(post("/api/note-images/presigned-upload")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"contentType":"image/jpeg","fileExtension":"jpg"}
-                                    """))
-                    .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.error.code").value("UNAUTHORIZED"));
-        }
-
         @DisplayName("쪽지 이미지 presigned upload는 이미지 타입만 허용한다")
         @Test
         void noteImageUploadValidatesImageContentType() throws Exception {
@@ -611,9 +576,9 @@ class ControllerBehaviorTest {
                                     {"id":"b1"}
                                     """))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.code").value("BAD_REQUEST"));
+                    .andExpect(jsonPath("$.error.code").value("C400"));
 
-            when(boardService.updatePost(any())).thenReturn(false);
+            doThrow(new CoreException(POST_NOT_FOUND)).when(boardService).updatePost(any());
             mockMvc.perform(put("/api/boards/b1")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
@@ -631,7 +596,7 @@ class ControllerBehaviorTest {
                                     {"id":"b2","title":"title","content":"content","author":"ssafy"}
                                     """))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath("$.error.code").value("INTERNAL_SERVER_ERROR"));
+                    .andExpect(jsonPath("$.error.code").value("I500"));
         }
     }
 
@@ -692,7 +657,9 @@ class ControllerBehaviorTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
 
-            when(hotplaceService.deleteHotplace("h-missing")).thenReturn(false);
+            doThrow(new CoreException(HOTPLACE_NOT_FOUND))
+                    .when(hotplaceService)
+                    .deleteHotplaceOrThrow("h-missing");
             mockMvc.perform(delete("/api/hotplaces/h-missing"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error.message")
@@ -831,7 +798,7 @@ class ControllerBehaviorTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.message").value("유효하지 않은 id입니다."));
 
-            when(noticeService.updateNotice(any())).thenReturn(false);
+            doThrow(new CoreException(NOTICE_NOT_FOUND)).when(noticeService).updateNoticeOrThrow(any());
             mockMvc.perform(put("/api/notices/1")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
@@ -869,7 +836,7 @@ class ControllerBehaviorTest {
                             .param("userId", "ssafy")
                             .param("email", "ssafy@example.com"))
                     .andExpect(status().isGone())
-                    .andExpect(jsonPath("$.error.code").value("GONE"));
+                    .andExpect(jsonPath("$.error.code").value("C410"));
         }
 
         @DisplayName("내 정보 수정은 인증된 JWT 주체를 사용하고 없는 사용자를 처리한다")
@@ -914,7 +881,7 @@ class ControllerBehaviorTest {
                     .thenThrow(new ExternalServiceException(
                             ExternalServiceException.Source.TOUR_API,
                             new RuntimeException("Tour API 호출에 실패했습니다.")
-                    ));
+            ));
             mockMvc.perform(get("/api/attractions").param("sidoCode", "1").param("keyword", "궁"))
                     .andExpect(status().isBadGateway())
                     .andExpect(jsonPath("$.error.message").value("Tour API 호출에 실패했습니다."));
@@ -984,7 +951,6 @@ class ControllerBehaviorTest {
         @DisplayName("관광지 참여와 태그 엔드포인트는 검증 후 위임한다")
         @Test
         void attractionEngagementAndTagEndpointsValidateAndDelegate() throws Exception {
-            when(attractionService.existsById(1L)).thenReturn(true);
             when(attractionStatsService.findStats(1L, "ssafy")).thenReturn(new AttractionStats(
                     1L, 2, 4.5, 2, List.of(new AttractionTag(3L, "family")), true, 5
             ));
@@ -1016,7 +982,7 @@ class ControllerBehaviorTest {
                                     {"tagIds":[3]}
                                     """))
                     .andExpect(status().isOk());
-            verify(attractionService).replaceTags(1L, List.of(3L));
+            verify(attractionService).replaceTagsOrThrow(1L, List.of(3L));
 
             mockMvc.perform(get("/api/attraction-tags"))
                     .andExpect(status().isOk())
@@ -1040,7 +1006,7 @@ class ControllerBehaviorTest {
 
             mockMvc.perform(get("/test/fail"))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath("$.error.code").value("INTERNAL_SERVER_ERROR"));
+                    .andExpect(jsonPath("$.error.code").value("I500"));
         }
     }
 

@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.core.domain;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.ACCESS_DENIED;
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.PLAN_ACCESS_DENIED;
 
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 
@@ -62,7 +62,7 @@ public record TravelPlan(
 
     public void requireOwnedBy(String userId) {
         if (!this.userId.equals(userId)) {
-            throw new CoreException(ACCESS_DENIED);
+            throw new CoreException(PLAN_ACCESS_DENIED);
         }
     }
 

@@ -1,6 +1,9 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.HOTPLACE_NOT_FOUND;
+
 import com.ssafy.enjoytrip.core.domain.Hotplace;
+import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.HotplaceRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.HotplaceMapper;
 import java.util.List;
@@ -59,6 +62,13 @@ public class HotplaceService {
                 hotplace.description(),
                 hotplace.photo()
         ));
+    }
+
+    @Transactional
+    public void deleteHotplaceOrThrow(String id) {
+        if (!deleteHotplace(id)) {
+            throw new CoreException(HOTPLACE_NOT_FOUND);
+        }
     }
 
     @Transactional

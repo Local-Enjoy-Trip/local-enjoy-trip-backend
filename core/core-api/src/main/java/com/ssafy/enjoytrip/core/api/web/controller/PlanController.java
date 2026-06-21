@@ -1,6 +1,5 @@
 package com.ssafy.enjoytrip.core.api.web.controller;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.PLAN_NOT_FOUND;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
@@ -12,7 +11,6 @@ import com.ssafy.enjoytrip.core.api.web.dto.response.PlanResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.PlansResponse;
 import com.ssafy.enjoytrip.core.domain.TravelPlan;
 import com.ssafy.enjoytrip.core.domain.service.PlanService;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -52,8 +50,7 @@ public class PlanController implements PlanApi {
     public ApiResponse<PlanResponse> findOne(
             @PathVariable @NotBlank String id
     ) {
-        return success(toResponse(service.findPlan(id.strip())
-                .orElseThrow(() -> new CoreException(PLAN_NOT_FOUND))));
+        return success(toResponse(service.findRequiredPlan(id.strip())));
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)

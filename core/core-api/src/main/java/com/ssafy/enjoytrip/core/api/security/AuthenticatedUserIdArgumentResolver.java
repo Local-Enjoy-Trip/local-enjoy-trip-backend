@@ -1,9 +1,7 @@
 package com.ssafy.enjoytrip.core.api.security;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.AUTHENTICATION_REQUIRED;
-
-import com.ssafy.enjoytrip.core.support.error.CoreException;
 import org.springframework.core.MethodParameter;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -16,6 +14,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 @Component
 public class AuthenticatedUserIdArgumentResolver implements HandlerMethodArgumentResolver {
+    private static final String AUTHENTICATION_REQUIRED_MESSAGE = "인증이 필요합니다.";
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -48,9 +47,8 @@ public class AuthenticatedUserIdArgumentResolver implements HandlerMethodArgumen
 
     private static String unauthenticatedValue(AuthenticatedUserId.Unauthenticated policy) {
         return switch (policy) {
-            case THROW -> throw new CoreException(AUTHENTICATION_REQUIRED);
+            case THROW -> throw new AuthenticationCredentialsNotFoundException(AUTHENTICATION_REQUIRED_MESSAGE);
             case NULL -> null;
-            case BLANK -> "";
         };
     }
 }

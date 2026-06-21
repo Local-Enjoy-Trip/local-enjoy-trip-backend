@@ -1,13 +1,10 @@
 package com.ssafy.enjoytrip.core.api.web.controller;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_ID;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_ALREADY_EXISTS;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_NOT_FOUND;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.AttractionTag;
 import com.ssafy.enjoytrip.core.domain.service.AttractionService;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
+import com.ssafy.enjoytrip.core.support.error.exception.ClientInputException;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.AttractionTagApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.TagRequest;
@@ -43,10 +40,7 @@ public class AttractionTagController implements AttractionTagApi {
     @Override
     public ApiResponse<AttractionTagsResponse> create(@Valid @RequestBody TagRequest request) {
         String name = request.normalizedName();
-        if (tagNameExists(null, name)) {
-            throw new CoreException(TAG_ALREADY_EXISTS);
-        }
-        AttractionTag tag = service.insertTag(name);
+        AttractionTag tag = service.createTagOrThrow(name);
         return success(new AttractionTagsResponse(List.of(tag)));
     }
 
@@ -55,12 +49,7 @@ public class AttractionTagController implements AttractionTagApi {
     public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody TagRequest request) {
         requireId(id);
         String name = request.normalizedName();
-        if (tagNameExists(id, name)) {
-            throw new CoreException(TAG_ALREADY_EXISTS);
-        }
-        if (!service.updateTag(id, name)) {
-            throw new CoreException(TAG_NOT_FOUND);
-        }
+        service.updateTagOrThrow(id, name);
         return success();
     }
 
@@ -68,20 +57,13 @@ public class AttractionTagController implements AttractionTagApi {
     @Override
     public ApiResponse<Void> delete(@PathVariable Long id) {
         requireId(id);
-        if (!service.deleteTag(id)) {
-            throw new CoreException(TAG_NOT_FOUND);
-        }
+        service.deleteTagOrThrow(id);
         return success();
-    }
-
-    private boolean tagNameExists(Long currentId, String name) {
-        return service.findAllTags().stream()
-                .anyMatch(tag -> tag.name().equals(name) && !tag.id().equals(currentId));
     }
 
     private static void requireId(Long id) {
         if (id == null || id <= 0) {
-            throw new CoreException(INVALID_ID);
+            throw new ClientInputException("유효하지 않은 id입니다.");
         }
     }
 }

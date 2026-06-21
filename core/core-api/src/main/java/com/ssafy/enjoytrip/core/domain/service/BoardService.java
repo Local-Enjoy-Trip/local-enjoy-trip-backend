@@ -1,6 +1,9 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.POST_NOT_FOUND;
+
 import com.ssafy.enjoytrip.core.domain.BoardPost;
+import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.BoardPostRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.BoardPostMapper;
 import java.util.List;
@@ -31,21 +34,21 @@ public class BoardService {
     }
 
     @Transactional
-    public boolean updatePost(BoardPost post) {
+    public void updatePost(BoardPost post) {
         BoardPostRecord record = boardPostMapper.findById(post.id());
         if (record == null) {
-            return false;
+            throw new CoreException(POST_NOT_FOUND);
         }
         record.update(post.title(), post.content());
-        return boardPostMapper.update(record) > 0;
+        boardPostMapper.update(record);
     }
 
     @Transactional
-    public boolean deletePost(String id) {
+    public void deletePost(String id) {
         if (boardPostMapper.existsById(id) <= 0) {
-            return false;
+            throw new CoreException(POST_NOT_FOUND);
         }
-        return boardPostMapper.deleteById(id) > 0;
+        boardPostMapper.deleteById(id);
     }
 
     private static String stringValue(Object value) {

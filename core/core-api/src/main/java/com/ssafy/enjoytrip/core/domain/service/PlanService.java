@@ -58,6 +58,10 @@ public class PlanService {
                 .toList();
     }
 
+    public TravelPlan findRequiredPlan(String id) {
+        return findPlan(id).orElseThrow(() -> new CoreException(PLAN_NOT_FOUND));
+    }
+
     public Optional<TravelPlan> findPlan(String id) {
         return Optional.ofNullable(planMapper.findById(id))
                 .map(record -> new TravelPlan(
@@ -180,7 +184,7 @@ public class PlanService {
     }
 
     private TravelPlan requireOwnedPlan(String planId, String authenticatedUserId) {
-        TravelPlan plan = findPlan(planId).orElseThrow(() -> new CoreException(PLAN_NOT_FOUND));
+        TravelPlan plan = findRequiredPlan(planId);
         plan.requireOwnedBy(authenticatedUserId);
         return plan;
     }

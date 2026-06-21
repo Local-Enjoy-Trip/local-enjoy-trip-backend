@@ -1,9 +1,13 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_ALREADY_EXISTS;
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_NOT_FOUND;
+
 import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.AttractionStats;
 import com.ssafy.enjoytrip.core.domain.AttractionTag;
 import com.ssafy.enjoytrip.core.domain.NearbyAttractionCandidate;
+import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.domain.PopularAttraction;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
@@ -69,10 +73,6 @@ public class AttractionService {
         return findNearbyAttractionCandidates(condition, userId);
     }
 
-    public boolean existsById(Long attractionId) {
-        return attractionId != null && attractionMapper.existsById(attractionId) > 0;
-    }
-
     private Map<Long, Long> findPopularityFavoriteCounts(List<NearbyAttractionCandidate> candidates) {
         return attractionMapper.findPopularityFavoriteCounts(candidates.stream()
                         .map(candidate -> candidate.attraction().id())
@@ -115,25 +115,45 @@ public class AttractionService {
                 .toList();
     }
 
+    public AttractionTag createTagOrThrow(String name) {
+        requireTagNameAvailable(null, name);
+        return insertTag(name);
+    }
+
     public AttractionTag insertTag(String name) {
         AttractionTagRecord record = attractionMapper.insertTag(name);
         return new AttractionTag(record.id(), record.name());
+    }
+
+    public void updateTagOrThrow(Long tagId, String name) {
+        requireTagNameAvailable(tagId, name);
+        if (!updateTag(tagId, name)) {
+            throw new CoreException(TAG_NOT_FOUND);
+        }
     }
 
     public boolean updateTag(Long tagId, String name) {
         return attractionMapper.updateTag(tagId, name) > 0;
     }
 
+    public void deleteTagOrThrow(Long tagId) {
+        if (!deleteTag(tagId)) {
+            throw new CoreException(TAG_NOT_FOUND);
+        }
+    }
+
     public boolean deleteTag(Long tagId) {
         return attractionMapper.deleteTag(tagId) > 0;
     }
 
+    public void replaceTagsOrThrow(Long attractionId, List<Long> tagIds) {
+        if (!replaceTags(attractionId, tagIds)) {
+            throw new CoreException(TAG_NOT_FOUND);
+        }
+    }
+
     @Transactional
     public boolean replaceTags(Long attractionId, List<Long> tagIds) {
-        if (attractionId == null || attractionMapper.existsById(attractionId) <= 0) {
-            return false;
-        }
-
         List<Long> normalized = tagIds.stream().distinct().toList();
         if (!normalized.isEmpty() && attractionMapper.countTagsByIds(normalized) != normalized.size()) {
             return false;
@@ -145,6 +165,14 @@ public class AttractionService {
         }
 
         return true;
+    }
+
+    private void requireTagNameAvailable(Long currentId, String name) {
+        boolean exists = findAllTags().stream()
+                .anyMatch(tag -> tag.name().equals(name) && !tag.id().equals(currentId));
+        if (exists) {
+            throw new CoreException(TAG_ALREADY_EXISTS);
+        }
     }
 
 

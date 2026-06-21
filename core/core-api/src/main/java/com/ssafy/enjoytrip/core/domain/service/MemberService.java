@@ -2,6 +2,7 @@ package com.ssafy.enjoytrip.core.domain.service;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.EMAIL_ALREADY_EXISTS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_CREDENTIALS;
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.MEMBER_ACCESS_DENIED;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_ALREADY_EXISTS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_NOT_FOUND;
 
@@ -25,6 +26,12 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final MemberMapper memberMapper;
     private final AuthLogMapper authLogMapper;
+
+    public void requireSameUser(String targetUserId, String authenticatedUserId) {
+        if (!targetUserId.equals(authenticatedUserId)) {
+            throw new CoreException(MEMBER_ACCESS_DENIED);
+        }
+    }
 
     public List<Member> findAllUsers() {
         return memberMapper.findAllOrderByCreatedAtDesc().stream()

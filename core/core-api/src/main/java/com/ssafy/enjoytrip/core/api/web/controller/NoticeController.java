@@ -1,12 +1,10 @@
 package com.ssafy.enjoytrip.core.api.web.controller;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_ID;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.NOTICE_NOT_FOUND;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.Notice;
 import com.ssafy.enjoytrip.core.domain.service.NoticeService;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
+import com.ssafy.enjoytrip.core.support.error.exception.ClientInputException;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.NoticeApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoticeCreateRequest;
@@ -57,34 +55,29 @@ public class NoticeController implements NoticeApi {
     @Override
     public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody NoticeUpdateRequest request) {
         requireId(id);
-        if (service.updateNotice(new Notice(
+        service.updateNoticeOrThrow(new Notice(
                 id,
                 request.normalizedTitle(),
                 request.normalizedContent(),
                 "",
                 "",
                 ""
-        ))) {
-            return success();
-        }
+        ));
 
-        throw new CoreException(NOTICE_NOT_FOUND);
+        return success();
     }
 
     @DeleteMapping("/{id}")
     @Override
     public ApiResponse<Void> delete(@PathVariable Long id) {
         requireId(id);
-        if (service.deleteNotice(id)) {
-            return success();
-        }
-
-        throw new CoreException(NOTICE_NOT_FOUND);
+        service.deleteNoticeOrThrow(id);
+        return success();
     }
 
     private static void requireId(Long id) {
         if (id == null || id <= 0) {
-            throw new CoreException(INVALID_ID);
+            throw new ClientInputException("유효하지 않은 id입니다.");
         }
     }
 }

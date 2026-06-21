@@ -1,6 +1,9 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.NOTICE_NOT_FOUND;
+
 import com.ssafy.enjoytrip.core.domain.Notice;
+import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.NoticeRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoticeMapper;
 import java.util.List;
@@ -31,6 +34,13 @@ public class NoticeService {
     }
 
     @Transactional
+    public void updateNoticeOrThrow(Notice notice) {
+        if (!updateNotice(notice)) {
+            throw new CoreException(NOTICE_NOT_FOUND);
+        }
+    }
+
+    @Transactional
     public boolean updateNotice(Notice notice) {
         NoticeRecord record = noticeMapper.findById(notice.id());
         if (record == null) {
@@ -38,6 +48,13 @@ public class NoticeService {
         }
         record.update(notice.title(), notice.content());
         return noticeMapper.update(record) > 0;
+    }
+
+    @Transactional
+    public void deleteNoticeOrThrow(Long id) {
+        if (!deleteNotice(id)) {
+            throw new CoreException(NOTICE_NOT_FOUND);
+        }
     }
 
     @Transactional

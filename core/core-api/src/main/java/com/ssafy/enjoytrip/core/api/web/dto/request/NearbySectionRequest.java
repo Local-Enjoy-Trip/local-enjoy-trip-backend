@@ -1,11 +1,8 @@
 package com.ssafy.enjoytrip.core.api.web.dto.request;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_LATITUDE_OR_LONGITUDE;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_REQUEST;
-
 import com.ssafy.enjoytrip.core.domain.query.NearbyNotesCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
+import com.ssafy.enjoytrip.core.support.error.exception.ClientInputException;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -21,6 +18,8 @@ public record NearbySectionRequest(
     private static final double SEOUL_LATITUDE = 37.5665;
     private static final double DEFAULT_RADIUS_METERS = 500.0;
     private static final int DEFAULT_LIMIT = 20;
+    private static final String INVALID_COORDINATES_MESSAGE = "위도 또는 경도가 유효하지 않습니다.";
+    private static final String INVALID_REQUEST_MESSAGE = "유효하지 않은 요청입니다.";
 
     public NearbySearchCondition toCondition() {
         NormalizedNearbySection normalized = normalize();
@@ -46,7 +45,7 @@ public record NearbySectionRequest(
 
     private NormalizedNearbySection normalize() {
         if ((mapX == null) != (mapY == null)) {
-            throw new CoreException(INVALID_LATITUDE_OR_LONGITUDE);
+            throw new ClientInputException(INVALID_COORDINATES_MESSAGE);
         }
 
         double longitude = mapX == null ? SEOUL_LONGITUDE : mapX;
@@ -55,7 +54,7 @@ public record NearbySectionRequest(
         int normalizedLimit = limit == null ? DEFAULT_LIMIT : limit;
 
         if (radiusMeters <= 0 || radiusMeters > 5000 || normalizedLimit <= 0 || normalizedLimit > 50) {
-            throw new CoreException(INVALID_REQUEST);
+            throw new ClientInputException(INVALID_REQUEST_MESSAGE);
         }
 
         return new NormalizedNearbySection(longitude, latitude, radiusMeters, normalizedLimit);
