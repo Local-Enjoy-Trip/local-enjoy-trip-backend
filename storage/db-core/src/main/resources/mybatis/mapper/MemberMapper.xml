@@ -13,7 +13,14 @@
         values (#{userId}, #{name}, #{nickname}, #{email}, #{password}, #{profileImageUrl}, #{representativeLatitude}, #{representativeLongitude}, #{representativeRegionName}, current_timestamp)
     </insert>
     <update id="update">
-        update members set name = #{name}, nickname = #{nickname}, email = #{email}, password = #{password}, profile_image_url = #{profileImageUrl}, representative_latitude = #{representativeLatitude}, representative_longitude = #{representativeLongitude}, representative_region_name = #{representativeRegionName}, updated_at = current_timestamp where user_id = #{userId}
+        update members
+        set nickname = #{nickname},
+            profile_image_url = #{profileImageUrl},
+            representative_latitude = #{representativeLatitude},
+            representative_longitude = #{representativeLongitude},
+            representative_region_name = #{representativeRegionName},
+            updated_at = current_timestamp
+        where user_id = #{userId}
     </update>
     <delete id="deleteByUserId">delete from members where user_id = #{userId}</delete>
 </mapper>

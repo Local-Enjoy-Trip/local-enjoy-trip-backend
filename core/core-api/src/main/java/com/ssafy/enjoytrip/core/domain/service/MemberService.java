@@ -2,7 +2,6 @@ package com.ssafy.enjoytrip.core.domain.service;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.EMAIL_ALREADY_EXISTS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_CREDENTIALS;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.MEMBER_ACCESS_DENIED;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_ALREADY_EXISTS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_NOT_FOUND;
 
@@ -26,12 +25,6 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final MemberMapper memberMapper;
     private final AuthLogMapper authLogMapper;
-
-    public void requireSameUser(String targetUserId, String authenticatedUserId) {
-        if (!targetUserId.equals(authenticatedUserId)) {
-            throw new CoreException(MEMBER_ACCESS_DENIED);
-        }
-    }
 
     public List<Member> findAllUsers() {
         return memberMapper.findAllOrderByCreatedAtDesc().stream()
@@ -127,17 +120,20 @@ public class MemberService {
         authLogMapper.insert(new AuthLogRecord(userId, "LOGOUT"));
     }
 
-    public String findPassword(String userId, String email) {
-        MemberRecord record = memberMapper.findByUserIdAndEmail(userId, email);
-        return record == null ? null : record.getPassword();
-    }
-
     @Transactional
     public void update(Member member) {
-        validateEmailOwner(member);
-        if (!updateMemberRecord(member.withPassword(encodedPasswordWhenPresent(member.password())))) {
+        MemberRecord record = memberMapper.findByUserId(member.userId());
+        if (record == null) {
             throw new CoreException(USER_NOT_FOUND);
         }
+        record.update(
+                member.nickname(),
+                member.profileImageUrl(),
+                member.representativeLatitude(),
+                member.representativeLongitude(),
+                member.representativeRegionName()
+        );
+        memberMapper.update(record);
     }
 
     @Transactional
@@ -173,13 +169,6 @@ public class MemberService {
             throw new CoreException(INVALID_CREDENTIALS);
         }
         return member;
-    }
-
-    private String encodedPasswordWhenPresent(String password) {
-        if (isBlank(password)) {
-            return password;
-        }
-        return passwordEncoder.encode(password);
     }
 
     private Member createOAuthMember(String provider,
@@ -254,28 +243,6 @@ public class MemberService {
                 member.representativeLongitude(),
                 member.representativeRegionName()
         ));
-    }
-
-    private boolean updateMemberRecord(Member member) {
-        MemberRecord record = memberMapper.findByUserId(member.userId());
-        if (record == null) {
-            return false;
-        }
-        record.update(
-                member.name(),
-                member.nickname(),
-                member.email(),
-                member.password(),
-                member.profileImageUrl(),
-                member.representativeLatitude(),
-                member.representativeLongitude(),
-                member.representativeRegionName()
-        );
-        return memberMapper.update(record) > 0;
-    }
-
-    private static boolean isBlank(String value) {
-        return value == null || value.isBlank();
     }
 
     private static String stringValue(Object value) {

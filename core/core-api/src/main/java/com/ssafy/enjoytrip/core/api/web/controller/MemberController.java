@@ -7,7 +7,6 @@ import com.ssafy.enjoytrip.core.domain.service.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
 import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService.PendingOAuthSignup;
-import com.ssafy.enjoytrip.core.support.error.exception.DeprecatedEndpointException;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.MemberApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberLoginRequest;
@@ -26,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -106,24 +104,6 @@ public class MemberController implements MemberApi {
         return success();
     }
 
-    @PostMapping("/password-lookup-requests")
-    @Override
-    public ApiResponse<Void> findPassword() {
-        throw new DeprecatedEndpointException(
-                "비밀번호 찾기는 더 이상 지원하지 않습니다. 비밀번호를 재설정하세요."
-        );
-    }
-
-    @PutMapping("/{userId}")
-    @Override
-    public ApiResponse<Void> update(
-            @PathVariable String userId,
-            @Valid @RequestBody MemberUpdateRequest request,
-            @AuthenticatedUserId String authenticatedUserId
-    ) {
-        return updateAuthenticated(userId, request, authenticatedUserId);
-    }
-
     @GetMapping("/me")
     @Override
     public ApiResponse<UserEnvelopeResponse> me(@AuthenticatedUserId String authenticatedUserId) {
@@ -137,25 +117,12 @@ public class MemberController implements MemberApi {
             @Valid @RequestBody MemberUpdateRequest request,
             @AuthenticatedUserId String authenticatedUserId
     ) {
-        return updateAuthenticated(authenticatedUserId, request, authenticatedUserId);
-    }
-
-    @DeleteMapping("/me")
-    @Override
-    public ApiResponse<Void> deleteMe(@AuthenticatedUserId String authenticatedUserId) {
-        return deleteAuthenticated(authenticatedUserId, authenticatedUserId);
-    }
-
-    private ApiResponse<Void> updateAuthenticated(String userId,
-                                                  MemberUpdateRequest request,
-                                                  String authenticatedUserId) {
-        authorizeUser(userId, authenticatedUserId);
         service.update(new Member(
-                userId,
-                request.normalizedName(),
+                authenticatedUserId,
+                null,
                 request.normalizedNickname(),
-                request.normalizedEmail(),
-                request.normalizedPassword(),
+                null,
+                null,
                 request.normalizedProfileImageUrl(),
                 request.representativeLatitude(),
                 request.representativeLongitude(),
@@ -165,41 +132,23 @@ public class MemberController implements MemberApi {
         return success();
     }
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/me")
     @Override
-    public ApiResponse<Void> delete(@PathVariable String userId, @AuthenticatedUserId String authenticatedUserId) {
-        return deleteAuthenticated(userId, authenticatedUserId);
-    }
-
-    private ApiResponse<Void> deleteAuthenticated(String userId, String authenticatedUserId) {
-        authorizeUser(userId, authenticatedUserId);
-        service.delete(userId);
+    public ApiResponse<Void> deleteMe(@AuthenticatedUserId String authenticatedUserId) {
+        service.delete(authenticatedUserId);
         return success();
-    }
-
-    private void authorizeUser(String userId, String authenticatedUserId) {
-        service.requireSameUser(userId, authenticatedUserId);
     }
 
     private static UserResponse toUserResponse(Member member) {
         return new UserResponse(
                 member.userId(),
                 member.name(),
-                value(member.nickname(), member.name()),
+                member.nickname(),
                 member.email(),
                 member.profileImageUrl(),
                 member.representativeLatitude(),
                 member.representativeLongitude(),
-                member.representativeRegionName(),
-                value(member.createdAt(), "")
+                member.representativeRegionName()
         );
     }
-
-    private static String value(String value, String fallback) {
-        if (value == null) {
-            return fallback;
-        }
-        return value;
-    }
-
 }

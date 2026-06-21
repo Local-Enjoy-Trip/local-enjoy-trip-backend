@@ -20,12 +20,6 @@ public enum ErrorType {
             "대표 동네 위치를 먼저 설정하세요.",
             WARN
     ),
-    MEMBER_ACCESS_DENIED(
-            ErrorCode.M006,
-            HttpStatus.FORBIDDEN,
-            "다른 사용자의 계정에 접근할 수 없습니다.",
-            WARN
-    ),
 
     TAG_NOT_FOUND(ErrorCode.A002, HttpStatus.NOT_FOUND, "태그를 찾을 수 없습니다.", WARN),
     TAG_ALREADY_EXISTS(ErrorCode.A003, HttpStatus.CONFLICT, "이미 존재하는 태그입니다.", WARN),

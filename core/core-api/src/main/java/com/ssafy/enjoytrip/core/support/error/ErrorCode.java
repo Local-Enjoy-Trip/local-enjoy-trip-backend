@@ -6,7 +6,6 @@ public enum ErrorCode {
     M003,
     M004,
     M005,
-    M006,
 
     A002,
     A003,

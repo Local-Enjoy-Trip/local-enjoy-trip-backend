@@ -218,16 +218,47 @@ class RepositoryBackedServicesTest {
             verify(authLogMapper, never()).insert(any());
         }
 
-        @DisplayName("회원 수정은 값이 있는 비밀번호만 인코딩하고 빈 비밀번호는 비워 둔다")
+        @DisplayName("회원 수정은 이메일과 비밀번호를 변경하지 않고 프로필 필드만 변경한다")
         @Test
-        void updateEncodesNonBlankPasswordAndLeavesBlankPasswordBlank() {
-            MemberRecord record = new MemberRecord("ssafy", "SSAFY", null, "old@example.com", "old", "",
-                    null, null, null);
+        void updateDoesNotChangeEmailAndPassword() {
+            MemberRecord record = new MemberRecord(
+                    "ssafy",
+                    "SSAFY",
+                    "기존닉네임",
+                    "old@example.com",
+                    "old",
+                    "https://cdn.example.com/old.png",
+                    37.5665,
+                    126.9780,
+                    "서울 중구"
+            );
             when(mapper.findByUserId("ssafy")).thenReturn(record);
             when(mapper.update(record)).thenReturn(1);
 
-            service.update(new Member("ssafy", "SSAFY", "ssafy@example.com", "new-secret", ""));
-            assertThat(passwordEncoder.matches("new-secret", record.getPassword())).isTrue();
+            service.update(new Member(
+                    "ssafy",
+                    "Changed Name",
+                    "동네핀러",
+                    "new@example.com",
+                    "new-secret",
+                    "https://cdn.example.com/profile.png",
+                    null,
+                    null,
+                    null,
+                    ""
+            ));
+            assertThat(record.getName()).isEqualTo("SSAFY");
+            assertThat(record.getEmail()).isEqualTo("old@example.com");
+            assertThat(record.getPassword()).isEqualTo("old");
+            assertThat(record.getNickname()).isEqualTo("동네핀러");
+            assertThat(record.getProfileImageUrl()).isEqualTo("https://cdn.example.com/profile.png");
+
+            service.update(new Member("ssafy", null, null, null, null, null, null, null, null, ""));
+            assertThat(record.getNickname()).isNull();
+            assertThat(record.getProfileImageUrl()).isNull();
+            assertThat(record.getRepresentativeLatitude()).isNull();
+            assertThat(record.getRepresentativeLongitude()).isNull();
+            assertThat(record.getRepresentativeRegionName()).isNull();
 
             when(mapper.findByUserId("missing")).thenReturn(null);
             Member missing = new Member("missing", "SSAFY", "ssafy@example.com", " ", "");

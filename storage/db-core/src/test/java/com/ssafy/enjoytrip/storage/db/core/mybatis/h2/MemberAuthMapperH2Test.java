@@ -36,10 +36,7 @@ class MemberAuthMapperH2Test extends H2MapperTestSupport {
         memberMapper.insert(record);
         MemberRecord saved = memberMapper.findByUserId(userId);
         saved.update(
-                "회원수정",
                 "nickname",
-                userId + "-updated@example.com",
-                "encoded-password-2",
                 null,
                 37.5700,
                 126.9820,

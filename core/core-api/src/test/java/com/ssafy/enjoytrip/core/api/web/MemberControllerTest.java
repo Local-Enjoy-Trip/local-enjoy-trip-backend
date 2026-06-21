@@ -1,7 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.EMAIL_ALREADY_EXISTS;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.MEMBER_ACCESS_DENIED;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_ALREADY_EXISTS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -9,7 +8,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -232,6 +230,8 @@ class MemberControllerTest {
                         .content("""
                                 {
                                   "nickname": "동네핀러",
+                                  "email": "changed@example.com",
+                                  "password": "new-secret1",
                                   "profileImageUrl": "https://cdn.example.com/profile.png",
                                   "representativeLatitude": 37.5665,
                                   "representativeLongitude": 126.9780,
@@ -244,7 +244,10 @@ class MemberControllerTest {
         verify(memberService).update(memberCaptor.capture());
         Member member = memberCaptor.getValue();
         assertThat(member.userId()).isEqualTo("ssafy");
+        assertThat(member.name()).isNull();
         assertThat(member.nickname()).isEqualTo("동네핀러");
+        assertThat(member.email()).isNull();
+        assertThat(member.password()).isNull();
         assertThat(member.profileImageUrl()).isEqualTo("https://cdn.example.com/profile.png");
         assertThat(member.representativeLatitude()).isEqualTo(37.5665);
         assertThat(member.representativeLongitude()).isEqualTo(126.9780);
@@ -264,36 +267,6 @@ class MemberControllerTest {
                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
-    }
-
-    @DisplayName("내 정보 수정은 다른 사용자 토큰을 거부한다")
-    @Test
-    void updateRejectsDifferentUserToken() throws Exception {
-        doThrow(new CoreException(MEMBER_ACCESS_DENIED))
-                .when(memberService)
-                .requireSameUser("other", "ssafy");
-
-        mockMvc.perform(put("/api/members/other")
-                        .principal(jwtPrincipal("ssafy"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name": "Other"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
-    }
-
-    @DisplayName("회원 삭제는 다른 사용자 토큰을 거부한다")
-    @Test
-    void deleteRejectsDifferentUserToken() throws Exception {
-        doThrow(new CoreException(MEMBER_ACCESS_DENIED))
-                .when(memberService)
-                .requireSameUser("other", "ssafy");
-
-        mockMvc.perform(delete("/api/members/other")
-                        .principal(jwtPrincipal("ssafy")))
-                .andExpect(status().isForbidden());
     }
 
     private static String signupJson(String userId, String name, String email, String password) {
