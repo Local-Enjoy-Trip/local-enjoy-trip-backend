@@ -52,22 +52,6 @@ tasks.register("bootRunOtel", tasks.named("bootRun").get().class) {
     jvmArgs = otelJvmArgs("enjoytrip-core-api")
 }
 
-tasks.register("bootRunWorker", tasks.named("bootRun").get().class) {
-    group = "application"
-    description = "Runs the core-api embedded background worker entrypoint."
-    mainClass = "com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication"
-    classpath = sourceSets.main.runtimeClasspath
-}
-
-tasks.register("bootRunWorkerOtel", tasks.named("bootRun").get().class) {
-    group = "application"
-    description = "Runs the core-api embedded background worker entrypoint with the OpenTelemetry Java agent."
-    dependsOn tasks.named("copyOpenTelemetryJavaAgent")
-    mainClass = "com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication"
-    classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = otelJvmArgs("enjoytrip-core-worker")
-}
-
 ext {
     snippetsDir = file("build/generated-snippets")
 }

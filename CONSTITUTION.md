@@ -21,15 +21,14 @@
 프로젝트는 monolithic core-api 전환 구조를 기준으로 `core:core-api`, `core:core-enum`,
 `storage:db-core`, `external`, `batch` 경계를 유지한다.
 
-- `core:core-api`: Spring Boot HTTP/API executable이자 background worker entrypoint를 함께 소유하는 주 실행 모듈.
+- `core:core-api`: Spring Boot HTTP/API executable이자 scheduled/background job 코드를 함께 소유하는 주 실행 모듈.
   - HTTP/API 코드는 `com.ssafy.enjoytrip.core.api.web.*` 아래에 둔다.
-  - Scheduled/background worker ingress는 `com.ssafy.enjoytrip.core.api.worker.*` 아래에 둔다.
+  - Scheduled/background job 코드는 별도 runtime profile이나 별도 background entrypoint 없이 일반 API runtime context에서 실행한다.
   - domain model, service/application logic, support contract를 소유한다.
   - API-facing outbound client는 `external`이 공개한 concrete client와 neutral result DTO를 service 경계에서 직접 사용한다.
   - database access는 `storage:db-core`의 MyBatis mapper와 storage Record contract를 service 경계에서 직접 사용한다.
-  - 기본 API main class는 `com.ssafy.enjoytrip.EnjoyTripApplication`이다.
-  - worker main class는 `com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication`이다.
-    worker entrypoint는 별도 Spring profile을 활성화하지 않고 `WebApplicationType.NONE`으로 실행한다.
+  - 기본이자 유일한 core-api main class는 `com.ssafy.enjoytrip.EnjoyTripApplication`이다.
+  - 별도 background 전용 Spring profile, profile-specific yml, 전용 main class, 전용 bootRun task를 두지 않는다.
 - `core:core-enum`: `core-api`와 `db-core`가 함께 참조해야 하는 enum만 소유한다.
 - `storage:db-core`: MyBatis mapper/XML/type handler, storage Record contract, persistence infrastructure, Flyway migration만
   소유한다.
@@ -43,13 +42,13 @@
 
 - `settings.gradle`에 `app`, `app:web`, `app:worker` include를 되살리는 것 금지.
 - `app/**` 아래에 새 source/resource/build script를 두는 것 금지.
-- `core-api`의 controller/API/REST Docs/REST response DTO 코드와 worker ingress 코드를 같은 package에 섞는 것 금지.
-- `com.ssafy.enjoytrip.core.api.web.*`에서 scheduled worker, background-only retry/error handler
+- `core-api`의 controller/API/REST Docs/REST response DTO 코드와 background job 코드를 같은 package에 섞는 것 금지.
+- `com.ssafy.enjoytrip.core.api.web.*`에서 scheduled/background job, background-only retry/error handler
   infrastructure를 소유하는 것 금지.
 - `com.ssafy.enjoytrip.core.api.worker.*`에서 controller, OpenAPI contract, REST Docs, web DTO, REST response envelope를
   소유하는 것 금지.
-- Controller 또는 worker ingress가 repository를 직접 호출하는 것 금지.
-- `storage:db-core`가 web/controller, worker ingress, domain service/application flow, external API client를 소유하는 것 금지.
+- Controller 또는 background job이 repository를 직접 호출하는 것 금지.
+- `storage:db-core`가 web/controller, background job, domain service/application flow, external API client를 소유하는 것 금지.
 - `core:core-enum`에 enum 외 application/domain behavior를 넣는 것 금지.
 - API-facing outbound client를 위해 `core-api`가 interface/port/gateway 계약을 새로 소유하고 `external`이 구현하게 만드는 구조 금지. `core-api` service는 `external` concrete client/result DTO를 직접 사용하고 service call path에서 domain model로 직접 매핑한다.
 
@@ -59,10 +58,10 @@
 core-api web controller -> core-api service -> storage Record/MyBatis
 ```
 
-기본 worker 흐름:
+기본 background job 흐름:
 
 ```text
-core-api worker ingress -> core-api service/processor -> storage Record/MyBatis
+core-api scheduled/background job -> core-api service/processor -> storage Record/MyBatis
 ```
 
 ## 3. 구체 운영 규칙은 RULES.md에 둔다

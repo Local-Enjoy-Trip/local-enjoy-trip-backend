@@ -20,15 +20,15 @@ The project is organized around the monolithic `core-api` target shape plus lowe
 
 - `core:core-api`: primary Spring Boot executable module.
   - API entrypoint: `com.ssafy.enjoytrip.EnjoyTripApplication`.
-  - Worker entrypoint: `com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication`.
   - HTTP/API code lives under `com.ssafy.enjoytrip.core.api.web.*`.
-  - Kafka/Scheduled/background worker ingress lives under `com.ssafy.enjoytrip.core.api.worker.*`.
+  - Scheduled/background job code runs in the general API runtime context; do not add a separate runtime
+    profile, profile-specific yml, background-only main class, or background-only bootRun task.
   - Domain models, application services, and support contracts live here; database access uses storage Record/MyBatis types directly.
   - API-facing concrete outbound integration clients and neutral result DTOs live in `external`; `core-api` depends on `external` directly and maps external results to domain models at the service call path. Batch-only embedding clients are compiled in `batch`; the `external` module must not depend on `core-api` or `core`.
   - `:core:core-api:check` is the primary executable-module verification command.
 - `core:core-enum`: enum-only shared module for values used by both `core-api` and `db-core`.
 - `storage:db-core`: storage Record contracts, MyBatis mapper interfaces/XML/type handlers, Flyway migrations, and database configuration.
-  - Do not place web/controller, worker ingress, domain service, or external API client code here.
+  - Do not place web/controller, background job ingress, domain service, or external API client code here.
 - `external`: independent module with no `core-api` or `core` dependency. API-facing third-party concrete clients, configuration, and neutral result DTOs live here; batch-only embedding clients live in `batch`.
 - `batch`: separate batch runtime. Batch job ingress, parameter parsing, batch-only services, and batch-only outbound clients stay in `batch`.
 
@@ -41,21 +41,21 @@ Default request flow:
 core-api web controller -> core-api service -> storage Record/MyBatis
 ```
 
-Default worker flow:
+Default background job flow:
 
 ```text
-core-api worker ingress -> core-api service/processor -> storage Record/MyBatis
+core-api scheduled/background job -> core-api service/processor -> storage Record/MyBatis
 ```
 
 Layering rules:
 
 - Controllers should be thin. They translate HTTP requests into service calls and return HTTP responses.
 - Controllers must use named request/response DTO objects. Do not use `Map`, `Map.of(...)`, `@RequestParam Map`, `@RequestBody Map`, or `ApiResponse<Map<...>>` for controller request/response contracts.
-- Worker ingress should only translate runtime messages/events into service or processor calls.
-- Web packages must not own Kafka listener, scheduled worker, or background-only retry/error handler code.
-- Worker packages must not own controllers, OpenAPI contracts, REST Docs, web DTOs, or REST response envelopes.
-- Controllers and workers must not call persistence/MyBatis mappers directly.
-- Services may import storage Record/MyBatis types; web controllers and worker ingress must not call storage/MyBatis mappers directly.
+- Scheduled/background job ingress should only translate runtime events into service or processor calls.
+- Web packages must not own Kafka listener, scheduled/background job, or background-only retry/error handler code.
+- Background job packages must not own controllers, OpenAPI contracts, REST Docs, web DTOs, or REST response envelopes.
+- Controllers and background job ingress must not call persistence/MyBatis mappers directly.
+- Services may import storage Record/MyBatis types; web controllers and background job ingress must not call storage/MyBatis mappers directly.
 - Core-api services use `external` concrete client/result DTO types directly for API-facing outbound integrations. Do not add core-owned outbound interface/port/gateway contracts for `external` to implement.
 - When services convert storage Records into core domain models, instantiate the domain model directly with `new` at the
   service call path for one-off conversions. If the same long storage Record -> domain model conversion repeats inside

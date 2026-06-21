@@ -63,15 +63,9 @@
 `EnjoyTripApplication`은 root package `com.ssafy.enjoytrip`에 둔다. 기본 component scan이
 `core.api`, `core.domain`, `storage.db.core` 하위 package를 모두 포함하므로 별도 `scanBasePackages`를 두지 않는다.
 
-Worker runtime은 같은 Gradle module 안의 별도 main class로 둔다.
-
-```text
-com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication
-```
-
-`bootJar`/`bootRun`의 기본 main class는 API entrypoint로 고정하고, worker 실행은
-`:core:core-api:bootRunWorker` task를 사용한다. worker entrypoint는 Spring profile을
-활성화하지 않고 non-web runtime으로 실행한다.
+이후 단일 런타임 방향으로 정리하면서 별도 background main class와 전용 bootRun task는 제거했다.
+Scheduled/background job은 일반 `core-api` API runtime context에서 실행하며, 별도 runtime profile이나
+profile-specific yml을 두지 않는다.
 
 ### 2. `db-core` 실제 source/resource 구성
 

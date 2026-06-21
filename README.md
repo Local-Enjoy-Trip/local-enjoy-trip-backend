@@ -2,11 +2,10 @@
 
 ## 구조
 
-- `core/core-api`: Spring Boot 주 실행 모듈. HTTP/API entrypoint와 worker entrypoint를 함께 소유한다.
+- `core/core-api`: Spring Boot 주 실행 모듈. 단일 API entrypoint에서 HTTP/API와 scheduled/background job을 함께 실행한다.
   - API main: `com.ssafy.enjoytrip.EnjoyTripApplication`
-  - Worker main: `com.ssafy.enjoytrip.core.api.worker.EnjoyTripWorkerApplication`
   - Web/API 코드는 `com.ssafy.enjoytrip.core.api.web.*`에 둔다.
-  - Scheduled/background worker 코드는 `com.ssafy.enjoytrip.core.api.worker.*`에 둔다.
+  - Scheduled/background job 코드는 별도 runtime profile이나 별도 main 없이 일반 API runtime context에서 실행한다.
 - `core/core-enum`: `core-api`와 `storage/db-core`가 공유하는 enum 전용 모듈.
 - `storage/db-core`: MyBatis mapper/XML, storage Record, Flyway migration 인프라.
 - `core`: Gradle namespace parent for `core-api` and `core-enum`; no source-bearing legacy core module.
@@ -15,7 +14,7 @@
 - `batch`: 수동/offline Spring Batch runtime.
 - `support/logging`, `support/monitoring`: runtime support resources used by active runtimes. Auth support is absorbed into `core-api`; `support/auth` is removed.
 
-`backend/` 래퍼 디렉터리는 제거했다. 새 코드는 프로젝트 루트의 위 모듈 아래에 둔다. Web package는 worker-only Scheduled 코드를 소유하지 않고, worker package는 controller/OpenAPI/REST Docs/DTO/response envelope를 소유하지 않는다.
+`backend/` 래퍼 디렉터리는 제거했다. 새 코드는 프로젝트 루트의 위 모듈 아래에 둔다. Web package는 background-only Scheduled 코드를 소유하지 않고, background job package는 controller/OpenAPI/REST Docs/DTO/response envelope를 소유하지 않는다.
 
 ## API
 
@@ -75,22 +74,14 @@ API 실행:
 .\gradlew :core:core-api:bootRun
 ```
 
-Worker 실행:
-
-```powershell
-.\gradlew :core:core-api:bootRunWorker
-```
-
 OpenTelemetry Java agent로 로컬 관측 실행:
 
 ```powershell
 .\gradlew :core:core-api:bootRunOtel
-.\gradlew :core:core-api:bootRunWorkerOtel
 ```
 
 위 태스크는 `infra/agent/opentelemetry-javaagent.jar`를 자동으로 준비하고 기본 OTLP endpoint를
-`http://localhost:4318`로 사용한다. IntelliJ에서는 `.run/Core API OTel.run.xml` 또는
-`.run/Core Worker OTel.run.xml` 실행 구성을 선택한다.
+`http://localhost:4318`로 사용한다. IntelliJ에서는 `.run/Core API OTel.run.xml` 실행 구성을 선택한다.
 
 빌드/검증:
 
