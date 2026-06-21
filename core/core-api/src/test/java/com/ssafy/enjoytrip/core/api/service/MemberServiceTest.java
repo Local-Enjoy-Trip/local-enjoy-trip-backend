@@ -1,7 +1,7 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.EMAIL_ALREADY_EXISTS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_CREDENTIALS;
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_ALREADY_EXISTS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,8 +40,7 @@ class MemberServiceTest {
     @DisplayName("회원가입은 BCrypt 비밀번호를 db-core MemberRecord로 저장한다")
     @Test
     void signupStoresBcryptPassword() {
-        when(memberMapper.existsByUserId("ssafy")).thenReturn(0);
-        when(memberMapper.existsByEmail("ssafy@example.com")).thenReturn(0);
+        when(memberMapper.existsByUserIdOrEmail("ssafy", "ssafy@example.com")).thenReturn(0);
 
         service.signup(new Member("ssafy", "SSAFY", "ssafy@example.com", "secret", ""));
 
@@ -52,15 +51,14 @@ class MemberServiceTest {
         assertThat(passwordEncoder.matches("secret", saved.getPassword())).isTrue();
     }
 
-    @DisplayName("회원가입은 중복 이메일을 거부한다")
+    @DisplayName("회원가입은 이미 존재하는 사용자 정보를 거부한다")
     @Test
-    void signupRejectsDuplicateEmail() {
-        when(memberMapper.existsByUserId("ssafy")).thenReturn(0);
-        when(memberMapper.existsByEmail("ssafy@example.com")).thenReturn(1);
+    void signupRejectsExistingMember() {
+        when(memberMapper.existsByUserIdOrEmail("ssafy", "ssafy@example.com")).thenReturn(1);
 
         assertThatThrownBy(() -> service.signup(new Member("ssafy", "SSAFY", "ssafy@example.com", "secret", "")))
                 .isInstanceOfSatisfying(CoreException.class,
-                        exception -> assertThat(exception.errorType()).isEqualTo(EMAIL_ALREADY_EXISTS));
+                        exception -> assertThat(exception.errorType()).isEqualTo(USER_ALREADY_EXISTS));
 
         verify(memberMapper, never()).insert(any());
     }
@@ -121,8 +119,7 @@ class MemberServiceTest {
     @DisplayName("OAuth 회원가입은 이름과 닉네임을 분리해 저장한다")
     @Test
     void oauthSignupStoresNicknameSeparatelyFromName() {
-        when(memberMapper.findByEmail("google@example.com")).thenReturn(null);
-        when(memberMapper.existsByUserId("google_123")).thenReturn(0);
+        when(memberMapper.existsByUserIdOrEmail("google_123", "google@example.com")).thenReturn(0);
 
         Member member = service.signupWithOAuth("google", "123", "google@example.com", "김구글", "트래블러");
 
@@ -133,5 +130,24 @@ class MemberServiceTest {
         assertThat(member.nickname()).isEqualTo("트래블러");
         assertThat(saved.getName()).isEqualTo("김구글");
         assertThat(saved.getNickname()).isEqualTo("트래블러");
+    }
+
+    @DisplayName("OAuth 회원가입은 이미 존재하는 사용자 정보를 로그인 처리하지 않고 거부한다")
+    @Test
+    void oauthSignupRejectsExistingMember() {
+        when(memberMapper.existsByUserIdOrEmail("google_123", "google@example.com")).thenReturn(1);
+
+        assertThatThrownBy(() -> service.signupWithOAuth(
+                "google",
+                "123",
+                "google@example.com",
+                "김구글",
+                "트래블러"
+        ))
+                .isInstanceOfSatisfying(CoreException.class,
+                        exception -> assertThat(exception.errorType()).isEqualTo(USER_ALREADY_EXISTS));
+
+        verify(memberMapper, never()).insert(any());
+        verify(authLogMapper, never()).insert(any());
     }
 }

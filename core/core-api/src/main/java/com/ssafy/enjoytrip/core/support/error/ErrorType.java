@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 public enum ErrorType {
     USER_NOT_FOUND(ErrorCode.M001, HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.", WARN),
     USER_ALREADY_EXISTS(ErrorCode.M002, HttpStatus.CONFLICT, "이미 존재하는 사용자입니다.", WARN),
-    EMAIL_ALREADY_EXISTS(ErrorCode.M003, HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.", WARN),
     INVALID_CREDENTIALS(
             ErrorCode.M004,
             HttpStatus.UNAUTHORIZED,

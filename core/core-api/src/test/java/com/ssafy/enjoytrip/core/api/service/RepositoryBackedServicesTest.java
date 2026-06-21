@@ -176,7 +176,7 @@ class RepositoryBackedServicesTest {
         @DisplayName("회원가입은 중복 사용자를 등록하지 않는다")
         @Test
         void signupDoesNotInsertDuplicateUser() {
-            when(mapper.existsByUserId("ssafy")).thenReturn(1);
+            when(mapper.existsByUserIdOrEmail("ssafy", "ssafy@example.com")).thenReturn(1);
 
             Member duplicate = new Member("ssafy", "SSAFY", "ssafy@example.com", "secret", "");
 

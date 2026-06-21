@@ -3,7 +3,6 @@ package com.ssafy.enjoytrip.core.support.error;
 public enum ErrorCode {
     M001,
     M002,
-    M003,
     M004,
     M005,
 

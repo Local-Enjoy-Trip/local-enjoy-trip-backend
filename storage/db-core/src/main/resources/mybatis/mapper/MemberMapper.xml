@@ -5,9 +5,13 @@
     <select id="findAllOrderByCreatedAtDesc" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">select <include refid="columns"/> from members order by created_at desc</select>
     <select id="findByUserId" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">select <include refid="columns"/> from members where user_id = #{userId}</select>
     <select id="findByEmail" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">select <include refid="columns"/> from members where email = #{email}</select>
-    <select id="findByUserIdAndEmail" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">select <include refid="columns"/> from members where user_id = #{userId} and email = #{email}</select>
     <select id="existsByUserId" resultType="int">select count(*) from members where user_id = #{userId}</select>
-    <select id="existsByEmail" resultType="int">select count(*) from members where email = #{email}</select>
+    <select id="existsByUserIdOrEmail" resultType="int">
+        select count(*)
+        from members
+        where user_id = #{userId}
+           or email = #{email}
+    </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into members (user_id, name, nickname, email, password, profile_image_url, representative_latitude, representative_longitude, representative_region_name, created_at)
         values (#{userId}, #{name}, #{nickname}, #{email}, #{password}, #{profileImageUrl}, #{representativeLatitude}, #{representativeLongitude}, #{representativeRegionName}, current_timestamp)

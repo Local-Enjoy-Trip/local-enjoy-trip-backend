@@ -1,6 +1,5 @@
 package com.ssafy.enjoytrip.core.api.web;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.EMAIL_ALREADY_EXISTS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_ALREADY_EXISTS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -76,21 +75,21 @@ class MemberControllerTest {
                 .andExpect(status().isConflict());
     }
 
-    @DisplayName("회원가입은 필드와 이메일 중복을 검증한다")
+    @DisplayName("회원가입은 필드와 중복 회원을 검증한다")
     @Test
-    void signupValidatesFieldsAndEmailDuplicates() throws Exception {
+    void signupValidatesFieldsAndDuplicateMember() throws Exception {
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(signupJson("bad id", "SSAFY", "ssafy@example.com", "secret123")))
                 .andExpect(status().isBadRequest());
 
-        doThrow(new CoreException(EMAIL_ALREADY_EXISTS)).when(memberService).signup(any(Member.class));
+        doThrow(new CoreException(USER_ALREADY_EXISTS)).when(memberService).signup(any(Member.class));
 
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(signupJson("ssafy", "SSAFY", "ssafy@example.com", "secret123")))
+                .content(signupJson("ssafy", "SSAFY", "ssafy@example.com", "secret123")))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error.message").value("이미 사용 중인 이메일입니다."));
+                .andExpect(jsonPath("$.error.message").value("이미 존재하는 사용자입니다."));
     }
 
     @DisplayName("로그인은 JWT 토큰을 반환한다")
@@ -191,6 +190,34 @@ class MemberControllerTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.code").value("C400"));
+    }
+
+    @DisplayName("OAuth 회원가입은 이미 존재하는 사용자 정보이면 충돌로 응답한다")
+    @Test
+    void oauthSignupRejectsExistingMember() throws Exception {
+        when(oauthSignupTicketService.verify("ticket"))
+                .thenReturn(new PendingOAuthSignup("google", "123", "google@example.com", "Google Name"));
+        doThrow(new CoreException(USER_ALREADY_EXISTS))
+                .when(memberService)
+                .signupWithOAuth(
+                        "google",
+                        "123",
+                        "google@example.com",
+                        "김구글",
+                        "트래블러"
+                );
+
+        mockMvc.perform(post("/api/members/oauth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "oauthSignupTicket": "ticket",
+                                  "name": "김구글",
+                                  "nickname": "트래블러"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error.message").value("이미 존재하는 사용자입니다."));
     }
 
     @DisplayName("내 정보 조회는 인증된 사용자를 반환한다")

@@ -1,6 +1,5 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.EMAIL_ALREADY_EXISTS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_CREDENTIALS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_ALREADY_EXISTS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_NOT_FOUND;
@@ -104,7 +103,16 @@ public class MemberService {
 
     @Transactional
     public Member loginWithOAuth(String provider, String providerUserId, String email, String name) {
-        return loginOrCreateOAuthMember(provider, providerUserId, email, name, name);
+        Member existing = findByEmail(email);
+        if (existing != null) {
+            authLogMapper.insert(new AuthLogRecord(existing.userId(), "LOGIN"));
+            return existing;
+        }
+
+        Member member = createOAuthMember(provider, providerUserId, email, name, name);
+        saveMember(member);
+        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
+        return member;
     }
 
     @Transactional
@@ -113,7 +121,11 @@ public class MemberService {
                                   String email,
                                   String name,
                                   String nickname) {
-        return loginOrCreateOAuthMember(provider, providerUserId, email, name, nickname);
+        Member member = createOAuthMember(provider, providerUserId, email, name, nickname);
+        validateNewMember(member);
+        saveMember(member);
+        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
+        return member;
     }
 
     public void logout(String userId) {
@@ -145,21 +157,8 @@ public class MemberService {
     }
 
     private void validateNewMember(Member member) {
-        if (memberMapper.existsByUserId(member.userId()) > 0) {
+        if (memberMapper.existsByUserIdOrEmail(member.userId(), member.email()) > 0) {
             throw new CoreException(USER_ALREADY_EXISTS);
-        }
-        if (memberMapper.existsByEmail(member.email()) > 0) {
-            throw new CoreException(EMAIL_ALREADY_EXISTS);
-        }
-    }
-
-    private void validateEmailOwner(Member member) {
-        if (member.email() == null) {
-            return;
-        }
-        Member owner = findByEmail(member.email());
-        if (owner != null && !owner.userId().equals(member.userId())) {
-            throw new CoreException(EMAIL_ALREADY_EXISTS);
         }
     }
 
@@ -188,23 +187,6 @@ public class MemberService {
                 null,
                 ""
         );
-    }
-
-    private Member loginOrCreateOAuthMember(String provider,
-                                            String providerUserId,
-                                            String email,
-                                            String name,
-                                            String nickname) {
-        Member existing = findByEmail(email);
-        if (existing != null) {
-            authLogMapper.insert(new AuthLogRecord(existing.userId(), "LOGIN"));
-            return existing;
-        }
-
-        Member member = createOAuthMember(provider, providerUserId, email, name, nickname);
-        saveMember(member);
-        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
-        return member;
     }
 
     private String oauthUserId(String provider, String providerUserId) {

@@ -11,11 +11,9 @@ public interface MemberMapper {
 
     MemberRecord findByEmail(String email);
 
-    MemberRecord findByUserIdAndEmail(@Param("userId") String userId, @Param("email") String email);
-
     int existsByUserId(String userId);
 
-    int existsByEmail(String email);
+    int existsByUserIdOrEmail(@Param("userId") String userId, @Param("email") String email);
 
     int insert(MemberRecord record);
 
