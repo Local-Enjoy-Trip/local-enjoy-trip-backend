@@ -1,8 +1,6 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.EMAIL_ALREADY_EXISTS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_CREDENTIALS;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.MEMBER_ACCESS_DENIED;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_ALREADY_EXISTS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_NOT_FOUND;
 
@@ -26,12 +24,6 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final MemberMapper memberMapper;
     private final AuthLogMapper authLogMapper;
-
-    public void requireSameUser(String targetUserId, String authenticatedUserId) {
-        if (!targetUserId.equals(authenticatedUserId)) {
-            throw new CoreException(MEMBER_ACCESS_DENIED);
-        }
-    }
 
     public List<Member> findAllUsers() {
         return memberMapper.findAllOrderByCreatedAtDesc().stream()
@@ -105,7 +97,6 @@ public class MemberService {
     @Transactional
     public Member login(String userId, String password) {
         Member member = findAuthenticatableMember(userId, password);
-        upgradeLegacyPasswordIfNeeded(member, password);
         authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
         return member;
     }
@@ -118,32 +109,43 @@ public class MemberService {
             return existing;
         }
 
-        Member member = createOAuthMember(provider, providerUserId, email, name);
+        Member member = createOAuthMember(provider, providerUserId, email, name, name);
         saveMember(member);
         authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
         return member;
     }
 
     @Transactional
-    public Member signupWithOAuth(String provider, String providerUserId, String email, String name) {
-        return loginWithOAuth(provider, providerUserId, email, name);
+    public Member signupWithOAuth(String provider,
+                                  String providerUserId,
+                                  String email,
+                                  String name,
+                                  String nickname) {
+        Member member = createOAuthMember(provider, providerUserId, email, name, nickname);
+        validateNewMember(member);
+        saveMember(member);
+        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
+        return member;
     }
 
     public void logout(String userId) {
         authLogMapper.insert(new AuthLogRecord(userId, "LOGOUT"));
     }
 
-    public String findPassword(String userId, String email) {
-        MemberRecord record = memberMapper.findByUserIdAndEmail(userId, email);
-        return record == null ? null : record.getPassword();
-    }
-
     @Transactional
     public void update(Member member) {
-        validateEmailOwner(member);
-        if (!updateMemberRecord(member.withPassword(encodedPasswordWhenPresent(member.password())))) {
+        MemberRecord record = memberMapper.findByUserId(member.userId());
+        if (record == null) {
             throw new CoreException(USER_NOT_FOUND);
         }
+        record.update(
+                member.nickname(),
+                member.profileImageUrl(),
+                member.representativeLatitude(),
+                member.representativeLongitude(),
+                member.representativeRegionName()
+        );
+        memberMapper.update(record);
     }
 
     @Transactional
@@ -155,69 +157,34 @@ public class MemberService {
     }
 
     private void validateNewMember(Member member) {
-        if (memberMapper.existsByUserId(member.userId()) > 0) {
+        if (memberMapper.existsByUserIdOrEmail(member.userId(), member.email()) > 0) {
             throw new CoreException(USER_ALREADY_EXISTS);
-        }
-        if (memberMapper.existsByEmail(member.email()) > 0) {
-            throw new CoreException(EMAIL_ALREADY_EXISTS);
-        }
-    }
-
-    private void validateEmailOwner(Member member) {
-        if (member.email() == null) {
-            return;
-        }
-        Member owner = findByEmail(member.email());
-        if (owner != null && !owner.userId().equals(member.userId())) {
-            throw new CoreException(EMAIL_ALREADY_EXISTS);
         }
     }
 
     private Member findAuthenticatableMember(String userId, String password) {
         Member member = findByUserId(userId);
-        if (member == null || !matchesPassword(password, member.password())) {
+        if (member == null || !passwordEncoder.matches(password, member.password())) {
             throw new CoreException(INVALID_CREDENTIALS);
         }
         return member;
     }
 
-    private void upgradeLegacyPasswordIfNeeded(Member member, String password) {
-        if (shouldUpgradePassword(member.password())) {
-            updateMemberRecord(member.withPassword(passwordEncoder.encode(password)));
-        }
-    }
-
-    private String encodedPasswordWhenPresent(String password) {
-        if (isBlank(password)) {
-            return password;
-        }
-        return passwordEncoder.encode(password);
-    }
-
-    private boolean matchesPassword(String rawPassword, String storedPassword) {
-        if (isBlank(rawPassword) || isBlank(storedPassword)) {
-            return false;
-        }
-        if (isEncodedPassword(storedPassword)) {
-            return passwordEncoder.matches(rawPassword, storedPassword);
-        }
-        return storedPassword.equals(rawPassword);
-    }
-
-    private boolean shouldUpgradePassword(String password) {
-        return !isBlank(password) && !isEncodedPassword(password);
-    }
-
-    private boolean isEncodedPassword(String password) {
-        return password != null && password.startsWith("$2");
-    }
-
-    private Member createOAuthMember(String provider, String providerUserId, String email, String name) {
+    private Member createOAuthMember(String provider,
+                                     String providerUserId,
+                                     String email,
+                                     String name,
+                                     String nickname) {
         return new Member(
                 oauthUserId(provider, providerUserId),
                 name,
+                nickname,
                 email,
                 passwordEncoder.encode(UUID.randomUUID().toString()),
+                null,
+                null,
+                null,
+                null,
                 ""
         );
     }
@@ -258,28 +225,6 @@ public class MemberService {
                 member.representativeLongitude(),
                 member.representativeRegionName()
         ));
-    }
-
-    private boolean updateMemberRecord(Member member) {
-        MemberRecord record = memberMapper.findByUserId(member.userId());
-        if (record == null) {
-            return false;
-        }
-        record.update(
-                member.name(),
-                member.nickname(),
-                member.email(),
-                member.password(),
-                member.profileImageUrl(),
-                member.representativeLatitude(),
-                member.representativeLongitude(),
-                member.representativeRegionName()
-        );
-        return memberMapper.update(record) > 0;
-    }
-
-    private static boolean isBlank(String value) {
-        return value == null || value.isBlank();
     }
 
     private static String stringValue(Object value) {

@@ -36,10 +36,7 @@ class MemberAuthMapperH2Test extends H2MapperTestSupport {
         memberMapper.insert(record);
         MemberRecord saved = memberMapper.findByUserId(userId);
         saved.update(
-                "회원수정",
                 "nickname",
-                userId + "-updated@example.com",
-                "encoded-password-2",
                 null,
                 37.5700,
                 126.9820,
@@ -47,13 +44,30 @@ class MemberAuthMapperH2Test extends H2MapperTestSupport {
         );
         memberMapper.update(saved);
 
-        MemberRecord updated = memberMapper.findByEmail(userId + "-updated@example.com");
+        MemberRecord updated = memberMapper.findByEmail(userId + "@example.com");
 
         assertThat(memberMapper.existsByUserId(userId)).isEqualTo(1);
-        assertThat(memberMapper.existsByEmail(userId + "-updated@example.com")).isEqualTo(1);
-        assertThat(memberMapper.findByUserIdAndEmail(userId, userId + "-updated@example.com")).isNotNull();
-        assertThat(updated.getName()).isEqualTo("회원수정");
+        assertThat(memberMapper.existsByUserIdOrEmail(userId, "new@example.com")).isEqualTo(1);
+        assertThat(memberMapper.existsByUserIdOrEmail("new-user", userId + "@example.com")).isEqualTo(1);
+        assertThat(updated.getName()).isEqualTo("회원");
         assertThat(updated.getNickname()).isEqualTo("nickname");
+        assertThat(updated.getPassword()).isEqualTo("encoded-password");
+        assertThat(updated.getRepresentativeLatitude()).isEqualTo(37.5700);
+        assertThat(updated.getRepresentativeLongitude()).isEqualTo(126.9820);
+        assertThat(updated.getRepresentativeRegionName()).isEqualTo("서울 종로구");
+
+        updated.update(null, null, null, null, null);
+        memberMapper.update(updated);
+        MemberRecord cleared = memberMapper.findByUserId(userId);
+
+        assertThat(cleared.getName()).isEqualTo("회원");
+        assertThat(cleared.getEmail()).isEqualTo(userId + "@example.com");
+        assertThat(cleared.getPassword()).isEqualTo("encoded-password");
+        assertThat(cleared.getNickname()).isNull();
+        assertThat(cleared.getProfileImageUrl()).isNull();
+        assertThat(cleared.getRepresentativeLatitude()).isNull();
+        assertThat(cleared.getRepresentativeLongitude()).isNull();
+        assertThat(cleared.getRepresentativeRegionName()).isNull();
         assertThat(memberMapper.findAllOrderByCreatedAtDesc())
                 .extracting(MemberRecord::getUserId)
                 .contains(userId);

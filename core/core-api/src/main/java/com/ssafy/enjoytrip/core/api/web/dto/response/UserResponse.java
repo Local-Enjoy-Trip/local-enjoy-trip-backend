@@ -8,7 +8,6 @@ public record UserResponse(
         String profileImageUrl,
         Double representativeLatitude,
         Double representativeLongitude,
-        String representativeRegionName,
-        String createdAt
+        String representativeRegionName
 ) {
 }

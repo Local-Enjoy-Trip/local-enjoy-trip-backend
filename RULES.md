@@ -193,7 +193,6 @@ Migration 작성 시:
 ```java
 public Member login(String userId, String password) {
     Member member = findAuthenticatableMember(userId, password);
-    upgradeLegacyPasswordIfNeeded(member, password);
     recordLogin(member);
     return member;
 }

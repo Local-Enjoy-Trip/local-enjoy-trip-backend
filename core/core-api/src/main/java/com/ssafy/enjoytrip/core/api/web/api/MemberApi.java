@@ -3,6 +3,7 @@ package com.ssafy.enjoytrip.core.api.web.api;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberLoginRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberLogoutRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.MemberOAuthSignupRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberSignupRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberUpdateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.LoginResponse;
@@ -94,37 +95,33 @@ public interface MemberApi {
     })
     ApiResponse<LoginResponse> login(MemberLoginRequest request);
 
+    @Operation(
+            summary = "OAuth 회원가입 완료",
+            description = "OAuth 로그인 콜백에서 받은 가입 티켓과 이름, 닉네임으로 회원을 생성하고 JWT access token을 발급합니다.",
+            operationId = "completeOAuthSignup"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "OAuth 회원가입 완료",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = LoginResponse.class)
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "필수 필드 누락 또는 유효하지 않은 가입 티켓"
+            )
+    })
+    ApiResponse<LoginResponse> completeOAuthSignup(MemberOAuthSignupRequest request);
+
     @Operation(summary = "로그아웃", description = "`userId` 기준으로 로그아웃 처리를 수행합니다.", operationId = "logout")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그아웃 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "userId 누락")
     })
     ApiResponse<Void> logout(MemberLogoutRequest request);
-
-    @Operation(summary = "비밀번호 찾기 종료 안내", description = "비밀번호 찾기 기능은 더 이상 지원하지 않아 410 Gone을 반환합니다.", operationId = "findPassword")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "410", description = "비밀번호 찾기 기능 제거")
-    })
-    ApiResponse<Void> findPassword();
-
-    @Operation(
-            summary = "회원 수정",
-            description = "경로의 `userId` 회원 정보와 닉네임, 프로필 이미지, 대표 위치를 수정합니다. 인증된 사용자 본인만 수정할 수 있습니다.",
-            operationId = "updateMember",
-            security = @SecurityRequirement(name = "bearerAuth")
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원 수정 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "userId 누락"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "다른 사용자 계정 접근"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
-    })
-    ApiResponse<Void> update(
-            @Parameter(description = "수정할 회원 ID", example = "ssafy", required = true) String userId,
-            MemberUpdateRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
-    );
 
     @Operation(summary = "내 정보 조회", description = "JWT subject에 해당하는 회원 정보를 조회합니다.", operationId = "me", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
@@ -136,14 +133,13 @@ public interface MemberApi {
 
     @Operation(
             summary = "내 정보 수정",
-            description = "JWT subject에 해당하는 내 회원 정보와 닉네임, 프로필 이미지, 대표 위치를 수정합니다.",
+            description = "JWT subject에 해당하는 회원의 닉네임, 프로필 이미지, 대표 위치를 수정합니다.",
             operationId = "updateMe",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "내 정보 수정 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "다른 사용자 계정 접근"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
     })
     ApiResponse<Void> updateMe(MemberUpdateRequest request, @Parameter(hidden = true) String authenticatedUserId);
@@ -156,17 +152,4 @@ public interface MemberApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
     })
     ApiResponse<Void> deleteMe(@Parameter(hidden = true) String authenticatedUserId);
-
-    @Operation(summary = "회원 삭제", description = "경로의 `userId` 회원을 삭제합니다. 인증된 사용자 본인만 삭제할 수 있습니다.", operationId = "deleteMember", security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원 삭제 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "userId 누락"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "다른 사용자 계정 접근"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
-    })
-    ApiResponse<Void> delete(
-            @Parameter(description = "삭제할 회원 ID", example = "ssafy", required = true) String userId,
-            @Parameter(hidden = true) String authenticatedUserId
-    );
 }

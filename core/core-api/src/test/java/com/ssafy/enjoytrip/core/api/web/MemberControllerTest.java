@@ -1,7 +1,5 @@
 package com.ssafy.enjoytrip.core.api.web;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.EMAIL_ALREADY_EXISTS;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.MEMBER_ACCESS_DENIED;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_ALREADY_EXISTS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -9,7 +7,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -78,21 +75,21 @@ class MemberControllerTest {
                 .andExpect(status().isConflict());
     }
 
-    @DisplayName("회원가입은 필드와 이메일 중복을 검증한다")
+    @DisplayName("회원가입은 필드와 중복 회원을 검증한다")
     @Test
-    void signupValidatesFieldsAndEmailDuplicates() throws Exception {
+    void signupValidatesFieldsAndDuplicateMember() throws Exception {
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(signupJson("bad id", "SSAFY", "ssafy@example.com", "secret123")))
                 .andExpect(status().isBadRequest());
 
-        doThrow(new CoreException(EMAIL_ALREADY_EXISTS)).when(memberService).signup(any(Member.class));
+        doThrow(new CoreException(USER_ALREADY_EXISTS)).when(memberService).signup(any(Member.class));
 
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(signupJson("ssafy", "SSAFY", "ssafy@example.com", "secret123")))
+                .content(signupJson("ssafy", "SSAFY", "ssafy@example.com", "secret123")))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error.message").value("이미 사용 중인 이메일입니다."));
+                .andExpect(jsonPath("$.error.message").value("이미 존재하는 사용자입니다."));
     }
 
     @DisplayName("로그인은 JWT 토큰을 반환한다")
@@ -121,10 +118,28 @@ class MemberControllerTest {
     @DisplayName("OAuth 회원가입은 티켓으로 회원을 만들고 JWT 토큰을 반환한다")
     @Test
     void oauthSignupCreatesMemberFromTicketAndReturnsJwtToken() throws Exception {
-        Member member = new Member("google_123", "트래블러", "google@example.com", "hidden", "2026-05-14 11:00:00");
+        Member member = new Member(
+                "google_123",
+                "김구글",
+                "트래블러",
+                "google@example.com",
+                "hidden",
+                null,
+                null,
+                null,
+                null,
+                "2026-05-14 11:00:00"
+        );
         when(oauthSignupTicketService.verify("ticket"))
                 .thenReturn(new PendingOAuthSignup("google", "123", "google@example.com", "Google Name"));
-        when(memberService.signupWithOAuth("google", "123", "google@example.com", "트래블러")).thenReturn(member);
+        when(memberService.signupWithOAuth(
+                "google",
+                "123",
+                "google@example.com",
+                "김구글",
+                "트래블러"
+        ))
+                .thenReturn(member);
         when(tokenService.issue(member)).thenReturn(new IssuedToken("jwt-token", "Bearer", 7200));
 
         mockMvc.perform(post("/api/members/oauth")
@@ -132,12 +147,14 @@ class MemberControllerTest {
                         .content("""
                                 {
                                   "oauthSignupTicket": "ticket",
-                                  "name": "트래블러"
+                                  "name": "김구글",
+                                  "nickname": "트래블러"
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
-                .andExpect(jsonPath("$.data.user.name").value("트래블러"));
+                .andExpect(jsonPath("$.data.user.name").value("김구글"))
+                .andExpect(jsonPath("$.data.user.nickname").value("트래블러"));
     }
 
     @DisplayName("잘못된 OAuth 가입 티켓은 클라이언트 입력 오류로 응답한다")
@@ -151,12 +168,56 @@ class MemberControllerTest {
                         .content("""
                                 {
                                   "oauthSignupTicket": "broken-ticket",
-                                  "name": "트래블러"
+                                  "name": "김구글",
+                                  "nickname": "트래블러"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.code").value("C400"))
                 .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
+    }
+
+    @DisplayName("OAuth 회원가입은 닉네임을 필수로 요구한다")
+    @Test
+    void oauthSignupRequiresNickname() throws Exception {
+        mockMvc.perform(post("/api/members/oauth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "oauthSignupTicket": "ticket",
+                                  "name": "김구글"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("C400"));
+    }
+
+    @DisplayName("OAuth 회원가입은 이미 존재하는 사용자 정보이면 충돌로 응답한다")
+    @Test
+    void oauthSignupRejectsExistingMember() throws Exception {
+        when(oauthSignupTicketService.verify("ticket"))
+                .thenReturn(new PendingOAuthSignup("google", "123", "google@example.com", "Google Name"));
+        doThrow(new CoreException(USER_ALREADY_EXISTS))
+                .when(memberService)
+                .signupWithOAuth(
+                        "google",
+                        "123",
+                        "google@example.com",
+                        "김구글",
+                        "트래블러"
+                );
+
+        mockMvc.perform(post("/api/members/oauth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "oauthSignupTicket": "ticket",
+                                  "name": "김구글",
+                                  "nickname": "트래블러"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error.message").value("이미 존재하는 사용자입니다."));
     }
 
     @DisplayName("내 정보 조회는 인증된 사용자를 반환한다")
@@ -196,6 +257,8 @@ class MemberControllerTest {
                         .content("""
                                 {
                                   "nickname": "동네핀러",
+                                  "email": "changed@example.com",
+                                  "password": "new-secret1",
                                   "profileImageUrl": "https://cdn.example.com/profile.png",
                                   "representativeLatitude": 37.5665,
                                   "representativeLongitude": 126.9780,
@@ -208,7 +271,10 @@ class MemberControllerTest {
         verify(memberService).update(memberCaptor.capture());
         Member member = memberCaptor.getValue();
         assertThat(member.userId()).isEqualTo("ssafy");
+        assertThat(member.name()).isNull();
         assertThat(member.nickname()).isEqualTo("동네핀러");
+        assertThat(member.email()).isNull();
+        assertThat(member.password()).isNull();
         assertThat(member.profileImageUrl()).isEqualTo("https://cdn.example.com/profile.png");
         assertThat(member.representativeLatitude()).isEqualTo(37.5665);
         assertThat(member.representativeLongitude()).isEqualTo(126.9780);
@@ -228,36 +294,6 @@ class MemberControllerTest {
                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
-    }
-
-    @DisplayName("내 정보 수정은 다른 사용자 토큰을 거부한다")
-    @Test
-    void updateRejectsDifferentUserToken() throws Exception {
-        doThrow(new CoreException(MEMBER_ACCESS_DENIED))
-                .when(memberService)
-                .requireSameUser("other", "ssafy");
-
-        mockMvc.perform(put("/api/members/other")
-                        .principal(jwtPrincipal("ssafy"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name": "Other"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
-    }
-
-    @DisplayName("회원 삭제는 다른 사용자 토큰을 거부한다")
-    @Test
-    void deleteRejectsDifferentUserToken() throws Exception {
-        doThrow(new CoreException(MEMBER_ACCESS_DENIED))
-                .when(memberService)
-                .requireSameUser("other", "ssafy");
-
-        mockMvc.perform(delete("/api/members/other")
-                        .principal(jwtPrincipal("ssafy")))
-                .andExpect(status().isForbidden());
     }
 
     private static String signupJson(String userId, String name, String email, String password) {

@@ -811,9 +811,9 @@ class ControllerBehaviorTest {
 
     @Nested
     class MemberAuthEndpoints {
-        @DisplayName("로그인 실패와 로그아웃 검증 및 비밀번호 조회 종료를 확인한다")
+        @DisplayName("로그인 실패와 로그아웃 검증을 확인한다")
         @Test
-        void loginFailureLogoutValidationAndPasswordLookupGone() throws Exception {
+        void loginFailureAndLogoutValidation() throws Exception {
             doThrow(new CoreException(INVALID_CREDENTIALS)).when(memberService).login("ssafy", "wrong");
 
             mockMvc.perform(post("/api/members/login")
@@ -831,25 +831,19 @@ class ControllerBehaviorTest {
             mockMvc.perform(post("/api/members/logout"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
-
-            mockMvc.perform(post("/api/members/password-lookup-requests")
-                            .param("userId", "ssafy")
-                            .param("email", "ssafy@example.com"))
-                    .andExpect(status().isGone())
-                    .andExpect(jsonPath("$.error.code").value("C410"));
         }
 
-        @DisplayName("내 정보 수정은 인증된 JWT 주체를 사용하고 없는 사용자를 처리한다")
+        @DisplayName("내 정보 수정은 인증된 JWT 주체를 사용하고 계정 필드를 변경하지 않는다")
         @Test
-        void updateMeUsesAuthenticatedJwtSubjectAndHandlesMissingUser() throws Exception {
+        void updateMeUsesAuthenticatedJwtSubjectWithoutAccountFields() throws Exception {
             mockMvc.perform(put("/api/members/me")
                             .principal(jwtPrincipal("ssafy"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
-                                      "name": "SSAFY",
                                       "email": "ssafy@example.com",
-                                      "password": "new-secret1"
+                                      "password": "new-secret1",
+                                      "nickname": "동네핀러"
                                     }
                                     """))
                     .andExpect(status().isOk());
@@ -857,6 +851,10 @@ class ControllerBehaviorTest {
             ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
             verify(memberService).update(captor.capture());
             assertThat(captor.getValue().userId()).isEqualTo("ssafy");
+            assertThat(captor.getValue().name()).isNull();
+            assertThat(captor.getValue().email()).isNull();
+            assertThat(captor.getValue().password()).isNull();
+            assertThat(captor.getValue().nickname()).isEqualTo("동네핀러");
 
             when(memberService.findRequiredByUserId("ghost")).thenThrow(new CoreException(USER_NOT_FOUND));
             mockMvc.perform(get("/api/members/me").principal(jwtPrincipal("ghost")))

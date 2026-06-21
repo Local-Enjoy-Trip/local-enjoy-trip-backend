@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 public enum ErrorType {
     USER_NOT_FOUND(ErrorCode.M001, HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.", WARN),
     USER_ALREADY_EXISTS(ErrorCode.M002, HttpStatus.CONFLICT, "이미 존재하는 사용자입니다.", WARN),
-    EMAIL_ALREADY_EXISTS(ErrorCode.M003, HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.", WARN),
     INVALID_CREDENTIALS(
             ErrorCode.M004,
             HttpStatus.UNAUTHORIZED,
@@ -18,12 +17,6 @@ public enum ErrorType {
             ErrorCode.M005,
             HttpStatus.BAD_REQUEST,
             "대표 동네 위치를 먼저 설정하세요.",
-            WARN
-    ),
-    MEMBER_ACCESS_DENIED(
-            ErrorCode.M006,
-            HttpStatus.FORBIDDEN,
-            "다른 사용자의 계정에 접근할 수 없습니다.",
             WARN
     ),
 
