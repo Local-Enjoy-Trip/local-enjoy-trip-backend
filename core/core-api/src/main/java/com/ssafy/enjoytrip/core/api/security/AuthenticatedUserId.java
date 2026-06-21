@@ -12,7 +12,6 @@ public @interface AuthenticatedUserId {
 
     enum Unauthenticated {
         THROW,
-        NULL,
-        BLANK
+        NULL
     }
 }

@@ -25,7 +25,10 @@ public final class ApiResponse<T> {
     }
 
     public static ApiResponse<Void> fail(ErrorType error) {
-        return new ApiResponse<>(false, null, new ErrorResponse(error.code(), error.message()));
+        return fail(error.code(), error.message());
     }
 
+    public static ApiResponse<Void> fail(ErrorCode code, String message) {
+        return new ApiResponse<>(false, null, new ErrorResponse(code.name(), message));
+    }
 }

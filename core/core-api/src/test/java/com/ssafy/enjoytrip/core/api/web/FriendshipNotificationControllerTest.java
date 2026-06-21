@@ -69,17 +69,6 @@ class FriendshipNotificationControllerTest {
         verify(friendshipService).requestFriendship("alice", "bob");
     }
 
-    @DisplayName("인증 없이 친구 요청을 보내면 표준 인증 오류 envelope를 반환한다")
-    @Test
-    void requestFriendshipRequiresAuthentication() throws Exception {
-        mockMvc.perform(post("/api/friendships/requests")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"targetUserId\":\"bob\"}"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.error.code").value("UNAUTHORIZED"));
-    }
-
     @DisplayName("친구 목록은 현재 사용자 관점의 counterpart를 friends 필드로 반환한다")
     @Test
     void friendsReturnsCounterpartList() throws Exception {

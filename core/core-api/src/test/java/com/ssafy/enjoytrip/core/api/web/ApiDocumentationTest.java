@@ -1,4 +1,5 @@
 package com.ssafy.enjoytrip.core.api.web;
+
 import com.ssafy.enjoytrip.core.api.web.controller.*;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;

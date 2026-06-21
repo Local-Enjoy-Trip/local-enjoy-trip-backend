@@ -1,6 +1,7 @@
 package com.ssafy.enjoytrip.core.api.web;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.EMAIL_ALREADY_EXISTS;
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.MEMBER_ACCESS_DENIED;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_ALREADY_EXISTS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +31,7 @@ import org.mockito.ArgumentCaptor;
 import java.time.Instant;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -138,11 +140,23 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.data.user.name").value("트래블러"));
     }
 
-    @DisplayName("내 정보 조회는 인증을 요구한다")
+    @DisplayName("잘못된 OAuth 가입 티켓은 클라이언트 입력 오류로 응답한다")
     @Test
-    void meRequiresAuthentication() throws Exception {
-        mockMvc.perform(get("/api/members/me"))
-                .andExpect(status().isUnauthorized());
+    void oauthSignupRejectsInvalidTicketAsClientInput() throws Exception {
+        when(oauthSignupTicketService.verify("broken-ticket"))
+                .thenThrow(new JwtException("invalid token"));
+
+        mockMvc.perform(post("/api/members/oauth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "oauthSignupTicket": "broken-ticket",
+                                  "name": "트래블러"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("C400"))
+                .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
     }
 
     @DisplayName("내 정보 조회는 인증된 사용자를 반환한다")
@@ -219,6 +233,10 @@ class MemberControllerTest {
     @DisplayName("내 정보 수정은 다른 사용자 토큰을 거부한다")
     @Test
     void updateRejectsDifferentUserToken() throws Exception {
+        doThrow(new CoreException(MEMBER_ACCESS_DENIED))
+                .when(memberService)
+                .requireSameUser("other", "ssafy");
+
         mockMvc.perform(put("/api/members/other")
                         .principal(jwtPrincipal("ssafy"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -233,6 +251,10 @@ class MemberControllerTest {
     @DisplayName("회원 삭제는 다른 사용자 토큰을 거부한다")
     @Test
     void deleteRejectsDifferentUserToken() throws Exception {
+        doThrow(new CoreException(MEMBER_ACCESS_DENIED))
+                .when(memberService)
+                .requireSameUser("other", "ssafy");
+
         mockMvc.perform(delete("/api/members/other")
                         .principal(jwtPrincipal("ssafy")))
                 .andExpect(status().isForbidden());

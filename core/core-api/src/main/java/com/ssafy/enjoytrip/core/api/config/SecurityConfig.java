@@ -1,16 +1,22 @@
 package com.ssafy.enjoytrip.core.api.config;
 
 import java.io.IOException;
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
-import com.ssafy.enjoytrip.core.support.error.ErrorType;
-import jakarta.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
+
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.ssafy.enjoytrip.core.support.error.ErrorCode;
+import com.ssafy.enjoytrip.core.support.response.ApiResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,8 +34,6 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.SecurityFilterChain;
 
-import java.nio.charset.StandardCharsets;
-
 @Configuration
 @EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
@@ -39,7 +43,8 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http,
                                            ObjectProvider<ClientRegistrationRepository> clientRegistrations,
                                            ObjectProvider<AuthenticationSuccessHandler> successHandler,
-                                           ObjectProvider<AuthenticationFailureHandler> failureHandler)
+                                           ObjectProvider<AuthenticationFailureHandler> failureHandler,
+                                           ObjectMapper objectMapper)
             throws Exception {
         http
                 .cors(Customizer.withDefaults())
@@ -91,11 +96,20 @@ public class SecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint((request, response, exception) ->
-                                writeFailure(response, HttpServletResponse.SC_UNAUTHORIZED,
-                                        ErrorType.AUTHENTICATION_REQUIRED))
-                        .accessDeniedHandler((request, response, exception) ->
-                                writeFailure(response, HttpServletResponse.SC_FORBIDDEN, ErrorType.ACCESS_DENIED))
+                        .authenticationEntryPoint((request, response, exception) -> writeError(
+                                objectMapper,
+                                response,
+                                HttpStatus.UNAUTHORIZED,
+                                ErrorCode.S401,
+                                "인증이 필요합니다."
+                        ))
+                        .accessDeniedHandler((request, response, exception) -> writeError(
+                                objectMapper,
+                                response,
+                                HttpStatus.FORBIDDEN,
+                                ErrorCode.S403,
+                                "접근 권한이 없습니다."
+                        ))
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
@@ -128,12 +142,17 @@ public class SecurityConfig {
         return new SecretKeySpec(properties.secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     }
 
-    private static void writeFailure(HttpServletResponse response, int status, ErrorType error) throws IOException {
-        response.setStatus(status);
+    private static void writeError(
+            ObjectMapper objectMapper,
+            HttpServletResponse response,
+            HttpStatus status,
+            ErrorCode code,
+            String message
+    ) throws IOException {
+        response.setStatus(status.value());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write("""
-                {"success":false,"data":null,"error":{"code":"%s","message":"%s"}}
-                """.formatted(error.code(), error.message()));
+        objectMapper.writeValue(response.getWriter(), ApiResponse.fail(code, message));
     }
+
 }
