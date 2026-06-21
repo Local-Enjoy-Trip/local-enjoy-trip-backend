@@ -10,6 +10,7 @@ import com.ssafy.enjoytrip.core.api.web.api.NoteApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NearbySectionRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.SavedNotesRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NoteResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NotesResponse;
 import jakarta.validation.Valid;
@@ -57,6 +58,33 @@ public class NoteController implements NoteApi {
         service.deleteNote(id, authenticatedUserId);
 
         return success();
+    }
+
+    @PutMapping("/{id}/save")
+    @Override
+    public ApiResponse<Void> save(@PathVariable Long id, @AuthenticatedUserId String authenticatedUserId) {
+        service.addSave(id, authenticatedUserId);
+
+        return success();
+    }
+
+    @DeleteMapping("/{id}/save")
+    @Override
+    public ApiResponse<Void> unsave(@PathVariable Long id, @AuthenticatedUserId String authenticatedUserId) {
+        service.removeSave(id, authenticatedUserId);
+
+        return success();
+    }
+
+    @GetMapping("/saved")
+    @Override
+    public ApiResponse<NotesResponse> saved(
+            @Valid @ModelAttribute SavedNotesRequest request,
+            @AuthenticatedUserId String authenticatedUserId
+    ) {
+        List<Note> notes = service.findSavedNotes(authenticatedUserId, request.normalizedLimit());
+
+        return success(NotesResponse.from(notes));
     }
 
     @GetMapping("/nearby")

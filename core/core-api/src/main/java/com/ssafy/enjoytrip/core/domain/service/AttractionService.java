@@ -4,21 +4,19 @@ import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_ALREADY_EXIST
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_NOT_FOUND;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
-import com.ssafy.enjoytrip.core.domain.AttractionStats;
 import com.ssafy.enjoytrip.core.domain.AttractionTag;
 import com.ssafy.enjoytrip.core.domain.NearbyAttractionCandidate;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.domain.PopularAttraction;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
-import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
+import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,24 +25,23 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AttractionService {
     private final AttractionMapper attractionMapper;
-    private final AttractionStatsReader attractionStatsReader;
     private final AttractionPopularityDeltaCache popularityDeltaCache;
 
-    public List<PopularAttraction> findPopularNearbyAttractions(NearbySearchCondition condition,
-                                                                String userId) {
-        List<NearbyAttractionCandidate> candidates = findNearbyAttractionCandidates(condition, userId);
+    public List<PopularAttraction> findPopularNearbyAttractions(
+            NearbySearchCondition condition,
+            String userId
+    ) {
+        List<NearbyAttractionCandidate> candidates = findNearbyAttractionCandidates(condition, userId, false);
 
         if (candidates.isEmpty()) {
             return List.of();
         }
 
-        Map<Long, Long> popularityCounts = findPopularityFavoriteCounts(candidates);
-
         return candidates.stream()
                 .map(candidate -> new PopularAttraction(
                         candidate.attraction(),
                         candidate.distanceMeters(),
-                        popularityCounts.getOrDefault(candidate.attraction().id(), 0L)
+                        candidate.attraction().favoriteCount() + candidate.attraction().saveCount()
                 ))
                 .sorted(Comparator
                         .comparingLong(PopularAttraction::popularityCount).reversed()
@@ -61,33 +58,22 @@ public class AttractionService {
     }
 
     public List<Attraction> searchAttractions(AttractionSearchCondition condition) {
-        return executeAttractionSearch(condition, "");
+        return executeAttractionSearch(condition, null);
     }
 
     public List<Attraction> searchAttractions(AttractionSearchCondition condition, String userId) {
         return executeAttractionSearch(condition, userId);
     }
 
-    public List<NearbyAttractionCandidate> findNearbyCandidates(NearbySearchCondition condition,
-                                                                String userId) {
-        return findNearbyAttractionCandidates(condition, userId);
-    }
-
-    private Map<Long, Long> findPopularityFavoriteCounts(List<NearbyAttractionCandidate> candidates) {
-        return attractionMapper.findPopularityFavoriteCounts(candidates.stream()
-                        .map(candidate -> candidate.attraction().id())
-                        .toList())
-                .stream()
-                .collect(Collectors.toMap(
-                        AttractionCountRecord::attractionId,
-                        record -> Long.valueOf(record.count())
-                ));
+    public List<NearbyAttractionCandidate> findNearbyCandidates(
+            NearbySearchCondition condition,
+            String userId,
+            boolean savedOnly
+    ) {
+        return findNearbyAttractionCandidates(condition, userId, savedOnly);
     }
 
     public void addFavorite(Long attractionId, String userId) {
-        if (userId == null) {
-            return;
-        }
         if (attractionMapper.insertFavorite(attractionId, userId) > 0) {
             popularityDeltaCache.recordFavoriteDelta(attractionId, 1L);
         }
@@ -101,12 +87,34 @@ public class AttractionService {
         return deleted;
     }
 
-    public void upsertRating(Long attractionId, String userId, int rating) {
-        attractionMapper.upsertRating(attractionId, userId, rating);
+    public void addSave(Long attractionId, String userId) {
+        if (attractionMapper.insertSave(attractionId, userId) > 0) {
+            popularityDeltaCache.recordSaveDelta(attractionId, 1L);
+        }
     }
 
+    public boolean removeSave(Long attractionId, String userId) {
+        boolean deleted = attractionMapper.deleteSave(attractionId, userId) > 0;
+        if (deleted) {
+            popularityDeltaCache.recordSaveDelta(attractionId, -1L);
+        }
+        return deleted;
+    }
+
+    @Transactional
+    public void upsertRating(Long attractionId, String userId, int rating) {
+        attractionMapper.upsertRating(attractionId, userId, rating);
+        attractionMapper.refreshPopularityRatingStats(attractionId);
+    }
+
+    @Transactional
     public boolean removeRating(Long attractionId, String userId) {
-        return attractionMapper.deleteRating(attractionId, userId) > 0;
+        boolean deleted = attractionMapper.deleteRating(attractionId, userId) > 0;
+        if (deleted) {
+            attractionMapper.refreshPopularityRatingStats(attractionId);
+        }
+
+        return deleted;
     }
 
     public List<AttractionTag> findAllTags() {
@@ -175,136 +183,120 @@ public class AttractionService {
         }
     }
 
-
     private List<Attraction> executeAttractionSearch(AttractionSearchCondition condition, String userId) {
-        List<Attraction> attractions = attractionMapper.search(
-                        condition.contentTypeId(),
-                        condition.keyword(),
-                        condition.aroundSearch() ? null : condition.sidoCode(),
-                        condition.aroundSearch() ? null : condition.gugunCode(),
-                        condition.longitude(),
-                        condition.latitude(),
-                        condition.radiusMeters(),
-                        condition.aroundSearch(),
-                        200
-                ).stream()
-                .map(record -> new Attraction(
-                        record.id(),
-                        record.title(),
-                        record.addr1(),
-                        record.addr2(),
-                        record.zipcode(),
-                        record.tel(),
-                        record.firstImage(),
-                        record.firstImage2(),
-                        record.readCount(),
-                        record.sidoCode(),
-                        record.gugunCode(),
-                        record.latitude(),
-                        record.longitude(),
-                        record.mlevel(),
-                        record.contentTypeId(),
-                        record.overview(),
-                        0,
-                        0.0,
-                        0,
-                        List.of(),
-                        false,
-                        null
-                ))
-                .toList();
-        return enrich(attractions, userId);
+        List<AttractionSearchRecord> records = attractionMapper.search(
+                condition.contentTypeId(),
+                condition.keyword(),
+                condition.aroundSearch() ? null : condition.sidoCode(),
+                condition.aroundSearch() ? null : condition.gugunCode(),
+                condition.longitude(),
+                condition.latitude(),
+                condition.radiusMeters(),
+                condition.aroundSearch(),
+                200,
+                userId
+        );
+        return toAttractions(records);
     }
 
-    private List<NearbyAttractionCandidate> findNearbyAttractionCandidates(NearbySearchCondition condition,
-                                                                           String userId) {
+    private List<NearbyAttractionCandidate> findNearbyAttractionCandidates(
+            NearbySearchCondition condition,
+            String userId,
+            boolean savedOnly
+    ) {
         List<AttractionSearchRecord> records = attractionMapper.findNearby(
                 condition.longitude(),
                 condition.latitude(),
                 condition.radiusMeters(),
-                condition.limit()
-        );
-        List<Attraction> enriched = enrich(records.stream()
-                .map(record -> new Attraction(
-                        record.id(),
-                        record.title(),
-                        record.addr1(),
-                        record.addr2(),
-                        record.zipcode(),
-                        record.tel(),
-                        record.firstImage(),
-                        record.firstImage2(),
-                        record.readCount(),
-                        record.sidoCode(),
-                        record.gugunCode(),
-                        record.latitude(),
-                        record.longitude(),
-                        record.mlevel(),
-                        record.contentTypeId(),
-                        record.overview(),
-                        0,
-                        0.0,
-                        0,
-                        List.of(),
-                        false,
-                        null
-                ))
-                .toList(), userId);
-        Map<Long, Double> distanceByAttractionId = records.stream()
-                .collect(Collectors.toMap(
-                        AttractionSearchRecord::id,
-                        AttractionSearchRecord::distanceMeters
-                ));
-
-        return enriched.stream()
-                .map(attraction -> new NearbyAttractionCandidate(
-                        attraction,
-                        distanceByAttractionId.getOrDefault(attraction.id(), 0.0)
-                ))
-                .toList();
-    }
-
-    private List<Attraction> enrich(List<Attraction> attractions, String userId) {
-        if (attractions.isEmpty()) {
-            return attractions;
-        }
-        Map<Long, AttractionStats> stats = attractionStatsReader.findStatsByAttractionId(
-                attractions.stream().map(Attraction::id).toList(),
+                condition.limit(),
+                savedOnly,
                 userId
         );
-        return attractions.stream()
-                .map(attraction -> enrich(attraction, stats.get(attraction.id())))
-                .toList();
+        return toNearbyCandidates(records);
     }
 
-    private static Attraction enrich(Attraction attraction, AttractionStats stats) {
-        if (stats == null) {
-            return attraction;
+    private List<Attraction> toAttractions(List<AttractionSearchRecord> records) {
+        List<Attraction> attractions = new ArrayList<>();
+        List<AttractionSearchRecord> attractionRows = new ArrayList<>();
+        Long currentAttractionId = null;
+
+        for (AttractionSearchRecord record : records) {
+            if (currentAttractionId != null && !Objects.equals(currentAttractionId, record.id())) {
+                attractions.add(toAttraction(attractionRows));
+                attractionRows.clear();
+            }
+            currentAttractionId = record.id();
+            attractionRows.add(record);
         }
+
+        if (!attractionRows.isEmpty()) {
+            attractions.add(toAttraction(attractionRows));
+        }
+
+        return attractions;
+    }
+
+    private List<NearbyAttractionCandidate> toNearbyCandidates(List<AttractionSearchRecord> records) {
+        List<NearbyAttractionCandidate> candidates = new ArrayList<>();
+        List<AttractionSearchRecord> attractionRows = new ArrayList<>();
+        Long currentAttractionId = null;
+
+        for (AttractionSearchRecord record : records) {
+            if (currentAttractionId != null && !Objects.equals(currentAttractionId, record.id())) {
+                candidates.add(toNearbyCandidate(attractionRows));
+                attractionRows.clear();
+            }
+            currentAttractionId = record.id();
+            attractionRows.add(record);
+        }
+
+        if (!attractionRows.isEmpty()) {
+            candidates.add(toNearbyCandidate(attractionRows));
+        }
+
+        return candidates;
+    }
+
+    private NearbyAttractionCandidate toNearbyCandidate(List<AttractionSearchRecord> attractionRows) {
+        AttractionSearchRecord first = attractionRows.get(0);
+        return new NearbyAttractionCandidate(toAttraction(attractionRows), first.distanceMeters() == null ? 0.0 : first.distanceMeters());
+    }
+
+    private Attraction toAttraction(List<AttractionSearchRecord> attractionRows) {
+        AttractionSearchRecord first = attractionRows.get(0);
         return new Attraction(
-                attraction.id(),
-                attraction.title(),
-                attraction.addr1(),
-                attraction.addr2(),
-                attraction.zipcode(),
-                attraction.tel(),
-                attraction.firstImage(),
-                attraction.firstImage2(),
-                attraction.readcount(),
-                attraction.sidoCode(),
-                attraction.gugunCode(),
-                attraction.latitude(),
-                attraction.longitude(),
-                attraction.mlevel(),
-                attraction.contentTypeId(),
-                attraction.overview(),
-                stats.favoriteCount(),
-                stats.ratingAverage(),
-                stats.ratingCount(),
-                stats.tags(),
-                stats.favorited(),
-                stats.myRating()
+                first.id(),
+                first.title(),
+                first.addr1(),
+                first.addr2(),
+                first.zipcode(),
+                first.tel(),
+                first.firstImage(),
+                first.firstImage2(),
+                first.readCount(),
+                first.sidoCode(),
+                first.gugunCode(),
+                first.latitude(),
+                first.longitude(),
+                first.mlevel(),
+                first.contentTypeId(),
+                first.overview(),
+                first.favoriteCount(),
+                first.saveCount(),
+                first.ratingAverage(),
+                first.ratingCount(),
+                toTags(attractionRows),
+                first.favorited(),
+                first.saved(),
+                first.myRating()
         );
+    }
+
+    private List<AttractionTag> toTags(List<AttractionSearchRecord> attractionRows) {
+        return attractionRows.stream()
+                .filter(row -> row.tagId() != null)
+                .map(row -> new AttractionTag(row.tagId(), row.tagName()))
+                .toList();
     }
 
 }

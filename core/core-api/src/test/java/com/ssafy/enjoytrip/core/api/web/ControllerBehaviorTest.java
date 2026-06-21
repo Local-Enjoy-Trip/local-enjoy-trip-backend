@@ -279,6 +279,31 @@ class ControllerBehaviorTest {
             verify(noteService).deleteNote(1L, "ssafy");
         }
 
+        @DisplayName("쪽지 저장과 저장 목록은 인증 사용자 기준으로 위임한다")
+        @Test
+        void noteSaveEndpointsDelegateWithAuthenticatedUser() throws Exception {
+            Note note = note(1L, "writer", "저장한 쪽지", NoteVisibility.PUBLIC);
+            when(noteService.findSavedNotes("ssafy", 30)).thenReturn(List.of(note));
+
+            mockMvc.perform(put("/api/notes/1/save").principal(jwtPrincipal("ssafy")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+            verify(noteService).addSave(1L, "ssafy");
+
+            mockMvc.perform(delete("/api/notes/1/save").principal(jwtPrincipal("ssafy")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+            verify(noteService).removeSave(1L, "ssafy");
+
+            mockMvc.perform(get("/api/notes/saved")
+                            .principal(jwtPrincipal("ssafy"))
+                            .param("limit", "30"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.notes[0].id").value(1))
+                    .andExpect(jsonPath("$.data.notes[0].title").value("저장한 쪽지"));
+            verify(noteService).findSavedNotes("ssafy", 30);
+        }
+
         @DisplayName("주변 쪽지는 서울과 500m 기본값으로 조회하고 목록을 반환한다")
         @Test
         void nearbyNotesUseDefaultSeoulAndRadius() throws Exception {
@@ -386,6 +411,43 @@ class ControllerBehaviorTest {
             );
         }
 
+        @DisplayName("지도 탐색은 SAVED_PLACE 필터를 서비스로 전달한다")
+        @Test
+        void mapExplorePassesSavedPlaceFilterToService() throws Exception {
+            when(mapExploreService.explore(
+                    any(),
+                    any(),
+                    any(),
+                    anyDouble(),
+                    anyInt(),
+                    any(),
+                    any()
+            )).thenReturn(new MapExploreResult(
+                    new MapCenter(126.9780, 37.5665, null, false),
+                    500.0,
+                    50,
+                    MapExploreFilter.SAVED_PLACE,
+                    List.of(),
+                    List.of()
+            ));
+
+            mockMvc.perform(get("/api/map/explore")
+                            .principal(jwtPrincipal("viewer"))
+                            .param("filter", "SAVED_PLACE"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.filter").value("SAVED_PLACE"));
+
+            verify(mapExploreService).explore(
+                    "viewer",
+                    null,
+                    null,
+                    500.0,
+                    50,
+                    MapExploreFilter.SAVED_PLACE,
+                    null
+            );
+        }
+
         @DisplayName("지도 탐색은 장소와 SELF/FRIEND/NONE privacy-projected 쪽지를 반환한다")
         @Test
         void mapExploreReturnsPlaceAndPrivacyProjectedNotePins() throws Exception {
@@ -404,6 +466,8 @@ class ControllerBehaviorTest {
                             "12",
                             24.5,
                             true,
+                            true,
+                            3,
                             4.5,
                             2
                     )),
@@ -915,7 +979,7 @@ class ControllerBehaviorTest {
             Attraction attraction = new Attraction(
                     1L, "경복궁", "서울 종로구", "", "zip", "tel", "image", "image2",
                     7, 1, 2, 37.579617, 126.977041, "6", "12", "overview",
-                    4, 4.5, 2, List.of(), false, null
+                    4, 2, 4.5, 2, List.of(), false, true, null
             );
             when(attractionService.findPopularNearbyAttractions(
                     new NearbySearchCondition(126.9780, 37.5665, 500.0, 20),
@@ -928,6 +992,8 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.attractions[0].id").value(1))
                     .andExpect(jsonPath("$.data.attractions[0].title").value("경복궁"))
                     .andExpect(jsonPath("$.data.attractions[0].favoriteCount").value(4))
+                    .andExpect(jsonPath("$.data.attractions[0].saveCount").value(2))
+                    .andExpect(jsonPath("$.data.attractions[0].saved").value(true))
                     .andExpect(jsonPath("$.data.attractions[0].popularityCount").value(42))
                     .andExpect(jsonPath("$.data.attractions[0].distanceMeters").value(120.5));
 
@@ -950,7 +1016,7 @@ class ControllerBehaviorTest {
         @Test
         void attractionEngagementAndTagEndpointsValidateAndDelegate() throws Exception {
             when(attractionStatsService.findStats(1L, "ssafy")).thenReturn(new AttractionStats(
-                    1L, 2, 4.5, 2, List.of(new AttractionTag(3L, "family")), true, 5
+                    1L, 2, 3, 4.5, 2, List.of(new AttractionTag(3L, "family")), true, true, 5
             ));
             when(attractionService.findAllTags()).thenReturn(List.of(new AttractionTag(3L, "family")));
             when(attractionService.replaceTags(1L, List.of(3L))).thenReturn(true);
@@ -958,6 +1024,14 @@ class ControllerBehaviorTest {
             mockMvc.perform(put("/api/attractions/1/favorite").principal(jwtPrincipal("ssafy")))
                     .andExpect(status().isOk());
             verify(attractionService).addFavorite(1L, "ssafy");
+
+            mockMvc.perform(put("/api/attractions/1/save").principal(jwtPrincipal("ssafy")))
+                    .andExpect(status().isOk());
+            verify(attractionService).addSave(1L, "ssafy");
+
+            mockMvc.perform(delete("/api/attractions/1/save").principal(jwtPrincipal("ssafy")))
+                    .andExpect(status().isOk());
+            verify(attractionService).removeSave(1L, "ssafy");
 
             mockMvc.perform(put("/api/attractions/1/rating")
                             .principal(jwtPrincipal("ssafy"))
@@ -971,6 +1045,8 @@ class ControllerBehaviorTest {
             mockMvc.perform(get("/api/attractions/1/stats").principal(jwtPrincipal("ssafy")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.stats.favoriteCount").value(2))
+                    .andExpect(jsonPath("$.data.stats.saveCount").value(3))
+                    .andExpect(jsonPath("$.data.stats.saved").value(true))
                     .andExpect(jsonPath("$.data.stats.tags[0].name").value("family"));
 
             mockMvc.perform(put("/api/attractions/1/tags")

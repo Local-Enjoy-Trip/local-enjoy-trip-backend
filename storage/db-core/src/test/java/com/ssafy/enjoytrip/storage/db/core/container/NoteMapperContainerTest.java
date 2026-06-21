@@ -76,4 +76,63 @@ class NoteMapperContainerTest extends StorageContainerTestSupport {
         assertThat(noteMapper.softDeleteOwned(saved.getId(), author)).isEqualTo(1);
         assertThat(noteMapper.findById(saved.getId()).getDeletedAt()).isNotNull();
     }
+    @DisplayName("NoteMapper는 저장 목록에서 접근 가능한 active 쪽지만 반환한다")
+    @Test
+    void noteMapperFindsOnlySavedAccessibleActiveNotes() {
+        String viewer = uniqueId("note-save-viewer");
+        String other = uniqueId("note-save-other");
+        seedMember(viewer, viewer + "@example.com");
+        seedMember(other, other + "@example.com");
+        NoteRecord selfPrivate = noteMapper.insert(new NoteRecord(
+                viewer,
+                "내 비공개 저장 쪽지",
+                "내 쪽지는 저장 목록에 보인다",
+                "TIP",
+                "PRIVATE",
+                new BigDecimal("37.5665000"),
+                new BigDecimal("126.9780000"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+        NoteRecord otherPrivate = noteMapper.insert(new NoteRecord(
+                other,
+                "타인 비공개 저장 쪽지",
+                "저장 row가 있어도 보이면 안 된다",
+                "TIP",
+                "PRIVATE",
+                new BigDecimal("37.5666000"),
+                new BigDecimal("126.9781000"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+        NoteRecord deleted = noteMapper.insert(new NoteRecord(
+                viewer,
+                "삭제된 저장 쪽지",
+                "삭제되면 저장 목록에서 제외된다",
+                "TIP",
+                "PUBLIC",
+                new BigDecimal("37.5667000"),
+                new BigDecimal("126.9782000"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+
+        assertThat(noteMapper.existsAccessibleActive(selfPrivate.getId(), viewer)).isEqualTo(1);
+        assertThat(noteMapper.existsAccessibleActive(otherPrivate.getId(), viewer)).isZero();
+        noteMapper.insertSave(selfPrivate.getId(), viewer);
+        noteMapper.insertSave(otherPrivate.getId(), viewer);
+        noteMapper.insertSave(deleted.getId(), viewer);
+        noteMapper.softDeleteOwned(deleted.getId(), viewer);
+
+        List<NoteRecord> saved = noteMapper.findSavedAccessible(viewer, 10);
+
+        assertThat(saved).extracting(NoteRecord::getId).containsExactly(selfPrivate.getId());
+    }
+
 }

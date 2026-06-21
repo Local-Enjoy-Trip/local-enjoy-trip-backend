@@ -97,6 +97,28 @@ public class AttractionController implements AttractionApi {
         return success();
     }
 
+    @PutMapping("/{id}/save")
+    @Override
+    public ApiResponse<Void> save(
+            @PathVariable Long id,
+            @AuthenticatedUserId String authenticatedUserId
+    ) {
+        service.addSave(id, authenticatedUserId);
+
+        return success();
+    }
+
+    @DeleteMapping("/{id}/save")
+    @Override
+    public ApiResponse<Void> unsave(
+            @PathVariable Long id,
+            @AuthenticatedUserId String authenticatedUserId
+    ) {
+        service.removeSave(id, authenticatedUserId);
+
+        return success();
+    }
+
     @PutMapping("/{id}/rating")
     @Override
     public ApiResponse<Void> rate(@PathVariable Long id,

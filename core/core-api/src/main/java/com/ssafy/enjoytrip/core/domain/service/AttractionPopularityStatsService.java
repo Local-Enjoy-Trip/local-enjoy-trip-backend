@@ -1,10 +1,9 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
-import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionPopularityDeltaRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,35 +12,41 @@ import org.springframework.stereotype.Service;
 public class AttractionPopularityStatsService {
     private final AttractionMapper attractionMapper;
 
-    public Map<Long, Long> findPopularityFavoriteCounts(List<Long> attractionIds) {
-        if (attractionIds == null || attractionIds.isEmpty()) {
-            return Map.of();
-        }
-
-        return attractionMapper.findPopularityFavoriteCounts(attractionIds).stream()
-                .collect(Collectors.toMap(
-                        AttractionCountRecord::attractionId,
-                        record -> Long.valueOf(record.count())
-                ));
-    }
-
     public int applyFavoriteDeltas(Map<Long, Long> deltas) {
         if (deltas == null || deltas.isEmpty()) {
             return 0;
         }
 
-        int applied = 0;
-        for (Map.Entry<Long, Long> entry : deltas.entrySet()) {
-            applied += applyFavoriteDelta(entry.getKey(), entry.getValue());
-        }
-        return applied;
-    }
-
-    private int applyFavoriteDelta(Long attractionId, Long delta) {
-        if (attractionId == null || delta == null || delta == 0) {
+        List<AttractionPopularityDeltaRecord> records = toDeltaRecords(deltas);
+        if (records.isEmpty()) {
             return 0;
         }
 
-        return attractionMapper.applyPopularityFavoriteDelta(attractionId, delta);
+        return attractionMapper.applyPopularityFavoriteDeltas(records);
+    }
+
+    public int applySaveDeltas(Map<Long, Long> deltas) {
+        if (deltas == null || deltas.isEmpty()) {
+            return 0;
+        }
+
+        List<AttractionPopularityDeltaRecord> records = toDeltaRecords(deltas);
+        if (records.isEmpty()) {
+            return 0;
+        }
+
+        return attractionMapper.applyPopularitySaveDeltas(records);
+    }
+
+    private List<AttractionPopularityDeltaRecord> toDeltaRecords(Map<Long, Long> deltas) {
+        return deltas.entrySet().stream()
+                .filter(entry -> entry.getKey() != null)
+                .filter(entry -> entry.getValue() != null)
+                .filter(entry -> entry.getValue() != 0)
+                .map(entry -> new AttractionPopularityDeltaRecord(
+                        entry.getKey(),
+                        entry.getValue()
+                ))
+                .toList();
     }
 }

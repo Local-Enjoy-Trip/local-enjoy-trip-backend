@@ -12,6 +12,8 @@ public record PlaceMapPinResponse(
         String contentTypeId,
         double distanceMeters,
         boolean favorited,
+        boolean saved,
+        int saveCount,
         double ratingAverage,
         int ratingCount
 ) {
@@ -26,6 +28,8 @@ public record PlaceMapPinResponse(
                 pin.contentTypeId(),
                 pin.distanceMeters(),
                 pin.favorited(),
+                pin.saved(),
+                pin.saveCount(),
                 pin.ratingAverage(),
                 pin.ratingCount()
         );

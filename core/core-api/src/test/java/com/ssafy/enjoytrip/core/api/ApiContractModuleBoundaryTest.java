@@ -65,6 +65,8 @@ class ApiContractModuleBoundaryTest {
                         "longitude",
                         "contentTypeId",
                         "favoriteCount",
+                        "saveCount",
+                        "saved",
                         "popularityCount",
                         "distanceMeters"
                 )
@@ -90,15 +92,15 @@ class ApiContractModuleBoundaryTest {
                 .doesNotContain("include \"app");
     }
 
-    @DisplayName("web/worker ingress는 서로의 계약과 storage mapper를 직접 소유하지 않는다")
+    @DisplayName("web/background job ingress는 서로의 계약과 storage mapper를 직접 소유하지 않는다")
     @Test
-    void webAndWorkerIngressKeepModuleBoundaries() throws IOException {
+    void webAndBackgroundJobIngressKeepModuleBoundaries() throws IOException {
         Path sourceRoot = projectRoot().resolve("core/core-api/src/main/java");
 
         List<SourceFile> webSources = javaSources(sourceRoot.resolve(
                 "com/ssafy/enjoytrip/core/api/web"
         ));
-        List<SourceFile> workerSources = javaSources(sourceRoot.resolve(
+        List<SourceFile> backgroundJobSources = javaSources(sourceRoot.resolve(
                 "com/ssafy/enjoytrip/core/api/worker"
         ));
 
@@ -107,7 +109,7 @@ class ApiContractModuleBoundaryTest {
                 .noneMatch(source -> source.contains("org.springframework.kafka.annotation"))
                 .noneMatch(source -> source.contains("com.ssafy.enjoytrip.core.api.worker"))
                 .noneMatch(SourceFile::importsStorageMapperOrRecord);
-        assertThat(workerSources)
+        assertThat(backgroundJobSources)
                 .noneMatch(source -> source.contains("org.springframework.web.bind.annotation"))
                 .noneMatch(source -> source.contains("com.ssafy.enjoytrip.core.api.web.dto"))
                 .noneMatch(source -> source.contains("com.ssafy.enjoytrip.core.support.response"))
@@ -139,6 +141,18 @@ class ApiContractModuleBoundaryTest {
                 .doesNotContain("AttractionPopularityStatsService");
         assertThat(friendshipService.content())
                 .doesNotContain("NotificationService");
+    }
+
+    @DisplayName("인증 주입 경계가 보장한 사용자 ID null 검증을 서비스 쓰기 유스케이스에 반복하지 않는다")
+    @Test
+    void authenticatedWriteUseCasesDoNotRepeatUserIdNullGuards() throws IOException {
+        Path serviceRoot = projectRoot().resolve(
+                "core/core-api/src/main/java/com/ssafy/enjoytrip/core/domain/service"
+        );
+        SourceFile attractionService = readSourceFile(serviceRoot.resolve("AttractionService.java"));
+
+        assertThat(attractionService.content())
+                .doesNotContain("if (userId == null) {\n            return;\n        }");
     }
 
     private static void assertRecordComponents(Class<? extends Record> recordType,

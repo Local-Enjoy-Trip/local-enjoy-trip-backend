@@ -2,16 +2,10 @@ package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.AttractionStats;
 import com.ssafy.enjoytrip.core.domain.AttractionTag;
-import com.ssafy.enjoytrip.storage.db.core.model.AttractionAverageRatingRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.AttractionRatingRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionStatsRowRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,78 +15,84 @@ public class AttractionStatsReader {
     private final AttractionMapper attractionMapper;
 
     public AttractionStats findStats(Long attractionId, String userId) {
-        return findStatsByAttractionId(List.of(attractionId), userId)
-                .getOrDefault(attractionId, new AttractionStats(
-                        attractionId,
-                        0,
-                        0.0,
-                        0,
-                        List.of(),
-                        false,
-                        null
-                ));
+        List<AttractionStatsRowRecord> rows = attractionMapper.findStatsRowsByAttractionId(
+                attractionId,
+                userId
+        );
+        if (rows.isEmpty()) {
+            return emptyStats(attractionId);
+        }
+
+        return toStats(attractionId, rows);
     }
 
-    public Map<Long, AttractionStats> findStatsByAttractionId(List<Long> attractionIds, String userId) {
+    public List<AttractionStats> findStatsByAttractionIds(List<Long> attractionIds, String userId) {
         if (attractionIds.isEmpty()) {
-            return Map.of();
+            return List.of();
         }
 
-        Map<Long, Integer> favoriteCounts = findFavoriteCounts(attractionIds);
-        Map<Long, AttractionAverageRatingRecord> ratingStats = findRatingStats(attractionIds);
-        Set<Long> favoritedIds = findFavoritedIds(attractionIds, userId);
-        Map<Long, Integer> myRatings = findMyRatings(attractionIds, userId);
+        List<AttractionStatsRowRecord> rows = attractionMapper.findStatsRowsByAttractionIds(
+                attractionIds,
+                userId
+        );
 
-        Map<Long, AttractionStats> result = new HashMap<>();
-        for (Long attractionId : attractionIds) {
-            AttractionAverageRatingRecord rating = ratingStats.get(attractionId);
-            result.put(attractionId, new AttractionStats(
-                    attractionId,
-                    favoriteCounts.getOrDefault(attractionId, 0),
-                    rating == null ? 0.0 : rating.average(),
-                    rating == null ? 0 : rating.count(),
-                    findTags(attractionId),
-                    favoritedIds.contains(attractionId),
-                    myRatings.get(attractionId)
-            ));
+        return toStatsList(rows);
+    }
+
+    private AttractionStats emptyStats(Long attractionId) {
+        return new AttractionStats(
+                attractionId,
+                0,
+                0,
+                0.0,
+                0,
+                List.of(),
+                false,
+                false,
+                null
+        );
+    }
+
+    private List<AttractionStats> toStatsList(List<AttractionStatsRowRecord> rows) {
+        List<AttractionStats> stats = new ArrayList<>();
+        List<AttractionStatsRowRecord> attractionRows = new ArrayList<>();
+        Long currentAttractionId = null;
+
+        for (AttractionStatsRowRecord row : rows) {
+            if (currentAttractionId != null && !currentAttractionId.equals(row.attractionId())) {
+                stats.add(toStats(currentAttractionId, attractionRows));
+                attractionRows.clear();
+            }
+            currentAttractionId = row.attractionId();
+            attractionRows.add(row);
         }
 
-        return result;
-    }
-
-    private Map<Long, Integer> findFavoriteCounts(List<Long> attractionIds) {
-        return attractionMapper.findFavoriteCounts(attractionIds).stream()
-                .collect(Collectors.toMap(AttractionCountRecord::attractionId, AttractionCountRecord::count));
-    }
-
-    private Map<Long, AttractionAverageRatingRecord> findRatingStats(List<Long> attractionIds) {
-        return attractionMapper.findRatingStats(attractionIds).stream()
-                .collect(Collectors.toMap(AttractionAverageRatingRecord::attractionId, record -> record));
-    }
-
-    private Set<Long> findFavoritedIds(List<Long> attractionIds, String userId) {
-        if (userId == null) {
-            return Set.of();
+        if (!attractionRows.isEmpty()) {
+            stats.add(toStats(currentAttractionId, attractionRows));
         }
 
-        return new HashSet<>(attractionMapper.findFavoritedIds(attractionIds, userId));
+        return stats;
     }
 
-    private Map<Long, Integer> findMyRatings(List<Long> attractionIds, String userId) {
-        if (userId == null) {
-            return Map.of();
-        }
-
-        return attractionMapper.findMyRatings(attractionIds, userId).stream()
-                .collect(Collectors.toMap(
-                        AttractionRatingRecord::attractionId,
-                        AttractionRatingRecord::rating
-                ));
+    private AttractionStats toStats(Long attractionId, List<AttractionStatsRowRecord> rows) {
+        AttractionStatsRowRecord first = rows.get(0);
+        return new AttractionStats(
+                attractionId,
+                first.favoriteCount(),
+                first.saveCount(),
+                first.averageRating(),
+                first.ratingCount(),
+                findTags(rows),
+                first.favorited(),
+                first.saved(),
+                first.myRating()
+        );
     }
 
-    private List<AttractionTag> findTags(Long attractionId) {
-        return attractionMapper.findTagsByAttractionId(attractionId).stream()
-                .map(record -> new AttractionTag(record.id(), record.name()))
+    private List<AttractionTag> findTags(List<AttractionStatsRowRecord> rows) {
+        return rows.stream()
+                .filter(row -> row.tagId() != null)
+                .map(row -> new AttractionTag(row.tagId(), row.tagName()))
                 .toList();
     }
 }

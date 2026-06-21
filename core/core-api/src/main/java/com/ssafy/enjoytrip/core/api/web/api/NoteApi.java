@@ -4,6 +4,7 @@ import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NearbySectionRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.SavedNotesRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NoteResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NotesResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,6 +55,32 @@ public interface NoteApi {
     )
     ApiResponse<Void> delete(Long id, @Parameter(hidden = true) String authenticatedUserId);
 
+    @Operation(summary = "쪽지 저장", description = "인증 사용자가 접근 가능한 active 쪽지를 저장합니다.", operationId = "saveNote")
+    ApiResponse<Void> save(Long id, @Parameter(hidden = true) String authenticatedUserId);
+
+    @Operation(summary = "쪽지 저장 해제", description = "인증 사용자의 쪽지 저장을 삭제합니다.", operationId = "unsaveNote")
+    ApiResponse<Void> unsave(Long id, @Parameter(hidden = true) String authenticatedUserId);
+
+    @Operation(
+            summary = "내가 저장한 쪽지 조회",
+            description = "저장 row가 있어도 현재 접근 가능한 ACTIVE 쪽지만 반환합니다.",
+            operationId = "getSavedNotes"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "저장 쪽지 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = NotesResponse.class)
+                    )
+            )
+    })
+    ApiResponse<NotesResponse> saved(
+            @ParameterObject SavedNotesRequest request,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
+
     @Operation(
             summary = "주변 최근 쪽지 조회",
             description = """
@@ -77,5 +104,8 @@ public interface NoteApi {
                     )
             )
     })
-    ApiResponse<NotesResponse> nearby(@ParameterObject NearbySectionRequest request, @Parameter(hidden = true) String authenticatedUserId);
+    ApiResponse<NotesResponse> nearby(
+            @ParameterObject NearbySectionRequest request,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 }

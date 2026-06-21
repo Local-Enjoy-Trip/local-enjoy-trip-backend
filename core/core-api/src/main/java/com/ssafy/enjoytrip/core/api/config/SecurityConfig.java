@@ -58,10 +58,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/members/me").authenticated()
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/attractions/{id}/favorite",
+                                "/api/attractions/{id}/save",
                                 "/api/attractions/{id}/rating",
                                 "/api/attractions/{id}/tags").authenticated()
                         .requestMatchers(HttpMethod.DELETE,
                                 "/api/attractions/{id}/favorite",
+                                "/api/attractions/{id}/save",
                                 "/api/attractions/{id}/rating").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/attraction-tags").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/attraction-tags/{id}").authenticated()
@@ -69,8 +71,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/map/explore").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/notes").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/note-images/presigned-upload").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/notes/{id}").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/notes/{id}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/notes/saved").authenticated()
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/notes/{id}",
+                                "/api/notes/{id}/save"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/notes/{id}",
+                                "/api/notes/{id}/save"
+                        ).authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/map/explore").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/note-images/presigned-upload").authenticated()
                         .requestMatchers("/api/friendships/**", "/api/notifications/**").authenticated()

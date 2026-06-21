@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ssafy.enjoytrip.core.domain.NotificationReferenceType;
 import com.ssafy.enjoytrip.core.domain.NotificationType;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionPopularityDeltaRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NotificationRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
@@ -78,13 +79,40 @@ class PostgresUpsertMapperContainerTest extends StorageContainerTestSupport {
         long attractionId = ATTRACTION_IDS.incrementAndGet();
         seedAttraction(attractionId, "컨테이너 인기 관광지", 1, 1);
 
-        assertThat(attractionMapper.applyPopularityFavoriteDelta(attractionId, 3L)).isEqualTo(1);
-        assertThat(attractionMapper.applyPopularityFavoriteDelta(attractionId, -5L)).isEqualTo(1);
+        assertThat(attractionMapper.applyPopularityFavoriteDeltas(List.of(
+                new AttractionPopularityDeltaRecord(attractionId, 3L)
+        ))).isPositive();
+        assertThat(attractionMapper.applyPopularityFavoriteDeltas(List.of(
+                new AttractionPopularityDeltaRecord(attractionId, -5L)
+        ))).isPositive();
 
-        List<AttractionCountRecord> counts = attractionMapper.findPopularityFavoriteCounts(
+        List<AttractionCountRecord> counts = attractionMapper.findPopularityCounts(
                 List.of(attractionId)
         );
 
         assertThat(counts).extracting(AttractionCountRecord::count).containsExactly(0);
     }
+    @DisplayName("AttractionMapper는 PostgreSQL on conflict로 save delta를 0 미만으로 내리지 않는다")
+    @Test
+    void attractionMapperAppliesPopularitySaveDeltaWithPostgresUpsert() {
+        long attractionId = ATTRACTION_IDS.incrementAndGet();
+        seedAttraction(attractionId, "컨테이너 저장 인기 관광지", 1, 1);
+
+        assertThat(attractionMapper.applyPopularityFavoriteDeltas(List.of(
+                new AttractionPopularityDeltaRecord(attractionId, 2L)
+        ))).isPositive();
+        assertThat(attractionMapper.applyPopularitySaveDeltas(List.of(
+                new AttractionPopularityDeltaRecord(attractionId, 4L)
+        ))).isPositive();
+        assertThat(attractionMapper.applyPopularitySaveDeltas(List.of(
+                new AttractionPopularityDeltaRecord(attractionId, -9L)
+        ))).isPositive();
+
+        List<AttractionCountRecord> counts = attractionMapper.findPopularityCounts(
+                List.of(attractionId)
+        );
+
+        assertThat(counts).extracting(AttractionCountRecord::count).containsExactly(2);
+    }
+
 }

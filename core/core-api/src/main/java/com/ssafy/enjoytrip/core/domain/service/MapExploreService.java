@@ -101,7 +101,8 @@ public class MapExploreService {
                                 radiusMeters,
                                 limit
                         ),
-                        viewerUserId
+                        viewerUserId,
+                        filter.savedPlacesOnly()
                 )
                 .stream()
                 .map(MapExploreService::toPlacePin)
@@ -121,6 +122,8 @@ public class MapExploreService {
                 attraction.contentTypeId(),
                 candidate.distanceMeters(),
                 attraction.favorited(),
+                attraction.saved(),
+                attraction.saveCount(),
                 attraction.ratingAverage(),
                 attraction.ratingCount()
         );

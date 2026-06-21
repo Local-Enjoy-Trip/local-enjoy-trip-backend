@@ -1,14 +1,13 @@
-package com.ssafy.enjoytrip.core.domain;
+package com.ssafy.enjoytrip.storage.db.core.model;
 
-import java.util.List;
-
-public record AttractionStats(
+public record AttractionStatsRowRecord(
         Long attractionId,
         int favoriteCount,
         int saveCount,
-        double ratingAverage,
+        double averageRating,
         int ratingCount,
-        List<AttractionTag> tags,
+        Long tagId,
+        String tagName,
         boolean favorited,
         boolean saved,
         Integer myRating

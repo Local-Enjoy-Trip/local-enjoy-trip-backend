@@ -2,11 +2,10 @@ package com.ssafy.enjoytrip.storage.db.core.container;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ssafy.enjoytrip.storage.db.core.model.AttractionAverageRatingRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingSourceRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.AttractionRatingRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionStatsRowRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.ChargerItemRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper;
@@ -47,6 +46,7 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
         attractionMapper.insertTagMapping(attractionId, tag.id());
         attractionMapper.insertFavorite(attractionId, userId);
         attractionMapper.upsertRating(attractionId, userId, 5);
+        attractionMapper.refreshPopularityRatingStats(attractionId);
 
         List<AttractionSearchRecord> searched = attractionMapper.search(
                 "12",
@@ -57,30 +57,41 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
                 null,
                 null,
                 false,
-                10
+                10,
+                userId
         );
-        List<AttractionSearchRecord> nearby = attractionMapper.findNearby(126.9781, 37.5666, 100, 10);
-        List<AttractionCountRecord> favoriteCounts =
-                attractionMapper.findFavoriteCounts(List.of(attractionId));
-        List<AttractionCountRecord> popularityFavoriteCounts =
-                attractionMapper.findPopularityFavoriteCounts(List.of(attractionId));
-        List<AttractionAverageRatingRecord> ratings = attractionMapper.findRatingStats(List.of(attractionId));
-        List<AttractionRatingRecord> myRatings =
-                attractionMapper.findMyRatings(List.of(attractionId), userId);
+        List<AttractionSearchRecord> nearby = attractionMapper.findNearby(
+                126.9781,
+                37.5666,
+                100,
+                10,
+                false,
+                null
+        );
+        List<AttractionStatsRowRecord> statsRows =
+                attractionMapper.findStatsRowsByAttractionIds(List.of(attractionId), userId);
+        List<AttractionCountRecord> popularityCounts =
+                attractionMapper.findPopularityCounts(List.of(attractionId));
 
         assertThat(attractionMapper.existsById(attractionId)).isEqualTo(1);
         assertThat(searched).extracting(AttractionSearchRecord::id).contains(attractionId);
+        assertThat(searched).extracting(AttractionSearchRecord::tagId).contains(tag.id());
+        assertThat(searched).extracting(AttractionSearchRecord::favorited).contains(true);
+        assertThat(searched).extracting(AttractionSearchRecord::favoriteCount).contains(7);
+        assertThat(searched).extracting(AttractionSearchRecord::ratingCount).contains(1);
+        assertThat(searched).extracting(AttractionSearchRecord::ratingAverage).contains(5.0);
+        assertThat(searched).extracting(AttractionSearchRecord::myRating).contains(5);
         assertThat(nearby).extracting(AttractionSearchRecord::id).contains(attractionId);
         assertThat(attractionMapper.findByIds(List.of(attractionId))).hasSize(1);
         assertThat(attractionMapper.countTagsByIds(List.of(tag.id()))).isEqualTo(1);
         assertThat(attractionMapper.findAllTags()).extracting(AttractionTagRecord::id).contains(tag.id());
-        assertThat(attractionMapper.findTagsByAttractionId(attractionId)).extracting(AttractionTagRecord::id)
-                .contains(tag.id());
-        assertThat(attractionMapper.findFavoritedIds(List.of(attractionId), userId)).contains(attractionId);
-        assertThat(favoriteCounts).extracting(AttractionCountRecord::count).contains(1);
-        assertThat(popularityFavoriteCounts).extracting(AttractionCountRecord::count).contains(7);
-        assertThat(ratings).extracting(AttractionAverageRatingRecord::count).contains(1);
-        assertThat(myRatings).extracting(AttractionRatingRecord::rating).contains(5);
+        assertThat(statsRows).extracting(AttractionStatsRowRecord::tagId).contains(tag.id());
+        assertThat(statsRows).extracting(AttractionStatsRowRecord::favorited).contains(true);
+        assertThat(statsRows).extracting(AttractionStatsRowRecord::favoriteCount).contains(7);
+        assertThat(statsRows).extracting(AttractionStatsRowRecord::ratingCount).contains(1);
+        assertThat(statsRows).extracting(AttractionStatsRowRecord::averageRating).contains(5.0);
+        assertThat(statsRows).extracting(AttractionStatsRowRecord::myRating).contains(5);
+        assertThat(popularityCounts).extracting(AttractionCountRecord::count).contains(7);
         assertThat(attractionMapper.deleteRating(attractionId, userId)).isEqualTo(1);
         assertThat(attractionMapper.deleteFavorite(attractionId, userId)).isEqualTo(1);
         assertThat(attractionMapper.deleteTagMappings(attractionId)).isEqualTo(1);

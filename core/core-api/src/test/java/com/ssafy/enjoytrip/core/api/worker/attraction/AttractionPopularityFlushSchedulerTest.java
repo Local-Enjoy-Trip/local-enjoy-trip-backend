@@ -14,18 +14,20 @@ import org.junit.jupiter.api.Test;
 
 class AttractionPopularityFlushSchedulerTest {
 
-    @DisplayName("AttractionPopularityFlushScheduler는 캐시 델타를 drain해서 RDB 통계에 반영한다")
+    @DisplayName("AttractionPopularityFlushScheduler는 찜과 저장 델타를 각각 drain해서 RDB 통계에 반영한다")
     @Test
-    void flushesCachedFavoriteDeltasToPopularityStats() {
+    void flushesCachedFavoriteAndSaveDeltasToPopularityStats() {
         AttractionPopularityDeltaCache deltaCache = mock(AttractionPopularityDeltaCache.class);
         AttractionPopularityStatsService statsService = mock(AttractionPopularityStatsService.class);
         AttractionPopularityFlushScheduler scheduler =
                 new AttractionPopularityFlushScheduler(deltaCache, statsService);
-        when(deltaCache.drainDirtyDeltas(500)).thenReturn(Map.of(1L, 2L, 2L, -1L));
+        when(deltaCache.drainDirtyFavoriteDeltas(500)).thenReturn(Map.of(1L, 2L, 2L, -1L));
+        when(deltaCache.drainDirtySaveDeltas(500)).thenReturn(Map.of(3L, 4L));
 
-        scheduler.flushFavoriteDeltas();
+        scheduler.flushDeltas();
 
         verify(statsService).applyFavoriteDeltas(Map.of(1L, 2L, 2L, -1L));
+        verify(statsService).applySaveDeltas(Map.of(3L, 4L));
     }
 
     @DisplayName("AttractionPopularityFlushScheduler는 캐시 델타가 비어 있으면 RDB 통계를 건드리지 않는다")
@@ -35,10 +37,12 @@ class AttractionPopularityFlushSchedulerTest {
         AttractionPopularityStatsService statsService = mock(AttractionPopularityStatsService.class);
         AttractionPopularityFlushScheduler scheduler =
                 new AttractionPopularityFlushScheduler(deltaCache, statsService);
-        when(deltaCache.drainDirtyDeltas(500)).thenReturn(Map.of());
+        when(deltaCache.drainDirtyFavoriteDeltas(500)).thenReturn(Map.of());
+        when(deltaCache.drainDirtySaveDeltas(500)).thenReturn(Map.of());
 
-        scheduler.flushFavoriteDeltas();
+        scheduler.flushDeltas();
 
         verify(statsService, never()).applyFavoriteDeltas(any());
+        verify(statsService, never()).applySaveDeltas(any());
     }
 }

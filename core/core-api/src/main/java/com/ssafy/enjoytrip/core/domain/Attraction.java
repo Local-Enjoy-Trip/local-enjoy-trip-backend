@@ -20,10 +20,12 @@ public record Attraction(
         String contentTypeId,
         String overview,
         int favoriteCount,
+        int saveCount,
         double ratingAverage,
         int ratingCount,
         List<AttractionTag> tags,
         boolean favorited,
+        boolean saved,
         Integer myRating
 ) {
     public String primaryImageUrl() {

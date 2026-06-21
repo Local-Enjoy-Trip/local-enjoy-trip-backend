@@ -11,6 +11,7 @@ import com.ssafy.enjoytrip.core.domain.NoteVisibility;
 import com.ssafy.enjoytrip.core.domain.query.MapNotesCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbyNotesCondition;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
+import com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
 import java.math.BigDecimal;
@@ -41,7 +42,7 @@ public class NoteService {
         );
         NoteRecord saved = noteMapper.insert(record);
 
-        return getNote(saved);
+        return toNote(saved);
     }
 
     @Transactional
@@ -69,7 +70,7 @@ public class NoteService {
             throw new CoreException(NOTE_NOT_FOUND);
         }
 
-        return getNote(updated);
+        return toNote(updated);
     }
 
     @Transactional
@@ -83,6 +84,22 @@ public class NoteService {
         }
     }
 
+    @Transactional
+    public void addSave(Long noteId, String userId) {
+        requireAccessibleActiveNote(noteId, userId);
+        noteMapper.insertSave(noteId, userId);
+    }
+
+    public boolean removeSave(Long noteId, String userId) {
+        return noteMapper.deleteSave(noteId, userId) > 0;
+    }
+
+    public List<Note> findSavedNotes(String userId, int limit) {
+        return noteMapper.findSavedAccessible(userId, limit).stream()
+                .map(this::toNote)
+                .toList();
+    }
+
     public List<Note> findNearbyNotes(NearbyNotesCondition condition, String viewerUserId) {
         return noteMapper.findNearbyAccessible(
                         condition.longitude(),
@@ -91,24 +108,7 @@ public class NoteService {
                         condition.limit(),
                         viewerUserId
                 ).stream()
-                .map(record -> new Note(
-                        record.getId(),
-                        record.getAuthorUserId(),
-                        record.getTitle(),
-                        record.getContent(),
-                        NoteCategory.valueOf(record.getCategory()),
-                        NoteVisibility.valueOf(record.getVisibility()),
-                        record.getLatitude().doubleValue(),
-                        record.getLongitude().doubleValue(),
-                        record.getRegionName(),
-                        record.getImageObjectKey(),
-                        record.getImageUrl(),
-                        record.getImageContentType(),
-                        NoteStatus.valueOf(record.getStatus()),
-                        record.getCreatedAt(),
-                        record.getUpdatedAt(),
-                        record.getDeletedAt()
-                ))
+                .map(this::toNote)
                 .toList();
     }
 
@@ -122,23 +122,14 @@ public class NoteService {
                         condition.category() == null ? null : condition.category().name(),
                         condition.friendOnly()
                 ).stream()
-                .map(record -> new NoteMapPin(
-                        record.id(),
-                        record.title(),
-                        NoteCategory.valueOf(record.category()),
-                        NoteVisibility.valueOf(record.visibility()),
-                        record.latitude().doubleValue(),
-                        record.longitude().doubleValue(),
-                        record.regionName(),
-                        record.distanceMeters(),
-                        record.imageObjectKey(),
-                        record.authorUserId(),
-                        record.authorNickname(),
-                        record.authorProfileImageUrl(),
-                        NoteViewerRelationship.valueOf(record.relationship()),
-                        record.createdAt()
-                ))
+                .map(this::toNoteMapPin)
                 .toList();
+    }
+
+    private void requireAccessibleActiveNote(Long noteId, String userId) {
+        if (noteMapper.existsAccessibleActive(noteId, userId) <= 0) {
+            throw new CoreException(NOTE_NOT_FOUND);
+        }
     }
 
     private Optional<Note> findNoteById(Long id) {
@@ -149,27 +140,10 @@ public class NoteService {
         if (record == null) {
             return Optional.empty();
         }
-        return Optional.of(new Note(
-                record.getId(),
-                record.getAuthorUserId(),
-                record.getTitle(),
-                record.getContent(),
-                NoteCategory.valueOf(record.getCategory()),
-                NoteVisibility.valueOf(record.getVisibility()),
-                record.getLatitude().doubleValue(),
-                record.getLongitude().doubleValue(),
-                record.getRegionName(),
-                record.getImageObjectKey(),
-                record.getImageUrl(),
-                record.getImageContentType(),
-                NoteStatus.valueOf(record.getStatus()),
-                record.getCreatedAt(),
-                record.getUpdatedAt(),
-                record.getDeletedAt()
-        ));
+        return Optional.of(toNote(record));
     }
 
-    private static Note getNote(NoteRecord record) {
+    private Note toNote(NoteRecord record) {
         return new Note(
                 record.getId(),
                 record.getAuthorUserId(),
@@ -187,6 +161,25 @@ public class NoteService {
                 record.getCreatedAt(),
                 record.getUpdatedAt(),
                 record.getDeletedAt()
+        );
+    }
+
+    private NoteMapPin toNoteMapPin(NoteMapPinRecord record) {
+        return new NoteMapPin(
+                record.id(),
+                record.title(),
+                NoteCategory.valueOf(record.category()),
+                NoteVisibility.valueOf(record.visibility()),
+                record.latitude().doubleValue(),
+                record.longitude().doubleValue(),
+                record.regionName(),
+                record.distanceMeters(),
+                record.imageObjectKey(),
+                record.authorUserId(),
+                record.authorNickname(),
+                record.authorProfileImageUrl(),
+                NoteViewerRelationship.valueOf(record.relationship()),
+                record.createdAt()
         );
     }
 

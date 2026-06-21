@@ -14,6 +14,8 @@ public record PopularAttractionResponse(
         Double longitude,
         String contentTypeId,
         int favoriteCount,
+        int saveCount,
+        boolean saved,
         long popularityCount,
         double distanceMeters
 ) {
@@ -29,6 +31,8 @@ public record PopularAttractionResponse(
                 popularAttraction.attraction().longitude(),
                 popularAttraction.attraction().contentTypeId(),
                 popularAttraction.attraction().favoriteCount(),
+                popularAttraction.attraction().saveCount(),
+                popularAttraction.attraction().saved(),
                 popularAttraction.popularityCount(),
                 popularAttraction.distanceMeters()
         );

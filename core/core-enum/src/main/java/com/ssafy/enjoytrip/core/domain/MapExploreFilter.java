@@ -4,10 +4,11 @@ public enum MapExploreFilter {
     ALL,
     PLACE,
     NOTE,
-    FRIEND;
+    FRIEND,
+    SAVED_PLACE;
 
     public boolean includesPlaces() {
-        return this == ALL || this == PLACE;
+        return this == ALL || this == PLACE || this == SAVED_PLACE;
     }
 
     public boolean includesNotes() {
@@ -16,5 +17,9 @@ public enum MapExploreFilter {
 
     public boolean friendNotesOnly() {
         return this == FRIEND;
+    }
+
+    public boolean savedPlacesOnly() {
+        return this == SAVED_PLACE;
     }
 }

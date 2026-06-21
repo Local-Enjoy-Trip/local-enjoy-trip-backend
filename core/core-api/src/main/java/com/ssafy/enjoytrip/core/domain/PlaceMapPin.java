@@ -10,6 +10,8 @@ public record PlaceMapPin(
         String contentTypeId,
         double distanceMeters,
         boolean favorited,
+        boolean saved,
+        int saveCount,
         double ratingAverage,
         int ratingCount
 ) {
