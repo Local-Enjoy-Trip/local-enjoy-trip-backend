@@ -12,19 +12,6 @@ import org.springframework.stereotype.Service;
 public class AttractionPopularityStatsService {
     private final AttractionMapper attractionMapper;
 
-    public int applyFavoriteDeltas(Map<Long, Long> deltas) {
-        if (deltas == null || deltas.isEmpty()) {
-            return 0;
-        }
-
-        List<AttractionPopularityDeltaRecord> records = toDeltaRecords(deltas);
-        if (records.isEmpty()) {
-            return 0;
-        }
-
-        return attractionMapper.applyPopularityFavoriteDeltas(records);
-    }
-
     public int applySaveDeltas(Map<Long, Long> deltas) {
         if (deltas == null || deltas.isEmpty()) {
             return 0;

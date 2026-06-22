@@ -39,7 +39,7 @@ public class AttractionService {
                 .map(candidate -> new PopularAttractionResult(
                         candidate.attraction(),
                         candidate.distanceMeters(),
-                        candidate.attraction().favoriteCount() + candidate.attraction().saveCount()
+                        candidate.attraction().saveCount()
                 ))
                 .sorted(Comparator
                         .comparingLong(PopularAttractionResult::popularityCount).reversed()
@@ -69,20 +69,6 @@ public class AttractionService {
             boolean savedOnly
     ) {
         return findNearbyAttractionCandidates(condition, userId, savedOnly);
-    }
-
-    public void addFavorite(Long attractionId, String userId) {
-        if (attractionMapper.insertFavorite(attractionId, userId) > 0) {
-            popularityDeltaCache.recordFavoriteDelta(attractionId, 1L);
-        }
-    }
-
-    public boolean removeFavorite(Long attractionId, String userId) {
-        boolean deleted = attractionMapper.deleteFavorite(attractionId, userId) > 0;
-        if (deleted) {
-            popularityDeltaCache.recordFavoriteDelta(attractionId, -1L);
-        }
-        return deleted;
     }
 
     public void addSave(Long attractionId, String userId) {
@@ -279,12 +265,10 @@ public class AttractionService {
                 first.mlevel(),
                 first.contentTypeId(),
                 first.overview(),
-                first.favoriteCount(),
                 first.saveCount(),
                 first.ratingAverage(),
                 first.ratingCount(),
                 toTags(attractionRows),
-                first.favorited(),
                 first.saved(),
                 first.myRating()
         );

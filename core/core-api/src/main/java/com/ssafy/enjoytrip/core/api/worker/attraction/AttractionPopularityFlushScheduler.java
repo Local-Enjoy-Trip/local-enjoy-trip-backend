@@ -21,24 +21,7 @@ public class AttractionPopularityFlushScheduler {
 
     @Scheduled(fixedDelayString = "${enjoytrip.attraction.popularity.flush-delay-ms:1000}")
     public void flushDeltas() {
-        flushFavoriteDeltas();
         flushSaveDeltas();
-    }
-
-    void flushFavoriteDeltas() {
-        Map<Long, Long> deltas = deltaCache.drainDirtyFavoriteDeltas(batchSize);
-        if (deltas.isEmpty()) {
-            return;
-        }
-
-        int applied = statsService.applyFavoriteDeltas(deltas);
-        long deltaSum = deltas.values().stream().mapToLong(Long::longValue).sum();
-        log.info(
-                "Flushed attraction favorite popularity deltas. dirtyCount={}, applied={}, deltaSum={}",
-                deltas.size(),
-                applied,
-                deltaSum
-        );
     }
 
     void flushSaveDeltas() {

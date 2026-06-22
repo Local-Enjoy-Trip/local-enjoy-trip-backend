@@ -28,7 +28,7 @@ public record PlanRouteItemResponse(
         int day,
         String memo,
         int stayMinutes,
-        int favoriteCount,
+        int saveCount,
         double ratingAverage,
         int ratingCount,
         List<AttractionTag> tags
@@ -57,7 +57,7 @@ public record PlanRouteItemResponse(
                 item.day(),
                 item.memo(),
                 item.stayMinutes(),
-                attraction.favoriteCount(),
+                attraction.saveCount(),
                 attraction.ratingAverage(),
                 attraction.ratingCount(),
                 attraction.tags()

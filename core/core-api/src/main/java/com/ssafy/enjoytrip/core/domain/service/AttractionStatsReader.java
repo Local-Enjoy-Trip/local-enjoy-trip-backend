@@ -43,11 +43,9 @@ public class AttractionStatsReader {
         return new AttractionStats(
                 attractionId,
                 0,
-                0,
                 0.0,
                 0,
                 List.of(),
-                false,
                 false,
                 null
         );
@@ -78,12 +76,10 @@ public class AttractionStatsReader {
         AttractionStatsRowRecord first = rows.get(0);
         return new AttractionStats(
                 attractionId,
-                first.favoriteCount(),
                 first.saveCount(),
                 first.averageRating(),
                 first.ratingCount(),
                 findTags(rows),
-                first.favorited(),
                 first.saved(),
                 first.myRating()
         );

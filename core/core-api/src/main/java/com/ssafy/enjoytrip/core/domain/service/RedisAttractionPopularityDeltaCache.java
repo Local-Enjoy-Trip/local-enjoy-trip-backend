@@ -12,51 +12,32 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class RedisAttractionPopularityDeltaCache implements AttractionPopularityDeltaCache {
-    private static final String FAVORITE_DIRTY_IDS_KEY = "enjoytrip:attraction-popularity:favorite:dirty";
     private static final String SAVE_DIRTY_IDS_KEY = "enjoytrip:attraction-popularity:save:dirty";
-    private static final String FAVORITE_DELTA_KEY_PREFIX = "enjoytrip:attraction-popularity:favorite:delta:";
     private static final String SAVE_DELTA_KEY_PREFIX = "enjoytrip:attraction-popularity:save:delta:";
 
     private final StringRedisTemplate redisTemplate;
 
     @Override
-    public void recordFavoriteDelta(Long attractionId, long delta) {
-        recordDelta(attractionId, delta, FAVORITE_DELTA_KEY_PREFIX, FAVORITE_DIRTY_IDS_KEY, "favorite");
-    }
-
-    @Override
     public void recordSaveDelta(Long attractionId, long delta) {
-        recordDelta(attractionId, delta, SAVE_DELTA_KEY_PREFIX, SAVE_DIRTY_IDS_KEY, "save");
-    }
-
-    @Override
-    public Map<Long, Long> drainDirtyFavoriteDeltas(int batchSize) {
-        return drainDirtyDeltas(batchSize, FAVORITE_DELTA_KEY_PREFIX, FAVORITE_DIRTY_IDS_KEY, "favorite");
+        recordDelta(attractionId, delta);
     }
 
     @Override
     public Map<Long, Long> drainDirtySaveDeltas(int batchSize) {
-        return drainDirtyDeltas(batchSize, SAVE_DELTA_KEY_PREFIX, SAVE_DIRTY_IDS_KEY, "save");
+        return drainDirtyDeltas(batchSize);
     }
 
-    private void recordDelta(
-            Long attractionId,
-            long delta,
-            String deltaKeyPrefix,
-            String dirtyIdsKey,
-            String kind
-    ) {
+    private void recordDelta(Long attractionId, long delta) {
         if (attractionId == null || delta == 0) {
             return;
         }
 
         try {
-            redisTemplate.opsForValue().increment(deltaKey(deltaKeyPrefix, attractionId), delta);
-            redisTemplate.opsForSet().add(dirtyIdsKey, attractionId.toString());
+            redisTemplate.opsForValue().increment(deltaKey(attractionId), delta);
+            redisTemplate.opsForSet().add(SAVE_DIRTY_IDS_KEY, attractionId.toString());
         } catch (RuntimeException exception) {
             log.warn(
-                    "Failed to record attraction {} popularity delta. attractionId={}, delta={}",
-                    kind,
+                    "Failed to record attraction save popularity delta. attractionId={}, delta={}",
                     attractionId,
                     delta,
                     exception
@@ -64,43 +45,38 @@ public class RedisAttractionPopularityDeltaCache implements AttractionPopularity
         }
     }
 
-    private Map<Long, Long> drainDirtyDeltas(
-            int batchSize,
-            String deltaKeyPrefix,
-            String dirtyIdsKey,
-            String kind
-    ) {
+    private Map<Long, Long> drainDirtyDeltas(int batchSize) {
         if (batchSize <= 0) {
             return Map.of();
         }
 
         try {
-            return drainDirtyDeltas(redisTemplate.opsForSet().pop(dirtyIdsKey, batchSize), deltaKeyPrefix);
+            return drainDirtyDeltas(redisTemplate.opsForSet().pop(SAVE_DIRTY_IDS_KEY, batchSize));
         } catch (RuntimeException exception) {
-            log.warn("Failed to drain attraction {} popularity deltas", kind, exception);
+            log.warn("Failed to drain attraction save popularity deltas", exception);
             return Map.of();
         }
     }
 
-    private Map<Long, Long> drainDirtyDeltas(List<String> dirtyIds, String deltaKeyPrefix) {
+    private Map<Long, Long> drainDirtyDeltas(List<String> dirtyIds) {
         if (dirtyIds == null || dirtyIds.isEmpty()) {
             return Map.of();
         }
 
         Map<Long, Long> deltas = new LinkedHashMap<>();
         for (String dirtyId : dirtyIds) {
-            putDrainedDelta(deltas, dirtyId, deltaKeyPrefix);
+            putDrainedDelta(deltas, dirtyId);
         }
         return deltas;
     }
 
-    private void putDrainedDelta(Map<Long, Long> deltas, String dirtyId, String deltaKeyPrefix) {
+    private void putDrainedDelta(Map<Long, Long> deltas, String dirtyId) {
         Long attractionId = parseAttractionId(dirtyId);
         if (attractionId == null) {
             return;
         }
 
-        Long delta = drainDelta(deltaKeyPrefix, attractionId);
+        Long delta = drainDelta(attractionId);
         if (delta == null || delta == 0) {
             return;
         }
@@ -108,8 +84,8 @@ public class RedisAttractionPopularityDeltaCache implements AttractionPopularity
         deltas.put(attractionId, delta);
     }
 
-    private Long drainDelta(String deltaKeyPrefix, Long attractionId) {
-        String key = deltaKey(deltaKeyPrefix, attractionId);
+    private Long drainDelta(Long attractionId) {
+        String key = deltaKey(attractionId);
         String value = redisTemplate.opsForValue().getAndDelete(key);
         if (value == null) {
             return null;
@@ -132,7 +108,7 @@ public class RedisAttractionPopularityDeltaCache implements AttractionPopularity
         }
     }
 
-    private static String deltaKey(String prefix, Long attractionId) {
-        return prefix + attractionId;
+    private static String deltaKey(Long attractionId) {
+        return SAVE_DELTA_KEY_PREFIX + attractionId;
     }
 }

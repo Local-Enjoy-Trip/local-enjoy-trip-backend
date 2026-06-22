@@ -83,7 +83,6 @@ public class MapExploreService {
                 attraction.primaryImageUrl(),
                 attraction.contentTypeId(),
                 candidate.distanceMeters(),
-                attraction.favorited(),
                 attraction.saved(),
                 attraction.saveCount(),
                 attraction.ratingAverage(),

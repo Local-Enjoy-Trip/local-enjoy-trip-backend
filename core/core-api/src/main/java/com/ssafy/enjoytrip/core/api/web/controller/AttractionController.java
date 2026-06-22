@@ -75,28 +75,6 @@ public class AttractionController implements AttractionApi {
         return ApiResponse.fail(ErrorCode.C405, "GET /api/attractions를 사용하세요.");
     }
 
-    @PutMapping("/{id}/favorite")
-    @Override
-    public ApiResponse<Void> favorite(
-            @PathVariable Long id,
-            @AuthenticatedUserId String authenticatedUserId
-    ) {
-        service.addFavorite(id, authenticatedUserId);
-
-        return success();
-    }
-
-    @DeleteMapping("/{id}/favorite")
-    @Override
-    public ApiResponse<Void> unfavorite(
-            @PathVariable Long id,
-            @AuthenticatedUserId String authenticatedUserId
-    ) {
-        service.removeFavorite(id, authenticatedUserId);
-
-        return success();
-    }
-
     @PutMapping("/{id}/save")
     @Override
     public ApiResponse<Void> save(

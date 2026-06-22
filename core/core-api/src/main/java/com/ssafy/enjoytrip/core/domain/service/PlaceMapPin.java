@@ -9,7 +9,6 @@ public record PlaceMapPin(
         String imageUrl,
         String contentTypeId,
         double distanceMeters,
-        boolean favorited,
         boolean saved,
         int saveCount,
         double ratingAverage,

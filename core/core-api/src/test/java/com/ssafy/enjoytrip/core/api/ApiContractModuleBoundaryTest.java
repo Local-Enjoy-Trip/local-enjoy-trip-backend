@@ -64,7 +64,6 @@ class ApiContractModuleBoundaryTest {
                         "latitude",
                         "longitude",
                         "contentTypeId",
-                        "favoriteCount",
                         "saveCount",
                         "saved",
                         "popularityCount",

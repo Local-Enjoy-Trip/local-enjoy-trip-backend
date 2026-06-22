@@ -4,12 +4,10 @@ import java.util.List;
 
 public record AttractionStats(
         Long attractionId,
-        int favoriteCount,
         int saveCount,
         double ratingAverage,
         int ratingCount,
         List<AttractionTag> tags,
-        boolean favorited,
         boolean saved,
         Integer myRating
 ) {

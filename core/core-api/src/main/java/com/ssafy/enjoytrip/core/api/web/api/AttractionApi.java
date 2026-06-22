@@ -75,11 +75,10 @@ public interface AttractionApi {
 
                     - 좌표를 전달하지 않으면 서울 시청 좌표(`mapX=126.9780`, `mapY=37.5665`)를 사용합니다.
                     - `radius` 기본값은 500m이며 쪽지 주변 조회와 동일한 기본 반경입니다.
-                    - 먼저 PostGIS로 반경 안 후보를 찾고, RDB `favorite_count + save_count` 합산값을
-                      `popularityCount`로 채운 뒤 내림차순, 거리, 제목/ID 순으로 정렬합니다.
+                    - 먼저 PostGIS로 반경 안 후보를 찾고, RDB `save_count`를 `popularityCount`로 채운 뒤
+                      내림차순, 거리, 제목/ID 순으로 정렬합니다.
                     - 집계 행이 없는 후보의 `popularityCount`는 0으로 반환합니다.
-                    - 기존 `favoriteCount`는 RDB 집계 테이블의 현재 찜 수 의미를 유지합니다.
-                    - `saveCount`, `saved`는 장소 저장 상태를 additive 필드로 제공합니다.
+                    - `saveCount`, `saved`는 장소 저장 상태를 제공합니다.
                     """,
             operationId = "getPopularNearbyAttractions"
     )
@@ -101,10 +100,9 @@ public interface AttractionApi {
                                             "latitude": 37.579617,
                                             "longitude": 126.977041,
                                             "contentTypeId": "12",
-                                            "favoriteCount": 3,
                                             "saveCount": 5,
                                             "saved": true,
-                                            "popularityCount": 8
+                                            "popularityCount": 5
                                           }
                                         ]
                                       },
@@ -136,16 +134,6 @@ public interface AttractionApi {
     })
     ApiResponse<Void> rejectPost();
 
-    @Operation(summary = "관광지 찜", description = "인증 사용자의 관광지 찜을 저장합니다.", operationId = "favoriteAttraction")
-    ApiResponse<Void> favorite(Long id, @Parameter(hidden = true) String authenticatedUserId);
-
-    @Operation(
-            summary = "관광지 찜 해제",
-            description = "인증 사용자의 관광지 찜을 삭제합니다.",
-            operationId = "unfavoriteAttraction"
-    )
-    ApiResponse<Void> unfavorite(Long id, @Parameter(hidden = true) String authenticatedUserId);
-
     @Operation(summary = "관광지 저장", description = "인증 사용자의 관광지 저장을 추가합니다.", operationId = "saveAttraction")
     ApiResponse<Void> save(Long id, @Parameter(hidden = true) String authenticatedUserId);
 
@@ -172,7 +160,7 @@ public interface AttractionApi {
 
     @Operation(
             summary = "관광지 통계 조회",
-            description = "찜 수, 저장 수, 평균 평점, 태그와 내 사용자 상태를 조회합니다.",
+            description = "저장 수, 평균 평점, 태그와 내 사용자 상태를 조회합니다.",
             operationId = "getAttractionStats"
     )
     ApiResponse<AttractionStatsResponse> stats(Long id, @Parameter(hidden = true) String authenticatedUserId);

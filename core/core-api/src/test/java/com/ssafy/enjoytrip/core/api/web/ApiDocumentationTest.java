@@ -136,7 +136,7 @@ class ApiDocumentationTest {
                 .thenReturn(List.of(
                 new Attraction(
                         1L, "경복궁", "서울 종로구", "", "", "", "", "", 0, 1, 1, 37.5796, 126.9770, "6", "", "",
-                        0, 0, 0.0, 0, List.of(), false, false, null)
+                        0, 0.0, 0, List.of(), false, null)
         ));
 
         mockMvc.perform(get("/api/attractions").param("sidoCode", "1").param("keyword", "궁"))

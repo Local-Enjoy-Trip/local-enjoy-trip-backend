@@ -461,7 +461,6 @@ class ControllerBehaviorTest {
                             "12",
                             24.5,
                             true,
-                            true,
                             3,
                             4.5,
                             2
@@ -1074,7 +1073,7 @@ class ControllerBehaviorTest {
             Attraction attraction = new Attraction(
                     1L, "경복궁", "서울 종로구", "", "zip", "tel", "image", "image2",
                     7, 1, 2, 37.579617, 126.977041, "6", "12", "overview",
-                    4, 2, 4.5, 2, List.of(), false, true, null
+                    2, 4.5, 2, List.of(), true, null
             );
             when(attractionService.findPopularNearbyAttractions(
                     new NearbySearchCondition(126.9780, 37.5665, 500.0, 20),
@@ -1086,7 +1085,6 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.attractions[0].id").value(1))
                     .andExpect(jsonPath("$.data.attractions[0].title").value("경복궁"))
-                    .andExpect(jsonPath("$.data.attractions[0].favoriteCount").value(4))
                     .andExpect(jsonPath("$.data.attractions[0].saveCount").value(2))
                     .andExpect(jsonPath("$.data.attractions[0].saved").value(true))
                     .andExpect(jsonPath("$.data.attractions[0].popularityCount").value(42))
@@ -1111,14 +1109,10 @@ class ControllerBehaviorTest {
         @Test
         void attractionEngagementAndTagEndpointsValidateAndDelegate() throws Exception {
             when(attractionStatsService.findStats(1L, "ssafy")).thenReturn(new AttractionStats(
-                    1L, 2, 3, 4.5, 2, List.of(new AttractionTag(3L, "family")), true, true, 5
+                    1L, 3, 4.5, 2, List.of(new AttractionTag(3L, "family")), true, 5
             ));
             when(attractionService.findAllTags()).thenReturn(List.of(new AttractionTag(3L, "family")));
             when(attractionService.replaceTags(1L, List.of(3L))).thenReturn(true);
-
-            mockMvc.perform(put("/api/attractions/1/favorite").principal(jwtPrincipal("ssafy")))
-                    .andExpect(status().isOk());
-            verify(attractionService).addFavorite(1L, "ssafy");
 
             mockMvc.perform(put("/api/attractions/1/save").principal(jwtPrincipal("ssafy")))
                     .andExpect(status().isOk());
@@ -1139,7 +1133,6 @@ class ControllerBehaviorTest {
 
             mockMvc.perform(get("/api/attractions/1/stats").principal(jwtPrincipal("ssafy")))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.stats.favoriteCount").value(2))
                     .andExpect(jsonPath("$.data.stats.saveCount").value(3))
                     .andExpect(jsonPath("$.data.stats.saved").value(true))
                     .andExpect(jsonPath("$.data.stats.tags[0].name").value("family"));

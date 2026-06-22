@@ -487,11 +487,9 @@ public class PlanService {
                         record.contentTypeId(),
                         record.overview(),
                         0,
-                        0,
                         0.0,
                         0,
                         List.of(),
-                        false,
                         false,
                         null
                 ))
