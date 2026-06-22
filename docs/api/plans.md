@@ -37,7 +37,7 @@ Content-Length: 362
         "day" : 1,
         "memo" : "오전 방문",
         "stayMinutes" : 120,
-        "favoriteCount" : 12,
+        "saveCount" : 12,
         "ratingAverage" : 4.6,
         "ratingCount" : 5,
         "tags" : [ ]

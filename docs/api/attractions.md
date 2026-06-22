@@ -14,7 +14,7 @@ Host: localhost:8080
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 692
+Content-Length: 640
 
 {
   "data" : {
@@ -35,14 +35,14 @@ Content-Length: 692
       "mlevel" : "6",
       "contentTypeId" : "",
       "overview" : "",
-      "favoriteCount" : 12,
+      "saveCount" : 12,
       "ratingAverage" : 4.6,
       "ratingCount" : 5,
       "tags" : [ {
         "id" : 1,
         "name" : "가족여행"
       } ],
-      "favorited" : true,
+      "saved" : true,
       "myRating" : 5
     } ]
   },
@@ -60,15 +60,15 @@ $ curl 'http://localhost:8080/api/attractions?sidoCode=1&keyword=%EA%B6%81' -i -
 
 ### Engagement Endpoints
 
-인증이 필요한 요청은 `Authorization: Bearer <token>` 헤더를 사용합니다. `GET /api/attractions`와 `GET /api/attractions/{id}/stats`는 비로그인도 가능하지만, 비로그인 응답에서는 `favorited=false`, `myRating=null`입니다.
+인증이 필요한 요청은 `Authorization: Bearer <token>` 헤더를 사용합니다. `GET /api/attractions`와 `GET /api/attractions/{id}/stats`는 비로그인도 가능하지만, 비로그인 응답에서는 `saved=false`, `myRating=null`입니다.
 
 ```http
-PUT /api/attractions/1/favorite HTTP/1.1
+PUT /api/attractions/1/save HTTP/1.1
 Authorization: Bearer <token>
 ```
 
 ```http
-DELETE /api/attractions/1/favorite HTTP/1.1
+DELETE /api/attractions/1/save HTTP/1.1
 Authorization: Bearer <token>
 ```
 
@@ -98,11 +98,11 @@ Authorization: Bearer <token>
   "data": {
     "stats": {
       "attractionId": 1,
-      "favoriteCount": 12,
+      "saveCount": 12,
       "ratingAverage": 4.6,
       "ratingCount": 5,
       "tags": [{ "id": 1, "name": "가족여행" }],
-      "favorited": true,
+      "saved": true,
       "myRating": 5
     }
   },
