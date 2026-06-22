@@ -25,7 +25,7 @@ public class ChargerController implements ChargerApi {
     @GetMapping
     @Override
     public ApiResponse<ChargersResponse> find(@Valid @ModelAttribute ChargerSearchRequest request) {
-        return success(ChargersResponse.from(service.findChargers(
+        return success(new ChargersResponse(service.findChargers(
                 request.normalizedZcode(),
                 request.normalizedKeyword(),
                 request.pageNoOrDefault(),

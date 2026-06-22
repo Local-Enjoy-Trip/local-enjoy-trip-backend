@@ -21,7 +21,7 @@ public class NewsController implements NewsApi {
     @GetMapping
     @Override
     public ApiResponse<NewsResponse> findNews() {
-        return success(NewsResponse.from(service.findNews()));
+        return success(new NewsResponse(service.findNews()));
     }
 
 }

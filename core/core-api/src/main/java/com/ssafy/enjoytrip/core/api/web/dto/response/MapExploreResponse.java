@@ -1,16 +1,19 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
 import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
+import com.ssafy.enjoytrip.core.domain.service.MapCenter;
 import com.ssafy.enjoytrip.core.domain.service.MapExploreResult;
+import com.ssafy.enjoytrip.core.domain.service.NoteMapPin;
+import com.ssafy.enjoytrip.core.domain.service.PlaceMapPin;
 import java.util.List;
 
 public record MapExploreResponse(
-        MapCenterResponse center,
+        MapCenter center,
         double radiusMeters,
         int limit,
         MapExploreFilter filter,
-        List<PlaceMapPinResponse> places,
-        List<NoteMapPinResponse> notes
+        List<PlaceMapPin> places,
+        List<NoteMapPin> notes
 ) {
     public MapExploreResponse {
         places = List.copyOf(places);
@@ -19,12 +22,12 @@ public record MapExploreResponse(
 
     public static MapExploreResponse from(MapExploreResult result) {
         return new MapExploreResponse(
-                MapCenterResponse.from(result.center()),
+                result.center(),
                 result.radiusMeters(),
                 result.limit(),
                 result.filter(),
-                result.places().stream().map(PlaceMapPinResponse::from).toList(),
-                result.notes().stream().map(NoteMapPinResponse::from).toList()
+                result.places(),
+                result.notes()
         );
     }
 }
