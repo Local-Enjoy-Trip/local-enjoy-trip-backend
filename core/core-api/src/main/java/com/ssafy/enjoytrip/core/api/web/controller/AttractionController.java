@@ -4,7 +4,7 @@ import static com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId.Unauthen
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
-import com.ssafy.enjoytrip.core.domain.PopularAttraction;
+import com.ssafy.enjoytrip.core.api.web.dto.response.PopularAttraction;
 import com.ssafy.enjoytrip.core.domain.service.AttractionService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
 import com.ssafy.enjoytrip.core.support.error.ErrorCode;

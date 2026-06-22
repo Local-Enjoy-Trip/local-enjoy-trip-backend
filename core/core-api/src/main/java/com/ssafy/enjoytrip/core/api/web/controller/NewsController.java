@@ -4,7 +4,7 @@ import com.ssafy.enjoytrip.core.api.web.api.*;
 
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
-import com.ssafy.enjoytrip.core.domain.NewsItem;
+import com.ssafy.enjoytrip.core.api.web.dto.response.NewsItem;
 import com.ssafy.enjoytrip.core.domain.service.NewsService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NewsResponse;

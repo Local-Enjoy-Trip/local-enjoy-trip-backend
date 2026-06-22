@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.core.domain;
+package com.ssafy.enjoytrip.core.api.web.dto.response;
 
 public record NewsItem(
         String id,
