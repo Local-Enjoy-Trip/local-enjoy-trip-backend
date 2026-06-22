@@ -6,6 +6,8 @@ public record WeatherBriefingResult(
         Integer temperature,
         Integer rainChance,
         String sunrise,
-        String sunset
+        String sunset,
+        Integer tempMin,
+        Integer tempMax
 ) {
 }

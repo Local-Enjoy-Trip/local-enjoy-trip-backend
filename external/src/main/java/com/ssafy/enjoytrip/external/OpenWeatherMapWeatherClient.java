@@ -1,6 +1,7 @@
 package com.ssafy.enjoytrip.external;
 
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -31,6 +32,7 @@ public class OpenWeatherMapWeatherClient {
 
     private final RestClient restClient;
     private final String apiKey;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public OpenWeatherMapWeatherClient(
             RestClient restClient,
@@ -97,7 +99,9 @@ public class OpenWeatherMapWeatherClient {
                     roundedInteger(numberValue(currentBody, "temp")),
                     rainChance(forecastBody),
                     epochSecondsToKoreanTime(numberValue(currentBody, "sunrise")),
-                    epochSecondsToKoreanTime(numberValue(currentBody, "sunset"))
+                    epochSecondsToKoreanTime(numberValue(currentBody, "sunset")),
+                    roundedInteger(numberValue(currentBody, "temp_min")),
+                    roundedInteger(numberValue(currentBody, "temp_max"))
             );
         } catch (Exception ex) {
             throw new IllegalStateException("OpenWeatherMap API 응답을 파싱하지 못했습니다", ex);
@@ -196,6 +200,115 @@ public class OpenWeatherMapWeatherClient {
             return first;
         }
         return second;
+    }
+
+    public WeatherBriefingWithForecast findWeatherWithForecast(double latitude, double longitude, String regionName) {
+        if (!notBlank(apiKey)) {
+            throw new IllegalStateException(
+                    "OpenWeatherMap API 키가 없습니다. enjoytrip.external.open-weather-map.api-key, "
+                            + "OPENWEATHERMAP_API_KEY 또는 OPENWEATHER_API_KEY를 설정하세요."
+            );
+        }
+
+        URI currentUri = URI.create(CURRENT_WEATHER_URL + "?lat=" + latitude + "&lon=" + longitude + "&appid=" + urlEncode(apiKey) + "&units=metric&lang=kr");
+        URI forecastUri = URI.create(FORECAST_URL + "?lat=" + latitude + "&lon=" + longitude + "&appid=" + urlEncode(apiKey) + "&units=metric&lang=kr&cnt=2");
+
+        String currentBody = fetch(currentUri);
+        String forecastBody = fetch(forecastUri);
+
+        return parseWeatherWithForecast(regionName, currentBody, forecastBody);
+    }
+
+    private WeatherBriefingWithForecast parseWeatherWithForecast(String regionName, String currentBody, String forecastBody) {
+        try {
+            JsonNode currentJson = objectMapper.readTree(currentBody);
+            JsonNode forecastJson = objectMapper.readTree(forecastBody);
+
+            String condition = "맑음";
+            if (currentJson.has("weather") && currentJson.get("weather").isArray() && currentJson.get("weather").size() > 0) {
+                JsonNode weatherNode = currentJson.get("weather").get(0);
+                String desc = weatherNode.path("description").asText();
+                if (notBlank(desc)) {
+                    condition = desc;
+                } else {
+                    condition = conditionFromMain(weatherNode.path("main").asText());
+                }
+            }
+
+            Integer temp = null;
+            Integer tempMin = null;
+            Integer tempMax = null;
+            if (currentJson.has("main")) {
+                temp = roundedInteger(currentJson.get("main").path("temp").asDouble());
+                tempMin = roundedInteger(currentJson.get("main").path("temp_min").asDouble());
+                tempMax = roundedInteger(currentJson.get("main").path("temp_max").asDouble());
+            }
+
+            String sunrise = null;
+            String sunset = null;
+            if (currentJson.has("sys")) {
+                sunrise = epochSecondsToKoreanTime(currentJson.get("sys").path("sunrise").asDouble());
+                sunset = epochSecondsToKoreanTime(currentJson.get("sys").path("sunset").asDouble());
+            }
+
+            Integer currentRainChance = null;
+            JsonNode listNode = forecastJson.path("list");
+            if (listNode.isArray() && listNode.size() > 0) {
+                Double pop = listNode.get(0).path("pop").asDouble();
+                currentRainChance = clamp((int) Math.round(pop * 100), 0, 100);
+            }
+
+            WeatherBriefingResult current = new WeatherBriefingResult(
+                    regionName,
+                    condition,
+                    temp,
+                    currentRainChance,
+                    sunrise,
+                    sunset,
+                    tempMin,
+                    tempMax
+            );
+
+            List<WeatherForecastResult> forecasts = new ArrayList<>();
+            if (listNode.isArray()) {
+                int limit = Math.min(2, listNode.size());
+                for (int i = 0; i < limit; i++) {
+                    JsonNode item = listNode.get(i);
+                    long dt = item.path("dt").asLong();
+                    String forecastTime = TIME_FORMAT.format(Instant.ofEpochSecond(dt));
+
+                    Integer forecastTemp = null;
+                    if (item.has("main")) {
+                        forecastTemp = roundedInteger(item.get("main").path("temp").asDouble());
+                    }
+
+                    String forecastCondition = "맑음";
+                    if (item.has("weather") && item.get("weather").isArray() && item.get("weather").size() > 0) {
+                        JsonNode weatherNode = item.get("weather").get(0);
+                        String desc = weatherNode.path("description").asText();
+                        if (notBlank(desc)) {
+                            forecastCondition = desc;
+                        } else {
+                            forecastCondition = conditionFromMain(weatherNode.path("main").asText());
+                        }
+                    }
+
+                    Double popVal = item.path("pop").asDouble();
+                    Integer forecastRainChance = clamp((int) Math.round(popVal * 100), 0, 100);
+
+                    forecasts.add(new WeatherForecastResult(
+                            forecastTime,
+                            forecastTemp,
+                            forecastCondition,
+                            forecastRainChance
+                    ));
+                }
+            }
+
+            return new WeatherBriefingWithForecast(current, forecasts);
+        } catch (Exception ex) {
+            throw new IllegalStateException("OpenWeatherMap API 응답을 파싱하지 못했습니다", ex);
+        }
     }
 
     private static String urlEncode(String value) {
