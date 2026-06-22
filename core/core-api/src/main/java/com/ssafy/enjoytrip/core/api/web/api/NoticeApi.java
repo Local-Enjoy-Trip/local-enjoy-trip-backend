@@ -21,9 +21,26 @@ public interface NoticeApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "공지사항 목록 조회 성공",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = NoticesResponse.class),
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = NoticesResponse.class),
                             examples = @ExampleObject(value = """
-                                    {"success":true,"data":{"notices":[{"id":1,"title":"공지","content":"내용","author":"admin","createdAt":"2026-05-20","updatedAt":"2026-05-20"}]},"error":null}
+                                    {
+                                      "success": true,
+                                      "data": {
+                                        "notices": [
+                                          {
+                                            "id": 1,
+                                            "title": "공지",
+                                            "content": "내용",
+                                            "author": "admin",
+                                            "createdAt": "2026-05-20",
+                                            "updatedAt": "2026-05-20"
+                                          }
+                                        ]
+                                      },
+                                      "error": null
+                                    }
                                     """))
             )
     })
@@ -51,7 +68,10 @@ public interface NoticeApi {
                             examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
                     )
             ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 본문")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 본문"
+            )
     })
     ApiResponse<Void> create(NoticeCreateRequest request);
 
@@ -77,8 +97,14 @@ public interface NoticeApi {
                             examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
                     )
             ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 id 또는 필수 필드 누락"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "공지사항 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 id 또는 필수 필드 누락"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "공지사항 없음"
+            )
     })
     ApiResponse<Void> update(
             @Parameter(description = "수정할 공지사항 ID", example = "1", required = true) Long id,
@@ -95,8 +121,14 @@ public interface NoticeApi {
                             examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
                     )
             ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 id"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "공지사항 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 id"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "공지사항 없음"
+            )
     })
     ApiResponse<Void> delete(@Parameter(description = "삭제할 공지사항 ID", example = "1", required = true) Long id);
 }

@@ -1,15 +1,29 @@
 package com.ssafy.enjoytrip.core.api.web.dto.request;
 
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public record AttractionSearchRequest(
-    String mapX,
-    String mapY,
-    String radius,
-    String contentTypeId,
-    String keyword,
-    String sidoCode,
-    String gugunCode
+        @Schema(description = "현재 위치 경도", example = "126.9780")
+        String mapX,
+
+        @Schema(description = "현재 위치 위도", example = "37.5665")
+        String mapY,
+
+        @Schema(description = "좌표 검색 반경(m), 기본값 3000", example = "3000")
+        String radius,
+
+        @Schema(description = "관광 타입 ID", example = "12")
+        String contentTypeId,
+
+        @Schema(description = "관광지 검색어", example = "경복궁")
+        String keyword,
+
+        @Schema(description = "시도 코드", example = "1")
+        String sidoCode,
+
+        @Schema(description = "구군 코드", example = "1")
+        String gugunCode
 ) {
     private static final double DEFAULT_RADIUS_METERS = 3000.0;
     private static final double MAX_RADIUS_METERS = 20000.0;

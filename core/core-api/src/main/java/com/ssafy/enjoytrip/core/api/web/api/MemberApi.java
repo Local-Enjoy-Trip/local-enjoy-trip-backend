@@ -22,12 +22,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Members", description = "회원 가입, 로그인, 내 정보, 회원 관리 API")
 public interface MemberApi {
 
-    @Operation(summary = "회원 목록 조회", description = "등록된 회원 목록을 조회합니다. 비밀번호는 응답하지 않습니다.", operationId = "findMembers")
+    @Operation(
+            summary = "회원 목록 조회",
+            description = "등록된 회원 목록을 조회합니다. 비밀번호는 응답하지 않습니다.",
+            operationId = "findMembers"
+    )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "회원 목록 조회 성공",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsersResponse.class),
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UsersResponse.class),
                             examples = @ExampleObject(value = """
                                     {
                                       "success": true,
@@ -69,8 +75,14 @@ public interface MemberApi {
                             examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
                     )
             ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "필수 필드 누락"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 존재하는 회원")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "필수 필드 누락"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "409",
+                    description = "이미 존재하는 회원"
+            )
     })
     ApiResponse<Void> signup(MemberSignupRequest request);
 
@@ -91,7 +103,9 @@ public interface MemberApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "로그인 성공",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class),
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = LoginResponse.class),
                             examples = @ExampleObject(value = """
                                     {
                                       "success": true,
@@ -111,7 +125,10 @@ public interface MemberApi {
                                     }
                                     """))
             ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "아이디 또는 비밀번호 불일치")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "아이디 또는 비밀번호 불일치"
+            )
     })
     ApiResponse<LoginResponse> login(MemberLoginRequest request);
 
@@ -184,7 +201,10 @@ public interface MemberApi {
                             examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
                     )
             ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "userId 누락")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "userId 누락"
+            )
     })
     ApiResponse<Void> logout(MemberLogoutRequest request);
 
@@ -257,7 +277,10 @@ public interface MemberApi {
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "다른 사용자 계정 접근"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "다른 사용자 계정 접근"
+            ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
     })
     ApiResponse<Void> deleteMe(@Parameter(hidden = true) String authenticatedUserId);

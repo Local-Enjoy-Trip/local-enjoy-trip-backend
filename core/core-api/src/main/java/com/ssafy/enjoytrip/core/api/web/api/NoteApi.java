@@ -56,7 +56,10 @@ public interface NoteApi {
                     )
             )
     })
-    ApiResponse<NoteResponse> create(NoteCreateRequest request, @Parameter(hidden = true) String authenticatedUserId);
+    ApiResponse<NoteResponse> create(
+            NoteCreateRequest request,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "쪽지 수정",
