@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.core.domain;
+package com.ssafy.enjoytrip.core.domain.service;
 
 public record PlaceMapPin(
         Long id,

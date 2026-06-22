@@ -6,14 +6,10 @@ public record Member(
         String nickname,
         String email,
         String password,
-        String profileImageUrl,
-        Double representativeLatitude,
-        Double representativeLongitude,
-        String representativeRegionName,
-        String createdAt
+        String profileImageUrl
 ) {
-    public Member(String userId, String name, String email, String password, String createdAt) {
-        this(userId, name, name, email, password, null, null, null, null, createdAt);
+    public Member(String userId, String name, String email, String password) {
+        this(userId, name, name, email, password, null);
     }
 
     public Member withPassword(String newPassword) {
@@ -23,11 +19,7 @@ public record Member(
                 nickname,
                 email,
                 newPassword,
-                profileImageUrl,
-                representativeLatitude,
-                representativeLongitude,
-                representativeRegionName,
-                createdAt
+                profileImageUrl
         );
     }
 

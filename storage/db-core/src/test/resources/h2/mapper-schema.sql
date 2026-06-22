@@ -55,9 +55,6 @@ create table members (
     email varchar(255) not null unique,
     password varchar(255) not null,
     profile_image_url varchar(512),
-    representative_latitude numeric(10, 7),
-    representative_longitude numeric(10, 7),
-    representative_region_name varchar(100),
     created_at timestamp not null,
     updated_at timestamp
 );

@@ -178,7 +178,7 @@ class RepositoryBackedServicesTest {
         void signupDoesNotInsertDuplicateUser() {
             when(mapper.existsByUserIdOrEmail("ssafy", "ssafy@example.com")).thenReturn(1);
 
-            Member duplicate = new Member("ssafy", "SSAFY", "ssafy@example.com", "secret", "");
+            Member duplicate = new Member("ssafy", "SSAFY", "ssafy@example.com", "secret");
 
             assertThatThrownBy(() -> service.signup(duplicate))
                     .isInstanceOfSatisfying(CoreException.class,
@@ -197,13 +197,10 @@ class RepositoryBackedServicesTest {
                     null,
                     "a@example.com",
                     passwordEncoder.encode("secret"),
-                    "",
-                    null,
-                    null,
-                    null
+                    ""
             ));
             when(mapper.findByUserId("blank-stored")).thenReturn(new MemberRecord(
-                    "blank-stored", "A", null, "a@example.com", " ", "", null, null, null));
+                    "blank-stored", "A", null, "a@example.com", " ", ""));
 
             assertThatThrownBy(() -> service.login("missing", "secret"))
                     .isInstanceOfSatisfying(CoreException.class,
@@ -227,10 +224,7 @@ class RepositoryBackedServicesTest {
                     "기존닉네임",
                     "old@example.com",
                     "old",
-                    "https://cdn.example.com/old.png",
-                    37.5665,
-                    126.9780,
-                    "서울 중구"
+                    "https://cdn.example.com/old.png"
             );
             when(mapper.findByUserId("ssafy")).thenReturn(record);
             when(mapper.update(record)).thenReturn(1);
@@ -241,11 +235,7 @@ class RepositoryBackedServicesTest {
                     "동네핀러",
                     "new@example.com",
                     "new-secret",
-                    "https://cdn.example.com/profile.png",
-                    null,
-                    null,
-                    null,
-                    ""
+                    "https://cdn.example.com/profile.png"
             ));
             assertThat(record.getName()).isEqualTo("SSAFY");
             assertThat(record.getEmail()).isEqualTo("old@example.com");
@@ -253,15 +243,12 @@ class RepositoryBackedServicesTest {
             assertThat(record.getNickname()).isEqualTo("동네핀러");
             assertThat(record.getProfileImageUrl()).isEqualTo("https://cdn.example.com/profile.png");
 
-            service.update(new Member("ssafy", null, null, null, null, null, null, null, null, ""));
+            service.update(new Member("ssafy", null, null, null, null, null));
             assertThat(record.getNickname()).isNull();
             assertThat(record.getProfileImageUrl()).isNull();
-            assertThat(record.getRepresentativeLatitude()).isNull();
-            assertThat(record.getRepresentativeLongitude()).isNull();
-            assertThat(record.getRepresentativeRegionName()).isNull();
 
             when(mapper.findByUserId("missing")).thenReturn(null);
-            Member missing = new Member("missing", "SSAFY", "ssafy@example.com", " ", "");
+            Member missing = new Member("missing", "SSAFY", "ssafy@example.com", " ");
 
             assertThatThrownBy(() -> service.update(missing))
                     .isInstanceOfSatisfying(CoreException.class,

@@ -30,8 +30,8 @@ Unauthenticated requests must return the standard envelope:
 
 | Name | Required | Rule |
 |---|---:|---|
-| `mapX` | no | Longitude. If present, `mapY` must also be present. Valid range: -180 to 180. |
-| `mapY` | no | Latitude. If present, `mapX` must also be present. Valid range: -90 to 90. |
+| `mapX` | yes | Longitude. Valid range: -180 to 180. |
+| `mapY` | yes | Latitude. Valid range: -90 to 90. |
 | `radius` | no | Positive search radius in meters; implementation must cap it. |
 | `limit` | no | Positive result limit; implementation must cap it. |
 | `filter` | no | Optional map filter. Keep as a typed enum, not a raw string map. |
@@ -39,11 +39,10 @@ Unauthenticated requests must return the standard envelope:
 
 Rules:
 
-- The DTO validates raw query shape only.
+- The DTO validates raw query shape and requires both coordinates.
 - Do not reuse the legacy home nearby Seoul fallback.
-- If both coordinates are omitted, resolve the authenticated member representative location in the core service.
-- If the member has no representative location, return `400 BAD_REQUEST` with message `대표 동네 위치를 먼저 설정하세요.`
-- Explicit coordinates override the representative-location fallback.
+- Do not resolve or fallback to a member-stored representative location.
+- Missing or partial coordinates return a `400` JSON error.
 
 ## Successful response shape
 
@@ -56,7 +55,7 @@ The response must keep map-only privacy fields separate from CRUD `NoteResponse`
     "center": {
       "latitude": 37.5665,
       "longitude": 126.978,
-      "source": "REPRESENTATIVE_LOCATION"
+      "regionName": null
     },
     "places": [
       {
@@ -122,13 +121,13 @@ curl -s -H "Authorization: Bearer $JWT" \
   'http://localhost:8080/api/map/explore?mapX=126.9' \
   | jq '.success, .error.code, .error.message'
 
-# representative-location fallback
-curl -s -H "Authorization: Bearer $JWT_WITH_REPRESENTATIVE_LOCATION" \
+# missing coordinates -> 400
+curl -s -H "Authorization: Bearer $JWT" \
   'http://localhost:8080/api/map/explore' \
-  | jq '.success, .data.center'
+  | jq '.success, .error.code, .error.message'
 
-# explicit coordinates override fallback
-curl -s -H "Authorization: Bearer $JWT_WITH_REPRESENTATIVE_LOCATION" \
+# explicit coordinates
+curl -s -H "Authorization: Bearer $JWT" \
   'http://localhost:8080/api/map/explore?mapX=126.978&mapY=37.5665&radius=500&limit=20' \
   | jq '.success, .data.center'
 

@@ -2,7 +2,6 @@ package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.api.config.JwtProperties;
 import com.ssafy.enjoytrip.core.domain.Member;
-import com.ssafy.enjoytrip.core.api.web.dto.response.IssuedToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;

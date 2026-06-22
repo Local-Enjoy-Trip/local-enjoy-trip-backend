@@ -2,12 +2,12 @@ package com.ssafy.enjoytrip.core.api.web.controller;
 
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
-import com.ssafy.enjoytrip.core.domain.MapExploreResult;
 import com.ssafy.enjoytrip.core.domain.service.MapExploreService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.MapApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MapExploreRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.MapExploreResponse;
+import com.ssafy.enjoytrip.core.domain.service.MapExploreResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
@@ -28,8 +28,8 @@ public class MapController implements MapApi {
                                                    @AuthenticatedUserId String authenticatedUserId) {
         MapExploreResult result = service.explore(
                 authenticatedUserId,
-                request.normalizedLongitude(),
-                request.normalizedLatitude(),
+                request.requiredLongitude(),
+                request.requiredLatitude(),
                 request.normalizedRadiusMeters(),
                 request.normalizedLimit(),
                 request.normalizedFilter(),

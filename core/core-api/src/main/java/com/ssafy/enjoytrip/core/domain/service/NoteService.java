@@ -4,7 +4,6 @@ import static com.ssafy.enjoytrip.core.support.error.ErrorType.NOTE_NOT_FOUND;
 
 import com.ssafy.enjoytrip.core.domain.Note;
 import com.ssafy.enjoytrip.core.domain.NoteCategory;
-import com.ssafy.enjoytrip.core.domain.NoteMapPin;
 import com.ssafy.enjoytrip.core.domain.NoteStatus;
 import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
 import com.ssafy.enjoytrip.core.domain.NoteVisibility;

@@ -1,6 +1,5 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
-import com.ssafy.enjoytrip.core.domain.ChargerItem;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.EvChargerMapper;
 import java.util.List;
 import java.util.Map;
@@ -32,14 +31,14 @@ public class EvChargerService {
 
     private final EvChargerMapper evChargerMapper;
 
-    public List<ChargerItem> findChargers(String zcode, String keyword, int pageNo, int numOfRows) {
+    public List<ChargerResult> findChargers(String zcode, String keyword, int pageNo, int numOfRows) {
         int limit = Math.max(10, Math.min(500, numOfRows));
         int page = Math.max(1, pageNo);
         String region = ZCODE_REGIONS.get(zcode);
 
         return evChargerMapper.findChargers(region, keyword, limit, (page - 1) * limit)
                 .stream()
-                .map(record -> new ChargerItem(
+                .map(record -> new ChargerResult(
                         record.statId(),
                         record.statNm(),
                         record.chgerId(),

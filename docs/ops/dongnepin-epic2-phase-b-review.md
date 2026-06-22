@@ -18,7 +18,7 @@
 
 - `app/web` may own controllers, request/response DTOs, OpenAPI contracts, validation, and response envelopes.
 - `app/web/src/main` must not import `com.ssafy.enjoytrip.storage.*`.
-- `core` owns representative-location fallback decision, business error, commands/projections, and service flow.
+- `core` now requires explicit map coordinates; the old member-location fallback decision is obsolete.
 - `storage` owns jOOQ/PostGIS queries, visibility/friend relationship projection, note image persistence, and migration.
 - `external` owns MinIO/S3-compatible presigned upload client and config binding.
 - `support/auth` owns security matcher protection for the new authenticated routes.
@@ -41,10 +41,9 @@ These are review checkpoints rather than final defects; implementation workers m
 1. **Security**
    - Verify both new endpoints are authenticated in runtime `SecurityConfig` and standalone test resolver support.
    - Confirm unauthenticated JSON envelope uses `error.code=UNAUTHORIZED`.
-2. **Representative-location fallback**
-   - Verify `MapExploreRequest` only validates raw query shape and does not hardcode Seoul fallback.
-   - Verify service uses explicit coordinates first, then authenticated member representative location.
-   - Verify missing representative location uses a specific `BAD_REQUEST` business error message: `대표 동네 위치를 먼저 설정하세요.`
+2. **Explicit map coordinates**
+   - Verify `MapExploreRequest` requires both `mapX` and `mapY` and does not hardcode Seoul coordinates.
+   - Verify service uses request coordinates only and does not read member-stored location.
 3. **Privacy matrix**
    - Verify inaccessible notes are excluded, not masked.
    - Verify nickname is present for accessible notes.
@@ -78,8 +77,8 @@ Verification:
 - PASS HTTP JSON proof: GET /api/map/explore unauthenticated -> 401 UNAUTHORIZED envelope
 - PASS HTTP JSON proof: POST /api/note-images/presigned-upload unauthenticated -> 401 UNAUTHORIZED envelope
 - PASS HTTP JSON proof: map partial coordinate -> 400 envelope
-- PASS HTTP JSON proof: missing representative location -> 400 BAD_REQUEST envelope
-- PASS HTTP JSON proof: representative fallback and explicit coordinate override
+- PASS HTTP JSON proof: missing map coordinates -> 400 BAD_REQUEST envelope
+- PASS HTTP JSON proof: explicit map coordinates -> success envelope
 - PASS HTTP JSON proof: SELF/FRIEND/NONE privacy matrix spot checks
 - PASS HTTP JSON proof: presign response fields
 ```
@@ -105,5 +104,5 @@ Verification:
 ### Test probe
 
 - Existing tests cover legacy note create/update/delete, legacy nearby fallback, JWT/security support, and SQL visibility predicate fragments.
-- Missing tests include map endpoint auth, representative-location fallback/error, SELF/FRIEND/NONE privacy shaping, non-ACCEPTED friendship exclusion, one-image schema validation, and MinIO config binding.
+- Missing tests include map endpoint auth, explicit-coordinate validation, SELF/FRIEND/NONE privacy shaping, non-ACCEPTED friendship exclusion, one-image schema validation, and MinIO config binding.
 - Focused checks after implementation should include `:core:core-api:test`, `:storage:db-core:test`, `:core:core-api:test`, `:core:core-api:check`, `:support:auth:check`, `:core:core-api:check`, plus `:external:test` if MinIO client code is added.

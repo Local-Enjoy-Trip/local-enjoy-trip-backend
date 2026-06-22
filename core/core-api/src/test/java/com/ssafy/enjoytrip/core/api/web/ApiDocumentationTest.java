@@ -4,8 +4,8 @@ import com.ssafy.enjoytrip.core.api.web.controller.*;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
-import com.ssafy.enjoytrip.core.domain.ChargerItem;
-import com.ssafy.enjoytrip.core.domain.NewsItem;
+import com.ssafy.enjoytrip.core.domain.service.ChargerResult;
+import com.ssafy.enjoytrip.core.domain.service.NewsResult;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import com.ssafy.enjoytrip.core.domain.service.DbHealthService;
@@ -143,7 +143,7 @@ class ApiDocumentationTest {
     @Test
     void chargers() throws Exception {
         when(chargerService.findChargers(null, "서울", 1, 150)).thenReturn(List.of(
-                new ChargerItem(
+                new ChargerResult(
                         "ST001", "서울충전소", "01", "06", "서울", "", 37.5, 127.0, "24시간", "환경부", "1661-9408", "2"
                 )
         ));
@@ -160,7 +160,7 @@ class ApiDocumentationTest {
     @Test
     void news() throws Exception {
         when(newsService.findNews()).thenReturn(List.of(
-                new NewsItem("news_1", "관광 뉴스", "https://example.com", "요약", "관광 뉴스", "2026-05-14")
+                new NewsResult("news_1", "관광 뉴스", "https://example.com", "요약", "관광 뉴스", "2026-05-14")
         ));
 
         mockMvc.perform(get("/api/news"))
@@ -274,7 +274,7 @@ class ApiDocumentationTest {
     @Test
     void members() throws Exception {
         when(memberService.findAllUsers()).thenReturn(List.of(
-                new Member("ssafy", "SSAFY", "ssafy@example.com", "secret", "2026-05-14 11:00:00")
+                new Member("ssafy", "SSAFY", "ssafy@example.com", "secret")
         ));
 
         mockMvc.perform(get("/api/members"))

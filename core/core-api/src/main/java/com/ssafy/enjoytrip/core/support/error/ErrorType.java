@@ -13,13 +13,6 @@ public enum ErrorType {
             "아이디 또는 비밀번호가 올바르지 않습니다.",
             WARN
     ),
-    MEMBER_REPRESENTATIVE_LOCATION_REQUIRED(
-            ErrorCode.M005,
-            HttpStatus.BAD_REQUEST,
-            "대표 동네 위치를 먼저 설정하세요.",
-            WARN
-    ),
-
     TAG_NOT_FOUND(ErrorCode.A002, HttpStatus.NOT_FOUND, "태그를 찾을 수 없습니다.", WARN),
     TAG_ALREADY_EXISTS(ErrorCode.A003, HttpStatus.CONFLICT, "이미 존재하는 태그입니다.", WARN),
 

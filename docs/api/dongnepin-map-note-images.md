@@ -6,7 +6,7 @@ Authenticated users can fetch map pins for places and accessible notes.
 
 Query parameters:
 
-- `mapX`, `mapY`: optional longitude/latitude pair. Supplying only one returns a `400` JSON error.
+- `mapX`, `mapY`: required longitude/latitude pair. Missing either value returns a `400` JSON error.
 - `radius`: optional search radius in meters. Default is `1000`, maximum is `5000`.
 - `limit`: optional per-type limit. Default is `50`, maximum is `100`.
 - `filter`: optional `ALL`, `PLACE`, `NOTE`, or `FRIEND`.
@@ -14,10 +14,9 @@ Query parameters:
 
 Center resolution:
 
-1. If `mapX` and `mapY` are present, the request coordinates are used.
-2. Otherwise, the authenticated member's representative location is used.
-3. If neither is available, the API returns `400 BAD_REQUEST` with
-   `대표 동네 위치를 먼저 설정하세요.`.
+1. The request `mapX` and `mapY` coordinates are used.
+2. The API does not fallback to member-stored representative location.
+3. Missing coordinates return a `400 BAD_REQUEST` JSON error.
 
 Note privacy projection:
 

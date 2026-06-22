@@ -1,7 +1,7 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
-import com.ssafy.enjoytrip.core.domain.PopularAttraction;
+import com.ssafy.enjoytrip.core.domain.service.PopularAttractionResult;
 
 public record PopularAttractionResponse(
         Long id,
@@ -19,7 +19,7 @@ public record PopularAttractionResponse(
         long popularityCount,
         double distanceMeters
 ) {
-    public PopularAttractionResponse(PopularAttraction popularAttraction) {
+    public PopularAttractionResponse(PopularAttractionResult popularAttraction) {
         this(
                 popularAttraction.attraction().id(),
                 popularAttraction.attraction().title(),
@@ -39,6 +39,6 @@ public record PopularAttractionResponse(
     }
 
     public PopularAttractionResponse(Attraction attraction, long popularityCount, double distanceMeters) {
-        this(new PopularAttraction(attraction, distanceMeters, popularityCount));
+        this(new PopularAttractionResult(attraction, distanceMeters, popularityCount));
     }
 }

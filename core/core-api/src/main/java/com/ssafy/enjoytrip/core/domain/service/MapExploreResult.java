@@ -1,5 +1,6 @@
-package com.ssafy.enjoytrip.core.domain;
+package com.ssafy.enjoytrip.core.domain.service;
 
+import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
 import java.util.List;
 
 public record MapExploreResult(

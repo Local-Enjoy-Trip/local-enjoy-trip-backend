@@ -1,17 +1,17 @@
 package com.ssafy.enjoytrip.core.api.web;
 
 import com.ssafy.enjoytrip.core.api.web.controller.*;
+import com.ssafy.enjoytrip.core.domain.service.MapCenter;
+import com.ssafy.enjoytrip.core.domain.service.MapExploreResult;
+import com.ssafy.enjoytrip.core.domain.service.NoteMapPin;
+import com.ssafy.enjoytrip.core.domain.service.PlaceMapPin;
 
 import com.ssafy.enjoytrip.core.domain.BoardPost;
 import com.ssafy.enjoytrip.core.domain.Hotplace;
-import com.ssafy.enjoytrip.core.domain.MapExploreResult;
 import com.ssafy.enjoytrip.core.domain.Member;
-import com.ssafy.enjoytrip.core.domain.MapCenter;
 import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
 import com.ssafy.enjoytrip.core.domain.NoteImageUploadUrl;
-import com.ssafy.enjoytrip.core.domain.NoteMapPin;
 import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
-import com.ssafy.enjoytrip.core.domain.PlaceMapPin;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.core.domain.Note;
 import com.ssafy.enjoytrip.core.domain.NoteCategory;
@@ -25,7 +25,7 @@ import com.ssafy.enjoytrip.core.domain.AttractionStats;
 import com.ssafy.enjoytrip.core.domain.AttractionTag;
 import com.ssafy.enjoytrip.core.domain.query.NearbyNotesCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
-import com.ssafy.enjoytrip.core.domain.PopularAttraction;
+import com.ssafy.enjoytrip.core.domain.service.PopularAttractionResult;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import com.ssafy.enjoytrip.core.support.error.exception.ExternalServiceException;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
@@ -69,7 +69,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_CREDENTIALS;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.MEMBER_REPRESENTATIVE_LOCATION_REQUIRED;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.PLAN_NOT_FOUND;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.NOTICE_NOT_FOUND;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.HOTPLACE_NOT_FOUND;
@@ -345,40 +344,29 @@ class ControllerBehaviorTest {
                             .value("위도 또는 경도가 유효하지 않습니다."));
         }
 
-        @DisplayName("대표 동네가 없고 좌표도 없으면 400을 반환한다")
+        @DisplayName("지도 탐색은 좌표가 없으면 검증 오류를 반환한다")
         @Test
-        void mapExploreRequiresRepresentativeLocationWhenCoordinatesAreMissing() throws Exception {
-            when(mapExploreService.explore(
-                    any(),
-                    any(),
-                    any(),
-                    anyDouble(),
-                    anyInt(),
-                    any(),
-                    any()
-            ))
-                    .thenThrow(new CoreException(MEMBER_REPRESENTATIVE_LOCATION_REQUIRED));
-
+        void mapExploreRequiresCoordinates() throws Exception {
             mockMvc.perform(get("/api/map/explore")
                             .principal(jwtPrincipal("viewer")))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.message")
-                            .value("대표 동네 위치를 먼저 설정하세요."));
+                            .value("위도 또는 경도가 유효하지 않습니다."));
         }
 
-        @DisplayName("명시 좌표는 대표 위치 fallback보다 우선하여 서비스 command로 전달된다")
+        @DisplayName("명시 좌표는 서비스 command로 전달된다")
         @Test
-        void mapExploreExplicitCoordinatesOverrideRepresentativeFallback() throws Exception {
+        void mapExplorePassesExplicitCoordinates() throws Exception {
             when(mapExploreService.explore(
                     any(),
-                    any(),
-                    any(),
+                    anyDouble(),
+                    anyDouble(),
                     anyDouble(),
                     anyInt(),
                     any(),
                     any()
             )).thenReturn(new MapExploreResult(
-                    new MapCenter(127.0276, 37.4979, null, false),
+                    new MapCenter(127.0276, 37.4979, null),
                     750.0,
                     10,
                     MapExploreFilter.NOTE,
@@ -395,7 +383,6 @@ class ControllerBehaviorTest {
                             .param("filter", "NOTE")
                             .param("noteCategory", "TIP"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.center.fromRepresentativeLocation").value(false))
                     .andExpect(jsonPath("$.data.radiusMeters").value(750.0))
                     .andExpect(jsonPath("$.data.limit").value(10))
                     .andExpect(jsonPath("$.data.filter").value("NOTE"));
@@ -416,14 +403,14 @@ class ControllerBehaviorTest {
         void mapExplorePassesSavedPlaceFilterToService() throws Exception {
             when(mapExploreService.explore(
                     any(),
-                    any(),
-                    any(),
+                    anyDouble(),
+                    anyDouble(),
                     anyDouble(),
                     anyInt(),
                     any(),
                     any()
             )).thenReturn(new MapExploreResult(
-                    new MapCenter(126.9780, 37.5665, null, false),
+                    new MapCenter(126.9780, 37.5665, null),
                     500.0,
                     50,
                     MapExploreFilter.SAVED_PLACE,
@@ -433,14 +420,16 @@ class ControllerBehaviorTest {
 
             mockMvc.perform(get("/api/map/explore")
                             .principal(jwtPrincipal("viewer"))
+                            .param("mapX", "126.9780")
+                            .param("mapY", "37.5665")
                             .param("filter", "SAVED_PLACE"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.filter").value("SAVED_PLACE"));
 
             verify(mapExploreService).explore(
                     "viewer",
-                    null,
-                    null,
+                    126.9780,
+                    37.5665,
                     500.0,
                     50,
                     MapExploreFilter.SAVED_PLACE,
@@ -452,7 +441,7 @@ class ControllerBehaviorTest {
         @Test
         void mapExploreReturnsPlaceAndPrivacyProjectedNotePins() throws Exception {
             MapExploreResult result = new MapExploreResult(
-                    new MapCenter(126.9780, 37.5665, "서울 중구", true),
+                    new MapCenter(126.9780, 37.5665, "서울 중구"),
                     1000.0,
                     50,
                     MapExploreFilter.ALL,
@@ -524,8 +513,8 @@ class ControllerBehaviorTest {
             );
             when(mapExploreService.explore(
                     any(),
-                    any(),
-                    any(),
+                    anyDouble(),
+                    anyDouble(),
                     anyDouble(),
                     anyInt(),
                     any(),
@@ -533,10 +522,11 @@ class ControllerBehaviorTest {
             )).thenReturn(result);
 
             mockMvc.perform(get("/api/map/explore")
-                            .principal(jwtPrincipal("viewer")))
+                            .principal(jwtPrincipal("viewer"))
+                            .param("mapX", "126.9780")
+                            .param("mapY", "37.5665"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.center.fromRepresentativeLocation").value(true))
                     .andExpect(jsonPath("$.data.places[0].title").value("서울광장"))
                     .andExpect(jsonPath("$.data.notes[0].authorNickname").value("내닉"))
                     .andExpect(jsonPath("$.data.notes[0].authorProfileImageUrl")
@@ -552,8 +542,8 @@ class ControllerBehaviorTest {
 
             verify(mapExploreService).explore(
                     any(),
-                    any(),
-                    any(),
+                    anyDouble(),
+                    anyDouble(),
                     anyDouble(),
                     anyInt(),
                     any(),
@@ -984,7 +974,7 @@ class ControllerBehaviorTest {
             when(attractionService.findPopularNearbyAttractions(
                     new NearbySearchCondition(126.9780, 37.5665, 500.0, 20),
                     null
-            )).thenReturn(List.of(new PopularAttraction(attraction, 120.5, 42L)));
+            )).thenReturn(List.of(new PopularAttractionResult(attraction, 120.5, 42L)));
 
             mockMvc.perform(get("/api/attractions/popular-nearby"))
                     .andExpect(status().isOk())

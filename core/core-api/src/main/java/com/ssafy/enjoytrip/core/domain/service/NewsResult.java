@@ -1,6 +1,6 @@
-package com.ssafy.enjoytrip.core.domain;
+package com.ssafy.enjoytrip.core.domain.service;
 
-public record NewsItem(
+public record NewsResult(
         String id,
         String title,
         String link,

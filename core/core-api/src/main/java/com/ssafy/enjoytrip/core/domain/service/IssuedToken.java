@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.core.api.web.dto.response;
+package com.ssafy.enjoytrip.core.domain.service;
 
 public record IssuedToken(
         String accessToken,

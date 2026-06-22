@@ -19,31 +19,22 @@ public record MapExploreRequest(
     private static final double DEFAULT_RADIUS_METERS = 500.0;
     private static final int DEFAULT_LIMIT = 50;
     private static final String INVALID_COORDINATES_MESSAGE = "위도 또는 경도가 유효하지 않습니다.";
-    private static final String INVALID_REQUEST_MESSAGE = "유효하지 않은 요청입니다.";
 
-    public Double normalizedLongitude() {
-        requireCoordinatePair();
+    public double requiredLongitude() {
+        requireCoordinates();
         return mapX;
     }
 
-    public Double normalizedLatitude() {
-        requireCoordinatePair();
+    public double requiredLatitude() {
+        requireCoordinates();
         return mapY;
     }
 
     public double normalizedRadiusMeters() {
-        if (radius != null && (radius <= 0 || radius > 5000)) {
-            throw new ClientInputException(INVALID_REQUEST_MESSAGE);
-        }
-
         return radius == null ? DEFAULT_RADIUS_METERS : radius;
     }
 
     public int normalizedLimit() {
-        if (limit != null && (limit <= 0 || limit > 100)) {
-            throw new ClientInputException(INVALID_REQUEST_MESSAGE);
-        }
-
         return limit == null ? DEFAULT_LIMIT : limit;
     }
 
@@ -51,8 +42,8 @@ public record MapExploreRequest(
         return filter == null ? MapExploreFilter.ALL : filter;
     }
 
-    private void requireCoordinatePair() {
-        if ((mapX == null) != (mapY == null)) {
+    private void requireCoordinates() {
+        if (mapX == null || mapY == null) {
             throw new ClientInputException(INVALID_COORDINATES_MESSAGE);
         }
     }

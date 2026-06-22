@@ -4,7 +4,7 @@ import static com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId.Unauthen
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
-import com.ssafy.enjoytrip.core.domain.PopularAttraction;
+import com.ssafy.enjoytrip.core.domain.service.PopularAttractionResult;
 import com.ssafy.enjoytrip.core.domain.service.AttractionService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
 import com.ssafy.enjoytrip.core.support.error.ErrorCode;
@@ -60,7 +60,7 @@ public class AttractionController implements AttractionApi {
             @Valid @ModelAttribute NearbySectionRequest request,
             @AuthenticatedUserId(unauthenticated = NULL) String authenticatedUserId
     ) {
-        List<PopularAttraction> attractions = service.findPopularNearbyAttractions(
+        List<PopularAttractionResult> attractions = service.findPopularNearbyAttractions(
                 request.toCondition(),
                 authenticatedUserId
         );

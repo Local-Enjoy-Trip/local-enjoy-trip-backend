@@ -33,11 +33,7 @@ public class MemberService {
                         record.getNickname(),
                         record.getEmail(),
                         record.getPassword(),
-                        record.getProfileImageUrl(),
-                        record.getRepresentativeLatitude(),
-                        record.getRepresentativeLongitude(),
-                        record.getRepresentativeRegionName(),
-                        stringValue(record.getCreatedAt())
+                        record.getProfileImageUrl()
                 ))
                 .toList();
     }
@@ -53,11 +49,7 @@ public class MemberService {
                 record.getNickname(),
                 record.getEmail(),
                 record.getPassword(),
-                record.getProfileImageUrl(),
-                record.getRepresentativeLatitude(),
-                record.getRepresentativeLongitude(),
-                record.getRepresentativeRegionName(),
-                stringValue(record.getCreatedAt())
+                record.getProfileImageUrl()
         );
     }
 
@@ -72,11 +64,7 @@ public class MemberService {
                 record.getNickname(),
                 record.getEmail(),
                 record.getPassword(),
-                record.getProfileImageUrl(),
-                record.getRepresentativeLatitude(),
-                record.getRepresentativeLongitude(),
-                record.getRepresentativeRegionName(),
-                stringValue(record.getCreatedAt())
+                record.getProfileImageUrl()
         );
     }
 
@@ -140,10 +128,7 @@ public class MemberService {
         }
         record.update(
                 member.nickname(),
-                member.profileImageUrl(),
-                member.representativeLatitude(),
-                member.representativeLongitude(),
-                member.representativeRegionName()
+                member.profileImageUrl()
         );
         memberMapper.update(record);
     }
@@ -181,11 +166,7 @@ public class MemberService {
                 nickname,
                 email,
                 passwordEncoder.encode(UUID.randomUUID().toString()),
-                null,
-                null,
-                null,
-                null,
-                ""
+                null
         );
     }
 
@@ -220,17 +201,7 @@ public class MemberService {
                 member.nickname(),
                 member.email(),
                 member.password(),
-                member.profileImageUrl(),
-                member.representativeLatitude(),
-                member.representativeLongitude(),
-                member.representativeRegionName()
+                member.profileImageUrl()
         ));
-    }
-
-    private static String stringValue(Object value) {
-        if (value == null) {
-            return "";
-        }
-        return String.valueOf(value);
     }
 }

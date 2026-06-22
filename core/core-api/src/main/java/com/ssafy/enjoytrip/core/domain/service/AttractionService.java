@@ -5,8 +5,6 @@ import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_NOT_FOUND;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.AttractionTag;
-import com.ssafy.enjoytrip.core.domain.NearbyAttractionCandidate;
-import com.ssafy.enjoytrip.core.domain.PopularAttraction;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
@@ -27,7 +25,7 @@ public class AttractionService {
     private final AttractionMapper attractionMapper;
     private final AttractionPopularityDeltaCache popularityDeltaCache;
 
-    public List<PopularAttraction> findPopularNearbyAttractions(
+    public List<PopularAttractionResult> findPopularNearbyAttractions(
             NearbySearchCondition condition,
             String userId
     ) {
@@ -38,14 +36,14 @@ public class AttractionService {
         }
 
         return candidates.stream()
-                .map(candidate -> new PopularAttraction(
+                .map(candidate -> new PopularAttractionResult(
                         candidate.attraction(),
                         candidate.distanceMeters(),
                         candidate.attraction().favoriteCount() + candidate.attraction().saveCount()
                 ))
                 .sorted(Comparator
-                        .comparingLong(PopularAttraction::popularityCount).reversed()
-                        .thenComparingDouble(PopularAttraction::distanceMeters)
+                        .comparingLong(PopularAttractionResult::popularityCount).reversed()
+                        .thenComparingDouble(PopularAttractionResult::distanceMeters)
                         .thenComparing(
                                 popular -> popular.attraction().title(),
                                 Comparator.nullsLast(String::compareTo)

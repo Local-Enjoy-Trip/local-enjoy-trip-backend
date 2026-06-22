@@ -42,7 +42,7 @@ class MemberServiceTest {
     void signupStoresBcryptPassword() {
         when(memberMapper.existsByUserIdOrEmail("ssafy", "ssafy@example.com")).thenReturn(0);
 
-        service.signup(new Member("ssafy", "SSAFY", "ssafy@example.com", "secret", ""));
+        service.signup(new Member("ssafy", "SSAFY", "ssafy@example.com", "secret"));
 
         ArgumentCaptor<MemberRecord> memberCaptor = ArgumentCaptor.forClass(MemberRecord.class);
         verify(memberMapper).insert(memberCaptor.capture());
@@ -56,7 +56,7 @@ class MemberServiceTest {
     void signupRejectsExistingMember() {
         when(memberMapper.existsByUserIdOrEmail("ssafy", "ssafy@example.com")).thenReturn(1);
 
-        assertThatThrownBy(() -> service.signup(new Member("ssafy", "SSAFY", "ssafy@example.com", "secret", "")))
+        assertThatThrownBy(() -> service.signup(new Member("ssafy", "SSAFY", "ssafy@example.com", "secret")))
                 .isInstanceOfSatisfying(CoreException.class,
                         exception -> assertThat(exception.errorType()).isEqualTo(USER_ALREADY_EXISTS));
 
@@ -68,7 +68,7 @@ class MemberServiceTest {
     void loginReturnsMemberWhenPasswordMatches() {
         String encodedPassword = passwordEncoder.encode("secret");
         MemberRecord record = new MemberRecord("ssafy", "SSAFY", null, "ssafy@example.com", encodedPassword,
-                "", null, null, null);
+                "");
         when(memberMapper.findByUserId("ssafy")).thenReturn(record);
 
         Member loggedIn = service.login("ssafy", "secret");
@@ -82,7 +82,7 @@ class MemberServiceTest {
     @Test
     void loginFailsWhenPasswordDoesNotMatch() {
         MemberRecord record = new MemberRecord("ssafy", "SSAFY", null, "ssafy@example.com",
-                passwordEncoder.encode("secret"), "", null, null, null);
+                passwordEncoder.encode("secret"), "");
         when(memberMapper.findByUserId("ssafy")).thenReturn(record);
 
         assertThatThrownBy(() -> service.login("ssafy", "wrong"))
@@ -101,10 +101,7 @@ class MemberServiceTest {
                 null,
                 "ssafy@example.com",
                 "secret",
-                "",
-                null,
-                null,
-                null
+                ""
         );
         when(memberMapper.findByUserId("ssafy")).thenReturn(record);
 

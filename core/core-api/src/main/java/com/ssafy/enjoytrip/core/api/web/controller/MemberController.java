@@ -14,7 +14,7 @@ import com.ssafy.enjoytrip.core.api.web.dto.request.MemberLogoutRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberOAuthSignupRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberSignupRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberUpdateRequest;
-import com.ssafy.enjoytrip.core.api.web.dto.response.IssuedToken;
+import com.ssafy.enjoytrip.core.domain.service.IssuedToken;
 import com.ssafy.enjoytrip.core.api.web.dto.response.LoginResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.UserEnvelopeResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.UserResponse;
@@ -55,11 +55,7 @@ public class MemberController implements MemberApi {
                 request.nicknameOrName(),
                 request.email().trim(),
                 request.password(),
-                request.normalizedProfileImageUrl(),
-                request.representativeLatitude(),
-                request.representativeLongitude(),
-                request.normalizedRepresentativeRegionName(),
-                ""
+                request.normalizedProfileImageUrl()
         ));
         return success();
     }
@@ -123,11 +119,7 @@ public class MemberController implements MemberApi {
                 request.normalizedNickname(),
                 null,
                 null,
-                request.normalizedProfileImageUrl(),
-                request.representativeLatitude(),
-                request.representativeLongitude(),
-                request.normalizedRepresentativeRegionName(),
-                ""
+                request.normalizedProfileImageUrl()
         ));
         return success();
     }
@@ -145,10 +137,7 @@ public class MemberController implements MemberApi {
                 member.name(),
                 member.nickname(),
                 member.email(),
-                member.profileImageUrl(),
-                member.representativeLatitude(),
-                member.representativeLongitude(),
-                member.representativeRegionName()
+                member.profileImageUrl()
         );
     }
 }

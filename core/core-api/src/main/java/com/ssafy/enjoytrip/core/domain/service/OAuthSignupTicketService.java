@@ -1,6 +1,5 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
-import com.ssafy.enjoytrip.core.api.web.dto.response.OAuthSignupTicket;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;

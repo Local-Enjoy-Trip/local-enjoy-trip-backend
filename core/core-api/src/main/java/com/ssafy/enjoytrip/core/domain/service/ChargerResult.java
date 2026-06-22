@@ -1,6 +1,6 @@
-package com.ssafy.enjoytrip.core.domain;
+package com.ssafy.enjoytrip.core.domain.service;
 
-public record ChargerItem(
+public record ChargerResult(
         String statId,
         String statNm,
         String chgerId,

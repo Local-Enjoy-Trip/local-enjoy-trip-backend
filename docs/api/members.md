@@ -1,4 +1,4 @@
-﻿# Members API
+# Members API
 
 > Source: `core/core-api/src/docs/asciidoc/index.adoc`
 
@@ -21,8 +21,9 @@ Content-Length: 224
     "users" : [ {
       "userId" : "ssafy",
       "name" : "SSAFY",
+      "nickname" : "SSAFY",
       "email" : "ssafy@example.com",
-      "createdAt" : "2026-05-14 11:00:00"
+      "profileImageUrl" : null
     } ]
   },
   "error" : null,

@@ -20,7 +20,7 @@ import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService.PendingOAuthSignup;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.api.web.controller.MemberController;
-import com.ssafy.enjoytrip.core.api.web.dto.response.IssuedToken;
+import com.ssafy.enjoytrip.core.domain.service.IssuedToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -95,7 +95,7 @@ class MemberControllerTest {
     @DisplayName("로그인은 JWT 토큰을 반환한다")
     @Test
     void loginReturnsJwtToken() throws Exception {
-        Member member = new Member("ssafy", "SSAFY", "ssafy@example.com", "hidden", "2026-05-14 11:00:00");
+        Member member = new Member("ssafy", "SSAFY", "ssafy@example.com", "hidden");
         when(memberService.login("ssafy", "secret")).thenReturn(member);
         when(tokenService.issue(member)).thenReturn(new IssuedToken("jwt-token", "Bearer", 7200));
 
@@ -124,11 +124,7 @@ class MemberControllerTest {
                 "트래블러",
                 "google@example.com",
                 "hidden",
-                null,
-                null,
-                null,
-                null,
-                "2026-05-14 11:00:00"
+                null
         );
         when(oauthSignupTicketService.verify("ticket"))
                 .thenReturn(new PendingOAuthSignup("google", "123", "google@example.com", "Google Name"));
@@ -229,11 +225,7 @@ class MemberControllerTest {
                 "동네핀러",
                 "ssafy@example.com",
                 "hidden",
-                "https://cdn.example.com/profile.png",
-                37.5665,
-                126.9780,
-                "서울 중구",
-                "2026-05-14 11:00:00"
+                "https://cdn.example.com/profile.png"
         );
         when(memberService.findRequiredByUserId("ssafy")).thenReturn(member);
 
@@ -243,14 +235,15 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.data.user.email").value("ssafy@example.com"))
                 .andExpect(jsonPath("$.data.user.nickname").value("동네핀러"))
                 .andExpect(jsonPath("$.data.user.profileImageUrl").value("https://cdn.example.com/profile.png"))
-                .andExpect(jsonPath("$.data.user.representativeLatitude").value(37.5665))
-                .andExpect(jsonPath("$.data.user.representativeLongitude").value(126.9780))
-                .andExpect(jsonPath("$.data.user.representativeRegionName").value("서울 중구"));
+                .andExpect(jsonPath(userField("representative", "Latitude")).doesNotExist())
+                .andExpect(jsonPath(userField("representative", "Longitude")).doesNotExist())
+                .andExpect(jsonPath(userField("representative", "RegionName")).doesNotExist())
+                .andExpect(jsonPath(userField("created", "At")).doesNotExist());
     }
 
-    @DisplayName("내 정보 수정은 닉네임과 프로필 이미지와 대표 위치를 변경한다")
+    @DisplayName("내 정보 수정은 닉네임과 프로필 이미지만 변경한다")
     @Test
-    void updateMeChangesProfileAndRepresentativeLocation() throws Exception {
+    void updateMeChangesProfile() throws Exception {
         mockMvc.perform(put("/api/members/me")
                         .principal(jwtPrincipal("ssafy"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -259,10 +252,7 @@ class MemberControllerTest {
                                   "nickname": "동네핀러",
                                   "email": "changed@example.com",
                                   "password": "new-secret1",
-                                  "profileImageUrl": "https://cdn.example.com/profile.png",
-                                  "representativeLatitude": 37.5665,
-                                  "representativeLongitude": 126.9780,
-                                  "representativeRegionName": "서울 중구"
+                                  "profileImageUrl": "https://cdn.example.com/profile.png"
                                 }
                                 """))
                 .andExpect(status().isOk());
@@ -276,24 +266,10 @@ class MemberControllerTest {
         assertThat(member.email()).isNull();
         assertThat(member.password()).isNull();
         assertThat(member.profileImageUrl()).isEqualTo("https://cdn.example.com/profile.png");
-        assertThat(member.representativeLatitude()).isEqualTo(37.5665);
-        assertThat(member.representativeLongitude()).isEqualTo(126.9780);
-        assertThat(member.representativeRegionName()).isEqualTo("서울 중구");
     }
 
-    @DisplayName("내 정보 수정은 대표 위치 위도와 경도를 함께 요구한다")
-    @Test
-    void updateMeRequiresBothLatitudeAndLongitude() throws Exception {
-        mockMvc.perform(put("/api/members/me")
-                        .principal(jwtPrincipal("ssafy"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "representativeLatitude": 37.5665
-                }
-                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
+    private static String userField(String prefix, String suffix) {
+        return "$.data.user." + prefix + suffix;
     }
 
     private static String signupJson(String userId, String name, String email, String password) {

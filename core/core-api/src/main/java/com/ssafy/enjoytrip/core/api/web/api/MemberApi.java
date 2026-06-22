@@ -36,11 +36,7 @@ public interface MemberApi {
                                           "name": "김싸피",
                                           "nickname": "동네핀러",
                                           "email": "ssafy@example.com",
-                                          "profileImageUrl": "https://cdn.example.com/profile.png",
-                                          "representativeLatitude": 37.5665,
-                                          "representativeLongitude": 126.978,
-                                          "representativeRegionName": "서울 중구",
-                                          "createdAt": "2026-05-20"
+                                          "profileImageUrl": "https://cdn.example.com/profile.png"
                                         }]
                                       },
                                       "error": null
@@ -52,7 +48,7 @@ public interface MemberApi {
 
     @Operation(
             summary = "회원 가입",
-            description = "`userId`, `name`, `email`, `password`를 등록하고 선택적으로 닉네임, 프로필 이미지, 대표 위치를 받습니다.",
+            description = "`userId`, `name`, `email`, `password`를 등록하고 선택적으로 닉네임과 프로필 이미지를 받습니다.",
             operationId = "signup"
     )
     @ApiResponses({
@@ -77,11 +73,7 @@ public interface MemberApi {
                                           "name": "김싸피",
                                           "nickname": "동네핀러",
                                           "email": "ssafy@example.com",
-                                          "profileImageUrl": "https://cdn.example.com/profile.png",
-                                          "representativeLatitude": 37.5665,
-                                          "representativeLongitude": 126.978,
-                                          "representativeRegionName": "서울 중구",
-                                          "createdAt": "2026-05-20"
+                                          "profileImageUrl": "https://cdn.example.com/profile.png"
                                         },
                                         "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
                                         "tokenType": "Bearer",
@@ -133,7 +125,7 @@ public interface MemberApi {
 
     @Operation(
             summary = "내 정보 수정",
-            description = "JWT subject에 해당하는 회원의 닉네임, 프로필 이미지, 대표 위치를 수정합니다.",
+            description = "JWT subject에 해당하는 회원의 닉네임과 프로필 이미지를 수정합니다.",
             operationId = "updateMe",
             security = @SecurityRequirement(name = "bearerAuth")
     )

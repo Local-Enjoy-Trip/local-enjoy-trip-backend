@@ -116,6 +116,18 @@ class ApiContractModuleBoundaryTest {
                 .noneMatch(SourceFile::importsStorageMapperOrRecord);
     }
 
+    @DisplayName("domain service는 web DTO 계약에 의존하지 않는다")
+    @Test
+    void domainServicesDoNotImportWebDtos() throws IOException {
+        Path serviceRoot = projectRoot().resolve(
+                "core/core-api/src/main/java/com/ssafy/enjoytrip/core/domain/service"
+        );
+        List<SourceFile> serviceSources = javaSources(serviceRoot);
+
+        assertThat(serviceSources)
+                .noneMatch(source -> source.contains("import com.ssafy.enjoytrip.core.api.web.dto"));
+    }
+
     @DisplayName("external 모듈은 core-api/web/storage 타입에 의존하지 않는다")
     @Test
     void externalModuleDoesNotDependOnApplicationOrStorageContracts() throws IOException {

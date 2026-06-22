@@ -1,20 +1,10 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.MEMBER_REPRESENTATIVE_LOCATION_REQUIRED;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_NOT_FOUND;
-
 import com.ssafy.enjoytrip.core.domain.Attraction;
-import com.ssafy.enjoytrip.core.domain.MapCenter;
 import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
-import com.ssafy.enjoytrip.core.domain.MapExploreResult;
-import com.ssafy.enjoytrip.core.domain.query.MapNotesCondition;
-import com.ssafy.enjoytrip.core.domain.Member;
-import com.ssafy.enjoytrip.core.domain.NearbyAttractionCandidate;
-import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
-import com.ssafy.enjoytrip.core.domain.NoteMapPin;
 import com.ssafy.enjoytrip.core.domain.NoteCategory;
-import com.ssafy.enjoytrip.core.domain.PlaceMapPin;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
+import com.ssafy.enjoytrip.core.domain.query.MapNotesCondition;
+import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,21 +12,19 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class MapExploreService {
-    private final MemberService memberService;
     private final AttractionService attractionService;
     private final NoteService noteService;
 
     public MapExploreResult explore(
             String viewerUserId,
-            Double longitude,
-            Double latitude,
+            double longitude,
+            double latitude,
             double radiusMeters,
             int limit,
             MapExploreFilter filter,
             NoteCategory noteCategory
     ) {
-        Member viewer = findViewer(viewerUserId);
-        MapCenter center = resolveMapCenter(longitude, latitude, viewer);
+        MapCenter center = new MapCenter(longitude, latitude, null);
         List<PlaceMapPin> places = findPlacePins(viewerUserId, radiusMeters, limit, filter, center);
         List<NoteMapPin> notes = findNotePins(
                 viewerUserId,
@@ -54,32 +42,6 @@ public class MapExploreService {
                 filter,
                 places,
                 notes
-        );
-    }
-
-    private Member findViewer(String viewerUserId) {
-        Member viewer = memberService.findByUserId(viewerUserId);
-        if (viewer == null) {
-            throw new CoreException(USER_NOT_FOUND);
-        }
-
-        return viewer;
-    }
-
-    private MapCenter resolveMapCenter(Double longitude, Double latitude, Member viewer) {
-        if (longitude != null && latitude != null) {
-            return new MapCenter(longitude, latitude, null, false);
-        }
-
-        if (viewer.representativeLatitude() == null || viewer.representativeLongitude() == null) {
-            throw new CoreException(MEMBER_REPRESENTATIVE_LOCATION_REQUIRED);
-        }
-
-        return new MapCenter(
-                viewer.representativeLongitude(),
-                viewer.representativeLatitude(),
-                viewer.representativeRegionName(),
-                true
         );
     }
 
@@ -151,5 +113,4 @@ public class MapExploreService {
                 filter.friendNotesOnly()
         ));
     }
-
 }

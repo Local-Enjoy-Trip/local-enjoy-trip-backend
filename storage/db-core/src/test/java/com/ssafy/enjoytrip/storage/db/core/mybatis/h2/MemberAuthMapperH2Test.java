@@ -27,20 +27,14 @@ class MemberAuthMapperH2Test extends H2MapperTestSupport {
                 null,
                 userId + "@example.com",
                 "encoded-password",
-                null,
-                37.5665,
-                126.9780,
-                "서울 중구"
+                null
         );
 
         memberMapper.insert(record);
         MemberRecord saved = memberMapper.findByUserId(userId);
         saved.update(
                 "nickname",
-                null,
-                37.5700,
-                126.9820,
-                "서울 종로구"
+                null
         );
         memberMapper.update(saved);
 
@@ -52,11 +46,7 @@ class MemberAuthMapperH2Test extends H2MapperTestSupport {
         assertThat(updated.getName()).isEqualTo("회원");
         assertThat(updated.getNickname()).isEqualTo("nickname");
         assertThat(updated.getPassword()).isEqualTo("encoded-password");
-        assertThat(updated.getRepresentativeLatitude()).isEqualTo(37.5700);
-        assertThat(updated.getRepresentativeLongitude()).isEqualTo(126.9820);
-        assertThat(updated.getRepresentativeRegionName()).isEqualTo("서울 종로구");
-
-        updated.update(null, null, null, null, null);
+        updated.update(null, null);
         memberMapper.update(updated);
         MemberRecord cleared = memberMapper.findByUserId(userId);
 
@@ -65,9 +55,6 @@ class MemberAuthMapperH2Test extends H2MapperTestSupport {
         assertThat(cleared.getPassword()).isEqualTo("encoded-password");
         assertThat(cleared.getNickname()).isNull();
         assertThat(cleared.getProfileImageUrl()).isNull();
-        assertThat(cleared.getRepresentativeLatitude()).isNull();
-        assertThat(cleared.getRepresentativeLongitude()).isNull();
-        assertThat(cleared.getRepresentativeRegionName()).isNull();
         assertThat(memberMapper.findAllOrderByCreatedAtDesc())
                 .extracting(MemberRecord::getUserId)
                 .contains(userId);
