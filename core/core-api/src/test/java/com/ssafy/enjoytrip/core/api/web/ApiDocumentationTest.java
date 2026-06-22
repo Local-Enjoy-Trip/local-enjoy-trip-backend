@@ -7,6 +7,7 @@ import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.service.ChargerResult;
 import com.ssafy.enjoytrip.core.domain.service.NewsResult;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
+import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import com.ssafy.enjoytrip.core.domain.service.DbHealthService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionService;
@@ -50,6 +51,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
 import java.time.Instant;
 import java.util.List;
@@ -183,7 +187,7 @@ class ApiDocumentationTest {
     @Test
     void weatherBriefings() throws Exception {
         when(weatherService.findWeatherBriefings()).thenReturn(List.of(
-                new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33")
+                new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25)
         ));
 
         mockMvc.perform(get("/api/weather/briefings"))
@@ -197,9 +201,16 @@ class ApiDocumentationTest {
     @DisplayName("동네 AI 브리핑 API 문서를 검증한다")
     @Test
     void neighborhoodBriefing() throws Exception {
-        when(neighborhoodBriefingService.brief("서울")).thenReturn(new NeighborhoodBriefing(
+        WeatherSummary weather = new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25);
+        List<WeatherForecast> forecasts = List.of(
+                new WeatherForecast("12:00", 22, "맑음", 10),
+                new WeatherForecast("15:00", 24, "맑음", 10)
+        );
+        when(neighborhoodBriefingService.brief(eq("서울"), any(), any(), anyString())).thenReturn(new NeighborhoodBriefing(
                 "서울",
-                "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?"
+                "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?",
+                weather,
+                forecasts
         ));
 
         mockMvc.perform(get("/api/neighborhood/briefing").param("regionName", "서울"))

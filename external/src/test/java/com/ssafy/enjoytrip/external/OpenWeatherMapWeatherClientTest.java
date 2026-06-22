@@ -48,7 +48,7 @@ class OpenWeatherMapWeatherClientTest {
                             .contains("lon="))
                     .andRespond(withSuccess("""
                             {"weather":[{"main":"Clear","description":"맑음"}],
-                             "main":{"temp":18.4},
+                             "main":{"temp":18.4,"temp_min":15.0,"temp_max":22.0},
                              "sys":{"sunrise":1716841380,"sunset":1716892380}}
                             """, MediaType.APPLICATION_JSON));
             server.expect(request -> assertThat(request.getURI().toString())
@@ -79,6 +79,12 @@ class OpenWeatherMapWeatherClientTest {
         assertThat(result)
                 .extracting(WeatherBriefingResult::rainChance)
                 .containsExactly(70, 70, 70);
+        assertThat(result)
+                .extracting(WeatherBriefingResult::tempMin)
+                .containsExactly(15, 15, 15);
+        assertThat(result)
+                .extracting(WeatherBriefingResult::tempMax)
+                .containsExactly(22, 22, 22);
         assertThat(result)
                 .allSatisfy(row -> {
                     assertThat(row.sunrise()).matches("\\d{2}:\\d{2}");
@@ -150,6 +156,58 @@ class OpenWeatherMapWeatherClientTest {
         assertThatThrownBy(repository::findWeatherBriefings)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("OpenWeatherMap API 응답을 파싱하지 못했습니다");
+        server.verify();
+    }
+
+    @DisplayName("좌표를 기준으로 날씨와 6시간 예보를 성공적으로 조회하고 매핑한다")
+    @Test
+    void findsWeatherWithForecastSuccessfully() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        OpenWeatherMapWeatherClient repository = new OpenWeatherMapWeatherClient(
+                builder.build(),
+                "test-key"
+        );
+
+        server.expect(request -> assertThat(request.getURI().toString())
+                        .contains("/data/2.5/weather")
+                        .contains("lat=37.5")
+                        .contains("lon=127.0"))
+                .andRespond(withSuccess("""
+                        {"weather":[{"main":"Clear","description":"맑음"}],
+                         "main":{"temp":22.5,"temp_min":19.0,"temp_max":26.0},
+                         "sys":{"sunrise":1716841380,"sunset":1716892380}}
+                        """, MediaType.APPLICATION_JSON));
+
+        server.expect(request -> assertThat(request.getURI().toString())
+                        .contains("/data/2.5/forecast")
+                        .contains("lat=37.5")
+                        .contains("lon=127.0")
+                        .contains("cnt=2"))
+                .andRespond(withSuccess("""
+                        {"list":[
+                          {"dt":1716844980,"pop":0.4,"main":{"temp":23.0},"weather":[{"main":"Clear","description":"맑음"}]},
+                          {"dt":1716855780,"pop":0.6,"main":{"temp":21.0},"weather":[{"main":"Rain","description":"비"}]}
+                        ]}
+                        """, MediaType.APPLICATION_JSON));
+
+        WeatherBriefingWithForecast result = repository.findWeatherWithForecast(37.5, 127.0, "역삼동");
+
+        assertThat(result.current().region()).isEqualTo("역삼동");
+        assertThat(result.current().condition()).isEqualTo("맑음");
+        assertThat(result.current().temperature()).isEqualTo(23);
+        assertThat(result.current().rainChance()).isEqualTo(40);
+        assertThat(result.current().tempMin()).isEqualTo(19);
+        assertThat(result.current().tempMax()).isEqualTo(26);
+
+        assertThat(result.forecasts()).hasSize(2);
+        assertThat(result.forecasts().get(0).condition()).isEqualTo("맑음");
+        assertThat(result.forecasts().get(0).temperature()).isEqualTo(23);
+        assertThat(result.forecasts().get(0).rainChance()).isEqualTo(40);
+        assertThat(result.forecasts().get(1).condition()).isEqualTo("비");
+        assertThat(result.forecasts().get(1).temperature()).isEqualTo(21);
+        assertThat(result.forecasts().get(1).rainChance()).isEqualTo(60);
+
         server.verify();
     }
 }

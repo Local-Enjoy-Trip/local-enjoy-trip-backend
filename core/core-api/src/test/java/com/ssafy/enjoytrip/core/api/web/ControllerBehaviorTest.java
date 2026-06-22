@@ -27,6 +27,7 @@ import com.ssafy.enjoytrip.core.domain.AttractionTag;
 import com.ssafy.enjoytrip.core.domain.query.NearbyNotesCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
 import com.ssafy.enjoytrip.core.domain.service.PopularAttractionResult;
+import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import com.ssafy.enjoytrip.core.support.error.exception.ExternalServiceException;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
@@ -79,6 +80,7 @@ import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -164,8 +166,8 @@ class ControllerBehaviorTest {
         @Test
         void returnsWeatherBriefingsAndDelegatesToService() throws Exception {
             when(weatherService.findWeatherBriefings()).thenReturn(List.of(
-                    new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33"),
-                    new WeatherSummary("부산", "구름 많음", 21, 20, "05:17", "19:22")
+                    new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25),
+                    new WeatherSummary("부산", "구름 많음", 21, 20, "05:17", "19:22", 16, 24)
             ));
 
             mockMvc.perform(get("/api/weather/briefings"))
@@ -176,7 +178,9 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.weather[0].temperature").value(22))
                     .andExpect(jsonPath("$.data.weather[0].rainChance").value(10))
                     .andExpect(jsonPath("$.data.weather[0].sunrise").value("05:23"))
-                    .andExpect(jsonPath("$.data.weather[0].sunset").value("19:33"));
+                    .andExpect(jsonPath("$.data.weather[0].sunset").value("19:33"))
+                    .andExpect(jsonPath("$.data.weather[0].tempMin").value(15))
+                    .andExpect(jsonPath("$.data.weather[0].tempMax").value(25));
 
             verify(weatherService).findWeatherBriefings();
         }
@@ -187,9 +191,16 @@ class ControllerBehaviorTest {
         @DisplayName("동네 브리핑을 반환하고 구조화 추천 ID를 노출하지 않는다")
         @Test
         void returnsNeighborhoodBriefingWithoutStructuredRecommendationIds() throws Exception {
-            when(neighborhoodBriefingService.brief("서울")).thenReturn(new NeighborhoodBriefing(
+            WeatherSummary weather = new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25);
+            List<WeatherForecast> forecasts = List.of(
+                    new WeatherForecast("12:00", 22, "맑음", 10),
+                    new WeatherForecast("15:00", 24, "맑음", 10)
+            );
+            when(neighborhoodBriefingService.brief(eq("서울"), any(), any(), anyString())).thenReturn(new NeighborhoodBriefing(
                     "서울",
-                    "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?"
+                    "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?",
+                    weather,
+                    forecasts
             ));
 
             mockMvc.perform(get("/api/neighborhood/briefing")
@@ -201,9 +212,13 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.briefing").isNotEmpty())
                     .andExpect(jsonPath("$.data.courseId").doesNotExist())
                     .andExpect(jsonPath("$.data.courseCandidates").doesNotExist())
-                    .andExpect(jsonPath("$.data.recommendations").doesNotExist());
+                    .andExpect(jsonPath("$.data.recommendations").doesNotExist())
+                    .andExpect(jsonPath("$.data.weather.region").value("서울"))
+                    .andExpect(jsonPath("$.data.weather.tempMin").value(15))
+                    .andExpect(jsonPath("$.data.weather.tempMax").value(25))
+                    .andExpect(jsonPath("$.data.forecasts[0].time").value("12:00"));
 
-            verify(neighborhoodBriefingService).brief("서울");
+            verify(neighborhoodBriefingService).brief(eq("서울"), any(), any(), anyString());
         }
 
         @DisplayName("동네 브리핑은 지역 query DTO 검증을 적용한다")

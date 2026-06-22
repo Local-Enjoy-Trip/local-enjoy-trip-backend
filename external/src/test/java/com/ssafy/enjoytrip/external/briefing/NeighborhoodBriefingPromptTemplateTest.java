@@ -15,7 +15,7 @@ class NeighborhoodBriefingPromptTemplateTest {
     void promptContainsWeatherAndCourseTitles() {
         NeighborhoodBriefingPromptData prompt = new NeighborhoodBriefingPromptData(
                 "서울",
-                new WeatherBriefingResult("서울", "맑음", 27, 10, "05:10", "19:50"),
+                new WeatherBriefingResult("서울", "맑음", 27, 10, "05:10", "19:50", 20, 30),
                 List.of(new CourseBriefingCandidateData("course-1", "한강 저녁 산책", "서울"))
         );
 

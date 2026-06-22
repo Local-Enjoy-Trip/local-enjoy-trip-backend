@@ -9,6 +9,9 @@ import com.ssafy.enjoytrip.core.api.web.api.NeighborhoodBriefingApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NeighborhoodBriefingRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NeighborhoodBriefingResponse;
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -26,8 +29,17 @@ public class NeighborhoodBriefingController implements NeighborhoodBriefingApi {
     public ApiResponse<NeighborhoodBriefingResponse> brief(
             @Valid @ModelAttribute NeighborhoodBriefingRequest request
     ) {
-        NeighborhoodBriefing briefing = service.brief(request.toRegionName());
+        String currentHour = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+                .format(DateTimeFormatter.ofPattern("yyyyMMddHH"));
+
+        NeighborhoodBriefing briefing = service.brief(
+                request.toRegionName(),
+                request.latitude(),
+                request.longitude(),
+                currentHour
+        );
 
         return success(new NeighborhoodBriefingResponse(briefing));
     }
 }
+

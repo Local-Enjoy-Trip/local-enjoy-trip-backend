@@ -1,7 +1,14 @@
 package com.ssafy.enjoytrip.core.domain;
 
+import java.io.Serializable;
+import java.util.List;
+
 public record NeighborhoodBriefing(
         String region,
-        String briefing
-) {
+        String briefing,
+        WeatherSummary weather,
+        List<WeatherForecast> forecasts
+) implements Serializable {
+    private static final long serialVersionUID = 1L;
 }
+

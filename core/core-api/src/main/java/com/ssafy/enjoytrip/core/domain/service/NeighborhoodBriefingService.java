@@ -2,6 +2,8 @@ package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.CourseBriefingCandidate;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
+import com.ssafy.enjoytrip.core.domain.WeatherForecast;
+import com.ssafy.enjoytrip.core.domain.WeatherBriefingWithForecastDomain;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import com.ssafy.enjoytrip.external.WeatherBriefingResult;
 import com.ssafy.enjoytrip.external.briefing.CourseBriefingCandidateData;
@@ -10,6 +12,7 @@ import com.ssafy.enjoytrip.external.briefing.SpringAiNeighborhoodBriefingGenerat
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NeighborhoodBriefingMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,12 +23,16 @@ public class NeighborhoodBriefingService {
     private final SpringAiNeighborhoodBriefingGenerator generator;
     private final NeighborhoodBriefingMapper neighborhoodBriefingMapper;
 
-    public NeighborhoodBriefing brief(String regionName) {
-        WeatherSummary weather = findWeatherForRegion(regionName);
+    @Cacheable(cacheNames = "neighborhoodBriefings", key = "#regionName + ':' + #currentHour")
+    public NeighborhoodBriefing brief(String regionName, Double latitude, Double longitude, String currentHour) {
+        WeatherBriefingWithForecastDomain weatherWithForecast = weatherService.findWeatherWithForecast(latitude, longitude, regionName);
+        WeatherSummary weather = weatherWithForecast.current();
+        List<WeatherForecast> forecasts = weatherWithForecast.forecasts();
+
         List<CourseBriefingCandidate> candidates = findCourseCandidates(regionName);
 
         if (candidates.isEmpty()) {
-            return fallbackBriefing(regionName, weather, candidates);
+            return fallbackBriefing(regionName, weather, forecasts, candidates);
         }
 
         NeighborhoodBriefingPromptData prompt = new NeighborhoodBriefingPromptData(
@@ -36,7 +43,9 @@ public class NeighborhoodBriefingService {
                         weather.temperature(),
                         weather.rainChance(),
                         weather.sunrise(),
-                        weather.sunset()
+                        weather.sunset(),
+                        weather.tempMin(),
+                        weather.tempMax()
                 ),
                 candidates.stream()
                         .map(candidate -> new CourseBriefingCandidateData(
@@ -48,20 +57,10 @@ public class NeighborhoodBriefingService {
         );
         String generated = normalizeGeneratedBriefing(generator.generate(prompt));
         if (generated.isBlank()) {
-            return fallbackBriefing(regionName, weather, candidates);
+            return fallbackBriefing(regionName, weather, forecasts, candidates);
         }
 
-        return new NeighborhoodBriefing(regionName, generated);
-    }
-
-    private WeatherSummary findWeatherForRegion(String region) {
-        List<WeatherSummary> briefings = weatherService.findWeatherBriefings();
-
-        return briefings.stream()
-                .filter(briefing -> region.equals(briefing.region()))
-                .findFirst()
-                .or(() -> briefings.stream().findFirst())
-                .orElse(new WeatherSummary(region, "맑음", 22, 10, "05:23", "19:33"));
+        return new NeighborhoodBriefing(regionName, generated, weather, forecasts);
     }
 
     private List<CourseBriefingCandidate> findCourseCandidates(String region) {
@@ -76,12 +75,15 @@ public class NeighborhoodBriefingService {
 
     private NeighborhoodBriefing fallbackBriefing(String region,
                                                   WeatherSummary weather,
+                                                  List<WeatherForecast> forecasts,
                                                   List<CourseBriefingCandidate> candidates) {
         if (candidates.isEmpty()) {
             return new NeighborhoodBriefing(
                     region,
                     "오늘 %s은 %s이고 기온은 %d도예요. 저장된 코스가 생기면 날씨에 맞춰 추천해드릴게요."
-                            .formatted(region, weather.condition(), weather.temperature())
+                            .formatted(region, weather.condition(), weather.temperature()),
+                    weather,
+                    forecasts
             );
         }
 
@@ -93,7 +95,9 @@ public class NeighborhoodBriefingService {
                                 weather.condition(),
                                 weather.temperature(),
                                 candidates.getFirst().title()
-                        )
+                        ),
+                weather,
+                forecasts
         );
     }
 
@@ -108,3 +112,4 @@ public class NeighborhoodBriefingService {
         return normalized.length() > 160 ? normalized.substring(0, 160).strip() : normalized;
     }
 }
+
