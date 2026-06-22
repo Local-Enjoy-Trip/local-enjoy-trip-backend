@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Positive;
 public record MapExploreRequest(
         @DecimalMin(value = "-180.0") @DecimalMax(value = "180.0") Double mapX,
         @DecimalMin(value = "-90.0") @DecimalMax(value = "90.0") Double mapY,
-        @Positive @Max(5000) Double radius,
+        @Positive Double radius,
         @Positive @Max(100) Integer limit,
         MapExploreFilter filter,
         NoteCategory noteCategory

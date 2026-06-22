@@ -555,7 +555,47 @@ class ControllerBehaviorTest {
                     any()
             );
         }
+
+        @DisplayName("지도 탐색은 5000m를 초과하는 반경도 정상적으로 허용한다")
+        @Test
+        void mapExploreAllowsRadiusOver5000m() throws Exception {
+            when(mapExploreService.explore(
+                    any(),
+                    anyDouble(),
+                    anyDouble(),
+                    anyDouble(),
+                    anyInt(),
+                    any(),
+                    any()
+            )).thenReturn(new MapExploreResult(
+                    new MapCenter(126.9780, 37.5665, null),
+                    10000.0,
+                    50,
+                    MapExploreFilter.ALL,
+                    List.of(),
+                    List.of()
+            ));
+
+            mockMvc.perform(get("/api/map/explore")
+                            .principal(jwtPrincipal("viewer"))
+                            .param("mapX", "126.9780")
+                            .param("mapY", "37.5665")
+                            .param("radius", "10000"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.radiusMeters").value(10000.0));
+
+            verify(mapExploreService).explore(
+                    "viewer",
+                    126.9780,
+                    37.5665,
+                    10000.0,
+                    50,
+                    MapExploreFilter.ALL,
+                    null
+            );
+        }
     }
+
 
     @Nested
     class MemberProfileImageEndpoints {

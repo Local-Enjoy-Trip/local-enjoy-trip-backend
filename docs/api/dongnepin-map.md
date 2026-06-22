@@ -32,7 +32,7 @@ Unauthenticated requests must return the standard envelope:
 |---|---:|---|
 | `mapX` | yes | Longitude. Valid range: -180 to 180. |
 | `mapY` | yes | Latitude. Valid range: -90 to 90. |
-| `radius` | no | Positive search radius in meters; implementation must cap it. |
+| `radius` | no | Positive search radius in meters (uncapped). |
 | `limit` | no | Positive result limit; implementation must cap it. |
 | `filter` | no | Optional map filter. Keep as a typed enum, not a raw string map. |
 | `noteCategory` | no | Optional typed note category filter when note pins are requested. |

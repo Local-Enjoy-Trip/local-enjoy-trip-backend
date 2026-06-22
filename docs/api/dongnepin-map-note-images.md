@@ -7,7 +7,7 @@ Authenticated users can fetch map pins for places and accessible notes.
 Query parameters:
 
 - `mapX`, `mapY`: required longitude/latitude pair. Missing either value returns a `400` JSON error.
-- `radius`: optional search radius in meters. Default is `1000`, maximum is `5000`.
+- `radius`: optional search radius in meters. Default is `500`, with no maximum limit.
 - `limit`: optional per-type limit. Default is `50`, maximum is `100`.
 - `filter`: optional `ALL`, `PLACE`, `NOTE`, or `FRIEND`.
 - `noteCategory`: optional note category filter for note pins.
