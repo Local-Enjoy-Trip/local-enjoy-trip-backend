@@ -12,12 +12,10 @@ public record MapExploreRequest(
         @DecimalMin(value = "-180.0") @DecimalMax(value = "180.0") Double mapX,
         @DecimalMin(value = "-90.0") @DecimalMax(value = "90.0") Double mapY,
         @Positive Double radius,
-        @Positive @Max(100) Integer limit,
         MapExploreFilter filter,
         NoteCategory noteCategory
 ) {
     private static final double DEFAULT_RADIUS_METERS = 500.0;
-    private static final int DEFAULT_LIMIT = 50;
     private static final String INVALID_COORDINATES_MESSAGE = "위도 또는 경도가 유효하지 않습니다.";
 
     public double requiredLongitude() {
@@ -34,10 +32,6 @@ public record MapExploreRequest(
         return radius == null ? DEFAULT_RADIUS_METERS : radius;
     }
 
-    public int normalizedLimit() {
-        return limit == null ? DEFAULT_LIMIT : limit;
-    }
-
     public MapExploreFilter normalizedFilter() {
         return filter == null ? MapExploreFilter.ALL : filter;
     }
@@ -48,3 +42,4 @@ public record MapExploreRequest(
         }
     }
 }
+

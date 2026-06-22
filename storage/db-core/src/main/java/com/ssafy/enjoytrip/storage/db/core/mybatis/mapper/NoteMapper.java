@@ -31,7 +31,7 @@ public interface NoteMapper {
     List<NoteMapPinRecord> findMapPins(@Param("longitude") double longitude,
                                         @Param("latitude") double latitude,
                                         @Param("radiusMeters") double radiusMeters,
-                                        @Param("limit") int limit,
+                                        @Param("limit") Integer limit,
                                         @Param("viewerUserId") String viewerUserId,
                                         @Param("category") String category,
                                         @Param("friendOnly") boolean friendOnly);

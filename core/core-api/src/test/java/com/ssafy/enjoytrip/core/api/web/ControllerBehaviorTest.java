@@ -383,13 +383,11 @@ class ControllerBehaviorTest {
                     anyDouble(),
                     anyDouble(),
                     anyDouble(),
-                    anyInt(),
                     any(),
                     any()
             )).thenReturn(new MapExploreResult(
                     new MapCenter(127.0276, 37.4979, null),
                     750.0,
-                    10,
                     MapExploreFilter.NOTE,
                     List.of(),
                     List.of()
@@ -400,12 +398,10 @@ class ControllerBehaviorTest {
                             .param("mapX", "127.0276")
                             .param("mapY", "37.4979")
                             .param("radius", "750")
-                            .param("limit", "10")
                             .param("filter", "NOTE")
                             .param("noteCategory", "TIP"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.radiusMeters").value(750.0))
-                    .andExpect(jsonPath("$.data.limit").value(10))
                     .andExpect(jsonPath("$.data.filter").value("NOTE"));
 
             verify(mapExploreService).explore(
@@ -413,7 +409,6 @@ class ControllerBehaviorTest {
                     127.0276,
                     37.4979,
                     750.0,
-                    10,
                     MapExploreFilter.NOTE,
                     NoteCategory.TIP
             );
@@ -427,13 +422,11 @@ class ControllerBehaviorTest {
                     anyDouble(),
                     anyDouble(),
                     anyDouble(),
-                    anyInt(),
                     any(),
                     any()
             )).thenReturn(new MapExploreResult(
                     new MapCenter(126.9780, 37.5665, null),
                     500.0,
-                    50,
                     MapExploreFilter.SAVED_PLACE,
                     List.of(),
                     List.of()
@@ -452,7 +445,6 @@ class ControllerBehaviorTest {
                     126.9780,
                     37.5665,
                     500.0,
-                    50,
                     MapExploreFilter.SAVED_PLACE,
                     null
             );
@@ -464,7 +456,6 @@ class ControllerBehaviorTest {
             MapExploreResult result = new MapExploreResult(
                     new MapCenter(126.9780, 37.5665, "서울 중구"),
                     1000.0,
-                    50,
                     MapExploreFilter.ALL,
                     List.of(new PlaceMapPin(
                             100L,
@@ -536,7 +527,6 @@ class ControllerBehaviorTest {
                     anyDouble(),
                     anyDouble(),
                     anyDouble(),
-                    anyInt(),
                     any(),
                     any()
             )).thenReturn(result);
@@ -565,7 +555,6 @@ class ControllerBehaviorTest {
                     anyDouble(),
                     anyDouble(),
                     anyDouble(),
-                    anyInt(),
                     any(),
                     any()
             );
@@ -579,13 +568,11 @@ class ControllerBehaviorTest {
                     anyDouble(),
                     anyDouble(),
                     anyDouble(),
-                    anyInt(),
                     any(),
                     any()
             )).thenReturn(new MapExploreResult(
                     new MapCenter(126.9780, 37.5665, null),
                     10000.0,
-                    50,
                     MapExploreFilter.ALL,
                     List.of(),
                     List.of()
@@ -604,7 +591,6 @@ class ControllerBehaviorTest {
                     126.9780,
                     37.5665,
                     10000.0,
-                    50,
                     MapExploreFilter.ALL,
                     null
             );

@@ -6,7 +6,6 @@ import java.util.List;
 public record MapExploreResult(
         MapCenter center,
         double radiusMeters,
-        int limit,
         MapExploreFilter filter,
         List<PlaceMapPin> places,
         List<NoteMapPin> notes

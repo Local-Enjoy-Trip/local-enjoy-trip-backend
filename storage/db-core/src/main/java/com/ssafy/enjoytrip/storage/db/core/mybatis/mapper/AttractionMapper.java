@@ -24,7 +24,7 @@ public interface AttractionMapper {
     List<AttractionSearchRecord> findNearby(@Param("longitude") double longitude,
                                             @Param("latitude") double latitude,
                                             @Param("radiusMeters") double radiusMeters,
-                                            @Param("limit") int limit,
+                                            @Param("limit") Integer limit,
                                             @Param("savedOnly") boolean savedOnly,
                                             @Param("viewerUserId") String viewerUserId);
 

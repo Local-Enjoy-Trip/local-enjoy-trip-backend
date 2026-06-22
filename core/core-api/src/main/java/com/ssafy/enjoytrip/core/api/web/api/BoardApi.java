@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -28,16 +29,54 @@ public interface BoardApi {
     })
     ApiResponse<BoardsResponse> findAll();
 
-    @Operation(summary = "게시글 생성", description = "JSON 본문의 `id`, `title`, `content`, `author`가 모두 필요합니다.", operationId = "createBoardPost")
+    @Operation(
+            summary = "게시글 생성",
+            description = "JSON 본문의 `id`, `title`, `content`, `author`가 모두 필요합니다.",
+            operationId = "createBoardPost",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = BoardCreateRequest.class),
+                            examples = @ExampleObject(value = ApiExamples.BOARD_CREATE_REQUEST)
+                    )
+            )
+    )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "게시글 생성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "201",
+                    description = "게시글 생성 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 본문")
     })
     ApiResponse<Void> create(BoardCreateRequest request);
 
-    @Operation(summary = "게시글 수정", description = "경로의 `id` 게시글 제목과 내용을 수정합니다.", operationId = "updateBoardPost")
+    @Operation(
+            summary = "게시글 수정",
+            description = "경로의 `id` 게시글 제목과 내용을 수정합니다.",
+            operationId = "updateBoardPost",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = BoardUpdateRequest.class),
+                            examples = @ExampleObject(value = ApiExamples.BOARD_UPDATE_REQUEST)
+                    )
+            )
+    )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "게시글 수정 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "필수 필드 누락"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "게시글 없음")
     })
@@ -48,7 +87,14 @@ public interface BoardApi {
 
     @Operation(summary = "게시글 삭제", description = "경로의 `id` 게시글을 삭제합니다.", operationId = "deleteBoardPost")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "게시글 삭제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "id 누락"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "게시글 없음")
     })

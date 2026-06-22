@@ -20,16 +20,14 @@ public class MapExploreService {
             double longitude,
             double latitude,
             double radiusMeters,
-            int limit,
             MapExploreFilter filter,
             NoteCategory noteCategory
     ) {
         MapCenter center = new MapCenter(longitude, latitude, null);
-        List<PlaceMapPin> places = findPlacePins(viewerUserId, radiusMeters, limit, filter, center);
+        List<PlaceMapPin> places = findPlacePins(viewerUserId, radiusMeters, filter, center);
         List<NoteMapPin> notes = findNotePins(
                 viewerUserId,
                 radiusMeters,
-                limit,
                 filter,
                 noteCategory,
                 center
@@ -38,7 +36,6 @@ public class MapExploreService {
         return new MapExploreResult(
                 center,
                 radiusMeters,
-                limit,
                 filter,
                 places,
                 notes
@@ -48,7 +45,6 @@ public class MapExploreService {
     private List<PlaceMapPin> findPlacePins(
             String viewerUserId,
             double radiusMeters,
-            int limit,
             MapExploreFilter filter,
             MapCenter center
     ) {
@@ -61,7 +57,7 @@ public class MapExploreService {
                                 center.longitude(),
                                 center.latitude(),
                                 radiusMeters,
-                                limit
+                                null
                         ),
                         viewerUserId,
                         filter.savedPlacesOnly()
@@ -93,7 +89,6 @@ public class MapExploreService {
     private List<NoteMapPin> findNotePins(
             String viewerUserId,
             double radiusMeters,
-            int limit,
             MapExploreFilter filter,
             NoteCategory noteCategory,
             MapCenter center
@@ -106,7 +101,7 @@ public class MapExploreService {
                 center.longitude(),
                 center.latitude(),
                 radiusMeters,
-                limit,
+                null,
                 viewerUserId,
                 noteCategory,
                 filter.friendNotesOnly()

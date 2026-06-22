@@ -126,7 +126,9 @@
                   </when>
               </choose>
             order by distanceMeters asc, a.title asc, a.id asc
-            limit #{limit}
+            <if test="limit != null">
+                limit #{limit}
+            </if>
         ) a
         <include refid="searchRowJoins"/>
         order by a.distanceMeters asc, a.title asc, a.id asc, t.name asc

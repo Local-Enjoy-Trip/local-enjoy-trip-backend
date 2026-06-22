@@ -19,7 +19,7 @@ class MapExploreServiceTest {
         NoteService noteService = mock(NoteService.class);
         MapExploreService service = new MapExploreService(attractionService, noteService);
         when(attractionService.findNearbyCandidates(
-                new NearbySearchCondition(126.9780, 37.5665, 500.0, 50),
+                new NearbySearchCondition(126.9780, 37.5665, 500.0, null),
                 "viewer",
                 true
         )).thenReturn(List.of());
@@ -29,13 +29,12 @@ class MapExploreServiceTest {
                 126.9780,
                 37.5665,
                 500.0,
-                50,
                 MapExploreFilter.SAVED_PLACE,
                 null
         );
 
         verify(attractionService).findNearbyCandidates(
-                new NearbySearchCondition(126.9780, 37.5665, 500.0, 50),
+                new NearbySearchCondition(126.9780, 37.5665, 500.0, null),
                 "viewer",
                 true
         );

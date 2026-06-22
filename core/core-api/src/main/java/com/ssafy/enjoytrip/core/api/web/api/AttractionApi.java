@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.annotations.ParameterObject;
@@ -125,7 +126,20 @@ public interface AttractionApi {
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "405",
-                    description = "GET /api/attractions 사용 필요"
+                    description = "GET /api/attractions 사용 필요",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "success": false,
+                                      "data": null,
+                                      "error": {
+                                        "code": "C405",
+                                        "message": "GET /api/attractions를 사용하세요."
+                                      }
+                                    }
+                                    """)
+                    )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "500",
@@ -135,40 +149,137 @@ public interface AttractionApi {
     ApiResponse<Void> rejectPost();
 
     @Operation(summary = "관광지 저장", description = "인증 사용자의 관광지 저장을 추가합니다.", operationId = "saveAttraction")
-    ApiResponse<Void> save(Long id, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "관광지 저장 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> save(
+            @Parameter(description = "저장할 관광지 ID", example = "125405", required = true) Long id,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "관광지 저장 해제",
             description = "인증 사용자의 관광지 저장을 삭제합니다.",
             operationId = "unsaveAttraction"
     )
-    ApiResponse<Void> unsave(Long id, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "관광지 저장 해제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> unsave(
+            @Parameter(description = "저장 해제할 관광지 ID", example = "125405", required = true) Long id,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "관광지 평점 등록",
             description = "인증 사용자의 1~5 평점을 등록하거나 갱신합니다.",
-            operationId = "rateAttraction"
+            operationId = "rateAttraction",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = RatingRequest.class),
+                            examples = @ExampleObject(value = ApiExamples.RATING_REQUEST)
+                    )
+            )
     )
-    ApiResponse<Void> rate(Long id, RatingRequest request, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "관광지 평점 등록 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> rate(
+            @Parameter(description = "평점을 등록할 관광지 ID", example = "125405", required = true) Long id,
+            RatingRequest request,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "관광지 평점 삭제",
             description = "인증 사용자의 평점을 삭제합니다.",
             operationId = "deleteAttractionRating"
     )
-    ApiResponse<Void> deleteRating(Long id, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "관광지 평점 삭제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> deleteRating(
+            @Parameter(description = "평점을 삭제할 관광지 ID", example = "125405", required = true) Long id,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "관광지 통계 조회",
             description = "저장 수, 평균 평점, 태그와 내 사용자 상태를 조회합니다.",
             operationId = "getAttractionStats"
     )
-    ApiResponse<AttractionStatsResponse> stats(Long id, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "관광지 통계 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AttractionStatsResponse.class),
+                            examples = @ExampleObject(value = ApiExamples.ATTRACTION_STATS_RESPONSE)
+                    )
+            )
+    })
+    ApiResponse<AttractionStatsResponse> stats(
+            @Parameter(description = "통계를 조회할 관광지 ID", example = "125405", required = true) Long id,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "관광지 태그 연결",
             description = "관광지에 연결된 태그 목록을 교체합니다.",
-            operationId = "replaceAttractionTags"
+            operationId = "replaceAttractionTags",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AttractionTagsRequest.class),
+                            examples = @ExampleObject(value = ApiExamples.ATTRACTION_TAGS_REQUEST)
+                    )
+            )
     )
-    ApiResponse<Void> replaceTags(Long id, AttractionTagsRequest request, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "관광지 태그 연결 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> replaceTags(
+            @Parameter(description = "태그를 교체할 관광지 ID", example = "125405", required = true) Long id,
+            AttractionTagsRequest request,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 }

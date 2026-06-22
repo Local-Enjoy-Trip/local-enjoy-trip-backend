@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.annotations.ParameterObject;
@@ -19,7 +20,19 @@ import org.springdoc.core.annotations.ParameterObject;
 @Tag(name = "Notes", description = "동네핀 쪽지 API")
 public interface NoteApi {
 
-    @Operation(summary = "쪽지 생성", description = "인증 사용자가 지도 좌표에 쪽지를 생성합니다.", operationId = "createNote")
+    @Operation(
+            summary = "쪽지 생성",
+            description = "인증 사용자가 지도 좌표에 쪽지를 생성합니다.",
+            operationId = "createNote",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = NoteCreateRequest.class),
+                            examples = @ExampleObject(value = ApiExamples.NOTE_REQUEST)
+                    )
+            )
+    )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
@@ -45,21 +58,87 @@ public interface NoteApi {
     })
     ApiResponse<NoteResponse> create(NoteCreateRequest request, @Parameter(hidden = true) String authenticatedUserId);
 
-    @Operation(summary = "쪽지 수정", description = "작성자 본인의 active 쪽지만 수정합니다.", operationId = "updateNote")
-    ApiResponse<NoteResponse> update(Long id, NoteUpdateRequest request, @Parameter(hidden = true) String authenticatedUserId);
+    @Operation(
+            summary = "쪽지 수정",
+            description = "작성자 본인의 active 쪽지만 수정합니다.",
+            operationId = "updateNote",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = NoteUpdateRequest.class),
+                            examples = @ExampleObject(value = ApiExamples.NOTE_REQUEST)
+                    )
+            )
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "쪽지 수정 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = NoteResponse.class),
+                            examples = @ExampleObject(value = ApiExamples.NOTE_RESPONSE)
+                    )
+            )
+    })
+    ApiResponse<NoteResponse> update(
+            @Parameter(description = "수정할 쪽지 ID", example = "1", required = true) Long id,
+            NoteUpdateRequest request,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "쪽지 삭제",
             description = "작성자 본인의 active 쪽지를 soft delete 합니다.",
             operationId = "deleteNote"
     )
-    ApiResponse<Void> delete(Long id, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "쪽지 삭제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> delete(
+            @Parameter(description = "삭제할 쪽지 ID", example = "1", required = true) Long id,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(summary = "쪽지 저장", description = "인증 사용자가 접근 가능한 active 쪽지를 저장합니다.", operationId = "saveNote")
-    ApiResponse<Void> save(Long id, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "쪽지 저장 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> save(
+            @Parameter(description = "저장할 쪽지 ID", example = "1", required = true) Long id,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(summary = "쪽지 저장 해제", description = "인증 사용자의 쪽지 저장을 삭제합니다.", operationId = "unsaveNote")
-    ApiResponse<Void> unsave(Long id, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "쪽지 저장 해제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> unsave(
+            @Parameter(description = "저장 해제할 쪽지 ID", example = "1", required = true) Long id,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "내가 저장한 쪽지 조회",
@@ -72,7 +151,8 @@ public interface NoteApi {
                     description = "저장 쪽지 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = NotesResponse.class)
+                            schema = @Schema(implementation = NotesResponse.class),
+                            examples = @ExampleObject(value = ApiExamples.NOTES_RESPONSE)
                     )
             )
     })
@@ -100,7 +180,8 @@ public interface NoteApi {
                     description = "주변 최근 쪽지 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = NotesResponse.class)
+                            schema = @Schema(implementation = NotesResponse.class),
+                            examples = @ExampleObject(value = ApiExamples.NOTES_RESPONSE)
                     )
             )
     })

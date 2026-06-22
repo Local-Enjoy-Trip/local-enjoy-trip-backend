@@ -102,6 +102,8 @@
               </when>
           </choose>
         order by distanceMeters asc, n.created_at desc, n.id desc
-        limit #{limit}
+        <if test="limit != null">
+            limit #{limit}
+        </if>
     </select>
 </mapper>

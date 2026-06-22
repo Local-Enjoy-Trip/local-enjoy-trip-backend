@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -59,17 +60,42 @@ public interface PlanApi {
             description = "경로의 `id` 여행 계획을 조회합니다.",
             operationId = "findPlan"
     )
-    ApiResponse<PlanResponse> findOne(String id);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "여행 계획 단건 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PlanResponse.class),
+                            examples = @ExampleObject(value = ApiExamples.PLAN_RESPONSE)
+                    )
+            )
+    })
+    ApiResponse<PlanResponse> findOne(
+            @Parameter(description = "조회할 여행 계획 ID", example = "p1", required = true) String id
+    );
 
     @Operation(
             summary = "여행 계획 생성",
             description = "JSON request body로 여행 계획과 코스 항목을 생성합니다. 사용자 ID는 JWT subject를 사용합니다.",
-            operationId = "createPlan"
+            operationId = "createPlan",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PlanCreateRequest.class),
+                            examples = @ExampleObject(value = ApiExamples.PLAN_CREATE_REQUEST)
+                    )
+            )
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
-                    description = "여행 계획 생성 성공"
+                    description = "여행 계획 생성 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
@@ -81,23 +107,81 @@ public interface PlanApi {
     @Operation(
             summary = "여행 계획 수정",
             description = "인증 사용자의 여행 계획 메타데이터와 코스를 JSON으로 수정합니다.",
-            operationId = "updatePlan"
+            operationId = "updatePlan",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PlanUpdateRequest.class),
+                            examples = @ExampleObject(value = ApiExamples.PLAN_UPDATE_REQUEST)
+                    )
+            )
     )
-    ApiResponse<Void> update(String id, PlanUpdateRequest request, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "여행 계획 수정 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> update(
+            @Parameter(description = "수정할 여행 계획 ID", example = "p1", required = true) String id,
+            PlanUpdateRequest request,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "여행 계획 코스 교체",
             description = "여행 계획의 코스 항목을 JSON 배열 순서대로 교체합니다.",
-            operationId = "replacePlanItems"
+            operationId = "replacePlanItems",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PlanReplaceItemsRequest.class),
+                            examples = @ExampleObject(value = ApiExamples.PLAN_REPLACE_ITEMS_REQUEST)
+                    )
+            )
     )
-    ApiResponse<Void> replaceItems(String id, PlanReplaceItemsRequest request, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "여행 계획 코스 교체 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> replaceItems(
+            @Parameter(description = "코스를 교체할 여행 계획 ID", example = "p1", required = true) String id,
+            PlanReplaceItemsRequest request,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "여행 계획 코스 항목 삭제",
             description = "여행 계획의 코스 항목 하나를 삭제하고 순서를 재정렬합니다.",
             operationId = "deletePlanItem"
     )
-    ApiResponse<Void> deleteItem(String id, Long itemId, @Parameter(hidden = true) String authenticatedUserId);
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "여행 계획 코스 항목 삭제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            )
+    })
+    ApiResponse<Void> deleteItem(
+            @Parameter(description = "여행 계획 ID", example = "p1", required = true) String id,
+            @Parameter(description = "삭제할 코스 항목 ID", example = "1", required = true) Long itemId,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(
             summary = "여행 계획 삭제",
@@ -107,7 +191,11 @@ public interface PlanApi {
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
-                    description = "여행 계획 삭제 성공"
+                    description = "여행 계획 삭제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "id 누락"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(

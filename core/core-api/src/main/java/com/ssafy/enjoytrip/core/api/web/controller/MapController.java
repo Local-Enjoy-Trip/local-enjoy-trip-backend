@@ -31,7 +31,6 @@ public class MapController implements MapApi {
                 request.requiredLongitude(),
                 request.requiredLatitude(),
                 request.normalizedRadiusMeters(),
-                request.normalizedLimit(),
                 request.normalizedFilter(),
                 request.noteCategory()
         );

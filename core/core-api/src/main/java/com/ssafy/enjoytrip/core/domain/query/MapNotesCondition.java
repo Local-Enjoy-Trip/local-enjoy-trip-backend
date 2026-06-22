@@ -6,7 +6,7 @@ public record MapNotesCondition(
         double longitude,
         double latitude,
         double radiusMeters,
-        int limit,
+        Integer limit,
         String viewerUserId,
         NoteCategory category,
         boolean friendOnly

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -27,16 +28,42 @@ public interface HotplaceApi {
     })
     ApiResponse<HotplacesResponse> find(@Parameter(description = "사용자 ID 필터", example = "ssafy") String userId);
 
-    @Operation(summary = "핫플레이스 생성", description = "JSON 본문에 `id`, `userId`, `title`, `type`, `visitDate`, 숫자형 `lat`, `lng`가 필요합니다.", operationId = "createHotplace")
+    @Operation(
+            summary = "핫플레이스 생성",
+            description = "JSON 본문에 `id`, `userId`, `title`, `type`, `visitDate`, 숫자형 `lat`, `lng`가 필요합니다.",
+            operationId = "createHotplace",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = HotplaceCreateRequest.class),
+                            examples = @ExampleObject(value = ApiExamples.HOTPLACE_CREATE_REQUEST)
+                    )
+            )
+    )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "핫플레이스 생성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "201",
+                    description = "핫플레이스 생성 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 본문")
     })
     ApiResponse<Void> create(HotplaceCreateRequest request);
 
     @Operation(summary = "핫플레이스 삭제", description = "경로의 `id` 핫플레이스를 삭제합니다.", operationId = "deleteHotplace")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "핫플레이스 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "핫플레이스 삭제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
+                    )
+            ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "id 누락"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "핫플레이스 없음")
     })

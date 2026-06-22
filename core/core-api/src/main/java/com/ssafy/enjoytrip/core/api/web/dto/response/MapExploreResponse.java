@@ -10,7 +10,6 @@ import java.util.List;
 public record MapExploreResponse(
         MapCenter center,
         double radiusMeters,
-        int limit,
         MapExploreFilter filter,
         List<PlaceMapPin> places,
         List<NoteMapPin> notes
@@ -24,7 +23,6 @@ public record MapExploreResponse(
         return new MapExploreResponse(
                 result.center(),
                 result.radiusMeters(),
-                result.limit(),
                 result.filter(),
                 result.places(),
                 result.notes()
