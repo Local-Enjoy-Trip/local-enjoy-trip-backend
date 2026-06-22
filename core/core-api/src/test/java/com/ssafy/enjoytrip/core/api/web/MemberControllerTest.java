@@ -44,7 +44,11 @@ class MemberControllerTest {
         memberService = mock(MemberService.class);
         tokenService = mock(JwtTokenService.class);
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new MemberController(memberService, tokenService, oauthSignupTicketService))
+        mockMvc = MockMvcBuilders.standaloneSetup(new MemberController(
+                        memberService,
+                        tokenService,
+                        oauthSignupTicketService
+                ))
                 .setCustomArgumentResolvers(new TestAuthenticationPrincipalResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -234,14 +238,15 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.data.user.userId").value("ssafy"))
                 .andExpect(jsonPath("$.data.user.email").value("ssafy@example.com"))
                 .andExpect(jsonPath("$.data.user.nickname").value("동네핀러"))
-                .andExpect(jsonPath("$.data.user.profileImageUrl").value("https://cdn.example.com/profile.png"))
+                .andExpect(jsonPath("$.data.user.profileImageUrl")
+                        .value("https://cdn.example.com/profile.png"))
                 .andExpect(jsonPath(userField("representative", "Latitude")).doesNotExist())
                 .andExpect(jsonPath(userField("representative", "Longitude")).doesNotExist())
                 .andExpect(jsonPath(userField("representative", "RegionName")).doesNotExist())
                 .andExpect(jsonPath(userField("created", "At")).doesNotExist());
     }
 
-    @DisplayName("내 정보 수정은 닉네임과 프로필 이미지만 변경한다")
+    @DisplayName("내 정보 수정은 닉네임만 변경하고 프로필 이미지는 변경하지 않는다")
     @Test
     void updateMeChangesProfile() throws Exception {
         mockMvc.perform(put("/api/members/me")
@@ -265,7 +270,7 @@ class MemberControllerTest {
         assertThat(member.nickname()).isEqualTo("동네핀러");
         assertThat(member.email()).isNull();
         assertThat(member.password()).isNull();
-        assertThat(member.profileImageUrl()).isEqualTo("https://cdn.example.com/profile.png");
+        assertThat(member.profileImageUrl()).isNull();
     }
 
     private static String userField(String prefix, String suffix) {

@@ -126,10 +126,7 @@ public class MemberService {
         if (record == null) {
             throw new CoreException(USER_NOT_FOUND);
         }
-        record.update(
-                member.nickname(),
-                member.profileImageUrl()
-        );
+        record.updateNickname(member.nickname());
         memberMapper.update(record);
     }
 

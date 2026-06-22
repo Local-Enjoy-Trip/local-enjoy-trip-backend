@@ -125,7 +125,8 @@ public interface MemberApi {
 
     @Operation(
             summary = "내 정보 수정",
-            description = "JWT subject에 해당하는 회원의 닉네임과 프로필 이미지를 수정합니다.",
+            description = "JWT subject에 해당하는 회원의 닉네임을 수정합니다. "
+                    + "프로필 이미지는 전용 profile-image API에서 수정합니다.",
             operationId = "updateMe",
             security = @SecurityRequirement(name = "bearerAuth")
     )
@@ -134,7 +135,10 @@ public interface MemberApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
     })
-    ApiResponse<Void> updateMe(MemberUpdateRequest request, @Parameter(hidden = true) String authenticatedUserId);
+    ApiResponse<Void> updateMe(
+            MemberUpdateRequest request,
+            @Parameter(hidden = true) String authenticatedUserId
+    );
 
     @Operation(summary = "내 계정 삭제", description = "JWT subject에 해당하는 내 계정을 삭제합니다.", operationId = "deleteMe", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({

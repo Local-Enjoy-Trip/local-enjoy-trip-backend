@@ -42,7 +42,10 @@ public class MemberController implements MemberApi {
     @GetMapping
     @Override
     public ApiResponse<UsersResponse> findAll() {
-        List<UserResponse> users = service.findAllUsers().stream().map(MemberController::toUserResponse).toList();
+        List<UserResponse> users = service.findAllUsers()
+                .stream()
+                .map(MemberController::toUserResponse)
+                .toList();
         return success(new UsersResponse(users));
     }
 
@@ -75,7 +78,9 @@ public class MemberController implements MemberApi {
 
     @PostMapping("/oauth")
     @Override
-    public ApiResponse<LoginResponse> completeOAuthSignup(@Valid @RequestBody MemberOAuthSignupRequest request) {
+    public ApiResponse<LoginResponse> completeOAuthSignup(
+            @Valid @RequestBody MemberOAuthSignupRequest request
+    ) {
         PendingOAuthSignup pending = oauthSignupTicketService.verify(request.oauthSignupTicket().trim());
         Member member = service.signupWithOAuth(
                 pending.provider(),
@@ -119,7 +124,7 @@ public class MemberController implements MemberApi {
                 request.normalizedNickname(),
                 null,
                 null,
-                request.normalizedProfileImageUrl()
+                null
         ));
         return success();
     }

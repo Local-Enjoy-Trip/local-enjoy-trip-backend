@@ -215,7 +215,7 @@ class RepositoryBackedServicesTest {
             verify(authLogMapper, never()).insert(any());
         }
 
-        @DisplayName("회원 수정은 이메일과 비밀번호를 변경하지 않고 프로필 필드만 변경한다")
+        @DisplayName("회원 수정은 이메일, 비밀번호, 프로필 이미지를 변경하지 않고 닉네임만 변경한다")
         @Test
         void updateDoesNotChangeEmailAndPassword() {
             MemberRecord record = new MemberRecord(
@@ -241,11 +241,11 @@ class RepositoryBackedServicesTest {
             assertThat(record.getEmail()).isEqualTo("old@example.com");
             assertThat(record.getPassword()).isEqualTo("old");
             assertThat(record.getNickname()).isEqualTo("동네핀러");
-            assertThat(record.getProfileImageUrl()).isEqualTo("https://cdn.example.com/profile.png");
+            assertThat(record.getProfileImageUrl()).isEqualTo("https://cdn.example.com/old.png");
 
             service.update(new Member("ssafy", null, null, null, null, null));
             assertThat(record.getNickname()).isNull();
-            assertThat(record.getProfileImageUrl()).isNull();
+            assertThat(record.getProfileImageUrl()).isEqualTo("https://cdn.example.com/old.png");
 
             when(mapper.findByUserId("missing")).thenReturn(null);
             Member missing = new Member("missing", "SSAFY", "ssafy@example.com", " ");

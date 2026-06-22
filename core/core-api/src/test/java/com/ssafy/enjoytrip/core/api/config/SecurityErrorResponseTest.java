@@ -2,6 +2,7 @@ package com.ssafy.enjoytrip.core.api.config;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -83,6 +84,27 @@ class SecurityErrorResponseTest {
         mockMvc.perform(post("/api/note-images/presigned-upload")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"contentType\":\"image/jpeg\",\"fileExtension\":\"jpg\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("S401"))
+                .andExpect(jsonPath("$.error.message").value("인증이 필요합니다."));
+
+        mockMvc.perform(post("/api/members/me/profile-image/presigned-upload")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"contentType\":\"image/jpeg\",\"fileExtension\":\"jpg\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("S401"))
+                .andExpect(jsonPath("$.error.message").value("인증이 필요합니다."));
+
+        mockMvc.perform(put("/api/members/me/profile-image")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "objectKey":"profiles/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
+                                  "contentType":"image/jpeg"
+                                }
+                                """))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.code").value("S401"))

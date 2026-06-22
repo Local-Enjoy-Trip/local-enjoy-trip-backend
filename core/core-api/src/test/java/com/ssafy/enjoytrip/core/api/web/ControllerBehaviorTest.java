@@ -11,6 +11,7 @@ import com.ssafy.enjoytrip.core.domain.Hotplace;
 import com.ssafy.enjoytrip.core.domain.Member;
 import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
 import com.ssafy.enjoytrip.core.domain.NoteImageUploadUrl;
+import com.ssafy.enjoytrip.core.domain.ProfileImageUploadUrl;
 import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.core.domain.Note;
@@ -39,6 +40,7 @@ import com.ssafy.enjoytrip.core.domain.service.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MapExploreService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
 import com.ssafy.enjoytrip.core.domain.service.NoteImageUploadService;
+import com.ssafy.enjoytrip.core.domain.service.MemberProfileImageService;
 import com.ssafy.enjoytrip.core.domain.service.NeighborhoodBriefingService;
 import com.ssafy.enjoytrip.core.domain.service.NoteService;
 import com.ssafy.enjoytrip.core.domain.service.NoticeService;
@@ -82,6 +84,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -108,6 +111,7 @@ class ControllerBehaviorTest {
     private WeatherService weatherService;
     private NeighborhoodBriefingService neighborhoodBriefingService;
     private NoteImageUploadService noteImageUploadService;
+    private MemberProfileImageService memberProfileImageService;
     private DbHealthService dbHealthService;
     private MockMvc mockMvc;
 
@@ -128,6 +132,7 @@ class ControllerBehaviorTest {
         weatherService = mock(WeatherService.class);
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         noteImageUploadService = mock(NoteImageUploadService.class);
+        memberProfileImageService = mock(MemberProfileImageService.class);
         dbHealthService = mock(DbHealthService.class);
 
         mockMvc = MockMvcBuilders.standaloneSetup(
@@ -137,6 +142,7 @@ class ControllerBehaviorTest {
                         new NoticeController(noticeService),
                         new NoteController(noteService),
                         new MemberController(memberService, tokenService, oauthSignupTicketService),
+                        new MemberProfileImageController(memberProfileImageService),
                         new AttractionController(attractionService, attractionStatsService),
                         new AttractionTagController(attractionService),
                         new ChargerController(chargerService),
@@ -549,6 +555,105 @@ class ControllerBehaviorTest {
                     any(),
                     any()
             );
+        }
+    }
+
+    @Nested
+    class MemberProfileImageEndpoints {
+        @DisplayName("회원 프로필 이미지 presigned upload는 이미지 타입만 허용한다")
+        @Test
+        void profileImageUploadValidatesImageContentType() throws Exception {
+            mockMvc.perform(post("/api/members/me/profile-image/presigned-upload")
+                            .principal(jwtPrincipal("viewer"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"contentType":"text/plain","fileExtension":"txt"}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @DisplayName("회원 프로필 이미지 presigned upload는 profile objectKey와 uploadUrl을 반환한다")
+        @Test
+        void profileImageUploadReturnsPresignedResponseShape() throws Exception {
+            when(memberProfileImageService.createPresignedUpload(any(), any(), any()))
+                    .thenReturn(new ProfileImageUploadUrl(
+                            "profiles/viewer/sample.jpg",
+                            "http://localhost:9000/dongnepin-notes/profiles/viewer/sample.jpg?signature=abc",
+                            Instant.parse("2026-06-15T01:10:00Z"),
+                            "http://localhost:9000/dongnepin-notes/profiles/viewer/sample.jpg"
+                    ));
+
+            mockMvc.perform(post("/api/members/me/profile-image/presigned-upload")
+                            .principal(jwtPrincipal("viewer"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"contentType":"image/jpeg","fileExtension":"jpg"}
+                                    """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.objectKey").value("profiles/viewer/sample.jpg"))
+                    .andExpect(jsonPath("$.data.uploadUrl").isNotEmpty())
+                    .andExpect(jsonPath("$.data.expiresAt").value("2026-06-15T01:10:00Z"))
+                    .andExpect(jsonPath("$.data.publicUrl").isNotEmpty());
+
+            verify(memberProfileImageService).createPresignedUpload(
+                    "viewer",
+                    "image/jpeg",
+                    "jpg"
+            );
+        }
+
+        @DisplayName("회원 프로필 이미지 저장은 objectKey와 contentType만 서비스에 전달한다")
+        @Test
+        void profileImageUpdatePassesObjectKeyOnly() throws Exception {
+            mockMvc.perform(put("/api/members/me/profile-image")
+                            .principal(jwtPrincipal("viewer"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "objectKey":"profiles/viewer/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
+                                      "contentType":"image/jpeg",
+                                      "publicUrl":"https://evil.example.com/sample.jpg"
+                                    }
+                                    """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+
+            verify(memberProfileImageService).updateProfileImage(
+                    "viewer",
+                    "profiles/viewer/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg"
+            );
+        }
+
+        @DisplayName("회원 프로필 이미지 저장은 이미지 타입만 허용한다")
+        @Test
+        void profileImageUpdateValidatesImageContentType() throws Exception {
+            mockMvc.perform(put("/api/members/me/profile-image")
+                            .principal(jwtPrincipal("viewer"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"objectKey":"profiles/viewer/sample.txt","contentType":"text/plain"}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @DisplayName("회원 프로필 이미지 저장은 다른 사용자 objectKey를 400으로 응답한다")
+        @Test
+        void profileImageUpdateRejectsForeignObjectKeyAsBadRequest() throws Exception {
+            mockMvc.perform(put("/api/members/me/profile-image")
+                            .principal(jwtPrincipal("viewer"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "objectKey":"profiles/other/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
+                                      "contentType":"image/jpeg"
+                                    }
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("C400"));
+
+            verify(memberProfileImageService, never()).updateProfileImage(any(), any());
         }
     }
 

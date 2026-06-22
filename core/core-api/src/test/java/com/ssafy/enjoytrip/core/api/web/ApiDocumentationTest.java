@@ -15,6 +15,7 @@ import com.ssafy.enjoytrip.core.domain.service.BoardService;
 import com.ssafy.enjoytrip.core.domain.service.EvChargerService;
 import com.ssafy.enjoytrip.core.domain.service.HotplaceService;
 import com.ssafy.enjoytrip.core.domain.service.JwtTokenService;
+import com.ssafy.enjoytrip.core.domain.service.MemberProfileImageService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
 import com.ssafy.enjoytrip.core.domain.service.NeighborhoodBriefingService;
 import com.ssafy.enjoytrip.core.domain.service.NewsService;
@@ -25,6 +26,7 @@ import com.ssafy.enjoytrip.core.domain.service.WeatherService;
 import com.ssafy.enjoytrip.core.domain.BoardPost;
 import com.ssafy.enjoytrip.core.domain.Hotplace;
 import com.ssafy.enjoytrip.core.domain.Member;
+import com.ssafy.enjoytrip.core.domain.ProfileImageUploadUrl;
 import com.ssafy.enjoytrip.core.domain.Notice;
 import com.ssafy.enjoytrip.core.domain.TravelPlan;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,11 +44,14 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.List;
 
 @ExtendWith(RestDocumentationExtension.class)
@@ -65,6 +70,7 @@ class ApiDocumentationTest {
     private MemberService memberService;
     private JwtTokenService tokenService;
     private OAuthSignupTicketService oauthSignupTicketService;
+    private MemberProfileImageService memberProfileImageService;
 
     @BeforeEach
     void setUp(RestDocumentationContextProvider restDocumentation) {
@@ -81,6 +87,7 @@ class ApiDocumentationTest {
         memberService = mock(MemberService.class);
         tokenService = mock(JwtTokenService.class);
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
+        memberProfileImageService = mock(MemberProfileImageService.class);
 
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(
@@ -94,7 +101,8 @@ class ApiDocumentationTest {
                         new HotplaceController(hotplaceService),
                         new PlanController(planService),
                         new NoticeController(noticeService),
-                        new MemberController(memberService, tokenService, oauthSignupTicketService)
+                        new MemberController(memberService, tokenService, oauthSignupTicketService),
+                        new MemberProfileImageController(memberProfileImageService)
                 )
                 .setCustomArgumentResolvers(new TestAuthenticationPrincipalResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -284,4 +292,49 @@ class ApiDocumentationTest {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint())));
     }
+
+
+    @DisplayName("회원 프로필 이미지 API 문서를 검증한다")
+    @Test
+    void memberProfileImages() throws Exception {
+        String objectKey = "profiles/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg";
+        when(memberProfileImageService.createPresignedUpload("ssafy", "image/jpeg", "jpg"))
+                .thenReturn(new ProfileImageUploadUrl(
+                        objectKey,
+                        "http://localhost:9000/dongnepin-notes/" + objectKey + "?signature=abc",
+                        Instant.parse("2026-06-22T05:10:00Z"),
+                        "http://localhost:9000/dongnepin-notes/" + objectKey
+                ));
+
+        mockMvc.perform(post("/api/members/me/profile-image/presigned-upload")
+                        .principal(() -> "ssafy")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "contentType": "image/jpeg",
+                                  "fileExtension": "jpg"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.objectKey").value(objectKey))
+                .andDo(document("member-profile-image-presigned-upload",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())));
+
+        mockMvc.perform(put("/api/members/me/profile-image")
+                        .principal(() -> "ssafy")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "objectKey": "%s",
+                                  "contentType": "image/jpeg"
+                                }
+                                """.formatted(objectKey)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andDo(document("member-profile-image-update",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())));
+    }
+
 }

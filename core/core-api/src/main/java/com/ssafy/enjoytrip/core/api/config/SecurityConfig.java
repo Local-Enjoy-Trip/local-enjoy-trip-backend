@@ -56,6 +56,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/members/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/members/me").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/members/me").authenticated()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/members/me/profile-image/presigned-upload"
+                        ).authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/members/me/profile-image").authenticated()
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/attractions/{id}/favorite",
                                 "/api/attractions/{id}/save",
@@ -82,8 +87,6 @@ public class SecurityConfig {
                                 "/api/notes/{id}",
                                 "/api/notes/{id}/save"
                         ).authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/map/explore").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/note-images/presigned-upload").authenticated()
                         .requestMatchers("/api/friendships/**", "/api/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/plans", "/api/plans/items").authenticated()
                         .requestMatchers(
