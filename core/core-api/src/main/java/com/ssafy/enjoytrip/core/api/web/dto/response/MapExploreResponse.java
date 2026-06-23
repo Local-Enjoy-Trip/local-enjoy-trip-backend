@@ -1,10 +1,10 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
 import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
-import com.ssafy.enjoytrip.core.domain.service.MapCenter;
-import com.ssafy.enjoytrip.core.domain.service.MapExploreResult;
-import com.ssafy.enjoytrip.core.domain.service.NoteMapPin;
-import com.ssafy.enjoytrip.core.domain.service.PlaceMapPin;
+import com.ssafy.enjoytrip.core.domain.MapCenter;
+import com.ssafy.enjoytrip.core.domain.MapExploreResult;
+import com.ssafy.enjoytrip.core.domain.NoteMapPin;
+import com.ssafy.enjoytrip.core.domain.PlaceMapPin;
 import java.util.List;
 
 public record MapExploreResponse(

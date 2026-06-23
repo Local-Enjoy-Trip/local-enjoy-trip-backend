@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
-import com.ssafy.enjoytrip.core.domain.service.PopularAttractionResult;
+import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
 import java.util.List;
 
 public record PopularAttractionsResponse(List<PopularAttractionResponse> attractions) {

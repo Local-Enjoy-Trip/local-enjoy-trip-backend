@@ -1,5 +1,6 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
+import com.ssafy.enjoytrip.core.domain.ChargerResult;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.EvChargerMapper;
 import java.util.List;
 import java.util.Map;

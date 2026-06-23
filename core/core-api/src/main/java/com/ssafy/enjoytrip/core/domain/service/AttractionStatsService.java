@@ -1,6 +1,7 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.AttractionStats;
+import com.ssafy.enjoytrip.core.domain.AttractionStatsReader;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

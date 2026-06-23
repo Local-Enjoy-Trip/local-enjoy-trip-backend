@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.core.domain.service;
+package com.ssafy.enjoytrip.core.domain;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -6,10 +6,10 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 @Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
 public class RedisAttractionPopularityDeltaCache implements AttractionPopularityDeltaCache {
     private static final String SAVE_DIRTY_IDS_KEY = "enjoytrip:attraction-popularity:save:dirty";

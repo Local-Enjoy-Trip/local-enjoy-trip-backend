@@ -5,7 +5,7 @@ import static org.mockito.Mockito.mock;
 
 import com.ssafy.enjoytrip.core.api.worker.attraction.AttractionPopularityFlushScheduler;
 import com.ssafy.enjoytrip.core.domain.service.AttractionPopularityStatsService;
-import com.ssafy.enjoytrip.core.domain.service.RedisAttractionPopularityDeltaCache;
+import com.ssafy.enjoytrip.core.domain.RedisAttractionPopularityDeltaCache;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

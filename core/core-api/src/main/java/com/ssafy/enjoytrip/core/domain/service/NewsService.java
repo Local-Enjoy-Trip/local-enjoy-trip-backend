@@ -1,5 +1,6 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
+import com.ssafy.enjoytrip.core.domain.NewsResult;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NewsMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,5 @@
-package com.ssafy.enjoytrip.core.domain.service;
+package com.ssafy.enjoytrip.core.domain;
 
-import com.ssafy.enjoytrip.core.domain.NoteCategory;
-import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
-import com.ssafy.enjoytrip.core.domain.NoteVisibility;
 import java.time.LocalDateTime;
 
 public record NoteMapPin(

@@ -1,7 +1,5 @@
-package com.ssafy.enjoytrip.core.domain.service;
+package com.ssafy.enjoytrip.core.domain;
 
-import com.ssafy.enjoytrip.core.domain.AttractionStats;
-import com.ssafy.enjoytrip.core.domain.AttractionTag;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionStatsRowRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import java.util.ArrayList;

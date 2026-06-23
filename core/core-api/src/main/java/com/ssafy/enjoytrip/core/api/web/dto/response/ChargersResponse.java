@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
-import com.ssafy.enjoytrip.core.domain.service.ChargerResult;
+import com.ssafy.enjoytrip.core.domain.ChargerResult;
 import java.util.List;
 
 public record ChargersResponse(List<ChargerResult> chargers) {

@@ -1,6 +1,5 @@
-package com.ssafy.enjoytrip.core.domain.service;
+package com.ssafy.enjoytrip.core.domain;
 
-import com.ssafy.enjoytrip.core.domain.Attraction;
 
 public record PopularAttractionResult(
         Attraction attraction,

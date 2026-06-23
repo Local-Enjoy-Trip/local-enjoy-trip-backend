@@ -1,7 +1,7 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
-import com.ssafy.enjoytrip.core.domain.service.PopularAttractionResult;
+import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
 
 public record PopularAttractionResponse(
         Long id,

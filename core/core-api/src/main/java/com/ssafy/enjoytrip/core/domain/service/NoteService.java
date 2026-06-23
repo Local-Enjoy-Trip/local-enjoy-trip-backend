@@ -7,6 +7,7 @@ import com.ssafy.enjoytrip.core.domain.NoteCategory;
 import com.ssafy.enjoytrip.core.domain.NoteStatus;
 import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
 import com.ssafy.enjoytrip.core.domain.NoteVisibility;
+import com.ssafy.enjoytrip.core.domain.NoteMapPin;
 import com.ssafy.enjoytrip.core.domain.query.MapNotesCondition;
 import com.ssafy.enjoytrip.core.domain.query.NearbyNotesCondition;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
