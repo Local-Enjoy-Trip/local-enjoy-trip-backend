@@ -109,6 +109,19 @@ class SecurityErrorResponseTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.code").value("S401"))
                 .andExpect(jsonPath("$.error.message").value("인증이 필요합니다."));
+
+        mockMvc.perform(post("/api/courses/course-1/order-recommendation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "currentLatitude": 37.5665,
+                                  "currentLongitude": 126.9780
+                                }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("S401"))
+                .andExpect(jsonPath("$.error.message").value("인증이 필요합니다."));
     }
 
     @DisplayName("지도 탐색 인증 실패도 Security entrypoint가 공통 오류 응답으로 처리한다")

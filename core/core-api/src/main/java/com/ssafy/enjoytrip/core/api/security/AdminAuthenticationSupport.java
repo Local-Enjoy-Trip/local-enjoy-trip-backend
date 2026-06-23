@@ -1,5 +1,6 @@
 package com.ssafy.enjoytrip.core.api.security;
 
+import com.ssafy.enjoytrip.core.domain.MemberRole;
 import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import lombok.RequiredArgsConstructor;
@@ -18,17 +19,19 @@ public class AdminAuthenticationSupport {
         }
 
         MemberRecord member = findAuthenticatedMember(authentication);
-        //TODO: ADMIN을 문자열로 쓰는것보다 enum 상수 ADMIN으로 쓰는게 나을듯
-        return member != null && "ADMIN".equals(member.getRole());
+        return isAdminRole(member);
     }
 
     public String requireAdminUserId(Authentication authentication) {
         MemberRecord member = findAuthenticatedMember(authentication);
-        if (member == null || !"ADMIN".equals(member.getRole())) {
-            //TODO: 인가 문제는 여기서 하기 보다 spring security에서 처리하는게 좋을듯.
+        if (!isAdminRole(member)) {
             throw new AccessDeniedException("관리자 권한이 필요합니다.");
         }
         return member.getUserId();
+    }
+
+    private static boolean isAdminRole(MemberRecord member) {
+        return member != null && MemberRole.ADMIN.name().equals(member.getRole());
     }
 
     private MemberRecord findAuthenticatedMember(Authentication authentication) {

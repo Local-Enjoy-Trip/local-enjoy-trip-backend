@@ -158,6 +158,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/friendships/**", "/api/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/courses/me").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/courses").authenticated()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/courses/{id}/order-recommendation"
+                        ).authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/courses/{id}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/courses/{id}").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/plans", "/api/plans/items").authenticated()
