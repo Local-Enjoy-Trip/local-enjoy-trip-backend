@@ -4,7 +4,9 @@ import static com.ssafy.enjoytrip.core.domain.FriendshipStatus.ACCEPTED;
 import static com.ssafy.enjoytrip.core.domain.FriendshipStatus.DELETED;
 import static com.ssafy.enjoytrip.core.domain.FriendshipStatus.PENDING;
 import static com.ssafy.enjoytrip.core.domain.FriendshipStatus.REJECTED;
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.FRIENDSHIP_ALREADY_ACTIVE;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.FRIENDSHIP_NOT_FOUND;
+import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_NOT_FOUND;
 
 import com.ssafy.enjoytrip.core.domain.Friendship;
 import com.ssafy.enjoytrip.core.domain.FriendshipStatus;
@@ -33,133 +35,86 @@ public class FriendshipService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public Friendship requestFriendship(String requesterUserId, String targetUserId) {
-        Friendship.validateRequestableUsers(requesterUserId, targetUserId);
+    public Friendship requestFriendship(Long requesterMemberId, String targetEmail) {
+        MemberRecord target = findRequiredMemberByEmail(targetEmail);
+        Friendship.validateRequestableMembers(requesterMemberId, target.getId());
+        if (existsActiveBetween(requesterMemberId, target.getId())) {
+            throw new CoreException(FRIENDSHIP_ALREADY_ACTIVE);
+        }
 
-        Friendship friendship = savePending(requesterUserId, targetUserId);
-        publishFriendshipRequested(friendship, requesterUserId, targetUserId);
+        Friendship friendship = savePending(requesterMemberId, target.getId());
+        publishFriendshipRequested(friendship);
 
         return friendship;
     }
 
     @Transactional
-    public Friendship acceptRequest(Long friendshipId, String actorUserId) {
+    public Friendship acceptRequest(Long friendshipId, Long actorMemberId) {
         Friendship friendship = findFriendship(friendshipId);
-        friendship.validateAcceptableBy(actorUserId);
+        friendship.validateAcceptableBy(actorMemberId);
         Friendship accepted = updateStatus(friendshipId, ACCEPTED);
         markFriendRequestNotificationRead(accepted);
         return accepted;
     }
 
     @Transactional
-    public Friendship rejectRequest(Long friendshipId, String actorUserId) {
+    public Friendship rejectRequest(Long friendshipId, Long actorMemberId) {
         Friendship friendship = findFriendship(friendshipId);
-        friendship.validateRejectableBy(actorUserId);
+        friendship.validateRejectableBy(actorMemberId);
         Friendship rejected = updateStatus(friendshipId, REJECTED);
         markFriendRequestNotificationRead(rejected);
         return rejected;
     }
 
     @Transactional
-    public Friendship cancelSentRequest(Long friendshipId, String actorUserId) {
+    public Friendship cancelSentRequest(Long friendshipId, Long actorMemberId) {
         Friendship friendship = findFriendship(friendshipId);
-        friendship.validateCancelableBy(actorUserId);
+        friendship.validateCancelableBy(actorMemberId);
         return updateStatus(friendshipId, DELETED);
     }
 
     @Transactional
-    public Friendship deleteFriendship(Long friendshipId, String actorUserId) {
+    public Friendship deleteFriendship(Long friendshipId, Long actorMemberId) {
         Friendship friendship = findFriendship(friendshipId);
-        friendship.validateDeletableBy(actorUserId);
+        friendship.validateDeletableBy(actorMemberId);
         return updateStatus(friendshipId, DELETED);
     }
 
-    public List<Friendship> findFriends(String actorUserId) {
-        return friendshipMapper.findByParticipantAndStatus(actorUserId, ACCEPTED).stream()
-                .map(record -> new Friendship(
-                        record.getId(),
-                        record.getRequesterUserId(),
-                        displayName(record.getRequesterUserId()),
-                        record.getAddresseeUserId(),
-                        displayName(record.getAddresseeUserId()),
-                        record.getStatus(),
-                        record.getRequestedAt(),
-                        record.getRespondedAt(),
-                        record.getCreatedAt(),
-                        record.getUpdatedAt()
-                ))
+    public List<Friendship> findFriends(Long actorMemberId) {
+        return friendshipMapper.findByParticipantAndStatus(actorMemberId, ACCEPTED).stream()
+                .map(this::toFriendship)
                 .toList();
     }
 
-    public List<Friendship> findReceivedPendingRequests(String actorUserId) {
-        return friendshipMapper.findReceivedRequests(actorUserId, PENDING).stream()
-                .map(record -> new Friendship(
-                        record.getId(),
-                        record.getRequesterUserId(),
-                        displayName(record.getRequesterUserId()),
-                        record.getAddresseeUserId(),
-                        displayName(record.getAddresseeUserId()),
-                        record.getStatus(),
-                        record.getRequestedAt(),
-                        record.getRespondedAt(),
-                        record.getCreatedAt(),
-                        record.getUpdatedAt()
-                ))
+    public List<Friendship> findReceivedPendingRequests(Long actorMemberId) {
+        return friendshipMapper.findReceivedRequests(actorMemberId, PENDING).stream()
+                .map(this::toFriendship)
                 .toList();
     }
 
-    public List<Friendship> findSentPendingRequests(String actorUserId) {
-        return friendshipMapper.findSentRequests(actorUserId, PENDING).stream()
-                .map(record -> new Friendship(
-                        record.getId(),
-                        record.getRequesterUserId(),
-                        displayName(record.getRequesterUserId()),
-                        record.getAddresseeUserId(),
-                        displayName(record.getAddresseeUserId()),
-                        record.getStatus(),
-                        record.getRequestedAt(),
-                        record.getRespondedAt(),
-                        record.getCreatedAt(),
-                        record.getUpdatedAt()
-                ))
+    public List<Friendship> findSentPendingRequests(Long actorMemberId) {
+        return friendshipMapper.findSentRequests(actorMemberId, PENDING).stream()
+                .map(this::toFriendship)
                 .toList();
     }
 
     public Optional<Friendship> findById(Long id) {
         return Optional.ofNullable(friendshipMapper.findById(id))
-                .map(record -> new Friendship(
-                        record.getId(),
-                        record.getRequesterUserId(),
-                        displayName(record.getRequesterUserId()),
-                        record.getAddresseeUserId(),
-                        displayName(record.getAddresseeUserId()),
-                        record.getStatus(),
-                        record.getRequestedAt(),
-                        record.getRespondedAt(),
-                        record.getCreatedAt(),
-                        record.getUpdatedAt()
-                ));
+                .map(this::toFriendship);
     }
 
-    public boolean existsActiveBetween(String userId, String otherUserId) {
-        return friendshipMapper.existsActiveBetween(userId, otherUserId, List.of(PENDING, ACCEPTED)) > 0;
+    public boolean existsActiveBetween(Long memberId, Long otherMemberId) {
+        return friendshipMapper.existsActiveBetween(
+                memberId,
+                otherMemberId,
+                List.of(PENDING, ACCEPTED)
+        ) > 0;
     }
 
-    private Friendship savePending(String requesterUserId, String addresseeUserId) {
-        FriendshipRecord record = new FriendshipRecord(requesterUserId, addresseeUserId);
+    private Friendship savePending(Long requesterMemberId, Long addresseeMemberId) {
+        FriendshipRecord record = new FriendshipRecord(requesterMemberId, addresseeMemberId);
         friendshipMapper.insert(record);
-        return new Friendship(
-                record.getId(),
-                record.getRequesterUserId(),
-                record.getRequesterUserId(),
-                record.getAddresseeUserId(),
-                record.getAddresseeUserId(),
-                record.getStatus(),
-                record.getRequestedAt(),
-                record.getRespondedAt(),
-                record.getCreatedAt(),
-                record.getUpdatedAt()
-        );
+        return toFriendship(record);
     }
 
     private Friendship updateStatus(Long id, FriendshipStatus status) {
@@ -169,33 +124,20 @@ public class FriendshipService {
         }
         record.transitionTo(status);
         friendshipMapper.updateStatus(record);
-        return new Friendship(
-                record.getId(),
-                record.getRequesterUserId(),
-                displayName(record.getRequesterUserId()),
-                record.getAddresseeUserId(),
-                displayName(record.getAddresseeUserId()),
-                record.getStatus(),
-                record.getRequestedAt(),
-                record.getRespondedAt(),
-                record.getCreatedAt(),
-                record.getUpdatedAt()
-        );
+        return toFriendship(record);
     }
 
-    private void publishFriendshipRequested(Friendship friendship,
-                                            String requesterUserId,
-                                            String targetUserId) {
+    private void publishFriendshipRequested(Friendship friendship) {
         eventPublisher.publishEvent(new FriendshipRequestedEvent(
                 friendship.id(),
-                requesterUserId,
-                targetUserId
+                friendship.requesterMemberId(),
+                friendship.addresseeMemberId()
         ));
     }
 
     private void markFriendRequestNotificationRead(Friendship friendship) {
         notificationMapper.markReadByReference(
-                friendship.addresseeUserId(),
+                friendship.addresseeMemberId(),
                 NotificationReferenceType.FRIENDSHIP,
                 friendship.id(),
                 LocalDateTime.now()
@@ -207,12 +149,20 @@ public class FriendshipService {
         if (record == null) {
             throw new CoreException(FRIENDSHIP_NOT_FOUND);
         }
+        return toFriendship(record);
+    }
+
+    private Friendship toFriendship(FriendshipRecord record) {
+        MemberRecord requester = findMemberById(record.getRequesterMemberId());
+        MemberRecord addressee = findMemberById(record.getAddresseeMemberId());
         return new Friendship(
                 record.getId(),
-                record.getRequesterUserId(),
-                displayName(record.getRequesterUserId()),
-                record.getAddresseeUserId(),
-                displayName(record.getAddresseeUserId()),
+                record.getRequesterMemberId(),
+                emailOrEmpty(requester),
+                displayName(requester),
+                record.getAddresseeMemberId(),
+                emailOrEmpty(addressee),
+                displayName(addressee),
                 record.getStatus(),
                 record.getRequestedAt(),
                 record.getRespondedAt(),
@@ -221,10 +171,25 @@ public class FriendshipService {
         );
     }
 
-    private String displayName(String userId) {
-        MemberRecord member = memberMapper.findByUserId(userId);
+    private MemberRecord findRequiredMemberByEmail(String email) {
+        MemberRecord member = memberMapper.findByEmail(email);
         if (member == null) {
-            return userId;
+            throw new CoreException(USER_NOT_FOUND);
+        }
+        return member;
+    }
+
+    private MemberRecord findMemberById(Long memberId) {
+        return memberMapper.findById(memberId);
+    }
+
+    private static String emailOrEmpty(MemberRecord member) {
+        return member == null ? "" : member.getEmail();
+    }
+
+    private static String displayName(MemberRecord member) {
+        if (member == null) {
+            return "";
         }
         if (member.getNickname() != null && !member.getNickname().isBlank()) {
             return member.getNickname();
@@ -232,6 +197,6 @@ public class FriendshipService {
         if (member.getName() != null && !member.getName().isBlank()) {
             return member.getName();
         }
-        return userId;
+        return member.getEmail();
     }
 }

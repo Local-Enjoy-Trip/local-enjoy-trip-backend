@@ -6,7 +6,7 @@ import com.ssafy.enjoytrip.core.support.error.CoreException;
 
 public record TravelPlan(
         String id,
-        String userId,
+        Long memberId,
         String title,
         String startDate,
         String endDate,
@@ -20,7 +20,7 @@ public record TravelPlan(
 
     public static TravelPlan createOwned(
             String id,
-            String userId,
+            Long memberId,
             String title,
             String startDate,
             String endDate,
@@ -29,7 +29,7 @@ public record TravelPlan(
     ) {
         return new TravelPlan(
                 id,
-                userId,
+                memberId,
                 title,
                 startDate,
                 endDate,
@@ -49,7 +49,7 @@ public record TravelPlan(
     ) {
         return new TravelPlan(
                 id,
-                userId,
+                memberId,
                 valueOrCurrent(title, this.title),
                 valueOrCurrent(startDate, this.startDate),
                 valueOrCurrent(endDate, this.endDate),
@@ -60,8 +60,8 @@ public record TravelPlan(
         );
     }
 
-    public void requireOwnedBy(String userId) {
-        if (!this.userId.equals(userId)) {
+    public void requireOwnedBy(Long memberId) {
+        if (!this.memberId.equals(memberId)) {
             throw new CoreException(PLAN_ACCESS_DENIED);
         }
     }

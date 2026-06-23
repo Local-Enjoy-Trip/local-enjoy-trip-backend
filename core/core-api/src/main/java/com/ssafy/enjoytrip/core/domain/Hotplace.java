@@ -2,7 +2,7 @@ package com.ssafy.enjoytrip.core.domain;
 
 public record Hotplace(
         String id,
-        String userId,
+        Long memberId,
         String title,
         String type,
         String visitDate,

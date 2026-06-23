@@ -27,7 +27,7 @@ public class AdminUserService {
 
     private static AdminUserSummary toSummary(MemberRecord record) {
         return new AdminUserSummary(
-                record.getUserId(),
+                record.getId(),
                 displayName(record),
                 record.getEmail(),
                 role(record.getRole()),
@@ -43,7 +43,7 @@ public class AdminUserService {
         if (!isBlank(record.getName())) {
             return record.getName();
         }
-        return record.getUserId();
+        return record.getEmail();
     }
 
     private static String role(String role) {
@@ -62,7 +62,7 @@ public class AdminUserService {
     }
 
     public record AdminUserSummary(
-            String userId,
+            Long memberId,
             String displayName,
             String email,
             String role,

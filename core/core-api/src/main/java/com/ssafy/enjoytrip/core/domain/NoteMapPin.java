@@ -12,7 +12,6 @@ public record NoteMapPin(
         String regionName,
         double distanceMeters,
         String imageObjectKey,
-        String authorUserId,
         String authorNickname,
         String authorProfileImageUrl,
         NoteViewerRelationship relationshipToViewer,

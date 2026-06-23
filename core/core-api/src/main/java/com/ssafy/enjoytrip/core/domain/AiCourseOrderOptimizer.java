@@ -181,11 +181,11 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
                                                   RuntimeException exception) {
         String providerException = exception == null ? "" : exception.getClass().getName();
         log.warn(
-                "Course order recommendation fallback: reason={} courseId={} ownerUserId={} "
+                "Course order recommendation fallback: reason={} courseId={} ownerMemberId={} "
                         + "itemCount={} providerException={}",
                 reason,
                 preview.course().id(),
-                preview.course().ownerUserId(),
+                preview.course().ownerMemberId(),
                 preview.itemCount(),
                 providerException
         );

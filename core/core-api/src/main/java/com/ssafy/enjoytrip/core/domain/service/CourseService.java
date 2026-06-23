@@ -17,8 +17,8 @@ public class CourseService {
     private final CourseWriter courseWriter;
     private final CourseOrderOptimizer courseOrderOptimizer;
 
-    public List<Course> findMyCourses(String ownerUserId) {
-        return courseReader.findMyCourses(ownerUserId);
+    public List<Course> findMyCourses(Long ownerMemberId) {
+        return courseReader.findMyCourses(ownerMemberId);
     }
 
     public Course findRequired(String id) {
@@ -33,29 +33,29 @@ public class CourseService {
         return courseWriter.create(course);
     }
 
-    public Course updateCourse(String ownerUserId, Course course) {
+    public Course updateCourse(Long ownerMemberId, Course course) {
         Course current = findRequired(course.id());
-        current.requireOwnedBy(ownerUserId);
+        current.requireOwnedBy(ownerMemberId);
 
         return courseWriter.update(course);
     }
 
-    public Course recommendCourseOrder(String ownerUserId, String courseId) {
-        return recommendCourseOrder(ownerUserId, courseId, CourseOrderOptimizationContext.empty());
+    public Course recommendCourseOrder(Long ownerMemberId, String courseId) {
+        return recommendCourseOrder(ownerMemberId, courseId, CourseOrderOptimizationContext.empty());
     }
 
-    public Course recommendCourseOrder(String ownerUserId,
+    public Course recommendCourseOrder(Long ownerMemberId,
                                        String courseId,
                                        CourseOrderOptimizationContext context) {
         Course current = findRequired(courseId);
-        current.requireOwnedBy(ownerUserId);
+        current.requireOwnedBy(ownerMemberId);
         return courseOrderOptimizer.recommend(current, context);
     }
 
-    public void deleteCourse(String ownerUserId, String courseId) {
+    public void deleteCourse(Long ownerMemberId, String courseId) {
         Course current = findRequired(courseId);
-        current.requireOwnedBy(ownerUserId);
-        courseWriter.deleteOwned(courseId, ownerUserId);
+        current.requireOwnedBy(ownerMemberId);
+        courseWriter.deleteOwned(courseId, ownerMemberId);
     }
 
     public List<Course> findPublicFeed(DistanceSearchCondition condition) {

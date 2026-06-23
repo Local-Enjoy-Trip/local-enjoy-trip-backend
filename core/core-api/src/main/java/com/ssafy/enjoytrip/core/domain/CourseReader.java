@@ -24,8 +24,8 @@ public class CourseReader {
     private static final String TYPE_NOTE = CourseStopTargetType.NOTE.name();
     private final CourseMapper courseMapper;
 
-    public List<Course> findMyCourses(String ownerUserId) {
-        return courseMapper.findByOwnerUserId(ownerUserId).stream()
+    public List<Course> findMyCourses(Long ownerMemberId) {
+        return courseMapper.findByOwnerMemberId(ownerMemberId).stream()
                 .map(record -> findCourse(record, true, SegmentReadPolicy.USER_COURSE))
                 .toList();
     }
@@ -50,10 +50,10 @@ public class CourseReader {
                 .toList();
     }
 
-    public Course findRequiredOwned(String ownerUserId, String courseId) {
+    public Course findRequiredOwned(Long ownerMemberId, String courseId) {
         CourseRecord record = courseMapper.findById(courseId);
         requireExisting(record);
-        if (!ownerUserId.equals(record.getOwnerUserId())) {
+        if (!ownerMemberId.equals(record.getOwnerMemberId())) {
             throw new CoreException(COURSE_ACCESS_DENIED);
         }
         return findCourse(record, true, SegmentReadPolicy.PLANNED_COURSE);
@@ -100,7 +100,7 @@ public class CourseReader {
                                    SegmentReadPolicy segmentReadPolicy) {
         return new Course(
                 record.getId(),
-                record.getOwnerUserId(),
+                record.getOwnerMemberId(),
                 record.getTitle(),
                 record.getRegionName(),
                 record.getVisibility(),

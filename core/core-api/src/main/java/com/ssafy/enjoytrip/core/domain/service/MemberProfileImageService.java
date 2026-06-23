@@ -3,8 +3,8 @@ package com.ssafy.enjoytrip.core.domain.service;
 import com.ssafy.enjoytrip.core.domain.ProfileImageUploadUrl;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.support.error.ErrorType;
-import com.ssafy.enjoytrip.external.minio.ProfileImageUploadUrlGenerator;
 import com.ssafy.enjoytrip.external.minio.ProfileImageUploadResult;
+import com.ssafy.enjoytrip.external.minio.ProfileImageUploadUrlGenerator;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,11 +17,15 @@ public class MemberProfileImageService {
     private final MemberMapper memberMapper;
 
     public ProfileImageUploadUrl createPresignedUpload(
-            String userId,
+            Long memberId,
             String contentType,
             String fileExtension
     ) {
-        ProfileImageUploadResult generated = uploadUrlGenerator.generate(userId, contentType, fileExtension);
+        ProfileImageUploadResult generated = uploadUrlGenerator.generate(
+                String.valueOf(memberId),
+                contentType,
+                fileExtension
+        );
 
         return new ProfileImageUploadUrl(
                 generated.objectKey(),
@@ -32,9 +36,9 @@ public class MemberProfileImageService {
     }
 
     @Transactional
-    public void updateProfileImage(String userId, String objectKey) {
+    public void updateProfileImage(Long memberId, String objectKey) {
         int updated = memberMapper.updateProfileImage(
-                userId,
+                memberId,
                 objectKey,
                 uploadUrlGenerator.publicUrl(objectKey)
         );

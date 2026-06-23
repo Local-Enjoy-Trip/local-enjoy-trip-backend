@@ -30,9 +30,9 @@ public class AttractionService {
 
     public List<PopularAttractionResult> findPopularNearbyAttractions(
             DistanceSearchCondition condition,
-            String userId
+            Long memberId
     ) {
-        List<NearbyAttractionCandidate> candidates = findNearbyAttractionCandidates(condition, userId, false);
+        List<NearbyAttractionCandidate> candidates = findNearbyAttractionCandidates(condition, memberId, false);
 
         if (candidates.isEmpty()) {
             return List.of();
@@ -62,26 +62,26 @@ public class AttractionService {
         return executeAttractionSearch(condition, null);
     }
 
-    public List<Attraction> searchAttractions(AttractionSearchCondition condition, String userId) {
-        return executeAttractionSearch(condition, userId);
+    public List<Attraction> searchAttractions(AttractionSearchCondition condition, Long memberId) {
+        return executeAttractionSearch(condition, memberId);
     }
 
     public List<NearbyAttractionCandidate> findNearbyCandidates(
             DistanceSearchCondition condition,
-            String userId,
+            Long memberId,
             boolean savedOnly
     ) {
-        return findNearbyAttractionCandidates(condition, userId, savedOnly);
+        return findNearbyAttractionCandidates(condition, memberId, savedOnly);
     }
 
-    public void addSave(Long attractionId, String userId) {
-        if (attractionMapper.insertSave(attractionId, userId) > 0) {
+    public void addSave(Long attractionId, Long memberId) {
+        if (attractionMapper.insertSave(attractionId, memberId) > 0) {
             popularityDeltaCache.recordSaveDelta(attractionId, 1L);
         }
     }
 
-    public boolean removeSave(Long attractionId, String userId) {
-        boolean deleted = attractionMapper.deleteSave(attractionId, userId) > 0;
+    public boolean removeSave(Long attractionId, Long memberId) {
+        boolean deleted = attractionMapper.deleteSave(attractionId, memberId) > 0;
         if (deleted) {
             popularityDeltaCache.recordSaveDelta(attractionId, -1L);
         }
@@ -89,14 +89,14 @@ public class AttractionService {
     }
 
     @Transactional
-    public void upsertRating(Long attractionId, String userId, int rating) {
-        attractionMapper.upsertRating(attractionId, userId, rating);
+    public void upsertRating(Long attractionId, Long memberId, int rating) {
+        attractionMapper.upsertRating(attractionId, memberId, rating);
         attractionMapper.refreshPopularityRatingStats(attractionId);
     }
 
     @Transactional
-    public boolean removeRating(Long attractionId, String userId) {
-        boolean deleted = attractionMapper.deleteRating(attractionId, userId) > 0;
+    public boolean removeRating(Long attractionId, Long memberId) {
+        boolean deleted = attractionMapper.deleteRating(attractionId, memberId) > 0;
         if (deleted) {
             attractionMapper.refreshPopularityRatingStats(attractionId);
         }
@@ -170,7 +170,7 @@ public class AttractionService {
         }
     }
 
-    private List<Attraction> executeAttractionSearch(AttractionSearchCondition condition, String userId) {
+    private List<Attraction> executeAttractionSearch(AttractionSearchCondition condition, Long memberId) {
         List<AttractionSearchRecord> records = attractionMapper.search(
                 condition.contentTypeId(),
                 condition.keyword(),
@@ -181,14 +181,14 @@ public class AttractionService {
                 condition.radiusMeters(),
                 condition.aroundSearch(),
                 200,
-                userId
+                memberId
         );
         return toAttractions(records);
     }
 
     private List<NearbyAttractionCandidate> findNearbyAttractionCandidates(
             DistanceSearchCondition condition,
-            String userId,
+            Long memberId,
             boolean savedOnly
     ) {
         List<AttractionSearchRecord> records = attractionMapper.findNearby(
@@ -197,7 +197,7 @@ public class AttractionService {
                 condition.radiusMeters(),
                 condition.limit(),
                 savedOnly,
-                userId
+                memberId
         );
         return toNearbyCandidates(records);
     }

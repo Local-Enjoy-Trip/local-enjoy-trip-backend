@@ -1,24 +1,35 @@
 package com.ssafy.enjoytrip.core.domain;
 
 public record Member(
-        String userId,
+        Long memberId,
         String name,
         String nickname,
         String email,
         String password,
         String profileImageUrl
 ) {
-    public Member(String userId, String name, String email, String password) {
-        this(userId, name, name, email, password, null);
+    public Member(String name, String email, String password) {
+        this(null, name, name, email, password, null);
     }
 
     public Member withPassword(String newPassword) {
         return new Member(
-                userId,
+                memberId,
                 name,
                 nickname,
                 email,
                 newPassword,
+                profileImageUrl
+        );
+    }
+
+    public Member withMemberId(Long newMemberId) {
+        return new Member(
+                newMemberId,
+                name,
+                nickname,
+                email,
+                password,
                 profileImageUrl
         );
     }
@@ -30,7 +41,7 @@ public record Member(
         if (!isBlank(name)) {
             return name;
         }
-        return userId;
+        return email;
     }
 
     private static boolean isBlank(String value) {

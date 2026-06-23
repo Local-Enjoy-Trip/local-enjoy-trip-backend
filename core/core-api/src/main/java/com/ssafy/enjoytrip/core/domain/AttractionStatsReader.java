@@ -12,10 +12,10 @@ import org.springframework.stereotype.Component;
 public class AttractionStatsReader {
     private final AttractionMapper attractionMapper;
 
-    public AttractionStats findStats(Long attractionId, String userId) {
+    public AttractionStats findStats(Long attractionId, Long memberId) {
         List<AttractionStatsRowRecord> rows = attractionMapper.findStatsRowsByAttractionId(
                 attractionId,
-                userId
+                memberId
         );
         if (rows.isEmpty()) {
             return emptyStats(attractionId);
@@ -24,14 +24,14 @@ public class AttractionStatsReader {
         return toStats(attractionId, rows);
     }
 
-    public List<AttractionStats> findStatsByAttractionIds(List<Long> attractionIds, String userId) {
+    public List<AttractionStats> findStatsByAttractionIds(List<Long> attractionIds, Long memberId) {
         if (attractionIds.isEmpty()) {
             return List.of();
         }
 
         List<AttractionStatsRowRecord> rows = attractionMapper.findStatsRowsByAttractionIds(
                 attractionIds,
-                userId
+                memberId
         );
 
         return toStatsList(rows);

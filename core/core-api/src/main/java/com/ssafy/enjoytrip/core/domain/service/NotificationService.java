@@ -7,8 +7,10 @@ import static com.ssafy.enjoytrip.core.domain.NotificationType.FRIEND_REQUEST_RE
 import com.ssafy.enjoytrip.core.domain.Notification;
 import com.ssafy.enjoytrip.core.domain.NotificationReferenceType;
 import com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NotificationRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.FriendshipMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NotificationMapper;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,14 +22,15 @@ import org.springframework.stereotype.Service;
 public class NotificationService {
     private final NotificationMapper notificationMapper;
     private final FriendshipMapper friendshipMapper;
+    private final MemberMapper memberMapper;
 
-    public List<Notification> findNotifications(String recipientUserId, int limit) {
-        return findUnreadByRecipient(recipientUserId, limit);
+    public List<Notification> findNotifications(Long recipientMemberId, int limit) {
+        return findUnreadByRecipient(recipientMemberId, limit);
     }
 
-    public boolean hasUnreadNotification(String recipientUserId) {
+    public boolean hasUnreadNotification(Long recipientMemberId) {
         return notificationMapper.existsUnreadFriendRequest(
-                recipientUserId,
+                recipientMemberId,
                 FRIEND_REQUEST_RECEIVED,
                 FRIENDSHIP,
                 PENDING
@@ -35,40 +38,40 @@ public class NotificationService {
     }
 
     public Notification saveFriendRequestReceived(Long friendshipId,
-                                                  String requesterUserId,
-                                                  String recipientUserId) {
+                                                  Long requesterMemberId,
+                                                  Long recipientMemberId) {
         NotificationRecord record = new NotificationRecord(
-                recipientUserId,
+                recipientMemberId,
                 FRIEND_REQUEST_RECEIVED,
                 FRIENDSHIP,
                 friendshipId,
-                requesterUserId
+                requesterEmail(requesterMemberId)
         );
         markReadIfFriendRequestAlreadyHandled(record);
 
         notificationMapper.upsertFriendRequest(record);
         return toNotification(notificationMapper.findByBusinessKey(
-                recipientUserId,
+                recipientMemberId,
                 FRIEND_REQUEST_RECEIVED,
                 FRIENDSHIP,
                 friendshipId
         ));
     }
 
-    public int markReadByReference(String recipientUserId,
+    public int markReadByReference(Long recipientMemberId,
                                    NotificationReferenceType referenceType,
                                    Long referenceId) {
         return notificationMapper.markReadByReference(
-                recipientUserId,
+                recipientMemberId,
                 referenceType,
                 referenceId,
                 LocalDateTime.now()
         );
     }
 
-    private List<Notification> findUnreadByRecipient(String recipientUserId, int limit) {
+    private List<Notification> findUnreadByRecipient(Long recipientMemberId, int limit) {
         return notificationMapper.findUnreadFriendRequests(
-                        recipientUserId,
+                        recipientMemberId,
                         FRIEND_REQUEST_RECEIVED,
                         FRIENDSHIP,
                         PENDING,
@@ -91,7 +94,7 @@ public class NotificationService {
     private Notification toNotification(NotificationRecord record) {
         return new Notification(
                 record.getId(),
-                record.getRecipientUserId(),
+                record.getRecipientMemberId(),
                 record.getType(),
                 record.getReferenceType(),
                 record.getReferenceId(),
@@ -102,4 +105,11 @@ public class NotificationService {
         );
     }
 
+    private String requesterEmail(Long requesterMemberId) {
+        MemberRecord requester = memberMapper.findById(requesterMemberId);
+        if (requester == null) {
+            return "";
+        }
+        return requester.getEmail();
+    }
 }

@@ -25,31 +25,31 @@ public class AdminCourseService {
     }
 
     public Course createAdminCourse(Course course) {
-        requireAdmin(course.ownerUserId());
+        requireAdmin(course.ownerMemberId());
         return courseWriter.create(course);
     }
 
-    public Course updateAdminCourse(String adminUserId, Course course) {
-        requireAdmin(adminUserId);
-        Course current = findRequiredAdminCourse(adminUserId, course.id());
-        current.requireOwnedBy(adminUserId);
+    public Course updateAdminCourse(Long adminMemberId, Course course) {
+        requireAdmin(adminMemberId);
+        Course current = findRequiredAdminCourse(adminMemberId, course.id());
+        current.requireOwnedBy(adminMemberId);
 
         return courseWriter.update(course);
     }
 
-    public void deleteAdminCourse(String adminUserId, String courseId) {
-        requireAdmin(adminUserId);
-        Course current = findRequiredAdminCourse(adminUserId, courseId);
-        current.requireOwnedBy(adminUserId);
-        courseWriter.deleteOwned(courseId, adminUserId);
+    public void deleteAdminCourse(Long adminMemberId, String courseId) {
+        requireAdmin(adminMemberId);
+        Course current = findRequiredAdminCourse(adminMemberId, courseId);
+        current.requireOwnedBy(adminMemberId);
+        courseWriter.deleteOwned(courseId, adminMemberId);
     }
 
-    private Course findRequiredAdminCourse(String adminUserId, String courseId) {
-        return courseReader.findRequiredOwned(adminUserId, courseId);
+    private Course findRequiredAdminCourse(Long adminMemberId, String courseId) {
+        return courseReader.findRequiredOwned(adminMemberId, courseId);
     }
 
-    private void requireAdmin(String userId) {
-        MemberRecord member = memberMapper.findByUserId(userId);
+    private void requireAdmin(Long memberId) {
+        MemberRecord member = memberMapper.findById(memberId);
         if (member == null || !MemberRole.ADMIN.name().equals(member.getRole())) {
             throw new CoreException(COURSE_ACCESS_DENIED);
         }

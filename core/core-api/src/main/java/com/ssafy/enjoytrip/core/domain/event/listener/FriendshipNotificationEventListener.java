@@ -18,8 +18,8 @@ public class FriendshipNotificationEventListener {
     public void saveFriendRequestNotification(FriendshipRequestedEvent event) {
         notificationService.saveFriendRequestReceived(
                 event.friendshipId(),
-                event.requesterUserId(),
-                event.recipientUserId()
+                event.requesterMemberId(),
+                event.recipientMemberId()
         );
     }
 }

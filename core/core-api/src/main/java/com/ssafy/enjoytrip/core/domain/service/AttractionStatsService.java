@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 public class AttractionStatsService {
     private final AttractionStatsReader attractionStatsReader;
 
-    public AttractionStats findStats(Long attractionId, String userId) {
-        return attractionStatsReader.findStats(attractionId, userId);
+    public AttractionStats findStats(Long attractionId, Long memberId) {
+        return attractionStatsReader.findStats(attractionId, memberId);
     }
 
-    public List<AttractionStats> findStatsByAttractionIds(List<Long> attractionIds, String userId) {
-        return attractionStatsReader.findStatsByAttractionIds(attractionIds, userId);
+    public List<AttractionStats> findStatsByAttractionIds(List<Long> attractionIds, Long memberId) {
+        return attractionStatsReader.findStatsByAttractionIds(attractionIds, memberId);
     }
 }

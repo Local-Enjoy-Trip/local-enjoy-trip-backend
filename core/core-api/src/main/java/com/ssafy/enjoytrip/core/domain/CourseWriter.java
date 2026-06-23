@@ -34,8 +34,8 @@ public class CourseWriter {
     }
 
     @Transactional
-    public void deleteOwned(String courseId, String ownerUserId) {
-        if (courseMapper.softDeleteOwned(courseId, ownerUserId) <= 0) {
+    public void deleteOwned(String courseId, Long ownerMemberId) {
+        if (courseMapper.softDeleteOwned(courseId, ownerMemberId) <= 0) {
             throw new CoreException(COURSE_NOT_FOUND);
         }
     }
@@ -198,7 +198,7 @@ public class CourseWriter {
     private static CourseRecord toRecord(Course course) {
         return new CourseRecord(
                 course.id(),
-                course.ownerUserId(),
+                course.ownerMemberId(),
                 course.title(),
                 course.regionName(),
                 course.visibility(),

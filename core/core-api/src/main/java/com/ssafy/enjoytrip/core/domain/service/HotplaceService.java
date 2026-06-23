@@ -18,42 +18,20 @@ public class HotplaceService {
 
     public List<Hotplace> findAllHotplaces() {
         return hotplaceMapper.findAllOrderByCreatedAtDesc().stream()
-                 .map(record -> new Hotplace(
-                        record.getId(),
-                        record.getUserId(),
-                        record.getTitle(),
-                        record.getType(),
-                        record.getVisitDate(),
-                        record.getLat(),
-                        record.getLng(),
-                        record.getDescription(),
-                        record.getPhoto(),
-                        stringValue(record.getCreatedAt())
-                ))
+                .map(HotplaceService::toHotplace)
                 .toList();
     }
 
-    public List<Hotplace> findHotplacesByUser(String userId) {
-        return hotplaceMapper.findByUserIdOrderByCreatedAtDesc(userId).stream()
-                 .map(record -> new Hotplace(
-                        record.getId(),
-                        record.getUserId(),
-                        record.getTitle(),
-                        record.getType(),
-                        record.getVisitDate(),
-                        record.getLat(),
-                        record.getLng(),
-                        record.getDescription(),
-                        record.getPhoto(),
-                        stringValue(record.getCreatedAt())
-                ))
+    public List<Hotplace> findHotplacesByMemberId(Long memberId) {
+        return hotplaceMapper.findByMemberIdOrderByCreatedAtDesc(memberId).stream()
+                .map(HotplaceService::toHotplace)
                 .toList();
     }
 
     public void insertHotplace(Hotplace hotplace) {
         hotplaceMapper.insert(new HotplaceRecord(
                 hotplace.id(),
-                hotplace.userId(),
+                hotplace.memberId(),
                 hotplace.title(),
                 hotplace.type(),
                 hotplace.visitDate(),
@@ -65,18 +43,25 @@ public class HotplaceService {
     }
 
     @Transactional
-    public void deleteHotplaceOrThrow(String id) {
-        if (!deleteHotplace(id)) {
+    public void deleteHotplaceOrThrow(String id, Long memberId) {
+        if (hotplaceMapper.deleteByIdAndMemberId(id, memberId) <= 0) {
             throw new CoreException(HOTPLACE_NOT_FOUND);
         }
     }
 
-    @Transactional
-    public boolean deleteHotplace(String id) {
-        if (hotplaceMapper.existsById(id) <= 0) {
-            return false;
-        }
-        return hotplaceMapper.deleteById(id) > 0;
+    private static Hotplace toHotplace(HotplaceRecord record) {
+        return new Hotplace(
+                record.getId(),
+                record.getMemberId(),
+                record.getTitle(),
+                record.getType(),
+                record.getVisitDate(),
+                record.getLat(),
+                record.getLng(),
+                record.getDescription(),
+                record.getPhoto(),
+                stringValue(record.getCreatedAt())
+        );
     }
 
     private static String stringValue(Object value) {

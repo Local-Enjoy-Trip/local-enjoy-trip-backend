@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record Notification(
         Long id,
-        String recipientUserId,
+        Long recipientMemberId,
         NotificationType type,
         NotificationReferenceType referenceType,
         Long referenceId,

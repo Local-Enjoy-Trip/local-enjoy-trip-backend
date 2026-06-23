@@ -1,15 +1,14 @@
 package com.ssafy.enjoytrip.core.support.auth;
 
 import com.ssafy.enjoytrip.core.domain.Member;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +26,7 @@ public class JwtTokenService {
                 .issuer("enjoytrip")
                 .issuedAt(issuedAt)
                 .expiresAt(expiresAt)
-                .subject(member.userId())
+                .subject(String.valueOf(member.memberId()))
                 .claim("name", member.name())
                 .claim("email", member.email())
                 .build();

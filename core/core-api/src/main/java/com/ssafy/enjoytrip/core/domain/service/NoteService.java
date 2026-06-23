@@ -28,7 +28,7 @@ public class NoteService {
 
     public Note createNote(Note note) {
         NoteRecord record = new NoteRecord(
-                note.authorUserId(),
+                note.authorMemberId(),
                 note.title(),
                 note.content(),
                 note.category().name(),
@@ -49,11 +49,11 @@ public class NoteService {
     public Note updateNote(Note requestedNote) {
         Note note = findNoteById(requestedNote.id())
                 .orElseThrow(() -> new CoreException(NOTE_NOT_FOUND));
-        note.requireEditableBy(requestedNote.authorUserId());
+        note.requireEditableBy(requestedNote.authorMemberId());
 
         NoteRecord record = new NoteRecord(
                 requestedNote.id(),
-                requestedNote.authorUserId(),
+                requestedNote.authorMemberId(),
                 requestedNote.title(),
                 requestedNote.content(),
                 requestedNote.category().name(),
@@ -74,39 +74,39 @@ public class NoteService {
     }
 
     @Transactional
-    public void deleteNote(Long id, String authorUserId) {
+    public void deleteNote(Long id, Long authorMemberId) {
         Note note = findNoteById(id)
                 .orElseThrow(() -> new CoreException(NOTE_NOT_FOUND));
-        note.requireEditableBy(authorUserId);
+        note.requireEditableBy(authorMemberId);
 
-        if (noteMapper.softDeleteOwned(id, authorUserId) <= 0) {
+        if (noteMapper.softDeleteOwned(id, authorMemberId) <= 0) {
             throw new CoreException(NOTE_NOT_FOUND);
         }
     }
 
     @Transactional
-    public void addSave(Long noteId, String userId) {
-        requireAccessibleActiveNote(noteId, userId);
-        noteMapper.insertSave(noteId, userId);
+    public void addSave(Long noteId, Long memberId) {
+        requireAccessibleActiveNote(noteId, memberId);
+        noteMapper.insertSave(noteId, memberId);
     }
 
-    public boolean removeSave(Long noteId, String userId) {
-        return noteMapper.deleteSave(noteId, userId) > 0;
+    public boolean removeSave(Long noteId, Long memberId) {
+        return noteMapper.deleteSave(noteId, memberId) > 0;
     }
 
-    public List<Note> findSavedNotes(String userId, int limit) {
-        return noteMapper.findSavedAccessible(userId, limit).stream()
+    public List<Note> findSavedNotes(Long memberId, int limit) {
+        return noteMapper.findSavedAccessible(memberId, limit).stream()
                 .map(this::toNote)
                 .toList();
     }
 
-    public List<Note> findNearbyNotes(DistanceSearchCondition condition, String viewerUserId) {
+    public List<Note> findNearbyNotes(DistanceSearchCondition condition, Long viewerMemberId) {
         return noteMapper.findNearbyAccessible(
                         condition.longitude(),
                         condition.latitude(),
                         condition.radiusMeters(),
                         condition.limit(),
-                        viewerUserId
+                        viewerMemberId
                 ).stream()
                 .map(this::toNote)
                 .toList();
@@ -118,7 +118,7 @@ public class NoteService {
                         condition.latitude(),
                         condition.radiusMeters(),
                         condition.limit(),
-                        condition.viewerUserId(),
+                        condition.viewerMemberId(),
                         condition.category() == null ? null : condition.category().name(),
                         condition.friendOnly()
                 ).stream()
@@ -126,8 +126,8 @@ public class NoteService {
                 .toList();
     }
 
-    private void requireAccessibleActiveNote(Long noteId, String userId) {
-        if (noteMapper.existsAccessibleActive(noteId, userId) <= 0) {
+    private void requireAccessibleActiveNote(Long noteId, Long memberId) {
+        if (noteMapper.existsAccessibleActive(noteId, memberId) <= 0) {
             throw new CoreException(NOTE_NOT_FOUND);
         }
     }
@@ -146,7 +146,7 @@ public class NoteService {
     private Note toNote(NoteRecord record) {
         return new Note(
                 record.getId(),
-                record.getAuthorUserId(),
+                record.getAuthorMemberId(),
                 record.getTitle(),
                 record.getContent(),
                 NoteCategory.valueOf(record.getCategory()),
@@ -175,7 +175,6 @@ public class NoteService {
                 record.regionName(),
                 record.distanceMeters(),
                 record.imageObjectKey(),
-                record.authorUserId(),
                 record.authorNickname(),
                 record.authorProfileImageUrl(),
                 NoteViewerRelationship.valueOf(record.relationship()),

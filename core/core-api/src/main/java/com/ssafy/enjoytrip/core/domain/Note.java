@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 public record Note(
         Long id,
-        String authorUserId,
+        Long authorMemberId,
         String title,
         String content,
         NoteCategory category,
@@ -25,9 +25,9 @@ public record Note(
         LocalDateTime updatedAt,
         LocalDateTime deletedAt
 ) {
-    public void requireEditableBy(String authorUserId) {
+    public void requireEditableBy(Long authorMemberId) {
         requireActive();
-        requireAuthor(authorUserId);
+        requireAuthor(authorMemberId);
     }
 
     private void requireActive() {
@@ -36,8 +36,8 @@ public record Note(
         }
     }
 
-    private void requireAuthor(String authorUserId) {
-        if (!this.authorUserId.equals(authorUserId)) {
+    private void requireAuthor(Long authorMemberId) {
+        if (!this.authorMemberId.equals(authorMemberId)) {
             throw new CoreException(NOTE_ACCESS_DENIED);
         }
     }

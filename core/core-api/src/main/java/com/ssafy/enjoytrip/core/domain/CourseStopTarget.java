@@ -9,15 +9,15 @@ public sealed interface CourseStopTarget permits CourseStopTarget.Attraction, Co
     Long id();
 
     default Long attractionIdOrNull() {
-        if (this instanceof Attraction attraction) {
-            return attraction.id();
+        if (this instanceof Attraction(Long id)) {
+            return id;
         }
         return null;
     }
 
     default Long noteIdOrNull() {
-        if (this instanceof Note note) {
-            return note.id();
+        if (this instanceof Note(Long id)) {
+            return id;
         }
         return null;
     }

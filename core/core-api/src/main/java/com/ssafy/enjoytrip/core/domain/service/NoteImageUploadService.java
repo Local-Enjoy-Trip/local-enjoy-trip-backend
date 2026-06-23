@@ -12,11 +12,15 @@ public class NoteImageUploadService {
     private final MinioNoteImageUploadUrlGenerator uploadUrlGenerator;
 
     public NoteImageUploadUrl createPresignedUpload(
-            String userId,
+            Long memberId,
             String contentType,
             String fileExtension
     ) {
-        NoteImageUploadResult generated = uploadUrlGenerator.generate(userId, contentType, fileExtension);
+        NoteImageUploadResult generated = uploadUrlGenerator.generate(
+                String.valueOf(memberId),
+                contentType,
+                fileExtension
+        );
 
         return new NoteImageUploadUrl(
                 generated.objectKey(),

@@ -32,7 +32,7 @@ public class PlanService {
         return planMapper.findAllOrderByCreatedAtDesc().stream()
                 .map(record -> new TravelPlan(
                         record.getId(),
-                        record.getUserId(),
+                        record.getMemberId(),
                         record.getTitle(),
                         record.getStartDate(),
                         record.getEndDate(),
@@ -44,11 +44,11 @@ public class PlanService {
                 .toList();
     }
 
-    public List<TravelPlan> findPlansByUser(String userId) {
-        return planMapper.findByUserIdOrderByCreatedAtDesc(userId).stream()
+    public List<TravelPlan> findPlansByMemberId(Long memberId) {
+        return planMapper.findByMemberIdOrderByCreatedAtDesc(memberId).stream()
                 .map(record -> new TravelPlan(
                         record.getId(),
-                        record.getUserId(),
+                        record.getMemberId(),
                         record.getTitle(),
                         record.getStartDate(),
                         record.getEndDate(),
@@ -68,7 +68,7 @@ public class PlanService {
         return Optional.ofNullable(planMapper.findById(id))
                 .map(record -> new TravelPlan(
                         record.getId(),
-                        record.getUserId(),
+                        record.getMemberId(),
                         record.getTitle(),
                         record.getStartDate(),
                         record.getEndDate(),
@@ -85,7 +85,7 @@ public class PlanService {
     }
 
     @Transactional
-    public void updatePlan(String authenticatedUserId,
+    public void updatePlan(Long memberId,
                            String planId,
                            String title,
                            String startDate,
@@ -93,7 +93,7 @@ public class PlanService {
                            Integer budget,
                            String note,
                            List<PlanItem> routeItems) {
-        TravelPlan current = requireOwnedPlan(planId, authenticatedUserId);
+        TravelPlan current = requireOwnedPlan(planId, memberId);
         TravelPlan next = current.merge(title, startDate, endDate, budget, note);
         boolean updated = routeItems == null
                 ? updateStoredPlan(next)
@@ -104,24 +104,24 @@ public class PlanService {
     }
 
     @Transactional
-    public void replacePlanItems(String authenticatedUserId, String planId, List<PlanItem> items) {
-        TravelPlan plan = requireOwnedPlan(planId, authenticatedUserId);
+    public void replacePlanItems(Long memberId, String planId, List<PlanItem> items) {
+        TravelPlan plan = requireOwnedPlan(planId, memberId);
         if (!replaceStoredPlanItems(plan.id(), items)) {
             throw new CoreException(PLAN_NOT_FOUND);
         }
     }
 
     @Transactional
-    public void deletePlanItem(String authenticatedUserId, String planId, Long itemId) {
-        TravelPlan plan = requireOwnedPlan(planId, authenticatedUserId);
+    public void deletePlanItem(Long memberId, String planId, Long itemId) {
+        TravelPlan plan = requireOwnedPlan(planId, memberId);
         if (!deleteStoredPlanItem(plan.id(), itemId)) {
             throw new CoreException(PLAN_NOT_FOUND);
         }
     }
 
     @Transactional
-    public void deletePlan(String authenticatedUserId, String planId) {
-        requireOwnedPlan(planId, authenticatedUserId);
+    public void deletePlan(Long memberId, String planId) {
+        requireOwnedPlan(planId, memberId);
         if (!deleteStoredPlan(planId)) {
             throw new CoreException(PLAN_NOT_FOUND);
         }
@@ -185,16 +185,16 @@ public class PlanService {
         return deleteStoredPlanItem(planId, itemId);
     }
 
-    private TravelPlan requireOwnedPlan(String planId, String authenticatedUserId) {
+    private TravelPlan requireOwnedPlan(String planId, Long memberId) {
         TravelPlan plan = findRequiredPlan(planId);
-        plan.requireOwnedBy(authenticatedUserId);
+        plan.requireOwnedBy(memberId);
         return plan;
     }
 
     private void savePlan(TravelPlan plan) {
         planMapper.insertPlan(new TravelPlanRecord(
                 plan.id(),
-                plan.userId(),
+                plan.memberId(),
                 plan.title(),
                 plan.startDate(),
                 plan.endDate(),

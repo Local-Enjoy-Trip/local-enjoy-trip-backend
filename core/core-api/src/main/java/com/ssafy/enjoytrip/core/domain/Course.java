@@ -6,7 +6,7 @@ import java.util.List;
 
 public record Course(
         String id,
-        String ownerUserId,
+        Long ownerMemberId,
         String title,
         String regionName,
         String visibility,
@@ -29,7 +29,7 @@ public record Course(
     }
 
     public Course(String id,
-                  String ownerUserId,
+                  Long ownerMemberId,
                   String title,
                   String regionName,
                   String visibility,
@@ -45,7 +45,7 @@ public record Course(
                   CourseRoute route) {
         this(
                 id,
-                ownerUserId,
+                ownerMemberId,
                 title,
                 regionName,
                 visibility,
@@ -65,8 +65,8 @@ public record Course(
         );
     }
 
-    public void requireOwnedBy(String userId) {
-        if (!ownerUserId.equals(userId)) {
+    public void requireOwnedBy(Long memberId) {
+        if (!ownerMemberId.equals(memberId)) {
             throw new CoreException(ErrorType.COURSE_ACCESS_DENIED);
         }
     }
@@ -82,7 +82,7 @@ public record Course(
     public Course withRoute(CourseRoute nextRoute) {
         return new Course(
                 id,
-                ownerUserId,
+                ownerMemberId,
                 title,
                 regionName,
                 visibility,
@@ -105,7 +105,7 @@ public record Course(
     public Course withStartLocation(CourseStopPoint startPoint) {
         return new Course(
                 id,
-                ownerUserId,
+                ownerMemberId,
                 title,
                 regionName,
                 visibility,

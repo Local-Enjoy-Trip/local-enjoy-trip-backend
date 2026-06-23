@@ -11,7 +11,6 @@ import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AuthLogMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,30 +26,16 @@ public class MemberService {
 
     public List<Member> findAllUsers() {
         return memberMapper.findAllOrderByCreatedAtDesc().stream()
-                .map(record -> new Member(
-                        record.getUserId(),
-                        record.getName(),
-                        record.getNickname(),
-                        record.getEmail(),
-                        record.getPassword(),
-                        record.getProfileImageUrl()
-                ))
+                .map(MemberService::toMember)
                 .toList();
     }
 
-    public Member findByUserId(String userId) {
-        MemberRecord record = memberMapper.findByUserId(userId);
+    public Member findById(Long memberId) {
+        MemberRecord record = memberMapper.findById(memberId);
         if (record == null) {
             return null;
         }
-        return new Member(
-                record.getUserId(),
-                record.getName(),
-                record.getNickname(),
-                record.getEmail(),
-                record.getPassword(),
-                record.getProfileImageUrl()
-        );
+        return toMember(record);
     }
 
     public Member findByEmail(String email) {
@@ -58,18 +43,11 @@ public class MemberService {
         if (record == null) {
             return null;
         }
-        return new Member(
-                record.getUserId(),
-                record.getName(),
-                record.getNickname(),
-                record.getEmail(),
-                record.getPassword(),
-                record.getProfileImageUrl()
-        );
+        return toMember(record);
     }
 
-    public Member findRequiredByUserId(String userId) {
-        Member member = findByUserId(userId);
+    public Member findRequiredById(Long memberId) {
+        Member member = findById(memberId);
         if (member == null) {
             throw new CoreException(USER_NOT_FOUND);
         }
@@ -83,9 +61,9 @@ public class MemberService {
     }
 
     @Transactional
-    public Member login(String userId, String password) {
-        Member member = findAuthenticatableMember(userId, password);
-        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
+    public Member login(String email, String password) {
+        Member member = findAuthenticatableMember(email, password);
+        authLogMapper.insert(new AuthLogRecord(member.memberId(), "LOGIN"));
         return member;
     }
 
@@ -93,13 +71,12 @@ public class MemberService {
     public Member loginWithOAuth(String provider, String providerUserId, String email, String name) {
         Member existing = findByEmail(email);
         if (existing != null) {
-            authLogMapper.insert(new AuthLogRecord(existing.userId(), "LOGIN"));
+            authLogMapper.insert(new AuthLogRecord(existing.memberId(), "LOGIN"));
             return existing;
         }
 
-        Member member = createOAuthMember(provider, providerUserId, email, name, name);
-        saveMember(member);
-        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
+        Member member = saveMember(createOAuthMember(provider, providerUserId, email, name, name));
+        authLogMapper.insert(new AuthLogRecord(member.memberId(), "LOGIN"));
         return member;
     }
 
@@ -111,18 +88,18 @@ public class MemberService {
                                   String nickname) {
         Member member = createOAuthMember(provider, providerUserId, email, name, nickname);
         validateNewMember(member);
-        saveMember(member);
-        authLogMapper.insert(new AuthLogRecord(member.userId(), "LOGIN"));
-        return member;
+        Member saved = saveMember(member);
+        authLogMapper.insert(new AuthLogRecord(saved.memberId(), "LOGIN"));
+        return saved;
     }
 
-    public void logout(String userId) {
-        authLogMapper.insert(new AuthLogRecord(userId, "LOGOUT"));
+    public void logout(Long memberId) {
+        authLogMapper.insert(new AuthLogRecord(memberId, "LOGOUT"));
     }
 
     @Transactional
     public void update(Member member) {
-        MemberRecord record = memberMapper.findByUserId(member.userId());
+        MemberRecord record = memberMapper.findById(member.memberId());
         if (record == null) {
             throw new CoreException(USER_NOT_FOUND);
         }
@@ -131,21 +108,20 @@ public class MemberService {
     }
 
     @Transactional
-    public void delete(String userId) {
-        if (memberMapper.existsByUserId(userId) <= 0) {
+    public void delete(Long memberId) {
+        if (memberMapper.deleteById(memberId) <= 0) {
             throw new CoreException(USER_NOT_FOUND);
         }
-        memberMapper.deleteByUserId(userId);
     }
 
     private void validateNewMember(Member member) {
-        if (memberMapper.existsByUserIdOrEmail(member.userId(), member.email()) > 0) {
+        if (memberMapper.existsByEmail(member.email()) > 0) {
             throw new CoreException(USER_ALREADY_EXISTS);
         }
     }
 
-    private Member findAuthenticatableMember(String userId, String password) {
-        Member member = findByUserId(userId);
+    private Member findAuthenticatableMember(String email, String password) {
+        Member member = findByEmail(email);
         if (member == null || !passwordEncoder.matches(password, member.password())) {
             throw new CoreException(INVALID_CREDENTIALS);
         }
@@ -158,47 +134,35 @@ public class MemberService {
                                      String name,
                                      String nickname) {
         return new Member(
-                oauthUserId(provider, providerUserId),
+                null,
                 name,
                 nickname,
                 email,
-                passwordEncoder.encode(UUID.randomUUID().toString()),
+                passwordEncoder.encode(provider + ":" + providerUserId + ":" + UUID.randomUUID()),
                 null
         );
     }
 
-    private String oauthUserId(String provider, String providerUserId) {
-        String normalizedProvider = provider.toLowerCase(Locale.ROOT);
-        String sourceId = providerUserId;
-        String normalizedId = sourceId.replaceAll("[^A-Za-z0-9_]", "");
-        if (normalizedId.isEmpty()) {
-            normalizedId = Integer.toUnsignedString(sourceId.hashCode(), 36);
-        }
-        String userId = normalizedProvider + "_" + normalizedId;
-        if (userId.length() <= 64) {
-            return uniqueOauthUserId(userId, normalizedProvider);
-        }
-        return uniqueOauthUserId(
-                normalizedProvider + "_" + Integer.toUnsignedString(sourceId.hashCode(), 36),
-                normalizedProvider
-        );
-    }
-
-    private String uniqueOauthUserId(String candidate, String provider) {
-        if (memberMapper.existsByUserId(candidate) <= 0) {
-            return candidate;
-        }
-        return provider + "_" + UUID.randomUUID().toString().replace("-", "");
-    }
-
-    private void saveMember(Member member) {
-        memberMapper.insert(new MemberRecord(
-                member.userId(),
+    private Member saveMember(Member member) {
+        MemberRecord record = new MemberRecord(
                 member.name(),
                 member.nickname(),
                 member.email(),
                 member.password(),
                 member.profileImageUrl()
-        ));
+        );
+        memberMapper.insert(record);
+        return member.withMemberId(record.getId());
+    }
+
+    private static Member toMember(MemberRecord record) {
+        return new Member(
+                record.getId(),
+                record.getName(),
+                record.getNickname(),
+                record.getEmail(),
+                record.getPassword(),
+                record.getProfileImageUrl()
+        );
     }
 }

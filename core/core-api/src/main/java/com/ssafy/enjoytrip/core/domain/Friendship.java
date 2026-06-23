@@ -11,9 +11,11 @@ import java.time.LocalDateTime;
 
 public record Friendship(
         Long id,
-        String requesterUserId,
+        Long requesterMemberId,
+        String requesterEmail,
         String requesterDisplayName,
-        String addresseeUserId,
+        Long addresseeMemberId,
+        String addresseeEmail,
         String addresseeDisplayName,
         FriendshipStatus status,
         LocalDateTime requestedAt,
@@ -21,62 +23,62 @@ public record Friendship(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static void validateRequestableUsers(String requesterUserId, String targetUserId) {
-        if (requesterUserId.equals(targetUserId)) {
+    public static void validateRequestableMembers(Long requesterMemberId, Long targetMemberId) {
+        if (requesterMemberId.equals(targetMemberId)) {
             throw new CoreException(FRIENDSHIP_SELF_REQUEST);
         }
     }
 
-    public void validateAcceptableBy(String actorUserId) {
+    public void validateAcceptableBy(Long actorMemberId) {
         validatePending();
-        validateAddressee(actorUserId);
+        validateAddressee(actorMemberId);
     }
 
-    public void validateRejectableBy(String actorUserId) {
+    public void validateRejectableBy(Long actorMemberId) {
         validatePending();
-        validateAddressee(actorUserId);
+        validateAddressee(actorMemberId);
     }
 
-    public void validateCancelableBy(String actorUserId) {
+    public void validateCancelableBy(Long actorMemberId) {
         validatePending();
-        validateRequester(actorUserId);
+        validateRequester(actorMemberId);
     }
 
-    public void validateDeletableBy(String actorUserId) {
+    public void validateDeletableBy(Long actorMemberId) {
         validateAccepted();
-        validateParticipant(actorUserId);
+        validateParticipant(actorMemberId);
     }
 
-    public String counterpartUserId(String actorUserId) {
-        if (isRequester(actorUserId)) {
-            return addresseeUserId;
+    public String counterpartEmail(Long actorMemberId) {
+        if (isRequester(actorMemberId)) {
+            return addresseeEmail;
         }
-        if (isAddressee(actorUserId)) {
-            return requesterUserId;
+        if (isAddressee(actorMemberId)) {
+            return requesterEmail;
         }
         return null;
     }
 
-    public String counterpartDisplayName(String actorUserId) {
-        if (isRequester(actorUserId)) {
+    public String counterpartDisplayName(Long actorMemberId) {
+        if (isRequester(actorMemberId)) {
             return addresseeDisplayName;
         }
-        if (isAddressee(actorUserId)) {
+        if (isAddressee(actorMemberId)) {
             return requesterDisplayName;
         }
         return null;
     }
 
-    public boolean isParticipant(String actorUserId) {
-        return isRequester(actorUserId) || isAddressee(actorUserId);
+    public boolean isParticipant(Long actorMemberId) {
+        return isRequester(actorMemberId) || isAddressee(actorMemberId);
     }
 
-    public boolean isRequester(String actorUserId) {
-        return requesterUserId.equals(actorUserId);
+    public boolean isRequester(Long actorMemberId) {
+        return requesterMemberId.equals(actorMemberId);
     }
 
-    public boolean isAddressee(String actorUserId) {
-        return addresseeUserId.equals(actorUserId);
+    public boolean isAddressee(Long actorMemberId) {
+        return addresseeMemberId.equals(actorMemberId);
     }
 
     public boolean isPending() {
@@ -99,20 +101,20 @@ public record Friendship(
         }
     }
 
-    private void validateAddressee(String actorUserId) {
-        if (!isAddressee(actorUserId)) {
+    private void validateAddressee(Long actorMemberId) {
+        if (!isAddressee(actorMemberId)) {
             throw new CoreException(FRIENDSHIP_ACCESS_DENIED);
         }
     }
 
-    private void validateRequester(String actorUserId) {
-        if (!isRequester(actorUserId)) {
+    private void validateRequester(Long actorMemberId) {
+        if (!isRequester(actorMemberId)) {
             throw new CoreException(FRIENDSHIP_ACCESS_DENIED);
         }
     }
 
-    private void validateParticipant(String actorUserId) {
-        if (!isParticipant(actorUserId)) {
+    private void validateParticipant(Long actorMemberId) {
+        if (!isParticipant(actorMemberId)) {
             throw new CoreException(FRIENDSHIP_ACCESS_DENIED);
         }
     }

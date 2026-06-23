@@ -21,7 +21,7 @@ public class MapExploreService {
     private final NoteService noteService;
 
     public MapExploreResult explore(
-            String viewerUserId,
+            Long viewerMemberId,
             double longitude,
             double latitude,
             double radiusMeters,
@@ -29,9 +29,9 @@ public class MapExploreService {
             NoteCategory noteCategory
     ) {
         MapCenter center = new MapCenter(longitude, latitude, null);
-        List<PlaceMapPin> places = findPlacePins(viewerUserId, radiusMeters, filter, center);
+        List<PlaceMapPin> places = findPlacePins(viewerMemberId, radiusMeters, filter, center);
         List<NoteMapPin> notes = findNotePins(
-                viewerUserId,
+                viewerMemberId,
                 radiusMeters,
                 filter,
                 noteCategory,
@@ -48,7 +48,7 @@ public class MapExploreService {
     }
 
     private List<PlaceMapPin> findPlacePins(
-            String viewerUserId,
+            Long viewerMemberId,
             double radiusMeters,
             MapExploreFilter filter,
             MapCenter center
@@ -64,7 +64,7 @@ public class MapExploreService {
                                 null,
                                 radiusMeters
                         ),
-                        viewerUserId,
+                        viewerMemberId,
                         filter.savedPlacesOnly()
                 )
                 .stream()
@@ -92,7 +92,7 @@ public class MapExploreService {
     }
 
     private List<NoteMapPin> findNotePins(
-            String viewerUserId,
+            Long viewerMemberId,
             double radiusMeters,
             MapExploreFilter filter,
             NoteCategory noteCategory,
@@ -107,7 +107,7 @@ public class MapExploreService {
                 center.latitude(),
                 radiusMeters,
                 null,
-                viewerUserId,
+                viewerMemberId,
                 noteCategory,
                 filter.friendNotesOnly()
         ));
