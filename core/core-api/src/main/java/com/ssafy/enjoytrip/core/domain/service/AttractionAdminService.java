@@ -25,13 +25,21 @@ public class AttractionAdminService {
         int totalCount = attractionMapper.countForAdmin(includeHidden);
         int totalPages = totalPages(totalCount, pageSize);
         int currentPage = currentPage(requestedPage, totalPages);
-        List<AttractionAdminRecord> places = totalCount == 0
-                ? List.of()
-                : attractionMapper.findAdminPage(
-                        includeHidden,
-                        pageSize,
-                        (currentPage - 1) * pageSize
-                );
+        if (totalCount == 0) {
+            return new AdminPlacePage(
+                    List.of(),
+                    currentPage,
+                    pageSize,
+                    totalCount,
+                    totalPages
+            );
+        }
+
+        List<AttractionAdminRecord> places = attractionMapper.findAdminPage(
+                includeHidden,
+                pageSize,
+                (currentPage - 1) * pageSize
+        );
 
         return new AdminPlacePage(
                 places,

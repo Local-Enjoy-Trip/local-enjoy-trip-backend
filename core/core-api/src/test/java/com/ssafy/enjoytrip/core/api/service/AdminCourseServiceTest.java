@@ -9,20 +9,21 @@ import static org.mockito.Mockito.when;
 
 import com.ssafy.enjoytrip.core.domain.Course;
 import com.ssafy.enjoytrip.core.domain.CourseRoute;
-import com.ssafy.enjoytrip.core.domain.CourseStop;
-import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.CourseReader;
+import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopPointResolver;
+import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.CourseWriter;
 import com.ssafy.enjoytrip.core.domain.DefaultCourseRoutePlanner;
+import com.ssafy.enjoytrip.core.domain.MemberRole;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRouteSegmentRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
@@ -224,7 +225,7 @@ class AdminCourseServiceTest {
                 "encoded-password",
                 null
         );
-        member.setRole("ADMIN");
+        member.setRole(MemberRole.ADMIN.name());
         return member;
     }
 

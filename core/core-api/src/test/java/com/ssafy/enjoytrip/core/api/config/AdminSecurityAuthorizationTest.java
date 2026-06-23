@@ -10,9 +10,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ssafy.enjoytrip.core.api.security.AdminAuthenticationSupport;
 import com.ssafy.enjoytrip.core.api.security.AdminAccountDetailsService;
+import com.ssafy.enjoytrip.core.api.security.AdminAuthenticationSupport;
 import com.ssafy.enjoytrip.core.api.security.DbBackedJwtAuthenticationConverter;
+import com.ssafy.enjoytrip.core.domain.MemberRole;
 import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,7 +74,7 @@ class AdminSecurityAuthorizationTest {
                 "encoded",
                 null
         );
-        admin.setRole("ADMIN");
+        admin.setRole(MemberRole.ADMIN.name());
         Mockito.when(memberMapper.findByUserId("admin")).thenReturn(admin);
 
         Jwt jwt = Jwt.withTokenValue("token")
@@ -100,7 +101,7 @@ class AdminSecurityAuthorizationTest {
                 "encoded",
                 null
         );
-        admin.setRole("ADMIN");
+        admin.setRole(MemberRole.ADMIN.name());
         Mockito.when(memberMapper.findByEmail("admin@example.com")).thenReturn(admin);
 
         UserDetails details = new AdminAccountDetailsService(memberMapper)
@@ -133,7 +134,7 @@ class AdminSecurityAuthorizationTest {
                 "encoded",
                 null
         );
-        admin.setRole("ADMIN");
+        admin.setRole(MemberRole.ADMIN.name());
         Mockito.when(memberMapper.findByUserId("user")).thenReturn(user);
         Mockito.when(memberMapper.findByUserId("admin")).thenReturn(admin);
 
@@ -158,7 +159,7 @@ class AdminSecurityAuthorizationTest {
                 passwordEncoder.encode("secret"),
                 null
         );
-        admin.setRole("ADMIN");
+        admin.setRole(MemberRole.ADMIN.name());
         Mockito.when(memberMapper.findByEmail("admin@example.com")).thenReturn(admin);
         Mockito.when(memberMapper.findByUserId("admin")).thenReturn(admin);
 

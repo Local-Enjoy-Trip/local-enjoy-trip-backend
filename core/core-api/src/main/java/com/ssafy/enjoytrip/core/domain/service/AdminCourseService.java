@@ -5,6 +5,7 @@ import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_ACCESS_DEN
 import com.ssafy.enjoytrip.core.domain.Course;
 import com.ssafy.enjoytrip.core.domain.CourseReader;
 import com.ssafy.enjoytrip.core.domain.CourseWriter;
+import com.ssafy.enjoytrip.core.domain.MemberRole;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
@@ -49,7 +50,7 @@ public class AdminCourseService {
 
     private void requireAdmin(String userId) {
         MemberRecord member = memberMapper.findByUserId(userId);
-        if (member == null || !"ADMIN".equals(member.getRole())) {
+        if (member == null || !MemberRole.ADMIN.name().equals(member.getRole())) {
             throw new CoreException(COURSE_ACCESS_DENIED);
         }
     }

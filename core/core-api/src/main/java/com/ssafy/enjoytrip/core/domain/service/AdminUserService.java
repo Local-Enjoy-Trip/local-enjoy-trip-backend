@@ -1,5 +1,6 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
+import com.ssafy.enjoytrip.core.domain.MemberRole;
 import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import java.time.LocalDateTime;
@@ -10,8 +11,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AdminUserService {
-    private static final String ROLE_ADMIN = "ADMIN";
-
     private final MemberMapper memberMapper;
 
     public List<AdminUserSummary> findUsers() {
@@ -32,7 +31,7 @@ public class AdminUserService {
                 displayName(record),
                 record.getEmail(),
                 role(record.getRole()),
-                ROLE_ADMIN.equals(role(record.getRole())),
+                MemberRole.ADMIN.name().equals(role(record.getRole())),
                 stringValue(record.getCreatedAt())
         );
     }
