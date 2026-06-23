@@ -18,6 +18,7 @@ class ExternalConfigurationResourceTest {
 
         assertThat(content)
                 .contains("spring:\n  ai:")
+                .contains("https://gms.ssafy.io/gmsapi/api.openai.com/v1")
                 .contains("enjoytrip:\n  ai:")
                 .contains("open-weather-map:")
                 .contains("minio:")
