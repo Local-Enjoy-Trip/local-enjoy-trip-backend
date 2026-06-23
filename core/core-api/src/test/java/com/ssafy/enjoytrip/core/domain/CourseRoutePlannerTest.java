@@ -1,13 +1,9 @@
-package com.ssafy.enjoytrip.core.domain.service;
+package com.ssafy.enjoytrip.core.domain;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_INVALID_ITEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ssafy.enjoytrip.core.domain.CourseRoute;
-import com.ssafy.enjoytrip.core.domain.CourseStop;
-import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
-import com.ssafy.enjoytrip.core.domain.CourseStopPoint;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -16,9 +12,9 @@ import org.junit.jupiter.api.Test;
 class CourseRoutePlannerTest {
     private final CourseRoutePlanner planner = new DefaultCourseRoutePlanner();
 
-    @DisplayName("경로 플래너는 2개 이상 항목에 결정적 N-1 인접 구간을 생성한다")
+    @DisplayName("경로 플래너는 입력 순서대로 N-1 인접 구간을 생성한다")
     @Test
-    void plansAdjacentSegmentsForMultipleStops() {
+    void plansAdjacentSegmentsInInputOrder() {
         CourseRoute route = planner.plan(List.of(
                 point(attractionStop(10L, 2), 37.1, 127.1),
                 point(attractionStop(20L, 1), 37.0, 127.0),
@@ -26,8 +22,10 @@ class CourseRoutePlannerTest {
         ));
 
         assertThat(route.stops()).extracting(CourseStop::position).containsExactly(1, 2, 3);
+        assertThat(route.stops()).extracting(stop -> stop.target().id()).containsExactly(10L, 20L, 30L);
         assertThat(route.segments()).hasSize(2);
-        assertThat(route.segments()).extracting(segment -> segment.fromPosition() + ":" + segment.toPosition())
+        assertThat(route.segments())
+                .extracting(segment -> segment.fromPosition() + ":" + segment.toPosition())
                 .containsExactly("1:2", "2:3");
         assertThat(route.summary().totalDistanceMeters()).isPositive();
     }

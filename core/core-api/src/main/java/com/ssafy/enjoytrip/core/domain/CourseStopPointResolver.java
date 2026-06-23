@@ -1,10 +1,7 @@
-package com.ssafy.enjoytrip.core.domain.service;
+package com.ssafy.enjoytrip.core.domain;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_INVALID_ITEM;
 
-import com.ssafy.enjoytrip.core.domain.CourseStop;
-import com.ssafy.enjoytrip.core.domain.CourseStopPoint;
-import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;

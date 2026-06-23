@@ -18,7 +18,8 @@ public record CourseResponse(
         String createdAt,
         String updatedAt,
         RouteSummaryResponse routeSummary,
-        List<CourseItemResponse> items
+        List<CourseItemResponse> items,
+        List<CourseSegmentResponse> segments
 ) {
     public static CourseResponse from(Course course) {
         return new CourseResponse(
@@ -36,7 +37,12 @@ public record CourseResponse(
                 course.createdAt(),
                 course.updatedAt(),
                 RouteSummaryResponse.from(course.routeSummary()),
-                course.route().stops().stream().map(CourseItemResponse::from).toList()
+                course.route().stops().stream()
+                        .map(CourseItemResponse::from)
+                        .toList(),
+                course.route().segments().stream()
+                        .map(CourseSegmentResponse::from)
+                        .toList()
         );
     }
 }

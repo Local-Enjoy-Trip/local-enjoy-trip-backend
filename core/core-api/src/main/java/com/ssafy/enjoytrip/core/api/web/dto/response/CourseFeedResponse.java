@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
-import com.ssafy.enjoytrip.core.domain.service.CourseFeedSection;
+import com.ssafy.enjoytrip.core.domain.CourseFeedSection;
 import java.util.List;
 
 public record CourseFeedResponse(

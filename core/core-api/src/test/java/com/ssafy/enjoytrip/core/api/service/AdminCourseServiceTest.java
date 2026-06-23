@@ -11,6 +11,10 @@ import com.ssafy.enjoytrip.core.domain.Course;
 import com.ssafy.enjoytrip.core.domain.CourseRoute;
 import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
+import com.ssafy.enjoytrip.core.domain.CourseReader;
+import com.ssafy.enjoytrip.core.domain.CourseStopPointResolver;
+import com.ssafy.enjoytrip.core.domain.CourseWriter;
+import com.ssafy.enjoytrip.core.domain.DefaultCourseRoutePlanner;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord;
@@ -44,12 +48,12 @@ class AdminCourseServiceTest {
         memberMapper = Mockito.mock(MemberMapper.class);
         attractionMapper = Mockito.mock(AttractionMapper.class);
         noteMapper = Mockito.mock(NoteMapper.class);
+        CourseStopPointResolver stopPointResolver = new CourseStopPointResolver(attractionMapper, noteMapper);
+        DefaultCourseRoutePlanner routePlanner = new DefaultCourseRoutePlanner();
         service = new AdminCourseService(
-                courseMapper,
+                new CourseReader(courseMapper),
                 memberMapper,
-                new CourseStopPointResolver(attractionMapper, noteMapper),
-                new DefaultCourseRoutePlanner(),
-                new CourseWriter(courseMapper)
+                new CourseWriter(courseMapper, stopPointResolver, routePlanner)
         );
     }
 
@@ -65,29 +69,15 @@ class AdminCourseServiceTest {
         when(memberMapper.findByUserId("admin")).thenReturn(adminMember());
         stubAttraction(10L, 37.0, 127.0);
         stubAttraction(20L, 37.1, 127.1);
-        when(courseMapper.insertItem(any(CourseItemRecord.class))).thenReturn(1);
-        when(courseMapper.insertSegment(any(CourseRouteSegmentRecord.class))).thenReturn(1);
-        when(courseMapper.findItemIdsByCourseId("admin-course")).thenReturn(List.of(
-                itemId("admin-course", 301L, 1),
-                itemId("admin-course", 302L, 2)
-        ));
-        when(courseMapper.findById("admin-course")).thenReturn(
-                courseRecord("admin-course", "admin")
-        );
-        when(courseMapper.findItemsByCourseId("admin-course")).thenReturn(List.of(
-                itemDetail(301L, "admin-course", 10L, 1, "첫 장소"),
-                itemDetail(302L, "admin-course", 20L, 2, "두 번째 장소")
-        ));
-        when(courseMapper.findSegmentsByCourseId("admin-course")).thenReturn(List.of(
-                new CourseRouteSegmentRecord("admin-course", 301L, 302L, 1, "WALK", 100, 140)
-        ));
+        stubGeneratedItemIds(301L, 302L);
+        when(courseMapper.insertSegments(any())).thenReturn(1);
 
         Course created = service.createAdminCourse(course);
 
         assertThat(created.routeSummary().segmentCount()).isEqualTo(1);
-        verify(courseMapper).deleteSegmentsByCourseId("admin-course");
-        verify(courseMapper).deleteItemsByCourseId("admin-course");
-        verify(courseMapper).insertSegment(any(CourseRouteSegmentRecord.class));
+        verify(courseMapper, never()).deleteSegmentsByCourseId("admin-course");
+        verify(courseMapper, never()).deleteItemsByCourseId("admin-course");
+        verify(courseMapper).insertSegments(any());
     }
 
     @DisplayName("관리자 코스 생성은 쪽지 항목 저장 시 note_id만 채운다")
@@ -96,23 +86,11 @@ class AdminCourseServiceTest {
         Course course = course("admin-note", "admin", noteStop(30L, 1));
         when(memberMapper.findByUserId("admin")).thenReturn(adminMember());
         stubNote(30L, 37.0, 127.0);
-        when(courseMapper.insertItem(any(CourseItemRecord.class))).thenReturn(1);
-        when(courseMapper.findItemIdsByCourseId("admin-note")).thenReturn(List.of(
-                itemId("admin-note", 401L, 1)
-        ));
-        when(courseMapper.findById("admin-note")).thenReturn(
-                courseRecord("admin-note", "admin")
-        );
-        when(courseMapper.findItemsByCourseId("admin-note")).thenReturn(List.of(
-                noteItemDetail(401L, "admin-note", 30L, 1, "쪽지 30")
-        ));
-        when(courseMapper.findSegmentsByCourseId("admin-note")).thenReturn(List.of());
+        stubGeneratedItemIds(401L);
 
         service.createAdminCourse(course);
 
-        ArgumentCaptor<CourseItemRecord> itemCaptor = ArgumentCaptor.forClass(CourseItemRecord.class);
-        verify(courseMapper).insertItem(itemCaptor.capture());
-        CourseItemRecord insertedItem = itemCaptor.getValue();
+        CourseItemRecord insertedItem = firstInsertedItem();
         assertThat(insertedItem.getItemType()).isEqualTo("NOTE");
         assertThat(insertedItem.getAttractionId()).isNull();
         assertThat(insertedItem.getNoteId()).isEqualTo(30L);
@@ -143,24 +121,17 @@ class AdminCourseServiceTest {
         when(memberMapper.findByUserId("admin")).thenReturn(adminMember());
         stubAttraction(10L, 37.0, 127.0);
         stubAttraction(20L, 37.1, 127.1);
-        when(courseMapper.findById("admin-update")).thenReturn(
-                courseRecord("admin-update", "admin"),
-                courseRecord("admin-update", "admin")
-        );
-        when(courseMapper.findItemsByCourseId("admin-update")).thenReturn(List.of(), List.of(
+        when(courseMapper.findById("admin-update")).thenReturn(courseRecord("admin-update", "admin"));
+        when(courseMapper.findItemsByCourseId("admin-update")).thenReturn(List.of(
                 itemDetail(501L, "admin-update", 10L, 1, "첫 장소"),
                 itemDetail(502L, "admin-update", 20L, 2, "두 번째 장소")
         ));
-        when(courseMapper.findSegmentsByCourseId("admin-update")).thenReturn(List.of(), List.of(
+        when(courseMapper.findSegmentsByCourseId("admin-update")).thenReturn(List.of(
                 new CourseRouteSegmentRecord("admin-update", 501L, 502L, 1, "WALK", 100, 140)
         ));
         when(courseMapper.updateOwned(any(CourseRecord.class))).thenReturn(1);
-        when(courseMapper.insertItem(any(CourseItemRecord.class))).thenReturn(1);
-        when(courseMapper.insertSegment(any(CourseRouteSegmentRecord.class))).thenReturn(1);
-        when(courseMapper.findItemIdsByCourseId("admin-update")).thenReturn(List.of(
-                itemId("admin-update", 501L, 1),
-                itemId("admin-update", 502L, 2)
-        ));
+        stubGeneratedItemIds(501L, 502L);
+        when(courseMapper.insertSegments(any())).thenReturn(1);
 
         Course updated = service.updateAdminCourse("admin", course);
 
@@ -180,6 +151,23 @@ class AdminCourseServiceTest {
     private void stubNote(Long noteId, Double latitude, Double longitude) {
         when(noteMapper.existsPublicActive(noteId)).thenReturn(1);
         when(noteMapper.findById(noteId)).thenReturn(note(noteId, latitude, longitude));
+    }
+
+    private void stubGeneratedItemIds(Long... ids) {
+        when(courseMapper.insertItems(any())).thenAnswer(invocation -> {
+            List<CourseItemRecord> records = invocation.getArgument(0);
+            for (int index = 0; index < records.size(); index++) {
+                records.get(index).setId(ids[index]);
+            }
+            return records.size();
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private CourseItemRecord firstInsertedItem() {
+        ArgumentCaptor<List<CourseItemRecord>> itemCaptor = ArgumentCaptor.forClass(List.class);
+        verify(courseMapper).insertItems(itemCaptor.capture());
+        return itemCaptor.getValue().get(0);
     }
 
     private static Course course(String id, String ownerUserId, CourseStop... stops) {
@@ -280,21 +268,6 @@ class AdminCourseServiceTest {
         return value == null ? null : BigDecimal.valueOf(value);
     }
 
-    private static CourseItemRecord itemId(String courseId, Long id, Integer position) {
-        CourseItemRecord record = new CourseItemRecord(
-                courseId,
-                "ATTRACTION",
-                id,
-                null,
-                position,
-                1,
-                null,
-                null
-        );
-        record.setId(id);
-        return record;
-    }
-
     private static CourseItemDetailRecord itemDetail(Long id,
                                                      String courseId,
                                                      Long attractionId,
@@ -312,29 +285,6 @@ class AdminCourseServiceTest {
                 null,
                 title,
                 null,
-                title,
-                null,
-                null
-        );
-    }
-
-    private static CourseItemDetailRecord noteItemDetail(Long id,
-                                                         String courseId,
-                                                         Long noteId,
-                                                         Integer position,
-                                                         String title) {
-        return new CourseItemDetailRecord(
-                id,
-                courseId,
-                "NOTE",
-                null,
-                noteId,
-                position,
-                1,
-                null,
-                null,
-                null,
-                title,
                 title,
                 null,
                 null

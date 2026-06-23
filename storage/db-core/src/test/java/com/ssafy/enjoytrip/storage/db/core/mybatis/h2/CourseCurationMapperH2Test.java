@@ -11,6 +11,7 @@ import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -159,7 +160,55 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
         }
     }
 
-    @DisplayName("코스 구간 mapper는 위치 재조회 id로 저장하고 제약 조건을 검증한다")
+    @DisplayName("코스 아이템과 구간은 batch insert로 저장하고 생성 id를 반환한다")
+    @Test
+    void batchInsertCourseItemsAndSegmentsAssignsGeneratedIds() {
+        seedMember("admin", "admin@example.com");
+        seedAttraction(1L, "첫 장소");
+        seedAttraction(2L, "두 번째 장소");
+        courseMapper.insert(publicCourse("course-batch"));
+        CourseItemRecord first = new CourseItemRecord(
+                "course-batch",
+                "ATTRACTION",
+                1L,
+                null,
+                1,
+                1,
+                null,
+                null
+        );
+        CourseItemRecord second = new CourseItemRecord(
+                "course-batch",
+                "ATTRACTION",
+                2L,
+                null,
+                2,
+                1,
+                null,
+                null
+        );
+
+        int insertedItems = courseMapper.insertItems(List.of(first, second));
+        int insertedSegments = courseMapper.insertSegments(List.of(new CourseRouteSegmentRecord(
+                "course-batch",
+                first.getId(),
+                second.getId(),
+                1,
+                "WALK",
+                300,
+                420
+        )));
+
+        assertThat(insertedItems).isEqualTo(2);
+        assertThat(first.getId()).isNotNull();
+        assertThat(second.getId()).isNotNull();
+        assertThat(insertedSegments).isEqualTo(1);
+        assertThat(courseMapper.findSegmentsByCourseId("course-batch"))
+                .extracting(CourseRouteSegmentRecord::getDistanceMeters)
+                .containsExactly(420);
+    }
+
+    @DisplayName("코스 구간 mapper는 생성된 아이템 id로 저장하고 제약 조건을 검증한다")
     @Test
     void courseRouteSegmentsUseReloadedItemIdsAndConstraints() {
         seedMember("admin", "admin@example.com");

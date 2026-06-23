@@ -7,7 +7,7 @@ import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.support.error.ErrorType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import java.util.Comparator;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -41,11 +41,10 @@ public record CourseCreateRequest(
     }
 
     private CourseRoute route() {
-        if (items == null) {
-            return CourseRoute.empty();
+        if (items == null || items.size() < 2) {
+            throw new CoreException(ErrorType.COURSE_INVALID_ITEM);
         }
         return CourseRoute.ofStops(items.stream()
-                .sorted(Comparator.comparingInt(item -> item.position() == null ? 1 : item.position()))
                 .map(CourseItemRequest::toStop)
                 .toList());
     }

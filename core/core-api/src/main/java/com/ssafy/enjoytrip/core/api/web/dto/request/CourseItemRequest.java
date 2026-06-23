@@ -6,14 +6,14 @@ import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.support.error.ErrorType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
+
 import java.util.Locale;
 
 public record CourseItemRequest(
         @NotBlank String itemType,
         Long attractionId,
         Long noteId,
-        @Positive Integer position,
+        Integer position,
         @Min(1) Integer day,
         String memo,
         @Min(1) Integer stayMinutes
@@ -22,7 +22,7 @@ public record CourseItemRequest(
         return new CourseStop(
                 null,
                 target(),
-                position == null ? 1 : position,
+                1,
                 day == null ? 1 : day,
                 normalizedMemo(),
                 stayMinutes,

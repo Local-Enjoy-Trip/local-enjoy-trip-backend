@@ -181,6 +181,35 @@
             current_timestamp
         )
     </insert>
+
+    <insert id="insertItems" useGeneratedKeys="true" keyProperty="id">
+        insert into course_items (
+            course_id,
+            item_type,
+            attraction_id,
+            note_id,
+            position,
+            day,
+            memo,
+            stay_minutes,
+            created_at
+        )
+        values
+        <foreach collection="list" item="record" separator=",">
+            (
+                #{record.courseId},
+                #{record.itemType},
+                #{record.attractionId},
+                #{record.noteId},
+                #{record.position},
+                #{record.day},
+                #{record.memo},
+                #{record.stayMinutes},
+                current_timestamp
+            )
+        </foreach>
+    </insert>
+
     <select id="findItemIdsByCourseId" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseItemRecord">
         select id,
                course_id as courseId,
@@ -209,6 +238,30 @@
             #{durationSeconds},
             #{distanceMeters}
         )
+    </insert>
+
+    <insert id="insertSegments">
+        insert into course_route_segments (
+            course_id,
+            from_course_item_id,
+            to_course_item_id,
+            segment_order,
+            travel_mode,
+            duration_seconds,
+            distance_meters
+        )
+        values
+        <foreach collection="list" item="record" separator=",">
+            (
+                #{record.courseId},
+                #{record.fromCourseItemId},
+                #{record.toCourseItemId},
+                #{record.segmentOrder},
+                #{record.travelMode},
+                #{record.durationSeconds},
+                #{record.distanceMeters}
+            )
+        </foreach>
     </insert>
 
     <select id="findSegmentsByCourseId" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRouteSegmentRecord">

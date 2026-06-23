@@ -26,9 +26,13 @@ public interface CourseMapper {
 
     int insertItem(CourseItemRecord record);
 
+    int insertItems(List<CourseItemRecord> records);
+
     List<CourseItemRecord> findItemIdsByCourseId(String courseId);
 
     int insertSegment(CourseRouteSegmentRecord record);
+
+    int insertSegments(List<CourseRouteSegmentRecord> records);
 
     List<CourseRouteSegmentRecord> findSegmentsByCourseId(String courseId);
 

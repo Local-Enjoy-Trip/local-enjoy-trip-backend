@@ -1,12 +1,7 @@
-package com.ssafy.enjoytrip.core.domain.service;
+package com.ssafy.enjoytrip.core.domain;
 
-import com.ssafy.enjoytrip.core.domain.CourseRoute;
-import com.ssafy.enjoytrip.core.domain.CourseRouteSegment;
-import com.ssafy.enjoytrip.core.domain.CourseStop;
-import com.ssafy.enjoytrip.core.domain.CourseStopPoint;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.support.error.ErrorType;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.springframework.stereotype.Component;
@@ -40,12 +35,9 @@ public class DefaultCourseRoutePlanner implements CourseRoutePlanner {
     }
 
     private static List<CourseStopPoint> normalize(List<CourseStopPoint> points) {
-        List<CourseStopPoint> sortedPoints = points.stream()
-                .sorted(Comparator.comparingInt(point -> point.stop().position()))
-                .toList();
-        return IntStream.range(0, sortedPoints.size())
+        return IntStream.range(0, points.size())
                 .mapToObj(index -> {
-                    CourseStopPoint point = sortedPoints.get(index);
+                    CourseStopPoint point = points.get(index);
                     return new CourseStopPoint(
                             point.stop().withPosition(index + 1),
                             point.title(),
