@@ -295,7 +295,7 @@ class ApiDocumentationTest {
         Course course = course("course-1", "ssafy", 101L, 102L);
         when(courseService.createCourse(any())).thenReturn(course);
         when(courseService.updateCourse(eq("ssafy"), any())).thenReturn(course);
-        when(courseService.recommendCourseOrder("ssafy", "course-1")).thenReturn(course);
+        when(courseService.recommendCourseOrder(eq("ssafy"), eq("course-1"), any())).thenReturn(course);
 
         mockMvc.perform(post("/api/courses")
                         .principal(() -> "ssafy")
@@ -341,7 +341,14 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
 
         mockMvc.perform(post("/api/courses/course-1/order-recommendation")
-                        .principal(() -> "ssafy"))
+                        .principal(() -> "ssafy")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "currentLatitude": 37.5665,
+                                  "currentLongitude": 126.9780
+                                }
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.items[0].id").value(101L))

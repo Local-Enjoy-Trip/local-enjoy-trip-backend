@@ -46,7 +46,8 @@ public class CourseOrderPreviewReader {
                     stop,
                     title(stop.title(), attraction == null ? null : attraction.title()),
                     attraction == null ? null : attraction.latitude(),
-                    attraction == null ? null : attraction.longitude()
+                    attraction == null ? null : attraction.longitude(),
+                    attraction == null ? null : attraction.contentTypeId()
             );
         }
         if (stop.target() instanceof CourseStopTarget.Note target) {

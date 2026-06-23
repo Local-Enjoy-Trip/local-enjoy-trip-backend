@@ -17,12 +17,14 @@ import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.AiCourseOrderOptimizer;
 import com.ssafy.enjoytrip.core.domain.CoordinateRouteOrderOptimizer;
 import com.ssafy.enjoytrip.core.domain.CourseFeedSection;
+import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
 import com.ssafy.enjoytrip.core.domain.CourseOrderPreviewReader;
 import com.ssafy.enjoytrip.core.domain.CourseReader;
 import com.ssafy.enjoytrip.core.domain.CourseStopPointResolver;
 import com.ssafy.enjoytrip.core.domain.CourseWriter;
 import com.ssafy.enjoytrip.core.domain.DefaultCourseRoutePlanner;
 import com.ssafy.enjoytrip.external.courseorder.CourseOrderRecommendationException;
+import com.ssafy.enjoytrip.external.courseorder.CourseOrderRecommendationRequest;
 import com.ssafy.enjoytrip.external.courseorder.CourseOrderRecommendationResult;
 import com.ssafy.enjoytrip.external.courseorder.SpringAiCourseOrderRecommendationClient;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
@@ -278,6 +280,33 @@ class CourseServiceTest {
         assertThat(recommended.route().stops()).extracting(CourseStop::id).containsExactly(102L, 101L);
         assertThat(recommended.route().stops()).extracting(CourseStop::position).containsExactly(1, 2);
         assertThat(recommended.routeSummary().segmentCount()).isEqualTo(1);
+        verifyNoCourseWrites();
+    }
+
+    @DisplayName("AI 추천 요청은 프론트 현재 위치를 외부 프롬프트 요청으로 전달한다")
+    @Test
+    void recommendCourseOrderPassesCurrentLocationToAiRequest() {
+        stubFoundCourseWithSegment("course-location", "user", 101L, 102L, 10L, 20L);
+        when(attractionMapper.findByIds(List.of(10L, 20L))).thenReturn(List.of(
+                attraction(10L, 37.0, 127.0),
+                attraction(20L, 37.1, 127.1)
+        ));
+        when(courseOrderRecommendationClient.recommend(any())).thenReturn(
+                new CourseOrderRecommendationResult(List.of(102L, 101L), "ok")
+        );
+
+        service.recommendCourseOrder(
+                "user",
+                "course-location",
+                new CourseOrderOptimizationContext(37.5665, 126.9780)
+        );
+
+        ArgumentCaptor<CourseOrderRecommendationRequest> requestCaptor = ArgumentCaptor.forClass(
+                CourseOrderRecommendationRequest.class
+        );
+        verify(courseOrderRecommendationClient).recommend(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().currentLatitude()).isEqualTo(37.5665);
+        assertThat(requestCaptor.getValue().currentLongitude()).isEqualTo(126.9780);
         verifyNoCourseWrites();
     }
 

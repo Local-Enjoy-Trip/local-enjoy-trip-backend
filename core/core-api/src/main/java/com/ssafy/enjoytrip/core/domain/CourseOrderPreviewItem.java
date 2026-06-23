@@ -5,8 +5,13 @@ public record CourseOrderPreviewItem(
         CourseStop stop,
         String title,
         Double latitude,
-        Double longitude
+        Double longitude,
+        String contentTypeId
 ) {
+    public CourseOrderPreviewItem(CourseStop stop, String title, Double latitude, Double longitude) {
+        this(stop, title, latitude, longitude, null);
+    }
+
     public Long id() {
         return stop.id();
     }

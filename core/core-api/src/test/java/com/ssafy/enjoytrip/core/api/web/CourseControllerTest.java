@@ -20,6 +20,7 @@ import com.ssafy.enjoytrip.core.domain.CourseRouteSegment;
 import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.CourseFeedSection;
+import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
 import com.ssafy.enjoytrip.core.domain.service.CourseService;
 import java.security.Principal;
 import java.util.List;
@@ -256,12 +257,19 @@ class CourseControllerTest {
     @DisplayName("코스 순서 추천 미리보기는 저장된 아이템 id를 반환한다")
     @Test
     void recommendCourseOrderReturnsCourseResponseShape() throws Exception {
-        when(courseService.recommendCourseOrder("ssafy", "course-1")).thenReturn(
+        when(courseService.recommendCourseOrder(eq("ssafy"), eq("course-1"), any())).thenReturn(
                 courseWithStoredStops("course-1", "ssafy", 101L, 102L)
         );
 
         mockMvc.perform(post("/api/courses/course-1/order-recommendation")
-                        .principal(jwtPrincipal("ssafy")))
+                        .principal(jwtPrincipal("ssafy"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "currentLatitude": 37.5665,
+                                  "currentLongitude": 126.9780
+                                }
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value("course-1"))
@@ -273,7 +281,12 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.data.fallbackReason").doesNotExist())
                 .andExpect(jsonPath("$.data.provider").doesNotExist());
 
-        verify(courseService).recommendCourseOrder("ssafy", "course-1");
+        ArgumentCaptor<CourseOrderOptimizationContext> contextCaptor = ArgumentCaptor.forClass(
+                CourseOrderOptimizationContext.class
+        );
+        verify(courseService).recommendCourseOrder(eq("ssafy"), eq("course-1"), contextCaptor.capture());
+        assertThat(contextCaptor.getValue().currentLatitude()).isEqualTo(37.5665);
+        assertThat(contextCaptor.getValue().currentLongitude()).isEqualTo(126.9780);
     }
 
     @DisplayName("코스 생성 요청은 DRAFT 상태를 거부한다")

@@ -1,5 +1,9 @@
 package com.ssafy.enjoytrip.core.domain;
 
 public interface CourseOrderOptimizer {
-    Course recommend(Course course);
+    default Course recommend(Course course) {
+        return recommend(course, CourseOrderOptimizationContext.empty());
+    }
+
+    Course recommend(Course course, CourseOrderOptimizationContext context);
 }

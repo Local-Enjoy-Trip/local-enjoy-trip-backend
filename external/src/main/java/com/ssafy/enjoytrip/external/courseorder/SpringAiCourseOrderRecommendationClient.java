@@ -15,10 +15,18 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SpringAiCourseOrderRecommendationClient {
     private static final String SYSTEM_PROMPT = """
-            You recommend only the order of existing trip course items.
+            You optimize the visit order of existing trip course items.
+            Optimization goals, in priority order:
+            1. If current location is provided, choose a first stop that minimizes travel from that location.
+            2. Minimize total travel distance within each day by using latitude and longitude as primary evidence.
+            3. Avoid backtracking, zigzags, and repeated long jumps; this means distance-efficient routing.
+            4. Do not move items across days. Optimize only the order inside each original day.
+            5. Prefer geographically clustered consecutive stops when distance tradeoffs are similar.
+            6. Place meal-suitable stops near lunch or dinner windows when title, item type, or content type implies food.
+            7. Respect opening hours only when they are provided. Do not invent opening hours.
+            8. Preserve every provided id exactly once.
             Return strict JSON only, with this shape: {"orderedItemIds":[1,2,3]}.
-            The response must contain every provided id exactly once.
-            Do not add, remove, explain, or wrap items in any other shape.
+            Do not add, remove, duplicate, explain, or wrap items in any other shape.
             """;
 
     private final ObjectProvider<ChatClient.Builder> chatClientBuilderProvider;
@@ -93,6 +101,9 @@ public class SpringAiCourseOrderRecommendationClient {
     private static String userPrompt(CourseOrderRecommendationRequest request) {
         StringBuilder prompt = new StringBuilder();
         prompt.append("Course id: ").append(request.courseId()).append('\n');
+        appendCurrentLocation(prompt, request);
+        prompt.append("Meal windows: lunch=11:30-13:30, dinner=17:30-19:30\n");
+        prompt.append("Opening hours: not provided unless an item explicitly includes them.\n");
         prompt.append("Items in current order:\n");
         for (CourseOrderRecommendationItem item : request.items()) {
             prompt.append("- id=").append(item.id())
@@ -101,11 +112,26 @@ public class SpringAiCourseOrderRecommendationClient {
                     .append(", title=").append(nullSafe(item.title()))
                     .append(", day=").append(item.day())
                     .append(", currentPosition=").append(item.currentPosition())
+                    .append(", stayMinutes=").append(item.stayMinutes())
+                    .append(", contentTypeId=").append(nullSafe(item.contentTypeId()))
                     .append(", latitude=").append(item.latitude())
                     .append(", longitude=").append(item.longitude())
                     .append('\n');
         }
         return prompt.toString();
+    }
+
+    private static void appendCurrentLocation(StringBuilder prompt, CourseOrderRecommendationRequest request) {
+        if (request.currentLatitude() == null || request.currentLongitude() == null) {
+            prompt.append("Current location: not provided\n");
+            return;
+        }
+
+        prompt.append("Current location: latitude=")
+                .append(request.currentLatitude())
+                .append(", longitude=")
+                .append(request.currentLongitude())
+                .append('\n');
     }
 
     private static String nullSafe(String value) {

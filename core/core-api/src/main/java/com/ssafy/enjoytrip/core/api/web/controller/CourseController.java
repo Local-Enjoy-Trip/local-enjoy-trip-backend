@@ -5,10 +5,12 @@ import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseUpdateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.CourseOrderRecommendationRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseFeedResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CoursesResponse;
 import com.ssafy.enjoytrip.core.domain.Course;
+import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
 import com.ssafy.enjoytrip.core.domain.service.CourseService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -71,9 +73,19 @@ public class CourseController {
 
     @PostMapping("/{id}/order-recommendation")
     public ApiResponse<CourseResponse> recommendOrder(@PathVariable @NotBlank String id,
+                                                      @Valid @RequestBody(required = false)
+                                                      CourseOrderRecommendationRequest request,
                                                       @AuthenticatedUserId String authenticatedUserId) {
-        Course recommended = courseService.recommendCourseOrder(authenticatedUserId, id.strip());
+        Course recommended = courseService.recommendCourseOrder(
+                authenticatedUserId,
+                id.strip(),
+                toContext(request)
+        );
         return success(CourseResponse.from(recommended));
+    }
+
+    private static CourseOrderOptimizationContext toContext(CourseOrderRecommendationRequest request) {
+        return request == null ? CourseOrderOptimizationContext.empty() : request.toContext();
     }
 
     @DeleteMapping("/{id}")

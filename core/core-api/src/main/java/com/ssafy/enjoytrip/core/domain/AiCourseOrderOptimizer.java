@@ -29,7 +29,7 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
     private final SpringAiCourseOrderRecommendationClient courseOrderRecommendationClient;
 
     @Override
-    public Course recommend(Course course) {
+    public Course recommend(Course course, CourseOrderOptimizationContext context) {
         CourseOrderPreview preview = courseOrderPreviewReader.read(course);
         if (preview.itemCount() < 2) {
             return course;
@@ -39,7 +39,7 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
         }
 
         try {
-            return course.withRoute(planPreviewRoute(recommendByAi(preview)));
+            return course.withRoute(planPreviewRoute(recommendByAi(preview, context)));
         } catch (RuntimeException exception) {
             return fallbackOptimized(preview, exception);
         }
@@ -61,9 +61,10 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
         return preview.course().withRoute(planPreviewRoute(optimizedItems));
     }
 
-    private List<CourseOrderPreviewItem> recommendByAi(CourseOrderPreview preview) {
+    private List<CourseOrderPreviewItem> recommendByAi(CourseOrderPreview preview,
+                                                       CourseOrderOptimizationContext context) {
         CourseOrderRecommendationResult result = courseOrderRecommendationClient.recommend(
-                toExternalRequest(preview)
+                toExternalRequest(preview, context)
         );
         requireValidRecommendation(preview, result);
         return orderByRecommendedIds(preview, result.orderedItemIds());
@@ -87,9 +88,12 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
         return new CourseStopPoint(stop, item.title(), item.latitude(), item.longitude());
     }
 
-    private static CourseOrderRecommendationRequest toExternalRequest(CourseOrderPreview preview) {
+    private static CourseOrderRecommendationRequest toExternalRequest(CourseOrderPreview preview,
+                                                                      CourseOrderOptimizationContext context) {
         return new CourseOrderRecommendationRequest(
                 preview.course().id(),
+                context.currentLatitude(),
+                context.currentLongitude(),
                 preview.items().stream()
                         .map(AiCourseOrderOptimizer::toExternalItem)
                         .toList()
@@ -105,6 +109,8 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
                 item.title(),
                 stop.day(),
                 stop.position(),
+                stop.stayMinutes(),
+                item.contentTypeId(),
                 item.latitude(),
                 item.longitude()
         );

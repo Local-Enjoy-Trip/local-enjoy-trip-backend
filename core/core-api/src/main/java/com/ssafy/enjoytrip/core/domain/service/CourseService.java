@@ -3,6 +3,7 @@ package com.ssafy.enjoytrip.core.domain.service;
 import com.ssafy.enjoytrip.core.domain.Course;
 import com.ssafy.enjoytrip.core.domain.CourseFeedSection;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizer;
+import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
 import com.ssafy.enjoytrip.core.domain.CourseReader;
 import com.ssafy.enjoytrip.core.domain.CourseWriter;
 import java.util.List;
@@ -40,9 +41,15 @@ public class CourseService {
     }
 
     public Course recommendCourseOrder(String ownerUserId, String courseId) {
+        return recommendCourseOrder(ownerUserId, courseId, CourseOrderOptimizationContext.empty());
+    }
+
+    public Course recommendCourseOrder(String ownerUserId,
+                                       String courseId,
+                                       CourseOrderOptimizationContext context) {
         Course current = findRequired(courseId);
         current.requireOwnedBy(ownerUserId);
-        return courseOrderOptimizer.recommend(current);
+        return courseOrderOptimizer.recommend(current, context);
     }
 
     public void deleteCourse(String ownerUserId, String courseId) {
