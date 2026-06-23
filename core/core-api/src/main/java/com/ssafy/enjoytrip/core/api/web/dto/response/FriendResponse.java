@@ -4,14 +4,14 @@ import com.ssafy.enjoytrip.core.domain.Friendship;
 
 public record FriendResponse(
         Long friendshipId,
-        String userId,
+        String email,
         String displayName
 ) {
-    public static FriendResponse from(Friendship friendship, String actorUserId) {
+    public static FriendResponse from(Friendship friendship, Long actorMemberId) {
         return new FriendResponse(
                 friendship.id(),
-                friendship.counterpartUserId(actorUserId),
-                friendship.counterpartDisplayName(actorUserId)
+                friendship.counterpartEmail(actorMemberId),
+                friendship.counterpartDisplayName(actorMemberId)
         );
     }
 }

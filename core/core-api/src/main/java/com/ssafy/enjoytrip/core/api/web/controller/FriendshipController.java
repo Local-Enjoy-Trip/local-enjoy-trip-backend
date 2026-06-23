@@ -2,18 +2,18 @@ package com.ssafy.enjoytrip.core.api.web.controller;
 
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
-import com.ssafy.enjoytrip.core.domain.Friendship;
-import com.ssafy.enjoytrip.core.domain.service.FriendshipService;
-import com.ssafy.enjoytrip.core.support.response.ApiResponse;
+import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
 import com.ssafy.enjoytrip.core.api.web.api.FriendshipApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.FriendRequestCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.FriendsResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.FriendshipMutationResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.FriendshipRequestsResponse;
+import com.ssafy.enjoytrip.core.domain.Friendship;
+import com.ssafy.enjoytrip.core.domain.service.FriendshipService;
+import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,11 +30,13 @@ public class FriendshipController implements FriendshipApi {
 
     @PostMapping("/requests")
     @Override
-    public ApiResponse<FriendshipMutationResponse> request(@Valid @RequestBody FriendRequestCreateRequest request,
-                                                           @AuthenticatedUserId String authenticatedUserId) {
+    public ApiResponse<FriendshipMutationResponse> request(
+            @Valid @RequestBody FriendRequestCreateRequest request,
+            @AuthenticatedMemberId Long memberId
+    ) {
         Friendship friendship = friendshipService.requestFriendship(
-                authenticatedUserId,
-                request.normalizedTargetUserId()
+                memberId,
+                request.targetEmail()
         );
         return success(FriendshipMutationResponse.from(friendship));
     }
@@ -42,60 +44,59 @@ public class FriendshipController implements FriendshipApi {
     @PostMapping("/requests/{friendshipId}/accept")
     @Override
     public ApiResponse<FriendshipMutationResponse> accept(@PathVariable Long friendshipId,
-                                                          @AuthenticatedUserId String authenticatedUserId) {
+                                                          @AuthenticatedMemberId Long memberId) {
         return success(FriendshipMutationResponse.from(
-                friendshipService.acceptRequest(friendshipId, authenticatedUserId)
+                friendshipService.acceptRequest(friendshipId, memberId)
         ));
     }
 
     @PostMapping("/requests/{friendshipId}/reject")
     @Override
     public ApiResponse<FriendshipMutationResponse> reject(@PathVariable Long friendshipId,
-                                                          @AuthenticatedUserId String authenticatedUserId) {
+                                                          @AuthenticatedMemberId Long memberId) {
         return success(FriendshipMutationResponse.from(
-                friendshipService.rejectRequest(friendshipId, authenticatedUserId)
+                friendshipService.rejectRequest(friendshipId, memberId)
         ));
     }
 
     @DeleteMapping("/requests/{friendshipId}")
     @Override
     public ApiResponse<FriendshipMutationResponse> cancel(@PathVariable Long friendshipId,
-                                                          @AuthenticatedUserId String authenticatedUserId) {
+                                                          @AuthenticatedMemberId Long memberId) {
         return success(FriendshipMutationResponse.from(
-                friendshipService.cancelSentRequest(friendshipId, authenticatedUserId)
+                friendshipService.cancelSentRequest(friendshipId, memberId)
         ));
     }
 
     @DeleteMapping("/{friendshipId}")
     @Override
     public ApiResponse<FriendshipMutationResponse> delete(@PathVariable Long friendshipId,
-                                                          @AuthenticatedUserId String authenticatedUserId) {
+                                                          @AuthenticatedMemberId Long memberId) {
         return success(FriendshipMutationResponse.from(
-                friendshipService.deleteFriendship(friendshipId, authenticatedUserId)
+                friendshipService.deleteFriendship(friendshipId, memberId)
         ));
     }
 
     @GetMapping
     @Override
-    public ApiResponse<FriendsResponse> friends(@AuthenticatedUserId String actorUserId) {
-        List<Friendship> friendships = friendshipService.findFriends(actorUserId);
-        return success(FriendsResponse.from(friendships, actorUserId));
+    public ApiResponse<FriendsResponse> friends(@AuthenticatedMemberId Long memberId) {
+        List<Friendship> friendships = friendshipService.findFriends(memberId);
+        return success(FriendsResponse.from(friendships, memberId));
     }
 
     @GetMapping("/requests/received")
     @Override
-    public ApiResponse<FriendshipRequestsResponse> received(@AuthenticatedUserId String authenticatedUserId) {
+    public ApiResponse<FriendshipRequestsResponse> received(@AuthenticatedMemberId Long memberId) {
         return success(FriendshipRequestsResponse.from(
-                friendshipService.findReceivedPendingRequests(authenticatedUserId)
+                friendshipService.findReceivedPendingRequests(memberId)
         ));
     }
 
     @GetMapping("/requests/sent")
     @Override
-    public ApiResponse<FriendshipRequestsResponse> sent(@AuthenticatedUserId String authenticatedUserId) {
+    public ApiResponse<FriendshipRequestsResponse> sent(@AuthenticatedMemberId Long memberId) {
         return success(FriendshipRequestsResponse.from(
-                friendshipService.findSentPendingRequests(authenticatedUserId)
+                friendshipService.findSentPendingRequests(memberId)
         ));
     }
-
 }

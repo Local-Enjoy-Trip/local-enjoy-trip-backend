@@ -20,10 +20,10 @@ public record CourseUpdateRequest(
         String coverImageUrl,
         List<@Valid CourseItemRequest> items
 ) {
-    public Course toCourse(String id, String ownerUserId) {
+    public Course toCourse(String id, Long ownerMemberId) {
         return new Course(
                 id,
-                ownerUserId,
+                ownerMemberId,
                 title.strip(),
                 blankToNull(regionName),
                 defaultValue(visibility, "PRIVATE"),

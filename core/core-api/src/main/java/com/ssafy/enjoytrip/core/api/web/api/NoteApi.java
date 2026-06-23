@@ -58,7 +58,7 @@ public interface NoteApi {
     })
     ApiResponse<NoteResponse> create(
             NoteCreateRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -88,7 +88,7 @@ public interface NoteApi {
     ApiResponse<NoteResponse> update(
             @Parameter(description = "수정할 쪽지 ID", example = "1", required = true) Long id,
             NoteUpdateRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -108,7 +108,7 @@ public interface NoteApi {
     })
     ApiResponse<Void> delete(
             @Parameter(description = "삭제할 쪽지 ID", example = "1", required = true) Long id,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(summary = "쪽지 저장", description = "인증 사용자가 접근 가능한 active 쪽지를 저장합니다.", operationId = "saveNote")
@@ -124,7 +124,7 @@ public interface NoteApi {
     })
     ApiResponse<Void> save(
             @Parameter(description = "저장할 쪽지 ID", example = "1", required = true) Long id,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(summary = "쪽지 저장 해제", description = "인증 사용자의 쪽지 저장을 삭제합니다.", operationId = "unsaveNote")
@@ -140,7 +140,7 @@ public interface NoteApi {
     })
     ApiResponse<Void> unsave(
             @Parameter(description = "저장 해제할 쪽지 ID", example = "1", required = true) Long id,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -161,7 +161,7 @@ public interface NoteApi {
     })
     ApiResponse<NotesResponse> saved(
             @ParameterObject SavedNotesRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -190,6 +190,6 @@ public interface NoteApi {
     })
     ApiResponse<NotesResponse> nearby(
             @ParameterObject NearbySectionRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 }

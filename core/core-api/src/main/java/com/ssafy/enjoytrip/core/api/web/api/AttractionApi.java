@@ -66,7 +66,7 @@ public interface AttractionApi {
     })
     ApiResponse<AttractionsResponse> search(
             @ParameterObject AttractionSearchRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -115,7 +115,7 @@ public interface AttractionApi {
     })
     ApiResponse<PopularAttractionsResponse> popularNearby(
             @ParameterObject NearbySectionRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -161,7 +161,7 @@ public interface AttractionApi {
     })
     ApiResponse<Void> save(
             @Parameter(description = "저장할 관광지 ID", example = "125405", required = true) Long id,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -181,7 +181,7 @@ public interface AttractionApi {
     })
     ApiResponse<Void> unsave(
             @Parameter(description = "저장 해제할 관광지 ID", example = "125405", required = true) Long id,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -210,7 +210,7 @@ public interface AttractionApi {
     ApiResponse<Void> rate(
             @Parameter(description = "평점을 등록할 관광지 ID", example = "125405", required = true) Long id,
             RatingRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -230,7 +230,7 @@ public interface AttractionApi {
     })
     ApiResponse<Void> deleteRating(
             @Parameter(description = "평점을 삭제할 관광지 ID", example = "125405", required = true) Long id,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -251,7 +251,7 @@ public interface AttractionApi {
     })
     ApiResponse<AttractionStatsResponse> stats(
             @Parameter(description = "통계를 조회할 관광지 ID", example = "125405", required = true) Long id,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -280,6 +280,6 @@ public interface AttractionApi {
     ApiResponse<Void> replaceTags(
             @Parameter(description = "태그를 교체할 관광지 ID", example = "125405", required = true) Long id,
             AttractionTagsRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 }

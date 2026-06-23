@@ -15,9 +15,9 @@ public record ProfileImageUpdateRequest(
             "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}"
                     + "-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.[A-Za-z0-9]{1,10}$";
 
-    public String normalizedObjectKeyFor(String authenticatedUserId) {
+    public String normalizedObjectKeyFor(Long memberId) {
         String normalized = objectKey.strip();
-        if (!matchesProfileImageObjectKey(authenticatedUserId, normalized)) {
+        if (!matchesProfileImageObjectKey(memberId, normalized)) {
             throw new ClientInputException(INVALID_OBJECT_KEY_MESSAGE);
         }
         return normalized;
@@ -27,8 +27,8 @@ public record ProfileImageUpdateRequest(
         return contentType.strip().toLowerCase(Locale.ROOT);
     }
 
-    private static boolean matchesProfileImageObjectKey(String authenticatedUserId, String objectKey) {
-        String requiredPrefix = "profiles/" + authenticatedUserId + "/";
+    private static boolean matchesProfileImageObjectKey(Long memberId, String objectKey) {
+        String requiredPrefix = "profiles/" + memberId + "/";
         if (!objectKey.startsWith(requiredPrefix)) {
             return false;
         }

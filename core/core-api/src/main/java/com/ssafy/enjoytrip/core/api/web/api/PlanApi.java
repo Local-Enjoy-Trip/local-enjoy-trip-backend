@@ -20,7 +20,7 @@ public interface PlanApi {
 
     @Operation(
             summary = "여행 계획 목록 조회",
-            description = "`userId`가 있으면 해당 사용자의 계획만, 없으면 전체 계획을 조회합니다.",
+            description = "`memberId`가 있으면 해당 사용자의 계획만, 없으면 전체 계획을 조회합니다.",
             operationId = "findPlans"
     )
     @ApiResponses({
@@ -37,7 +37,7 @@ public interface PlanApi {
                                         "plans": [
                                           {
                                             "id": "p1",
-                                            "userId": "ssafy",
+                                            "memberId": "ssafy",
                                             "title": "제주 여행",
                                             "startDate": "2026-05-20",
                                             "endDate": "2026-05-22",
@@ -53,7 +53,7 @@ public interface PlanApi {
                                     """))
             )
     })
-    ApiResponse<PlansResponse> find(@Parameter(description = "사용자 ID 필터", example = "ssafy") String userId);
+    ApiResponse<PlansResponse> find(@Parameter(description = "사용자 ID 필터", example = "ssafy") Long memberId);
 
     @Operation(
             summary = "여행 계획 단건 조회",
@@ -102,7 +102,7 @@ public interface PlanApi {
                     description = "필수 필드 또는 범위 validation 실패"
             )
     })
-    ApiResponse<Void> create(PlanCreateRequest request, @Parameter(hidden = true) String authenticatedUserId);
+    ApiResponse<Void> create(PlanCreateRequest request, @Parameter(hidden = true) Long memberId);
 
     @Operation(
             summary = "여행 계획 수정",
@@ -130,7 +130,7 @@ public interface PlanApi {
     ApiResponse<Void> update(
             @Parameter(description = "수정할 여행 계획 ID", example = "p1", required = true) String id,
             PlanUpdateRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -159,7 +159,7 @@ public interface PlanApi {
     ApiResponse<Void> replaceItems(
             @Parameter(description = "코스를 교체할 여행 계획 ID", example = "p1", required = true) String id,
             PlanReplaceItemsRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -180,7 +180,7 @@ public interface PlanApi {
     ApiResponse<Void> deleteItem(
             @Parameter(description = "여행 계획 ID", example = "p1", required = true) String id,
             @Parameter(description = "삭제할 코스 항목 ID", example = "1", required = true) Long itemId,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -205,6 +205,6 @@ public interface PlanApi {
     })
     ApiResponse<Void> delete(
             @Parameter(description = "삭제할 여행 계획 ID", example = "p1", required = true) String id,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 }

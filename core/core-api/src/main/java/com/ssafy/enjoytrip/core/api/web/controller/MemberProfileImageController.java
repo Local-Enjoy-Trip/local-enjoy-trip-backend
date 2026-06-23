@@ -2,7 +2,7 @@ package com.ssafy.enjoytrip.core.api.web.controller;
 
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
-import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
+import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
 import com.ssafy.enjoytrip.core.api.web.api.MemberProfileImageApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.ProfileImagePresignedUploadRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.ProfileImageUpdateRequest;
@@ -28,10 +28,10 @@ public class MemberProfileImageController implements MemberProfileImageApi {
     @Override
     public ApiResponse<ProfileImagePresignedUploadResponse> createPresignedUpload(
             @Valid @RequestBody ProfileImagePresignedUploadRequest request,
-            @AuthenticatedUserId String authenticatedUserId
+            @AuthenticatedMemberId Long memberId
     ) {
         ProfileImageUploadUrl upload = service.createPresignedUpload(
-                authenticatedUserId,
+                memberId,
                 request.normalizedContentType(),
                 request.normalizedFileExtension()
         );
@@ -43,11 +43,11 @@ public class MemberProfileImageController implements MemberProfileImageApi {
     @Override
     public ApiResponse<Void> updateProfileImage(
             @Valid @RequestBody ProfileImageUpdateRequest request,
-            @AuthenticatedUserId String authenticatedUserId
+            @AuthenticatedMemberId Long memberId
     ) {
         service.updateProfileImage(
-                authenticatedUserId,
-                request.normalizedObjectKeyFor(authenticatedUserId)
+                memberId,
+                request.normalizedObjectKeyFor(memberId)
         );
 
         return success();

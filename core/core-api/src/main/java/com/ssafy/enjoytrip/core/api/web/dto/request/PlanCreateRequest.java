@@ -16,10 +16,10 @@ public record PlanCreateRequest(
         String note,
         List<@Valid PlanRouteItemRequest> routeItems
 ) {
-    public TravelPlan toTravelPlan(String userId) {
+    public TravelPlan toTravelPlan(Long memberId) {
         return TravelPlan.createOwned(
                 id.strip(),
-                userId,
+                memberId,
                 title.strip(),
                 startDate.strip(),
                 endDate.strip(),

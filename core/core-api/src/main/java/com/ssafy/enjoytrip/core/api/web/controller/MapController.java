@@ -10,7 +10,7 @@ import com.ssafy.enjoytrip.core.api.web.dto.response.MapExploreResponse;
 import com.ssafy.enjoytrip.core.domain.MapExploreResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
+import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,9 +25,9 @@ public class MapController implements MapApi {
     @GetMapping("/explore")
     @Override
     public ApiResponse<MapExploreResponse> explore(@Valid @ModelAttribute MapExploreRequest request,
-                                                   @AuthenticatedUserId String authenticatedUserId) {
+                                                   @AuthenticatedMemberId Long memberId) {
         MapExploreResult result = service.explore(
-                authenticatedUserId,
+                memberId,
                 request.requiredLongitude(),
                 request.requiredLatitude(),
                 request.normalizedRadiusMeters(),

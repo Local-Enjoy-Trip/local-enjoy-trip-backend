@@ -21,10 +21,10 @@ public record CourseCreateRequest(
         String coverImageUrl,
         List<@Valid CourseItemRequest> items
 ) {
-    public Course toCourse(String ownerUserId) {
+    public Course toCourse(Long ownerMemberId) {
         return new Course(
                 id.strip(),
-                ownerUserId,
+                ownerMemberId,
                 title.strip(),
                 blankToNull(regionName),
                 defaultValue(visibility, "PRIVATE"),

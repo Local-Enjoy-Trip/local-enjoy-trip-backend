@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.controller;
 
-import static com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId.Unauthenticated.NULL;
+import static com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId.Unauthenticated.NULL;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
@@ -21,7 +21,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
+import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -44,11 +44,11 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<AttractionsResponse> search(
             @ModelAttribute AttractionSearchRequest request,
-            @AuthenticatedUserId(unauthenticated = NULL) String authenticatedUserId
+            @AuthenticatedMemberId(unauthenticated = NULL) Long memberId
     ) {
         List<Attraction> attractions = service.searchAttractions(
                 request.toCondition(),
-                authenticatedUserId
+                memberId
         );
 
         return success(new AttractionsResponse(attractions));
@@ -58,11 +58,11 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<PopularAttractionsResponse> popularNearby(
             @Valid @ModelAttribute NearbySectionRequest request,
-            @AuthenticatedUserId(unauthenticated = NULL) String authenticatedUserId
+            @AuthenticatedMemberId(unauthenticated = NULL) Long memberId
     ) {
         List<PopularAttractionResult> attractions = service.findPopularNearbyAttractions(
                 request.toCondition(),
-                authenticatedUserId
+                memberId
         );
 
         return success(PopularAttractionsResponse.from(attractions));
@@ -79,9 +79,9 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<Void> save(
             @PathVariable Long id,
-            @AuthenticatedUserId String authenticatedUserId
+            @AuthenticatedMemberId Long memberId
     ) {
-        service.addSave(id, authenticatedUserId);
+        service.addSave(id, memberId);
 
         return success();
     }
@@ -90,9 +90,9 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<Void> unsave(
             @PathVariable Long id,
-            @AuthenticatedUserId String authenticatedUserId
+            @AuthenticatedMemberId Long memberId
     ) {
-        service.removeSave(id, authenticatedUserId);
+        service.removeSave(id, memberId);
 
         return success();
     }
@@ -101,8 +101,8 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<Void> rate(@PathVariable Long id,
                                   @Valid @RequestBody RatingRequest request,
-                                  @AuthenticatedUserId String authenticatedUserId) {
-        service.upsertRating(id, authenticatedUserId, request.rating());
+                                  @AuthenticatedMemberId Long memberId) {
+        service.upsertRating(id, memberId, request.rating());
 
         return success();
     }
@@ -111,9 +111,9 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<Void> deleteRating(
             @PathVariable Long id,
-            @AuthenticatedUserId String authenticatedUserId
+            @AuthenticatedMemberId Long memberId
     ) {
-        service.removeRating(id, authenticatedUserId);
+        service.removeRating(id, memberId);
 
         return success();
     }
@@ -122,10 +122,10 @@ public class AttractionController implements AttractionApi {
     @Override
     public ApiResponse<AttractionStatsResponse> stats(
             @PathVariable Long id,
-            @AuthenticatedUserId(unauthenticated = NULL) String authenticatedUserId
+            @AuthenticatedMemberId(unauthenticated = NULL) Long memberId
     ) {
         return success(new AttractionStatsResponse(
-                statsService.findStats(id, authenticatedUserId)
+                statsService.findStats(id, memberId)
         ));
     }
 
@@ -134,7 +134,7 @@ public class AttractionController implements AttractionApi {
     public ApiResponse<Void> replaceTags(
             @PathVariable Long id,
             @Valid @RequestBody AttractionTagsRequest request,
-            @AuthenticatedUserId String authenticatedUserId
+            @AuthenticatedMemberId Long memberId
     ) {
         service.replaceTagsOrThrow(id, request.tagIds());
 

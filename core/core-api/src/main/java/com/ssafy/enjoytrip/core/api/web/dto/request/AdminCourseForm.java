@@ -24,14 +24,14 @@ public record AdminCourseForm(
         Integer curationOrder,
         String itemsText
 ) {
-    public Course toCourse(String adminUserId) {
-        return toCourse(adminUserId, id.strip());
+    public Course toCourse(Long adminMemberId) {
+        return toCourse(adminMemberId, id.strip());
     }
 
-    public Course toCourse(String adminUserId, String courseId) {
+    public Course toCourse(Long adminMemberId, String courseId) {
         return new Course(
                 courseId,
-                adminUserId,
+                adminMemberId,
                 title.strip(),
                 blankToNull(regionName),
                 defaultValue(visibility, "PUBLIC"),

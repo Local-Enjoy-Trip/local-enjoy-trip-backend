@@ -2,7 +2,7 @@ package com.ssafy.enjoytrip.core.api.web.controller;
 
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
-import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
+import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseOrderRecommendationRequest;
@@ -48,8 +48,8 @@ public class CourseController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<CoursesResponse> mine(@AuthenticatedUserId String authenticatedUserId) {
-        List<CourseResponse> courses = courseService.findMyCourses(authenticatedUserId).stream()
+    public ApiResponse<CoursesResponse> mine(@AuthenticatedMemberId Long authenticatedMemberId) {
+        List<CourseResponse> courses = courseService.findMyCourses(authenticatedMemberId).stream()
                 .map(CourseResponse::from)
                 .toList();
         return success(new CoursesResponse(courses));
@@ -57,18 +57,18 @@ public class CourseController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<CourseResponse> create(@Valid @RequestBody CourseCreateRequest request,
-                                              @AuthenticatedUserId String authenticatedUserId) {
-        Course created = courseService.createCourse(request.toCourse(authenticatedUserId));
+                                              @AuthenticatedMemberId Long authenticatedMemberId) {
+        Course created = courseService.createCourse(request.toCourse(authenticatedMemberId));
         return success(CourseResponse.from(created));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<CourseResponse> update(@PathVariable @NotBlank String id,
                                               @Valid @RequestBody CourseUpdateRequest request,
-                                              @AuthenticatedUserId String authenticatedUserId) {
+                                              @AuthenticatedMemberId Long authenticatedMemberId) {
         Course updated = courseService.updateCourse(
-                authenticatedUserId,
-                request.toCourse(id.strip(), authenticatedUserId)
+                authenticatedMemberId,
+                request.toCourse(id.strip(), authenticatedMemberId)
         );
         return success(CourseResponse.from(updated));
     }
@@ -77,9 +77,9 @@ public class CourseController {
     public ApiResponse<CourseResponse> recommendOrder(@PathVariable @NotBlank String id,
                                                       @Valid @RequestBody(required = false)
                                                       CourseOrderRecommendationRequest request,
-                                                      @AuthenticatedUserId String authenticatedUserId) {
+                                                      @AuthenticatedMemberId Long authenticatedMemberId) {
         Course recommended = courseService.recommendCourseOrder(
-                authenticatedUserId,
+                authenticatedMemberId,
                 id.strip(),
                 toContext(request)
         );
@@ -92,8 +92,8 @@ public class CourseController {
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable @NotBlank String id,
-                                    @AuthenticatedUserId String authenticatedUserId) {
-        courseService.deleteCourse(authenticatedUserId, id.strip());
+                                    @AuthenticatedMemberId Long authenticatedMemberId) {
+        courseService.deleteCourse(authenticatedMemberId, id.strip());
         return success();
     }
 }

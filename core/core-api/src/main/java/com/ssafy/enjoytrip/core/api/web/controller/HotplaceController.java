@@ -2,12 +2,13 @@ package com.ssafy.enjoytrip.core.api.web.controller;
 
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
-import com.ssafy.enjoytrip.core.domain.Hotplace;
-import com.ssafy.enjoytrip.core.domain.service.HotplaceService;
-import com.ssafy.enjoytrip.core.support.response.ApiResponse;
+import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
 import com.ssafy.enjoytrip.core.api.web.api.HotplaceApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.HotplaceCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.HotplacesResponse;
+import com.ssafy.enjoytrip.core.domain.Hotplace;
+import com.ssafy.enjoytrip.core.domain.service.HotplaceService;
+import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -30,22 +31,24 @@ public class HotplaceController implements HotplaceApi {
 
     @GetMapping
     @Override
-    public ApiResponse<HotplacesResponse> find(@RequestParam(required = false) String userId) {
-        String trimmedUserId = trim(userId);
-        if (trimmedUserId.isEmpty()) {
+    public ApiResponse<HotplacesResponse> find(@RequestParam(required = false) Long memberId) {
+        if (memberId == null) {
             return success(new HotplacesResponse(service.findAllHotplaces()));
         }
-        List<Hotplace> hotplaces = service.findHotplacesByUser(trimmedUserId);
+        List<Hotplace> hotplaces = service.findHotplacesByMemberId(memberId);
         return success(new HotplacesResponse(hotplaces));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Override
-    public ApiResponse<Void> create(@Valid @RequestBody HotplaceCreateRequest request) {
+    public ApiResponse<Void> create(
+            @Valid @RequestBody HotplaceCreateRequest request,
+            @AuthenticatedMemberId Long memberId
+    ) {
         service.insertHotplace(new Hotplace(
                 request.normalizedId(),
-                request.normalizedUserId(),
+                memberId,
                 request.normalizedTitle(),
                 request.normalizedType(),
                 request.normalizedVisitDate(),
@@ -61,16 +64,8 @@ public class HotplaceController implements HotplaceApi {
 
     @DeleteMapping("/{id}")
     @Override
-    public ApiResponse<Void> delete(@PathVariable String id) {
-        service.deleteHotplaceOrThrow(id.strip());
+    public ApiResponse<Void> delete(@PathVariable String id, @AuthenticatedMemberId Long memberId) {
+        service.deleteHotplaceOrThrow(id.strip(), memberId);
         return success();
-    }
-
-    private static String trim(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        return value.trim();
     }
 }

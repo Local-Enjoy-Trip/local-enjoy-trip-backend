@@ -41,7 +41,7 @@ public interface FriendshipApi {
     })
     ApiResponse<FriendshipMutationResponse> request(
             FriendRequestCreateRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(summary = "받은 친구 요청 수락", operationId = "acceptFriendshipRequest")
@@ -58,7 +58,7 @@ public interface FriendshipApi {
     })
     ApiResponse<FriendshipMutationResponse> accept(
             @Parameter(description = "친구 관계 ID", example = "10", required = true) Long friendshipId,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(summary = "받은 친구 요청 거절", operationId = "rejectFriendshipRequest")
@@ -75,7 +75,7 @@ public interface FriendshipApi {
     })
     ApiResponse<FriendshipMutationResponse> reject(
             @Parameter(description = "친구 관계 ID", example = "10", required = true) Long friendshipId,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(summary = "보낸 친구 요청 취소", operationId = "cancelFriendshipRequest")
@@ -92,7 +92,7 @@ public interface FriendshipApi {
     })
     ApiResponse<FriendshipMutationResponse> cancel(
             @Parameter(description = "친구 관계 ID", example = "10", required = true) Long friendshipId,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(summary = "친구 끊기", operationId = "deleteFriendship")
@@ -109,7 +109,7 @@ public interface FriendshipApi {
     })
     ApiResponse<FriendshipMutationResponse> delete(
             @Parameter(description = "친구 관계 ID", example = "10", required = true) Long friendshipId,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(summary = "친구 목록 조회", operationId = "getFriends")
@@ -124,7 +124,7 @@ public interface FriendshipApi {
                     )
             )
     })
-    ApiResponse<FriendsResponse> friends(@Parameter(hidden = true) String authenticatedUserId);
+    ApiResponse<FriendsResponse> friends(@Parameter(hidden = true) Long memberId);
 
     @Operation(summary = "받은 대기 친구 요청 조회", operationId = "getReceivedFriendshipRequests")
     @ApiResponses({
@@ -138,7 +138,7 @@ public interface FriendshipApi {
                     )
             )
     })
-    ApiResponse<FriendshipRequestsResponse> received(@Parameter(hidden = true) String authenticatedUserId);
+    ApiResponse<FriendshipRequestsResponse> received(@Parameter(hidden = true) Long memberId);
 
     @Operation(summary = "보낸 대기 친구 요청 조회", operationId = "getSentFriendshipRequests")
     @ApiResponses({
@@ -152,5 +152,5 @@ public interface FriendshipApi {
                     )
             )
     })
-    ApiResponse<FriendshipRequestsResponse> sent(@Parameter(hidden = true) String authenticatedUserId);
+    ApiResponse<FriendshipRequestsResponse> sent(@Parameter(hidden = true) Long memberId);
 }

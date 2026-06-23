@@ -131,6 +131,57 @@ final class ApiExamples {
             }
             """;
 
+    static final String USERS_RESPONSE = """
+            {
+              "success": true,
+              "data": {
+                "users": [{
+                  "name": "김싸피",
+                  "nickname": "동네핀러",
+                  "email": "ssafy@example.com",
+                  "profileImageUrl": "https://cdn.example.com/profile.png"
+                }]
+              },
+              "error": null
+            }
+            """;
+
+    static final String LOGIN_RESPONSE = """
+            {
+              "success": true,
+              "data": {
+                "user": {
+                  "name": "김싸피",
+                  "nickname": "동네핀러",
+                  "email": "Case@Test.example",
+                  "profileImageUrl": "https://cdn.example.com/profile.png"
+                },
+                "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+                "tokenType": "Bearer",
+                "expiresIn": 3600
+              },
+              "error": null
+            }
+            """;
+
+    static final String OAUTH_LOGIN_RESPONSE = """
+            {
+              "success": true,
+              "data": {
+                "user": {
+                  "name": "김싸피",
+                  "nickname": "동네핀러",
+                  "email": "ssafy@example.com",
+                  "profileImageUrl": null
+                },
+                "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+                "tokenType": "Bearer",
+                "expiresIn": 3600
+              },
+              "error": null
+            }
+            """;
+
     static final String USER_ENVELOPE_RESPONSE = """
             {
               "success": true,

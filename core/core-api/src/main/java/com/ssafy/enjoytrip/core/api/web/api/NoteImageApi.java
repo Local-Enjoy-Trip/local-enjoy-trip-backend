@@ -40,6 +40,6 @@ public interface NoteImageApi {
     })
     ApiResponse<NoteImagePresignedUploadResponse> createPresignedUpload(
             NoteImagePresignedUploadRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 }

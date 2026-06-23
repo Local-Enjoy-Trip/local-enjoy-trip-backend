@@ -41,8 +41,8 @@ public class AdminCourseController {
             return "admin/courses";
         }
 
-        String adminUserId = adminAuthenticationSupport.requireAdminUserId(authentication);
-        adminCourseService.createAdminCourse(form.toCourse(adminUserId));
+        Long adminMemberId = adminAuthenticationSupport.requireAdminMemberId(authentication);
+        adminCourseService.createAdminCourse(form.toCourse(adminMemberId));
         redirectAttributes.addFlashAttribute("message", "관리자 코스를 생성했습니다.");
         return "redirect:/admin/courses";
     }
@@ -59,8 +59,8 @@ public class AdminCourseController {
             return "admin/courses";
         }
 
-        String adminUserId = adminAuthenticationSupport.requireAdminUserId(authentication);
-        adminCourseService.updateAdminCourse(adminUserId, form.toCourse(adminUserId, id.strip()));
+        Long adminMemberId = adminAuthenticationSupport.requireAdminMemberId(authentication);
+        adminCourseService.updateAdminCourse(adminMemberId, form.toCourse(adminMemberId, id.strip()));
         redirectAttributes.addFlashAttribute("message", "관리자 코스를 수정했습니다.");
         return "redirect:/admin/courses";
     }
@@ -70,7 +70,7 @@ public class AdminCourseController {
                          Authentication authentication,
                          RedirectAttributes redirectAttributes) {
         adminCourseService.deleteAdminCourse(
-                adminAuthenticationSupport.requireAdminUserId(authentication),
+                adminAuthenticationSupport.requireAdminMemberId(authentication),
                 id.strip()
         );
         redirectAttributes.addFlashAttribute("message", "관리자 코스를 삭제했습니다.");

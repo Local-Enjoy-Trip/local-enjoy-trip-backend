@@ -22,12 +22,12 @@ public record NoteCreateRequest(
         @Size(max = 100) String regionName,
         @Valid NoteImageReferenceRequest image
 ) {
-    public Note toNote(String authorUserId) {
+    public Note toNote(Long authorMemberId) {
         NoteImageReference imageReference = image == null ? null : image.toReference();
 
         return new Note(
                 null,
-                authorUserId,
+                authorMemberId,
                 title.strip(),
                 content.strip(),
                 category,

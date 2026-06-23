@@ -6,7 +6,6 @@ import java.util.List;
 
 public record PlanResponse(
         String id,
-        String userId,
         String title,
         String startDate,
         String endDate,
@@ -18,7 +17,6 @@ public record PlanResponse(
     public static PlanResponse from(TravelPlan plan, List<PlanRouteItem> routeItems) {
         return new PlanResponse(
                 plan.id(),
-                plan.userId(),
                 plan.title(),
                 plan.startDate(),
                 plan.endDate(),

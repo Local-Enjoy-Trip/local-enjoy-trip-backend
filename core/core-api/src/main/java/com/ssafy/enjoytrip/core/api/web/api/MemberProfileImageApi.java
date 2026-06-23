@@ -43,7 +43,7 @@ public interface MemberProfileImageApi {
     })
     ApiResponse<ProfileImagePresignedUploadResponse> createPresignedUpload(
             ProfileImagePresignedUploadRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -72,6 +72,6 @@ public interface MemberProfileImageApi {
     })
     ApiResponse<Void> updateProfileImage(
             ProfileImageUpdateRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 }

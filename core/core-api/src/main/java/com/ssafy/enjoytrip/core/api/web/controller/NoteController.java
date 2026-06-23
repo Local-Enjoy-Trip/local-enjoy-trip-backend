@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.controller;
 
-import static com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId.Unauthenticated.NULL;
+import static com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId.Unauthenticated.NULL;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.Note;
@@ -16,7 +16,7 @@ import com.ssafy.enjoytrip.core.api.web.dto.response.NotesResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
+import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -36,8 +36,8 @@ public class NoteController implements NoteApi {
     @PostMapping
     @Override
     public ApiResponse<NoteResponse> create(@Valid @RequestBody NoteCreateRequest request,
-                                            @AuthenticatedUserId String authenticatedUserId) {
-        Note note = service.createNote(request.toNote(authenticatedUserId));
+                                            @AuthenticatedMemberId Long memberId) {
+        Note note = service.createNote(request.toNote(memberId));
 
         return success(new NoteResponse(note));
     }
@@ -46,32 +46,32 @@ public class NoteController implements NoteApi {
     @Override
     public ApiResponse<NoteResponse> update(@PathVariable Long id,
                                             @Valid @RequestBody NoteUpdateRequest request,
-                                            @AuthenticatedUserId String authenticatedUserId) {
-        Note note = service.updateNote(request.toNote(id, authenticatedUserId));
+                                            @AuthenticatedMemberId Long memberId) {
+        Note note = service.updateNote(request.toNote(id, memberId));
 
         return success(new NoteResponse(note));
     }
 
     @DeleteMapping("/{id}")
     @Override
-    public ApiResponse<Void> delete(@PathVariable Long id, @AuthenticatedUserId String authenticatedUserId) {
-        service.deleteNote(id, authenticatedUserId);
+    public ApiResponse<Void> delete(@PathVariable Long id, @AuthenticatedMemberId Long memberId) {
+        service.deleteNote(id, memberId);
 
         return success();
     }
 
     @PutMapping("/{id}/save")
     @Override
-    public ApiResponse<Void> save(@PathVariable Long id, @AuthenticatedUserId String authenticatedUserId) {
-        service.addSave(id, authenticatedUserId);
+    public ApiResponse<Void> save(@PathVariable Long id, @AuthenticatedMemberId Long memberId) {
+        service.addSave(id, memberId);
 
         return success();
     }
 
     @DeleteMapping("/{id}/save")
     @Override
-    public ApiResponse<Void> unsave(@PathVariable Long id, @AuthenticatedUserId String authenticatedUserId) {
-        service.removeSave(id, authenticatedUserId);
+    public ApiResponse<Void> unsave(@PathVariable Long id, @AuthenticatedMemberId Long memberId) {
+        service.removeSave(id, memberId);
 
         return success();
     }
@@ -80,9 +80,9 @@ public class NoteController implements NoteApi {
     @Override
     public ApiResponse<NotesResponse> saved(
             @Valid @ModelAttribute SavedNotesRequest request,
-            @AuthenticatedUserId String authenticatedUserId
+            @AuthenticatedMemberId Long memberId
     ) {
-        List<Note> notes = service.findSavedNotes(authenticatedUserId, request.normalizedLimit());
+        List<Note> notes = service.findSavedNotes(memberId, request.normalizedLimit());
 
         return success(NotesResponse.from(notes));
     }
@@ -91,11 +91,11 @@ public class NoteController implements NoteApi {
     @Override
     public ApiResponse<NotesResponse> nearby(
             @Valid @ModelAttribute NearbySectionRequest request,
-            @AuthenticatedUserId(unauthenticated = NULL) String authenticatedUserId
+            @AuthenticatedMemberId(unauthenticated = NULL) Long memberId
     ) {
         List<Note> notes = service.findNearbyNotes(
                 request.toCondition(),
-                authenticatedUserId
+                memberId
         );
 
         return success(NotesResponse.from(notes));

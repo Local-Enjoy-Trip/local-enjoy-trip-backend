@@ -17,7 +17,7 @@ public interface HotplaceApi {
 
     @Operation(
             summary = "핫플레이스 목록 조회",
-            description = "`userId`가 있으면 해당 사용자의 핫플레이스만, 없으면 전체 핫플레이스를 조회합니다.",
+            description = "`memberId`가 있으면 해당 사용자의 핫플레이스만, 없으면 전체 핫플레이스를 조회합니다.",
             operationId = "findHotplaces"
     )
     @ApiResponses({
@@ -34,7 +34,7 @@ public interface HotplaceApi {
                                         "hotplaces": [
                                           {
                                             "id": "h1",
-                                            "userId": "ssafy",
+                                            "memberId": "ssafy",
                                             "title": "성산일출봉",
                                             "type": "nature",
                                             "visitDate": "2026-05-20",
@@ -52,12 +52,12 @@ public interface HotplaceApi {
             )
     })
     ApiResponse<HotplacesResponse> find(
-            @Parameter(description = "사용자 ID 필터", example = "ssafy") String userId
+            @Parameter(description = "사용자 ID 필터", example = "ssafy") Long memberId
     );
 
     @Operation(
             summary = "핫플레이스 생성",
-            description = "JSON 본문에 `id`, `userId`, `title`, `type`, `visitDate`, 숫자형 `lat`, `lng`가 필요합니다.",
+            description = "JSON 본문에 `id`, `memberId`, `title`, `type`, `visitDate`, 숫자형 `lat`, `lng`가 필요합니다.",
             operationId = "createHotplace",
             requestBody = @RequestBody(
                     required = true,
@@ -82,7 +82,7 @@ public interface HotplaceApi {
                     description = "잘못된 요청 본문"
             )
     })
-    ApiResponse<Void> create(HotplaceCreateRequest request);
+    ApiResponse<Void> create(HotplaceCreateRequest request, @Parameter(hidden = true) Long memberId);
 
     @Operation(summary = "핫플레이스 삭제", description = "경로의 `id` 핫플레이스를 삭제합니다.", operationId = "deleteHotplace")
     @ApiResponses({
@@ -101,6 +101,7 @@ public interface HotplaceApi {
             )
     })
     ApiResponse<Void> delete(
-            @Parameter(description = "삭제할 핫플레이스 ID", example = "h1", required = true) String id
+            @Parameter(description = "삭제할 핫플레이스 ID", example = "h1", required = true) String id,
+            @Parameter(hidden = true) Long memberId
     );
 }

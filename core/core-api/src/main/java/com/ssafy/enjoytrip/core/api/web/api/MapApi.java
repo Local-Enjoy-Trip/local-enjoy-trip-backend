@@ -32,6 +32,6 @@ public interface MapApi {
     })
     ApiResponse<MapExploreResponse> explore(
             @ParameterObject MapExploreRequest request,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 }

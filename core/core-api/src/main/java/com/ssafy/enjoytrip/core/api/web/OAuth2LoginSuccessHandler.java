@@ -55,8 +55,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             return;
         }
 
-        memberService.loginWithOAuth(provider, providerUserId, email, name);
-        IssuedToken token = tokenService.issue(member);
+        Member loggedIn = memberService.loginWithOAuth(provider, providerUserId, email, name);
+        IssuedToken token = tokenService.issue(loggedIn);
         response.sendRedirect(redirectUri + "#" + tokenFragment(token));
     }
 
@@ -77,7 +77,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         if (value == null) {
             return "";
         }
-        return String.valueOf(value).trim();
+        return String.valueOf(value);
     }
 
     private static String encode(String value) {

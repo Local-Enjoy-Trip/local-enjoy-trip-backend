@@ -19,7 +19,7 @@ public class AdminAccountDetailsService implements UserDetailsService {
         if (member == null || !MemberRole.ADMIN.name().equals(member.getRole())) {
             throw new UsernameNotFoundException("관리자 계정을 찾을 수 없습니다.");
         }
-        return User.withUsername(member.getUserId())
+        return User.withUsername(String.valueOf(member.getId()))
                 .password(member.getPassword())
                 .roles(member.getRole())
                 .build();

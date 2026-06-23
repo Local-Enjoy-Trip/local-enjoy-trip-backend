@@ -2,7 +2,7 @@ package com.ssafy.enjoytrip.core.api.web.controller;
 
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
-import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
+import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
 import com.ssafy.enjoytrip.core.api.web.api.PlanApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.PlanCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.PlanReplaceItemsRequest;
@@ -38,10 +38,10 @@ public class PlanController implements PlanApi {
 
     @GetMapping
     @Override
-    public ApiResponse<PlansResponse> find(@RequestParam(required = false) String userId) {
-        List<PlanResponse> plans = hasText(userId)
-                ? service.findPlansByUser(userId.strip()).stream().map(this::toResponse).toList()
-                : service.findAllPlans().stream().map(this::toResponse).toList();
+    public ApiResponse<PlansResponse> find(@RequestParam(required = false) Long memberId) {
+        List<PlanResponse> plans = memberId == null
+                ? service.findAllPlans().stream().map(this::toResponse).toList()
+                : service.findPlansByMemberId(memberId).stream().map(this::toResponse).toList();
         return success(new PlansResponse(plans));
     }
 
@@ -57,10 +57,10 @@ public class PlanController implements PlanApi {
     @Override
     public ApiResponse<Void> create(
             @Valid @RequestBody PlanCreateRequest request,
-            @AuthenticatedUserId String authenticatedUserId
+            @AuthenticatedMemberId Long memberId
     ) {
         service.createPlan(
-                request.toTravelPlan(authenticatedUserId),
+                request.toTravelPlan(memberId),
                 request.toPlanItems()
         );
 
@@ -71,10 +71,10 @@ public class PlanController implements PlanApi {
     @Override
     public ApiResponse<Void> update(@PathVariable @NotBlank String id,
                                     @Valid @RequestBody PlanUpdateRequest request,
-                                    @AuthenticatedUserId String authenticatedUserId) {
+                                    @AuthenticatedMemberId Long memberId) {
         String planId = id.strip();
         service.updatePlan(
-                authenticatedUserId,
+                memberId,
                 planId,
                 request.normalizedTitle(),
                 request.normalizedStartDate(),
@@ -91,10 +91,10 @@ public class PlanController implements PlanApi {
     @Override
     public ApiResponse<Void> replaceItems(@PathVariable @NotBlank String id,
                                           @Valid @RequestBody PlanReplaceItemsRequest request,
-                                          @AuthenticatedUserId String authenticatedUserId) {
+                                          @AuthenticatedMemberId Long memberId) {
         String planId = id.strip();
         service.replacePlanItems(
-                authenticatedUserId,
+                memberId,
                 planId,
                 request.toPlanItems(planId)
         );
@@ -106,8 +106,8 @@ public class PlanController implements PlanApi {
     @Override
     public ApiResponse<Void> deleteItem(@PathVariable @NotBlank String id,
                                         @PathVariable @Positive Long itemId,
-                                        @AuthenticatedUserId String authenticatedUserId) {
-        service.deletePlanItem(authenticatedUserId, id.strip(), itemId);
+                                        @AuthenticatedMemberId Long memberId) {
+        service.deletePlanItem(memberId, id.strip(), itemId);
         return success();
     }
 
@@ -115,9 +115,9 @@ public class PlanController implements PlanApi {
     @Override
     public ApiResponse<Void> delete(
             @PathVariable @NotBlank String id,
-            @AuthenticatedUserId String authenticatedUserId
+            @AuthenticatedMemberId Long memberId
     ) {
-        service.deletePlan(authenticatedUserId, id.strip());
+        service.deletePlan(memberId, id.strip());
         return success();
     }
 
@@ -126,7 +126,4 @@ public class PlanController implements PlanApi {
         return PlanResponse.from(plan, service.findPlanItems(plan.id()));
     }
 
-    private static boolean hasText(String value) {
-        return value != null && !value.isBlank();
-    }
 }

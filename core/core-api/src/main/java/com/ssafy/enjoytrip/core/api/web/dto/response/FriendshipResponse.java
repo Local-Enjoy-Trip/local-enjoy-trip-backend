@@ -6,9 +6,9 @@ import java.time.LocalDateTime;
 
 public record FriendshipResponse(
         Long id,
-        String requesterUserId,
+        String requesterEmail,
         String requesterDisplayName,
-        String addresseeUserId,
+        String addresseeEmail,
         String addresseeDisplayName,
         FriendshipStatus status,
         LocalDateTime requestedAt,
@@ -17,9 +17,9 @@ public record FriendshipResponse(
     public static FriendshipResponse from(Friendship friendship) {
         return new FriendshipResponse(
                 friendship.id(),
-                friendship.requesterUserId(),
+                friendship.requesterEmail(),
                 friendship.requesterDisplayName(),
-                friendship.addresseeUserId(),
+                friendship.addresseeEmail(),
                 friendship.addresseeDisplayName(),
                 friendship.status(),
                 friendship.requestedAt(),

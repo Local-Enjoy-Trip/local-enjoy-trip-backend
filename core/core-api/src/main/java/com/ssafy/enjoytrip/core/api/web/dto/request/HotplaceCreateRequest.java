@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 
 public record HotplaceCreateRequest(
         @NotBlank String id,
-        @NotBlank String userId,
         @NotBlank String title,
         @NotBlank String type,
         @NotBlank String visitDate,
@@ -18,10 +17,6 @@ public record HotplaceCreateRequest(
 ) {
     public String normalizedId() {
         return id.strip();
-    }
-
-    public String normalizedUserId() {
-        return userId.strip();
     }
 
     public String normalizedTitle() {

@@ -35,7 +35,7 @@ public interface NotificationApi {
     })
     ApiResponse<NotificationsResponse> notifications(
             @Parameter(description = "조회 개수", example = "20") int limit,
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 
     @Operation(
@@ -58,6 +58,6 @@ public interface NotificationApi {
             )
     })
     ApiResponse<NotificationUnreadStatusResponse> unreadStatus(
-            @Parameter(hidden = true) String authenticatedUserId
+            @Parameter(hidden = true) Long memberId
     );
 }

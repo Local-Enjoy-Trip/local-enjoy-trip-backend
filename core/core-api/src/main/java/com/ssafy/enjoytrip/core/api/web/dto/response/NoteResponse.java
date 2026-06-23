@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 
 public record NoteResponse(
         Long id,
-        String authorUserId,
         String title,
         String content,
         NoteCategory category,
@@ -24,7 +23,6 @@ public record NoteResponse(
     public NoteResponse(Note note) {
         this(
                 note.id(),
-                note.authorUserId(),
                 note.title(),
                 note.content(),
                 note.category(),
