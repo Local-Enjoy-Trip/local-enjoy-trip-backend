@@ -13,6 +13,7 @@ import com.ssafy.enjoytrip.core.api.security.AdminAuthenticationSupport;
 import com.ssafy.enjoytrip.core.api.security.DbBackedJwtAuthenticationConverter;
 import com.ssafy.enjoytrip.core.support.error.ErrorCode;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
+import com.ssafy.enjoytrip.core.support.auth.JwtProperties;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.ObjectProvider;

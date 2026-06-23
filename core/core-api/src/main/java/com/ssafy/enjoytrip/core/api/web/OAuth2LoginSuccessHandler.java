@@ -1,11 +1,11 @@
 package com.ssafy.enjoytrip.core.api.web;
 
 import com.ssafy.enjoytrip.core.domain.Member;
-import com.ssafy.enjoytrip.core.domain.service.JwtTokenService;
+import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
-import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService;
-import com.ssafy.enjoytrip.core.domain.service.IssuedToken;
-import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicket;
+import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
+import com.ssafy.enjoytrip.core.support.auth.IssuedToken;
+import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicket;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

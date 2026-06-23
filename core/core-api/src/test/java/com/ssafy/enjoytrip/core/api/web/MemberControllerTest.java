@@ -14,13 +14,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ssafy.enjoytrip.core.domain.Member;
-import com.ssafy.enjoytrip.core.domain.service.JwtTokenService;
+import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
-import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService;
-import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService.PendingOAuthSignup;
+import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
+import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService.PendingOAuthSignup;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.api.web.controller.MemberController;
-import com.ssafy.enjoytrip.core.domain.service.IssuedToken;
+import com.ssafy.enjoytrip.core.support.auth.IssuedToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.core.domain.service;
+package com.ssafy.enjoytrip.core.support.auth;
 
 public record OAuthSignupTicket(
         String ticket,

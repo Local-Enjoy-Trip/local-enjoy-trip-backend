@@ -1,6 +1,5 @@
-package com.ssafy.enjoytrip.core.domain.service;
+package com.ssafy.enjoytrip.core.support.auth;
 
-import com.ssafy.enjoytrip.core.api.config.JwtProperties;
 import com.ssafy.enjoytrip.core.domain.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;

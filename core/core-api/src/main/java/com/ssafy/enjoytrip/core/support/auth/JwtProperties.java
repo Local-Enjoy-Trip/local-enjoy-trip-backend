@@ -1,4 +1,4 @@
-package com.ssafy.enjoytrip.core.api.config;
+package com.ssafy.enjoytrip.core.support.auth;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

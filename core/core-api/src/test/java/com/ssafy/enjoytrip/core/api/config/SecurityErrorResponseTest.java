@@ -9,9 +9,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserIdArgumentResolver;
 import com.ssafy.enjoytrip.core.api.web.controller.MemberController;
-import com.ssafy.enjoytrip.core.domain.service.JwtTokenService;
+import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
-import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService;
+import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
