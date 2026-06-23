@@ -476,8 +476,10 @@ class CourseServiceTest {
         assertThat(feed).hasSize(2);
         assertThat(feed.get(0).key()).isEqualTo("MD_RECOMMENDED");
         assertThat(feed.get(0).courses()).extracting(Course::id).containsExactly("md-1");
+        assertThat(feed.get(0).courses()).extracting(Course::createdByAdmin).containsExactly(true);
         assertThat(feed.get(1).key()).isEqualTo("POPULAR");
         assertThat(feed.get(1).courses()).extracting(Course::saveCount).containsExactly(3);
+        assertThat(feed.get(1).courses()).extracting(Course::createdByAdmin).containsExactly(true);
     }
 
     private void verifyNoCourseWrites() {
@@ -567,6 +569,7 @@ class CourseServiceTest {
                 null,
                 null,
                 null,
+                false,
                 0,
                 "",
                 "",
@@ -681,6 +684,7 @@ class CourseServiceTest {
                 curationOrder
         );
         record.setSaveCount(saveCount);
+        record.setCreatedByAdmin("admin".equals(ownerUserId));
         return record;
     }
 }

@@ -48,6 +48,7 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
         assertThat(found.getId()).isEqualTo("course-md-1");
         assertThat(found.getCurationSection()).isEqualTo("MD_RECOMMENDED");
         assertThat(found.getCurationOrder()).isEqualTo(1);
+        assertThat(found.getCreatedByAdmin()).isTrue();
     }
 
     @DisplayName("공개 코스 아이템 조회는 숨김 장소와 비공개 노트를 제외한다")

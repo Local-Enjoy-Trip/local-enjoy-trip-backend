@@ -32,6 +32,7 @@ public record CourseUpdateRequest(
                 blankToNull(coverImageUrl),
                 null,
                 null,
+                false,
                 0,
                 "",
                 "",

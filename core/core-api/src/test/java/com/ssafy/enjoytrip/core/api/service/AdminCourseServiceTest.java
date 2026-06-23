@@ -182,6 +182,7 @@ class AdminCourseServiceTest {
                 null,
                 "MD_RECOMMENDED",
                 1,
+                true,
                 0,
                 "",
                 "",
@@ -292,7 +293,7 @@ class AdminCourseServiceTest {
     }
 
     private static CourseRecord courseRecord(String id, String ownerUserId) {
-        return new CourseRecord(
+        CourseRecord record = new CourseRecord(
                 id,
                 ownerUserId,
                 id,
@@ -304,5 +305,7 @@ class AdminCourseServiceTest {
                 null,
                 null
         );
+        record.setCreatedByAdmin("admin".equals(ownerUserId));
+        return record;
     }
 }

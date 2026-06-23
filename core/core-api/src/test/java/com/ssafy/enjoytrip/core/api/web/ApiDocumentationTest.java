@@ -441,6 +441,7 @@ class ApiDocumentationTest {
                 null,
                 null,
                 null,
+                false,
                 0,
                 "2026-06-23T00:00:00",
                 "2026-06-23T00:00:00",

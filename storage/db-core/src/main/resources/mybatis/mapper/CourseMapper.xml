@@ -12,6 +12,12 @@
         c.cover_image_url as coverImageUrl,
         c.curation_section as curationSection,
         c.curation_order as curationOrder,
+        exists (
+            select 1
+            from members m
+            where m.user_id = c.owner_user_id
+              and m.role = &apos;ADMIN&apos;
+        ) as createdByAdmin,
         (
             select count(*)
             from course_saves s

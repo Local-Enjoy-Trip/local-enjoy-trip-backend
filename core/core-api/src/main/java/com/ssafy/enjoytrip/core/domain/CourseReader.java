@@ -118,6 +118,7 @@ public class CourseReader {
                 record.getCoverImageUrl(),
                 record.getCurationSection(),
                 record.getCurationOrder(),
+                Boolean.TRUE.equals(record.getCreatedByAdmin()),
                 countValue(record.getSaveCount()),
                 stringValue(record.getCreatedAt()),
                 stringValue(record.getUpdatedAt()),

@@ -33,6 +33,7 @@ public record CourseCreateRequest(
                 blankToNull(coverImageUrl),
                 null,
                 null,
+                false,
                 0,
                 "",
                 "",

@@ -61,6 +61,7 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.sections[0].key").value("MD_RECOMMENDED"))
                 .andExpect(jsonPath("$.data.sections[0].courses[0].id").value("md-1"))
+                .andExpect(jsonPath("$.data.sections[0].courses[0].createdByAdmin").value(true))
                 .andExpect(jsonPath("$.data.sections[0].courses[0].routeSummary.stopCount").value(2))
                 .andExpect(jsonPath("$.data.sections[0].courses[0].segments[0].distanceMeters").value(140))
                 .andExpect(jsonPath("$.data.sections[0].courses[0].encodedPolyline").doesNotExist())
@@ -78,6 +79,7 @@ class CourseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value("course-1"))
+                .andExpect(jsonPath("$.data.createdByAdmin").value(true))
                 .andExpect(jsonPath("$.data.routeSummary.stopCount").value(2))
                 .andExpect(jsonPath("$.data.items").isArray())
                 .andExpect(jsonPath("$.data.segments[0].fromPosition").value(1))
@@ -314,6 +316,7 @@ class CourseControllerTest {
                 null,
                 null,
                 null,
+                "admin".equals(ownerUserId),
                 saveCount,
                 "",
                 "",
@@ -339,6 +342,7 @@ class CourseControllerTest {
                 null,
                 null,
                 null,
+                false,
                 0,
                 "",
                 "",

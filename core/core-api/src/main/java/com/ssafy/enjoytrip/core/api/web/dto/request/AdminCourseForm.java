@@ -40,6 +40,7 @@ public record AdminCourseForm(
                 blankToNull(coverImageUrl),
                 blankToNull(curationSection),
                 curationOrder,
+                true,
                 0,
                 "",
                 "",

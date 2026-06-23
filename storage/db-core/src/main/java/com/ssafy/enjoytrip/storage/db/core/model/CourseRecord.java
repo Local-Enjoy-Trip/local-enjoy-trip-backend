@@ -30,6 +30,8 @@ public class CourseRecord {
 
     private Integer curationOrder;
 
+    private Boolean createdByAdmin;
+
     private Integer saveCount;
 
     private LocalDateTime createdAt;
