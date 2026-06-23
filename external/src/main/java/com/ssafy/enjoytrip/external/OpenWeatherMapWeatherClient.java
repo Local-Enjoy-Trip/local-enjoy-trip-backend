@@ -22,6 +22,8 @@ import java.util.regex.Pattern;
 public class OpenWeatherMapWeatherClient {
     private static final String CURRENT_WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather";
     private static final String FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
+    private static final String ONE_CALL_URL = "https://api.openweathermap.org/data/3.0/onecall";
+    private static final int HOURLY_FORECAST_LIMIT = 6;
     private static final ZoneId KOREA = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm").withZone(KOREA);
     private static final List<RegionCoordinate> DEFAULT_REGIONS = List.of(
@@ -79,6 +81,15 @@ public class OpenWeatherMapWeatherClient {
 
     private static URI forecastUri(String apiKey, RegionCoordinate region) {
         return URI.create(FORECAST_URL + baseQuery(apiKey, region) + "&cnt=1");
+    }
+
+    private static URI oneCallUri(String apiKey, double latitude, double longitude) {
+        return URI.create(ONE_CALL_URL + "?lat=" + latitude
+                + "&lon=" + longitude
+                + "&appid=" + urlEncode(apiKey)
+                + "&units=metric"
+                + "&lang=kr"
+                + "&exclude=minutely,alerts");
     }
 
     private static String baseQuery(String apiKey, RegionCoordinate region) {
@@ -202,7 +213,9 @@ public class OpenWeatherMapWeatherClient {
         return second;
     }
 
-    public WeatherBriefingWithForecast findWeatherWithForecast(double latitude, double longitude, String regionName) {
+    public WeatherBriefingWithForecast findWeatherWithForecast(double latitude,
+                                                               double longitude,
+                                                               String regionName) {
         if (!notBlank(apiKey)) {
             throw new IllegalStateException(
                     "OpenWeatherMap API 키가 없습니다. enjoytrip.external.open-weather-map.api-key, "
@@ -210,105 +223,147 @@ public class OpenWeatherMapWeatherClient {
             );
         }
 
-        URI currentUri = URI.create(CURRENT_WEATHER_URL + "?lat=" + latitude + "&lon=" + longitude + "&appid=" + urlEncode(apiKey) + "&units=metric&lang=kr");
-        URI forecastUri = URI.create(FORECAST_URL + "?lat=" + latitude + "&lon=" + longitude + "&appid=" + urlEncode(apiKey) + "&units=metric&lang=kr&cnt=2");
+        String oneCallBody = fetch(oneCallUri(apiKey, latitude, longitude));
 
-        String currentBody = fetch(currentUri);
-        String forecastBody = fetch(forecastUri);
-
-        return parseWeatherWithForecast(regionName, currentBody, forecastBody);
+        return parseWeatherWithForecast(regionName, oneCallBody);
     }
 
-    private WeatherBriefingWithForecast parseWeatherWithForecast(String regionName, String currentBody, String forecastBody) {
+    private WeatherBriefingWithForecast parseWeatherWithForecast(String regionName, String oneCallBody) {
         try {
-            JsonNode currentJson = objectMapper.readTree(currentBody);
-            JsonNode forecastJson = objectMapper.readTree(forecastBody);
+            JsonNode oneCallJson = objectMapper.readTree(oneCallBody);
+            JsonNode currentJson = requiredObject(oneCallJson, "current");
+            JsonNode hourlyNode = requiredArray(oneCallJson, "hourly");
 
-            String condition = "맑음";
-            if (currentJson.has("weather") && currentJson.get("weather").isArray() && currentJson.get("weather").size() > 0) {
-                JsonNode weatherNode = currentJson.get("weather").get(0);
-                String desc = weatherNode.path("description").asText();
-                if (notBlank(desc)) {
-                    condition = desc;
-                } else {
-                    condition = conditionFromMain(weatherNode.path("main").asText());
-                }
+            List<WeatherForecastResult> forecasts = hourlyForecasts(hourlyNode);
+            if (forecasts.size() < HOURLY_FORECAST_LIMIT) {
+                throw new IllegalArgumentException("OpenWeatherMap 시간별 예보가 부족합니다");
             }
 
-            Integer temp = null;
-            Integer tempMin = null;
-            Integer tempMax = null;
-            if (currentJson.has("main")) {
-                temp = roundedInteger(currentJson.get("main").path("temp").asDouble());
-                tempMin = roundedInteger(currentJson.get("main").path("temp_min").asDouble());
-                tempMax = roundedInteger(currentJson.get("main").path("temp_max").asDouble());
-            }
-
-            String sunrise = null;
-            String sunset = null;
-            if (currentJson.has("sys")) {
-                sunrise = epochSecondsToKoreanTime(currentJson.get("sys").path("sunrise").asDouble());
-                sunset = epochSecondsToKoreanTime(currentJson.get("sys").path("sunset").asDouble());
-            }
-
-            Integer currentRainChance = null;
-            JsonNode listNode = forecastJson.path("list");
-            if (listNode.isArray() && listNode.size() > 0) {
-                Double pop = listNode.get(0).path("pop").asDouble();
-                currentRainChance = clamp((int) Math.round(pop * 100), 0, 100);
-            }
-
+            Integer currentTemp = roundedInteger(currentJson, "temp");
             WeatherBriefingResult current = new WeatherBriefingResult(
                     regionName,
-                    condition,
-                    temp,
-                    currentRainChance,
-                    sunrise,
-                    sunset,
-                    tempMin,
-                    tempMax
+                    weatherCondition(currentJson),
+                    currentTemp,
+                    rainChance(hourlyNode.get(0)),
+                    epochSecondsToKoreanTime(numberValue(currentJson, "sunrise")),
+                    epochSecondsToKoreanTime(numberValue(currentJson, "sunset")),
+                    firstDailyTemperature(oneCallJson, "min", currentTemp, forecasts),
+                    firstDailyTemperature(oneCallJson, "max", currentTemp, forecasts)
             );
-
-            List<WeatherForecastResult> forecasts = new ArrayList<>();
-            if (listNode.isArray()) {
-                int limit = Math.min(2, listNode.size());
-                for (int i = 0; i < limit; i++) {
-                    JsonNode item = listNode.get(i);
-                    long dt = item.path("dt").asLong();
-                    String forecastTime = TIME_FORMAT.format(Instant.ofEpochSecond(dt));
-
-                    Integer forecastTemp = null;
-                    if (item.has("main")) {
-                        forecastTemp = roundedInteger(item.get("main").path("temp").asDouble());
-                    }
-
-                    String forecastCondition = "맑음";
-                    if (item.has("weather") && item.get("weather").isArray() && item.get("weather").size() > 0) {
-                        JsonNode weatherNode = item.get("weather").get(0);
-                        String desc = weatherNode.path("description").asText();
-                        if (notBlank(desc)) {
-                            forecastCondition = desc;
-                        } else {
-                            forecastCondition = conditionFromMain(weatherNode.path("main").asText());
-                        }
-                    }
-
-                    Double popVal = item.path("pop").asDouble();
-                    Integer forecastRainChance = clamp((int) Math.round(popVal * 100), 0, 100);
-
-                    forecasts.add(new WeatherForecastResult(
-                            forecastTime,
-                            forecastTemp,
-                            forecastCondition,
-                            forecastRainChance
-                    ));
-                }
-            }
 
             return new WeatherBriefingWithForecast(current, forecasts);
         } catch (Exception ex) {
             throw new IllegalStateException("OpenWeatherMap API 응답을 파싱하지 못했습니다", ex);
         }
+    }
+
+    private static JsonNode requiredObject(JsonNode parent, String fieldName) {
+        JsonNode node = parent.path(fieldName);
+        if (!node.isObject()) {
+            throw new IllegalArgumentException(
+                    "OpenWeatherMap 필드가 누락되었습니다: " + fieldName
+            );
+        }
+        return node;
+    }
+
+    private static JsonNode requiredArray(JsonNode parent, String fieldName) {
+        JsonNode node = parent.path(fieldName);
+        if (!node.isArray()) {
+            throw new IllegalArgumentException(
+                    "OpenWeatherMap 필드가 누락되었습니다: " + fieldName
+            );
+        }
+        return node;
+    }
+
+    private static List<WeatherForecastResult> hourlyForecasts(JsonNode hourlyNode) {
+        List<WeatherForecastResult> forecasts = new ArrayList<>();
+        int startIndex = hourlyNode.size() > HOURLY_FORECAST_LIMIT ? 1 : 0;
+
+        for (int i = startIndex; i < hourlyNode.size() && forecasts.size() < HOURLY_FORECAST_LIMIT; i++) {
+            JsonNode item = hourlyNode.get(i);
+            forecasts.add(new WeatherForecastResult(
+                    epochSecondsToKoreanTime(numberValue(item, "dt")),
+                    roundedInteger(item, "temp"),
+                    weatherCondition(item),
+                    rainChance(item)
+            ));
+        }
+
+        return forecasts;
+    }
+
+    private static String weatherCondition(JsonNode node) {
+        JsonNode weatherNode = node.path("weather");
+        if (!weatherNode.isArray() || weatherNode.isEmpty()) {
+            return "맑음";
+        }
+
+        JsonNode firstWeather = weatherNode.get(0);
+        String description = firstWeather.path("description").asText();
+        if (notBlank(description)) {
+            return description;
+        }
+
+        String condition = conditionFromMain(firstWeather.path("main").asText());
+        return notBlank(condition) ? condition : "맑음";
+    }
+
+    private static Integer rainChance(JsonNode node) {
+        if (!node.hasNonNull("pop")) {
+            return null;
+        }
+        return clamp((int) Math.round(node.path("pop").asDouble() * 100), 0, 100);
+    }
+
+    private static Integer roundedInteger(JsonNode node, String fieldName) {
+        if (!node.hasNonNull(fieldName)) {
+            return null;
+        }
+        return roundedInteger(node.path(fieldName).asDouble());
+    }
+
+    private static Double numberValue(JsonNode node, String fieldName) {
+        if (!node.hasNonNull(fieldName)) {
+            return null;
+        }
+        return node.path(fieldName).asDouble();
+    }
+
+    private static Integer firstDailyTemperature(JsonNode oneCallJson,
+                                                 String fieldName,
+                                                 Integer currentTemp,
+                                                 List<WeatherForecastResult> forecasts) {
+        JsonNode dailyNode = oneCallJson.path("daily");
+        if (dailyNode.isArray() && !dailyNode.isEmpty()) {
+            Integer dailyTemperature = roundedInteger(dailyNode.get(0).path("temp"), fieldName);
+            if (dailyTemperature != null) {
+                return dailyTemperature;
+            }
+        }
+
+        return aggregateTemperature(fieldName, currentTemp, forecasts);
+    }
+
+    private static Integer aggregateTemperature(String fieldName,
+                                                Integer currentTemp,
+                                                List<WeatherForecastResult> forecasts) {
+        List<Integer> temperatures = new ArrayList<>();
+        if (currentTemp != null) {
+            temperatures.add(currentTemp);
+        }
+        forecasts.stream()
+                .map(WeatherForecastResult::temperature)
+                .filter(temperature -> temperature != null)
+                .forEach(temperatures::add);
+
+        if (temperatures.isEmpty()) {
+            return null;
+        }
+        return "min".equals(fieldName)
+                ? temperatures.stream().min(Integer::compareTo).orElse(null)
+                : temperatures.stream().max(Integer::compareTo).orElse(null);
     }
 
     private static String urlEncode(String value) {

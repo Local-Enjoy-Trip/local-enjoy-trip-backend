@@ -5,16 +5,23 @@ import com.ssafy.enjoytrip.core.domain.WeatherBriefingWithForecastDomain;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import com.ssafy.enjoytrip.external.OpenWeatherMapWeatherClient;
 import com.ssafy.enjoytrip.external.WeatherBriefingWithForecast;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class WeatherService {
+    private static final ZoneId KOREA = ZoneId.of("Asia/Seoul");
+    private static final DateTimeFormatter HOUR_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final int HOURLY_FORECAST_LIMIT = 6;
     private static final List<WeatherSummary> FALLBACK_BRIEFINGS = List.of(
             new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25),
             new WeatherSummary("부산", "구름 조금", 21, 20, "05:17", "19:22", 16, 24),
@@ -38,7 +45,9 @@ public class WeatherService {
                 .toList());
     }
 
-    public WeatherBriefingWithForecastDomain findWeatherWithForecast(Double latitude, Double longitude, String regionName) {
+    public WeatherBriefingWithForecastDomain findWeatherWithForecast(Double latitude,
+                                                                     Double longitude,
+                                                                     String regionName) {
         try {
             double lat = latitude != null ? latitude : 37.5665;
             double lon = longitude != null ? longitude : 126.9780;
@@ -53,7 +62,11 @@ public class WeatherService {
                 }
             }
 
-            WeatherBriefingWithForecast clientResult = weatherClient.findWeatherWithForecast(lat, lon, regionName);
+            WeatherBriefingWithForecast clientResult = weatherClient.findWeatherWithForecast(
+                    lat,
+                    lon,
+                    regionName
+            );
 
             WeatherSummary weather = new WeatherSummary(
                     clientResult.current().region(),
@@ -77,13 +90,34 @@ public class WeatherService {
 
             return new WeatherBriefingWithForecastDomain(weather, forecasts);
         } catch (Exception e) {
-            WeatherSummary fallbackWeather = new WeatherSummary(regionName, "맑음", 22, 10, "05:23", "19:33", 15, 25);
-            List<WeatherForecast> fallbackForecasts = List.of(
-                    new WeatherForecast("12:00", 22, "맑음", 10),
-                    new WeatherForecast("15:00", 24, "맑음", 10)
+            WeatherSummary fallbackWeather = new WeatherSummary(
+                    regionName,
+                    "맑음",
+                    22,
+                    10,
+                    "05:23",
+                    "19:33",
+                    15,
+                    25
             );
-            return new WeatherBriefingWithForecastDomain(fallbackWeather, fallbackForecasts);
+            return new WeatherBriefingWithForecastDomain(fallbackWeather, fallbackForecasts());
         }
+    }
+
+    private static List<WeatherForecast> fallbackForecasts() {
+        LocalTime currentHour = LocalTime.now(KOREA).truncatedTo(ChronoUnit.HOURS);
+        List<WeatherForecast> forecasts = new ArrayList<>();
+
+        for (int hour = 1; hour <= HOURLY_FORECAST_LIMIT; hour++) {
+            forecasts.add(new WeatherForecast(
+                    currentHour.plusHours(hour).format(HOUR_FORMAT),
+                    22,
+                    "맑음",
+                    10
+            ));
+        }
+
+        return forecasts;
     }
 
     private List<WeatherSummary> completeWithFallback(List<WeatherSummary> liveBriefings) {
@@ -105,4 +139,3 @@ public class WeatherService {
                 .toList();
     }
 }
-
