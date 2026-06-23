@@ -43,6 +43,11 @@ logs/
 !.codex/hooks/
 !.codex/hooks/**
 
+# GJC runtime/session artifacts stay local by default.
+.gjc
+.gjc/
+*.gjc
+
 # OpenTelemetry Java Agent
 infra/agent/
 

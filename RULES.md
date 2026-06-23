@@ -35,6 +35,22 @@
 
 이 문서에는 모듈별 세부 구현사항을 중복해서 적지 않는다. 세부 구현 규칙은 각 모듈의 `AGENTS.md`가 소유한다.
 
+## 2.1 코드 리뷰 가이드 우선 확인
+
+프로젝트 코드 변경을 검토하거나 리뷰할 때는 `docs/code-review.md`를 먼저 읽고 그 체크리스트를 적용한다.
+
+적용 대상:
+
+- PR 리뷰, 리뷰 코멘트 반영 전 검토, TODO 검토
+- `$code-review`, architect/code-reviewer/verifier 검증, Ralph/Team 최종 승인 검토
+- 구현 완료 전 자체 점검 또는 deslop/cleanup 후 회귀 검토
+
+운영 규칙:
+
+- `docs/code-review.md`의 헌법/규칙 준수, 중복 검증 제거, 불필요 코드 제거, 추상화 수준, 명명, 트랜잭션 범위 항목을 실제 diff에 대조한다.
+- `CONSTITUTION.md`, 이 `RULES.md`, 모듈별 `AGENTS.md`와 충돌하면 `CONSTITUTION.md`를 우선하고, 나머지는 더 구체적인 규칙을 따른다.
+- 검토 완료 보고에는 `docs/code-review.md` 사용 여부와 확인한 주요 항목을 적는다.
+
 ## 3. API 계약 규칙
 
 Controller request/response 계약은 이름 있는 DTO로 표현한다.
