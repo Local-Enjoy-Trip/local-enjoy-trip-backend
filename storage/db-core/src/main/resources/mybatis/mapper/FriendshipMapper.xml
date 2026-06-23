@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.FriendshipMapper">
-    <sql id="columns">id, requester_user_id as requesterUserId, addressee_user_id as addresseeUserId, status, requested_at as requestedAt, responded_at as respondedAt, created_at as createdAt, updated_at as updatedAt</sql>
+    <sql id="columns">id, requester_member_id as requesterMemberId, addressee_member_id as addresseeMemberId, status, requested_at as requestedAt, responded_at as respondedAt, created_at as createdAt, updated_at as updatedAt</sql>
     <select id="findById" resultType="com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord">select <include refid="columns"/> from friendships where id = #{id}</select>
-    <select id="findByParticipantAndStatus" resultType="com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord">select <include refid="columns"/> from friendships where status = #{status} and (requester_user_id = #{userId} or addressee_user_id = #{userId}) order by responded_at desc, id desc</select>
-    <select id="findReceivedRequests" resultType="com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord">select <include refid="columns"/> from friendships where addressee_user_id = #{addresseeUserId} and status = #{status} order by requested_at desc, id desc</select>
-    <select id="findSentRequests" resultType="com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord">select <include refid="columns"/> from friendships where requester_user_id = #{requesterUserId} and status = #{status} order by requested_at desc, id desc</select>
+    <select id="findByParticipantAndStatus" resultType="com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord">select <include refid="columns"/> from friendships where status = #{status} and (requester_member_id = #{memberId} or addressee_member_id = #{memberId}) order by responded_at desc, id desc</select>
+    <select id="findReceivedRequests" resultType="com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord">select <include refid="columns"/> from friendships where addressee_member_id = #{addresseeMemberId} and status = #{status} order by requested_at desc, id desc</select>
+    <select id="findSentRequests" resultType="com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord">select <include refid="columns"/> from friendships where requester_member_id = #{requesterMemberId} and status = #{status} order by requested_at desc, id desc</select>
     <select id="existsActiveBetween" resultType="int">
         select count(*) from friendships
         where status in <foreach collection="statuses" item="status" open="(" separator="," close=")">#{status}</foreach>
-          and ((requester_user_id = #{userId} and addressee_user_id = #{otherUserId}) or (requester_user_id = #{otherUserId} and addressee_user_id = #{userId}))
+          and ((requester_member_id = #{memberId} and addressee_member_id = #{otherMemberId}) or (requester_member_id = #{otherMemberId} and addressee_member_id = #{memberId}))
     </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into friendships (requester_user_id, addressee_user_id, status, requested_at, created_at)
-        values (#{requesterUserId}, #{addresseeUserId}, #{status}, #{requestedAt}, current_timestamp)
+        insert into friendships (requester_member_id, addressee_member_id, status, requested_at, created_at)
+        values (#{requesterMemberId}, #{addresseeMemberId}, #{status}, #{requestedAt}, current_timestamp)
     </insert>
     <update id="updateStatus">update friendships set status = #{status}, responded_at = #{respondedAt}, updated_at = current_timestamp where id = #{id}</update>
 </mapper>

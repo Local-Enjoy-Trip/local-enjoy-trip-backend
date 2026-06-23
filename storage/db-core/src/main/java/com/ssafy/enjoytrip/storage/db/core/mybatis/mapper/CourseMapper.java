@@ -12,7 +12,7 @@ public interface CourseMapper {
 
     CourseRecord findById(String id);
 
-    List<CourseRecord> findByOwnerUserId(String ownerUserId);
+    List<CourseRecord> findByOwnerMemberId(Long ownerMemberId);
 
     List<CourseRecord> findAdminOwned();
 
@@ -22,7 +22,7 @@ public interface CourseMapper {
                             @Param("longitude") Double longitude,
                             @Param("latitude") Double latitude);
 
-    int softDeleteOwned(@Param("id") String id, @Param("ownerUserId") String ownerUserId);
+    int softDeleteOwned(@Param("id") String id, @Param("ownerMemberId") Long ownerMemberId);
 
     int deleteSegmentsByCourseId(String courseId);
 

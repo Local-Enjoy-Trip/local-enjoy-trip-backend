@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper">
-    <sql id="noteColumns">id, author_user_id as authorUserId, title, content, category, visibility, latitude, longitude, region_name as regionName, image_object_key as imageObjectKey, image_url as imageUrl, image_content_type as imageContentType, status, created_at as createdAt, updated_at as updatedAt, deleted_at as deletedAt</sql>
-    <sql id="noteColumnsWithAlias">n.id, n.author_user_id as authorUserId, n.title, n.content, n.category, n.visibility, n.latitude, n.longitude, n.region_name as regionName, n.image_object_key as imageObjectKey, n.image_url as imageUrl, n.image_content_type as imageContentType, n.status, n.created_at as createdAt, n.updated_at as updatedAt, n.deleted_at as deletedAt</sql>
+    <sql id="noteColumns">id, author_member_id as authorMemberId, title, content, category, visibility, latitude, longitude, region_name as regionName, image_object_key as imageObjectKey, image_url as imageUrl, image_content_type as imageContentType, status, created_at as createdAt, updated_at as updatedAt, deleted_at as deletedAt</sql>
+    <sql id="noteColumnsWithAlias">n.id, n.author_member_id as authorMemberId, n.title, n.content, n.category, n.visibility, n.latitude, n.longitude, n.region_name as regionName, n.image_object_key as imageObjectKey, n.image_url as imageUrl, n.image_content_type as imageContentType, n.status, n.created_at as createdAt, n.updated_at as updatedAt, n.deleted_at as deletedAt</sql>
     <sql id="accessiblePredicate">
         n.status = &apos;ACTIVE&apos;
         and (n.visibility = &apos;PUBLIC&apos;
-             <if test="viewerUserId != null">
-             or n.author_user_id = #{viewerUserId}
+             <if test="viewerMemberId != null">
+             or n.author_member_id = #{viewerMemberId}
              or (n.visibility = &apos;FRIENDS&apos; and exists (
                   select 1
                   from friendships f
                   where f.status = &apos;ACCEPTED&apos;
-                    and ((f.requester_user_id = #{viewerUserId} and f.addressee_user_id = n.author_user_id)
-                      or (f.requester_user_id = n.author_user_id and f.addressee_user_id = #{viewerUserId}))))
+                    and ((f.requester_member_id = #{viewerMemberId} and f.addressee_member_id = n.author_member_id)
+                      or (f.requester_member_id = n.author_member_id and f.addressee_member_id = #{viewerMemberId}))))
              </if>
         )
     </sql>
@@ -23,17 +23,17 @@
         and n.deleted_at is null
     </sql>
     <select id="insert" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
-        insert into notes (author_user_id, title, content, category, visibility, location, latitude, longitude, region_name, image_object_key, image_url, image_content_type)
-        values (#{authorUserId}, #{title}, #{content}, #{category}, #{visibility}, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326), #{latitude}, #{longitude}, #{regionName}, #{imageObjectKey}, #{imageUrl}, #{imageContentType})
+        insert into notes (author_member_id, title, content, category, visibility, location, latitude, longitude, region_name, image_object_key, image_url, image_content_type)
+        values (#{authorMemberId}, #{title}, #{content}, #{category}, #{visibility}, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326), #{latitude}, #{longitude}, #{regionName}, #{imageObjectKey}, #{imageUrl}, #{imageContentType})
         returning <include refid="noteColumns"/>
     </select>
     <select id="findById" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">select <include refid="noteColumns"/> from notes where id = #{id}</select>
     <select id="updateOwned" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
         update notes set title = #{title}, content = #{content}, category = #{category}, visibility = #{visibility}, location = ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326), latitude = #{latitude}, longitude = #{longitude}, region_name = #{regionName}, image_object_key = #{imageObjectKey}, image_url = #{imageUrl}, image_content_type = #{imageContentType}, updated_at = current_timestamp
-        where id = #{id} and author_user_id = #{authorUserId} and status = &apos;ACTIVE&apos;
+        where id = #{id} and author_member_id = #{authorMemberId} and status = &apos;ACTIVE&apos;
         returning <include refid="noteColumns"/>
     </select>
-    <update id="softDeleteOwned">update notes set status = &apos;DELETED&apos;, updated_at = current_timestamp, deleted_at = current_timestamp where id = #{id} and author_user_id = #{authorUserId} and status = &apos;ACTIVE&apos;</update>
+    <update id="softDeleteOwned">update notes set status = &apos;DELETED&apos;, updated_at = current_timestamp, deleted_at = current_timestamp where id = #{id} and author_member_id = #{authorMemberId} and status = &apos;ACTIVE&apos;</update>
     <select id="existsAccessibleActive" resultType="int">
         select count(*)
         from notes n
@@ -47,16 +47,16 @@
           and <include refid="publicActivePredicate"/>
     </select>
     <insert id="insertSave">
-        insert into note_saves (note_id, user_id)
-        values (#{noteId}, #{userId})
-        on conflict (note_id, user_id) do nothing
+        insert into note_saves (note_id, member_id)
+        values (#{noteId}, #{memberId})
+        on conflict (note_id, member_id) do nothing
     </insert>
-    <delete id="deleteSave">delete from note_saves where note_id = #{noteId} and user_id = #{userId}</delete>
+    <delete id="deleteSave">delete from note_saves where note_id = #{noteId} and member_id = #{memberId}</delete>
     <select id="findSavedAccessible" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
         select <include refid="noteColumnsWithAlias"/>
         from note_saves s
         join notes n on n.id = s.note_id
-        where s.user_id = #{viewerUserId}
+        where s.member_id = #{viewerMemberId}
           and <include refid="accessiblePredicate"/>
         order by s.created_at desc, s.id desc
         limit #{limit}
@@ -69,24 +69,24 @@
         limit #{limit}
     </select>
     <select id="findMapPins" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord">
-        select n.id, n.title, n.category, n.visibility, n.latitude, n.longitude, n.region_name as regionName, n.image_object_key as imageObjectKey, n.author_user_id as authorUserId, coalesce(m.nickname, m.name, m.user_id) as authorNickname,
+        select n.id, n.title, n.category, n.visibility, n.latitude, n.longitude, n.region_name as regionName, n.image_object_key as imageObjectKey, n.author_member_id as authorMemberId, coalesce(m.nickname, m.name, m.email) as authorNickname,
                <choose>
-                   <when test="viewerUserId != null">
-                       case when n.author_user_id = #{viewerUserId} or exists (
+                   <when test="viewerMemberId != null">
+                       case when n.author_member_id = #{viewerMemberId} or exists (
                            select 1 from friendships f where f.status = &apos;ACCEPTED&apos;
-                             and ((f.requester_user_id = #{viewerUserId} and f.addressee_user_id = n.author_user_id)
-                               or (f.requester_user_id = n.author_user_id and f.addressee_user_id = #{viewerUserId}))
+                             and ((f.requester_member_id = #{viewerMemberId} and f.addressee_member_id = n.author_member_id)
+                               or (f.requester_member_id = n.author_member_id and f.addressee_member_id = #{viewerMemberId}))
                        ) then m.profile_image_url else null end
                    </when>
                    <otherwise>null</otherwise>
                </choose> as authorProfileImageUrl,
                <choose>
-                   <when test="viewerUserId != null">
-                       case when n.author_user_id = #{viewerUserId} then &apos;SELF&apos;
+                   <when test="viewerMemberId != null">
+                       case when n.author_member_id = #{viewerMemberId} then &apos;SELF&apos;
                             when exists (
                                 select 1 from friendships f where f.status = &apos;ACCEPTED&apos;
-                                  and ((f.requester_user_id = #{viewerUserId} and f.addressee_user_id = n.author_user_id)
-                                    or (f.requester_user_id = n.author_user_id and f.addressee_user_id = #{viewerUserId}))
+                                  and ((f.requester_member_id = #{viewerMemberId} and f.addressee_member_id = n.author_member_id)
+                                    or (f.requester_member_id = n.author_member_id and f.addressee_member_id = #{viewerMemberId}))
                             ) then &apos;FRIEND&apos;
                             else &apos;NONE&apos;
                        end
@@ -95,17 +95,17 @@
                </choose> as relationship,
                n.created_at as createdAt,
                ST_Distance(n.location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography) as distanceMeters
-        from notes n join members m on m.user_id = n.author_user_id
+        from notes n join members m on m.id = n.author_member_id
         where ST_DWithin(n.location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography, #{radiusMeters})
           and <include refid="accessiblePredicate"/>
           <if test="category != null">and n.category = #{category}</if>
           <choose>
-              <when test="friendOnly and viewerUserId != null">
-                  and n.author_user_id &lt;&gt; #{viewerUserId}
+              <when test="friendOnly and viewerMemberId != null">
+                  and n.author_member_id &lt;&gt; #{viewerMemberId}
                   and exists (
                       select 1 from friendships f where f.status = &apos;ACCEPTED&apos;
-                        and ((f.requester_user_id = #{viewerUserId} and f.addressee_user_id = n.author_user_id)
-                          or (f.requester_user_id = n.author_user_id and f.addressee_user_id = #{viewerUserId}))
+                        and ((f.requester_member_id = #{viewerMemberId} and f.addressee_member_id = n.author_member_id)
+                          or (f.requester_member_id = n.author_member_id and f.addressee_member_id = #{viewerMemberId}))
                   )
               </when>
               <when test="friendOnly">

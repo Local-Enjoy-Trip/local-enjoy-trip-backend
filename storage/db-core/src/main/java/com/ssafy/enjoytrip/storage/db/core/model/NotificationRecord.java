@@ -14,7 +14,7 @@ import lombok.Setter;
 public class NotificationRecord extends BaseRecord {
     private Long id;
 
-    private String recipientUserId;
+    private Long recipientMemberId;
 
     private NotificationType type;
 
@@ -26,12 +26,12 @@ public class NotificationRecord extends BaseRecord {
 
     private LocalDateTime readAt;
 
-    public NotificationRecord(String recipientUserId,
+    public NotificationRecord(Long recipientMemberId,
                               NotificationType type,
                               NotificationReferenceType referenceType,
                               Long referenceId,
                               String payload) {
-        this.recipientUserId = recipientUserId;
+        this.recipientMemberId = recipientMemberId;
         this.type = type;
         this.referenceType = referenceType;
         this.referenceId = referenceId;

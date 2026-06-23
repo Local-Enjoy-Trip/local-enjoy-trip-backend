@@ -3,7 +3,6 @@
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper">
     <sql id="columns">
         id,
-        user_id as userId,
         name,
         nickname,
         email,
@@ -19,37 +18,30 @@
         from members
         order by created_at desc
     </select>
-    <select id="findByUserId" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">
+    <select id="findById" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">
         select <include refid="columns"/>
         from members
-        where user_id = #{userId}
+        where id = #{memberId}
     </select>
     <select id="findByEmail" resultType="com.ssafy.enjoytrip.storage.db.core.model.MemberRecord">
         select <include refid="columns"/>
         from members
         where email = #{email}
     </select>
-    <select id="existsByUserId" resultType="int">
+    <select id="existsByEmail" resultType="int">
         select count(*)
         from members
-        where user_id = #{userId}
-    </select>
-    <select id="existsByUserIdOrEmail" resultType="int">
-        select count(*)
-        from members
-        where user_id = #{userId}
-           or email = #{email}
+        where email = #{email}
     </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into members (user_id, name, nickname, email, password, profile_image_url, role, created_at)
+        insert into members (name, nickname, email, password, profile_image_url, role, created_at)
         values (
-            #{userId},
             #{name},
             #{nickname},
             #{email},
             #{password},
             #{profileImageUrl},
-            coalesce(#{role}, &apos;USER&apos;),
+            #{role},
             current_timestamp
         )
     </insert>
@@ -57,17 +49,17 @@
         update members
         set nickname = #{nickname},
             updated_at = current_timestamp
-        where user_id = #{userId}
+        where id = #{id}
     </update>
     <update id="updateProfileImage">
         update members
         set profile_image_object_key = #{profileImageObjectKey},
             profile_image_url = #{profileImageUrl},
             updated_at = current_timestamp
-        where user_id = #{userId}
+        where id = #{memberId}
     </update>
-    <delete id="deleteByUserId">
+    <delete id="deleteById">
         delete from members
-        where user_id = #{userId}
+        where id = #{memberId}
     </delete>
 </mapper>

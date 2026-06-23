@@ -13,7 +13,7 @@ import lombok.Setter;
 public class NoteRecord extends BaseRecord {
     private Long id;
 
-    private String authorUserId;
+    private Long authorMemberId;
 
     private String title;
 
@@ -39,7 +39,7 @@ public class NoteRecord extends BaseRecord {
 
     private LocalDateTime deletedAt;
 
-    public NoteRecord(String authorUserId,
+    public NoteRecord(Long authorMemberId,
                       String title,
                       String content,
                       String category,
@@ -50,12 +50,12 @@ public class NoteRecord extends BaseRecord {
                       String imageObjectKey,
                       String imageUrl,
                       String imageContentType) {
-        this(null, authorUserId, title, content, category, visibility, latitude, longitude, regionName,
+        this(null, authorMemberId, title, content, category, visibility, latitude, longitude, regionName,
                 imageObjectKey, imageUrl, imageContentType);
     }
 
     public NoteRecord(Long id,
-                      String authorUserId,
+                      Long authorMemberId,
                       String title,
                       String content,
                       String category,
@@ -67,7 +67,7 @@ public class NoteRecord extends BaseRecord {
                       String imageUrl,
                       String imageContentType) {
         this.id = id;
-        this.authorUserId = authorUserId;
+        this.authorMemberId = authorMemberId;
         this.title = title;
         this.content = content;
         this.category = category;

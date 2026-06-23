@@ -20,14 +20,14 @@ public interface AttractionMapper {
                                         @Param("radiusMeters") Double radiusMeters,
                                         @Param("aroundSearch") boolean aroundSearch,
                                         @Param("limit") int limit,
-                                        @Param("viewerUserId") String viewerUserId);
+                                        @Param("viewerMemberId") Long viewerMemberId);
 
     List<AttractionSearchRecord> findNearby(@Param("longitude") double longitude,
                                             @Param("latitude") double latitude,
                                             @Param("radiusMeters") double radiusMeters,
                                             @Param("limit") Integer limit,
                                             @Param("savedOnly") boolean savedOnly,
-                                            @Param("viewerUserId") String viewerUserId);
+                                            @Param("viewerMemberId") Long viewerMemberId);
 
     int existsById(Long attractionId);
 
@@ -49,15 +49,15 @@ public interface AttractionMapper {
 
     int restoreForAdmin(@Param("attractionId") Long attractionId);
 
-    int insertSave(@Param("attractionId") Long attractionId, @Param("userId") String userId);
+    int insertSave(@Param("attractionId") Long attractionId, @Param("memberId") Long memberId);
 
-    int deleteSave(@Param("attractionId") Long attractionId, @Param("userId") String userId);
+    int deleteSave(@Param("attractionId") Long attractionId, @Param("memberId") Long memberId);
 
     int upsertRating(@Param("attractionId") Long attractionId,
-                     @Param("userId") String userId,
+                     @Param("memberId") Long memberId,
                      @Param("rating") int rating);
 
-    int deleteRating(@Param("attractionId") Long attractionId, @Param("userId") String userId);
+    int deleteRating(@Param("attractionId") Long attractionId, @Param("memberId") Long memberId);
 
     int refreshPopularityRatingStats(Long attractionId);
 
@@ -76,10 +76,10 @@ public interface AttractionMapper {
     int insertTagMapping(@Param("attractionId") Long attractionId, @Param("tagId") Long tagId);
 
     List<AttractionStatsRowRecord> findStatsRowsByAttractionId(@Param("attractionId") Long attractionId,
-                                                               @Param("userId") String userId);
+                                                               @Param("memberId") Long memberId);
 
     List<AttractionStatsRowRecord> findStatsRowsByAttractionIds(@Param("ids") List<Long> ids,
-                                                                @Param("userId") String userId);
+                                                                @Param("memberId") Long memberId);
 
     List<AttractionCountRecord> findPopularityCounts(@Param("ids") List<Long> ids);
 

@@ -13,9 +13,9 @@ import lombok.Setter;
 public class FriendshipRecord extends BaseRecord {
     private Long id;
 
-    private String requesterUserId;
+    private Long requesterMemberId;
 
-    private String addresseeUserId;
+    private Long addresseeMemberId;
 
     private FriendshipStatus status = FriendshipStatus.PENDING;
 
@@ -23,9 +23,9 @@ public class FriendshipRecord extends BaseRecord {
 
     private LocalDateTime respondedAt;
 
-    public FriendshipRecord(String requesterUserId, String addresseeUserId) {
-        this.requesterUserId = requesterUserId;
-        this.addresseeUserId = addresseeUserId;
+    public FriendshipRecord(Long requesterMemberId, Long addresseeMemberId) {
+        this.requesterMemberId = requesterMemberId;
+        this.addresseeMemberId = addresseeMemberId;
         this.status = FriendshipStatus.PENDING;
         this.requestedAt = LocalDateTime.now();
     }

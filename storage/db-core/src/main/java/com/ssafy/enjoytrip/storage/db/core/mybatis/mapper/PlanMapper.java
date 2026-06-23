@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 public interface PlanMapper {
     List<TravelPlanRecord> findAllOrderByCreatedAtDesc();
 
-    List<TravelPlanRecord> findByUserIdOrderByCreatedAtDesc(String userId);
+    List<TravelPlanRecord> findByMemberIdOrderByCreatedAtDesc(Long memberId);
 
     TravelPlanRecord findById(String id);
 

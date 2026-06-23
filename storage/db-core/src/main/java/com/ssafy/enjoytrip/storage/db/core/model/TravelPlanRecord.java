@@ -11,7 +11,7 @@ import lombok.Setter;
 public class TravelPlanRecord extends BaseRecord {
     private String id;
 
-    private String userId;
+    private Long memberId;
 
     private String title;
 
@@ -25,10 +25,10 @@ public class TravelPlanRecord extends BaseRecord {
 
     private String routeItemsJson;
 
-    public TravelPlanRecord(String id, String userId, String title, String startDate, String endDate,
+    public TravelPlanRecord(String id, Long memberId, String title, String startDate, String endDate,
                             int budget, String note, String routeItemsJson) {
         this.id = id;
-        this.userId = userId;
+        this.memberId = memberId;
         this.title = title;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -37,7 +37,12 @@ public class TravelPlanRecord extends BaseRecord {
         this.routeItemsJson = routeItemsJson;
     }
 
-    public void update(String title, String startDate, String endDate, int budget, String note, String routeItemsJson) {
+    public void update(String title,
+                       String startDate,
+                       String endDate,
+                       int budget,
+                       String note,
+                       String routeItemsJson) {
         this.title = title;
         this.startDate = startDate;
         this.endDate = endDate;

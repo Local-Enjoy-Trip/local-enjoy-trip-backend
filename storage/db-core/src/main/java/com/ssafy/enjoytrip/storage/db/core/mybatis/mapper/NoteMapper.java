@@ -12,29 +12,29 @@ public interface NoteMapper {
 
     NoteRecord updateOwned(NoteRecord record);
 
-    int softDeleteOwned(@Param("id") Long id, @Param("authorUserId") String authorUserId);
+    int softDeleteOwned(@Param("id") Long id, @Param("authorMemberId") Long authorMemberId);
 
-    int existsAccessibleActive(@Param("noteId") Long noteId, @Param("viewerUserId") String viewerUserId);
+    int existsAccessibleActive(@Param("noteId") Long noteId, @Param("viewerMemberId") Long viewerMemberId);
 
     int existsPublicActive(Long noteId);
 
-    int insertSave(@Param("noteId") Long noteId, @Param("userId") String userId);
+    int insertSave(@Param("noteId") Long noteId, @Param("memberId") Long memberId);
 
-    int deleteSave(@Param("noteId") Long noteId, @Param("userId") String userId);
+    int deleteSave(@Param("noteId") Long noteId, @Param("memberId") Long memberId);
 
-    List<NoteRecord> findSavedAccessible(@Param("viewerUserId") String userId, @Param("limit") int limit);
+    List<NoteRecord> findSavedAccessible(@Param("viewerMemberId") Long memberId, @Param("limit") int limit);
 
     List<NoteRecord> findNearbyAccessible(@Param("longitude") double longitude,
                                           @Param("latitude") double latitude,
                                           @Param("radiusMeters") double radiusMeters,
                                           @Param("limit") int limit,
-                                          @Param("viewerUserId") String viewerUserId);
+                                          @Param("viewerMemberId") Long viewerMemberId);
 
     List<NoteMapPinRecord> findMapPins(@Param("longitude") double longitude,
                                         @Param("latitude") double latitude,
                                         @Param("radiusMeters") double radiusMeters,
                                         @Param("limit") Integer limit,
-                                        @Param("viewerUserId") String viewerUserId,
+                                        @Param("viewerMemberId") Long viewerMemberId,
                                         @Param("category") String category,
                                         @Param("friendOnly") boolean friendOnly);
 }

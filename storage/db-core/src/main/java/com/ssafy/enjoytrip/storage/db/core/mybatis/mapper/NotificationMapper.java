@@ -9,18 +9,18 @@ import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 public interface NotificationMapper {
-    NotificationRecord findByBusinessKey(@Param("recipientUserId") String recipientUserId,
+    NotificationRecord findByBusinessKey(@Param("recipientMemberId") Long recipientMemberId,
                                           @Param("type") NotificationType type,
                                           @Param("referenceType") NotificationReferenceType referenceType,
                                           @Param("referenceId") Long referenceId);
 
-    int existsUnreadFriendRequest(@Param("recipientUserId") String recipientUserId,
+    int existsUnreadFriendRequest(@Param("recipientMemberId") Long recipientMemberId,
                                   @Param("type") NotificationType type,
                                   @Param("referenceType") NotificationReferenceType referenceType,
                                   @Param("status") FriendshipStatus status);
 
     List<NotificationRecord> findUnreadFriendRequests(
-            @Param("recipientUserId") String recipientUserId,
+            @Param("recipientMemberId") Long recipientMemberId,
             @Param("type") NotificationType type,
             @Param("referenceType") NotificationReferenceType referenceType,
             @Param("status") FriendshipStatus status,
@@ -31,7 +31,7 @@ public interface NotificationMapper {
 
     int updateReadAt(NotificationRecord record);
 
-    int markReadByReference(@Param("recipientUserId") String recipientUserId,
+    int markReadByReference(@Param("recipientMemberId") Long recipientMemberId,
                             @Param("referenceType") NotificationReferenceType referenceType,
                             @Param("referenceId") Long referenceId,
                             @Param("readAt") LocalDateTime readAt);

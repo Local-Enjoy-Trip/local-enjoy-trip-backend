@@ -13,14 +13,14 @@ import java.time.LocalDateTime;
 public class AuthLogRecord {
     private Long id;
 
-    private String userId;
+    private Long memberId;
 
     private String eventType;
 
     private LocalDateTime loggedAt;
 
-    public AuthLogRecord(String userId, String eventType) {
-        this.userId = userId;
+    public AuthLogRecord(Long memberId, String eventType) {
+        this.memberId = memberId;
         this.eventType = eventType;
     }
 }

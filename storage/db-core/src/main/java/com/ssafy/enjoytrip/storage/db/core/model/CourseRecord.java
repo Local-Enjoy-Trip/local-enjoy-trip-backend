@@ -12,7 +12,7 @@ import lombok.Setter;
 public class CourseRecord {
     private String id;
 
-    private String ownerUserId;
+    private Long ownerMemberId;
 
     private String title;
 
@@ -47,7 +47,7 @@ public class CourseRecord {
     private LocalDateTime deletedAt;
 
     public CourseRecord(String id,
-                        String ownerUserId,
+                        Long ownerMemberId,
                         String title,
                         String regionName,
                         String visibility,
@@ -57,7 +57,7 @@ public class CourseRecord {
                         String curationSection,
                         Integer curationOrder) {
         this.id = id;
-        this.ownerUserId = ownerUserId;
+        this.ownerMemberId = ownerMemberId;
         this.title = title;
         this.regionName = regionName;
         this.visibility = visibility;

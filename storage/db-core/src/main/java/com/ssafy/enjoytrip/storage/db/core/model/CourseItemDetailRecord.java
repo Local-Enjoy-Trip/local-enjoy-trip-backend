@@ -15,7 +15,7 @@ public record CourseItemDetailRecord(
         String attractionTitle,
         String noteTitle,
         String itemTitle,
-        String noteAuthorUserId,
+        Long noteAuthorMemberId,
         LocalDateTime createdAt
 ) {
 }

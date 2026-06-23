@@ -8,17 +8,17 @@ import org.apache.ibatis.annotations.Param;
 public interface FriendshipMapper {
     FriendshipRecord findById(Long id);
 
-    List<FriendshipRecord> findByParticipantAndStatus(@Param("userId") String userId,
+    List<FriendshipRecord> findByParticipantAndStatus(@Param("memberId") Long memberId,
                                                        @Param("status") FriendshipStatus status);
 
-    List<FriendshipRecord> findReceivedRequests(@Param("addresseeUserId") String addresseeUserId,
+    List<FriendshipRecord> findReceivedRequests(@Param("addresseeMemberId") Long addresseeMemberId,
                                                  @Param("status") FriendshipStatus status);
 
-    List<FriendshipRecord> findSentRequests(@Param("requesterUserId") String requesterUserId,
+    List<FriendshipRecord> findSentRequests(@Param("requesterMemberId") Long requesterMemberId,
                                              @Param("status") FriendshipStatus status);
 
-    int existsActiveBetween(@Param("userId") String userId,
-                            @Param("otherUserId") String otherUserId,
+    int existsActiveBetween(@Param("memberId") Long memberId,
+                            @Param("otherMemberId") Long otherMemberId,
                             @Param("statuses") List<FriendshipStatus> statuses);
 
     int insert(FriendshipRecord record);

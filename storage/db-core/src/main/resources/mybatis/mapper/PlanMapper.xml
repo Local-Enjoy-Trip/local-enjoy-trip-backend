@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.PlanMapper">
-    <sql id="planColumns">id, user_id as userId, title, start_date as startDate, end_date as endDate, budget, note, route_items as routeItemsJson, created_at as createdAt, updated_at as updatedAt</sql>
+    <sql id="planColumns">id, member_id as memberId, title, start_date as startDate, end_date as endDate, budget, note, route_items as routeItemsJson, created_at as createdAt, updated_at as updatedAt</sql>
     <sql id="itemColumns">id, plan_id as planId, attraction_id as attractionId, position, day, memo, stay_minutes as stayMinutes, created_at as createdAt, updated_at as updatedAt</sql>
     <sql id="attractionColumns">id, title, addr1, addr2, zipcode, tel, first_image as firstImage, first_image2 as firstImage2, read_count as readCount, sido_code as sidoCode, gugun_code as gugunCode, ST_Y(location) as latitude, ST_X(location) as longitude, mlevel, content_type_id as contentTypeId, overview</sql>
     <select id="findAllOrderByCreatedAtDesc" resultType="com.ssafy.enjoytrip.storage.db.core.model.TravelPlanRecord">select <include refid="planColumns"/> from plans order by created_at desc</select>
-    <select id="findByUserIdOrderByCreatedAtDesc" resultType="com.ssafy.enjoytrip.storage.db.core.model.TravelPlanRecord">select <include refid="planColumns"/> from plans where user_id = #{userId} order by created_at desc</select>
+    <select id="findByMemberIdOrderByCreatedAtDesc" resultType="com.ssafy.enjoytrip.storage.db.core.model.TravelPlanRecord">select <include refid="planColumns"/> from plans where member_id = #{memberId} order by created_at desc</select>
     <select id="findById" resultType="com.ssafy.enjoytrip.storage.db.core.model.TravelPlanRecord">select <include refid="planColumns"/> from plans where id = #{id}</select>
     <select id="existsById" resultType="int">select count(*) from plans where id = #{id}</select>
-    <insert id="insertPlan">insert into plans (id, user_id, title, start_date, end_date, budget, note, route_items, created_at) values (#{id}, #{userId}, #{title}, #{startDate}, #{endDate}, #{budget}, #{note}, #{routeItemsJson}, current_timestamp)</insert>
+    <insert id="insertPlan">insert into plans (id, member_id, title, start_date, end_date, budget, note, route_items, created_at) values (#{id}, #{memberId}, #{title}, #{startDate}, #{endDate}, #{budget}, #{note}, #{routeItemsJson}, current_timestamp)</insert>
     <update id="updatePlan">update plans set title = #{title}, start_date = #{startDate}, end_date = #{endDate}, budget = #{budget}, note = #{note}, route_items = #{routeItemsJson}, updated_at = current_timestamp where id = #{id}</update>
     <delete id="deletePlanById">delete from plans where id = #{id}</delete>
     <select id="findItemsByPlanIdOrderByPositionAsc" resultType="com.ssafy.enjoytrip.storage.db.core.model.PlanItemRecord">select <include refid="itemColumns"/> from plan_items where plan_id = #{planId} order by position asc</select>

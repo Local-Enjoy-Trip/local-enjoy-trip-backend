@@ -12,7 +12,7 @@ public record NoteMapPinRecord(
         BigDecimal longitude,
         String regionName,
         String imageObjectKey,
-        String authorUserId,
+        Long authorMemberId,
         String authorNickname,
         String authorProfileImageUrl,
         String relationship,

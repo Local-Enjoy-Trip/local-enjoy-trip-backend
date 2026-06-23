@@ -37,10 +37,10 @@
         left join attraction_popularity_stats stats on stats.attraction_id = a.id
         left join attraction_saves s
                on s.attraction_id = a.id
-              and s.user_id = #{viewerUserId}
+              and s.member_id = #{viewerMemberId}
         left join attraction_ratings my_rating
                on my_rating.attraction_id = a.id
-              and my_rating.user_id = #{viewerUserId}
+              and my_rating.member_id = #{viewerMemberId}
         left join attraction_tag_mappings m on m.attraction_id = a.id
         left join attraction_tags t on t.id = m.tag_id
     </sql>
@@ -122,12 +122,12 @@
                   #{radiusMeters}
               )
               <choose>
-                  <when test="savedOnly and viewerUserId != null">
+                  <when test="savedOnly and viewerMemberId != null">
                       and exists (
                           select 1
                           from attraction_saves s
                           where s.attraction_id = a.id
-                            and s.user_id = #{viewerUserId}
+                            and s.member_id = #{viewerMemberId}
                       )
                   </when>
                   <when test="savedOnly">
@@ -268,10 +268,10 @@
             updated_at = current_timestamp
         where id = #{attractionId}
     </update>
-    <insert id="insertSave">insert into attraction_saves (attraction_id, user_id) values (#{attractionId}, #{userId}) on conflict (attraction_id, user_id) do nothing</insert>
-    <delete id="deleteSave">delete from attraction_saves where attraction_id = #{attractionId} and user_id = #{userId}</delete>
-    <insert id="upsertRating">insert into attraction_ratings (attraction_id, user_id, rating) values (#{attractionId}, #{userId}, #{rating}) on conflict (attraction_id, user_id) do update set rating = excluded.rating, updated_at = current_timestamp</insert>
-    <delete id="deleteRating">delete from attraction_ratings where attraction_id = #{attractionId} and user_id = #{userId}</delete>
+    <insert id="insertSave">insert into attraction_saves (attraction_id, member_id) values (#{attractionId}, #{memberId}) on conflict (attraction_id, member_id) do nothing</insert>
+    <delete id="deleteSave">delete from attraction_saves where attraction_id = #{attractionId} and member_id = #{memberId}</delete>
+    <insert id="upsertRating">insert into attraction_ratings (attraction_id, member_id, rating) values (#{attractionId}, #{memberId}, #{rating}) on conflict (attraction_id, member_id) do update set rating = excluded.rating, updated_at = current_timestamp</insert>
+    <delete id="deleteRating">delete from attraction_ratings where attraction_id = #{attractionId} and member_id = #{memberId}</delete>
     <insert id="refreshPopularityRatingStats">
         insert into attraction_popularity_stats (
             attraction_id,
@@ -312,10 +312,10 @@
         left join attraction_popularity_stats stats on stats.attraction_id = a.id
         left join attraction_saves s
                on s.attraction_id = a.id
-              and s.user_id = #{userId}
+              and s.member_id = #{memberId}
         left join attraction_ratings my_rating
                on my_rating.attraction_id = a.id
-              and my_rating.user_id = #{userId}
+              and my_rating.member_id = #{memberId}
         left join attraction_tag_mappings m on m.attraction_id = a.id
         left join attraction_tags t on t.id = m.tag_id
     </sql>

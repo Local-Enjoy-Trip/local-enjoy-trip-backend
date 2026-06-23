@@ -11,8 +11,6 @@ import lombok.Setter;
 public class MemberRecord extends BaseRecord {
     private Long id;
 
-    private String userId;
-
     private String name;
 
     private String nickname;
@@ -27,13 +25,11 @@ public class MemberRecord extends BaseRecord {
 
     private String role;
 
-    public MemberRecord(String userId,
-                        String name,
+    public MemberRecord(String name,
                         String nickname,
                         String email,
                         String password,
                         String profileImageUrl) {
-        this.userId = userId;
         this.name = name;
         this.nickname = nickname;
         this.email = email;

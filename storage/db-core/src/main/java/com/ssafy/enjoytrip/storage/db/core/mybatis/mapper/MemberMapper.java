@@ -7,23 +7,21 @@ import org.apache.ibatis.annotations.Param;
 public interface MemberMapper {
     List<MemberRecord> findAllOrderByCreatedAtDesc();
 
-    MemberRecord findByUserId(String userId);
+    MemberRecord findById(Long memberId);
 
     MemberRecord findByEmail(String email);
 
-    int existsByUserId(String userId);
-
-    int existsByUserIdOrEmail(@Param("userId") String userId, @Param("email") String email);
+    int existsByEmail(String email);
 
     int insert(MemberRecord record);
 
     int update(MemberRecord record);
 
     int updateProfileImage(
-            @Param("userId") String userId,
+            @Param("memberId") Long memberId,
             @Param("profileImageObjectKey") String profileImageObjectKey,
             @Param("profileImageUrl") String profileImageUrl
     );
 
-    int deleteByUserId(String userId);
+    int deleteById(Long memberId);
 }

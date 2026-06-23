@@ -3,7 +3,7 @@
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper">
     <sql id="courseColumns">
         c.id,
-        c.owner_user_id as ownerUserId,
+        c.owner_member_id as ownerMemberId,
         c.title,
         c.region_name as regionName,
         c.visibility,
@@ -15,7 +15,7 @@
         exists (
             select 1
             from members m
-            where m.user_id = c.owner_user_id
+            where m.id = c.owner_member_id
               and m.role = &apos;ADMIN&apos;
         ) as createdByAdmin,
         (
@@ -54,7 +54,7 @@
             when &apos;ATTRACTION&apos; then a.title
             when &apos;NOTE&apos; then n.title
         end as itemTitle,
-        n.author_user_id as noteAuthorUserId,
+        n.author_member_id as noteAuthorMemberId,
         i.created_at as createdAt
     </sql>
 
@@ -102,7 +102,7 @@
     <insert id="insert">
         insert into courses (
             id,
-            owner_user_id,
+            owner_member_id,
             title,
             region_name,
             visibility,
@@ -115,7 +115,7 @@
         )
         values (
             #{id},
-            #{ownerUserId},
+            #{ownerMemberId},
             #{title},
             #{regionName},
             #{visibility},
@@ -134,10 +134,10 @@
         where c.id = #{id}
     </select>
 
-    <select id="findByOwnerUserId" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
+    <select id="findByOwnerMemberId" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
         select <include refid="courseColumns"/>
         from courses c
-        where c.owner_user_id = #{ownerUserId}
+        where c.owner_member_id = #{ownerMemberId}
           and c.deleted_at is null
         order by c.created_at desc, c.id asc
     </select>
@@ -145,7 +145,7 @@
     <select id="findAdminOwned" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
         select <include refid="courseColumns"/>
         from courses c
-        join members m on m.user_id = c.owner_user_id
+        join members m on m.id = c.owner_member_id
         where m.role = &apos;ADMIN&apos;
           and c.deleted_at is null
         order by c.updated_at desc nulls last, c.created_at desc, c.id asc
@@ -163,7 +163,7 @@
             curation_order = #{curationOrder},
             updated_at = current_timestamp
         where id = #{id}
-          and owner_user_id = #{ownerUserId}
+          and owner_member_id = #{ownerMemberId}
           and deleted_at is null
     </update>
     <update id="updateStartLocation">
@@ -184,7 +184,7 @@
         set deleted_at = current_timestamp,
             updated_at = current_timestamp
         where id = #{id}
-          and owner_user_id = #{ownerUserId}
+          and owner_member_id = #{ownerMemberId}
           and deleted_at is null
     </update>
 
