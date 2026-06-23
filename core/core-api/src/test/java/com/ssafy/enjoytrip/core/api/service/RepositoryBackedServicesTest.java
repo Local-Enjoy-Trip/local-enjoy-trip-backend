@@ -18,6 +18,7 @@ import com.ssafy.enjoytrip.core.domain.Member;
 import com.ssafy.enjoytrip.core.domain.Notice;
 import com.ssafy.enjoytrip.core.domain.PlanItem;
 import com.ssafy.enjoytrip.core.domain.TravelPlan;
+import com.ssafy.enjoytrip.core.domain.CoordinateRouteOrderOptimizer;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.HotplaceRecord;
@@ -102,7 +103,7 @@ class RepositoryBackedServicesTest {
     @Nested
     class PlanServiceTests {
         private final PlanMapper mapper = mock(PlanMapper.class);
-        private final PlanService service = new PlanService(mapper);
+        private final PlanService service = new PlanService(mapper, new CoordinateRouteOrderOptimizer());
 
         @DisplayName("여행 계획 등록은 db-core TravelPlanRecord를 MyBatis mapper로 저장한다")
         @Test

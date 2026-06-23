@@ -1,7 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.dto.request;
 
-import com.ssafy.enjoytrip.core.domain.query.NearbyNotesCondition;
-import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.support.error.exception.ClientInputException;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
@@ -29,25 +28,14 @@ public record NearbySectionRequest(
     private static final String INVALID_COORDINATES_MESSAGE = "위도 또는 경도가 유효하지 않습니다.";
     private static final String INVALID_REQUEST_MESSAGE = "유효하지 않은 요청입니다.";
 
-    public NearbySearchCondition toCondition() {
+    public DistanceSearchCondition toCondition() {
         NormalizedNearbySection normalized = normalize();
 
-        return new NearbySearchCondition(
+        return new DistanceSearchCondition(
                 normalized.longitude(),
                 normalized.latitude(),
-                normalized.radiusMeters(),
-                normalized.limit()
-        );
-    }
-
-    public NearbyNotesCondition toNotesCondition() {
-        NormalizedNearbySection normalized = normalize();
-
-        return new NearbyNotesCondition(
-                normalized.longitude(),
-                normalized.latitude(),
-                normalized.radiusMeters(),
-                normalized.limit()
+                normalized.limit(),
+                normalized.radiusMeters()
         );
     }
 

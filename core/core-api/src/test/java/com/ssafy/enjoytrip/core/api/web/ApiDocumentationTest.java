@@ -3,9 +3,14 @@ package com.ssafy.enjoytrip.core.api.web;
 import com.ssafy.enjoytrip.core.api.web.controller.*;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
+import com.ssafy.enjoytrip.core.domain.Course;
+import com.ssafy.enjoytrip.core.domain.CourseRoute;
+import com.ssafy.enjoytrip.core.domain.CourseRouteSegment;
+import com.ssafy.enjoytrip.core.domain.CourseStop;
+import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
-import com.ssafy.enjoytrip.core.domain.service.ChargerResult;
-import com.ssafy.enjoytrip.core.domain.service.NewsResult;
+import com.ssafy.enjoytrip.core.domain.ChargerResult;
+import com.ssafy.enjoytrip.core.domain.NewsResult;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
@@ -15,13 +20,14 @@ import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
 import com.ssafy.enjoytrip.core.domain.service.BoardService;
 import com.ssafy.enjoytrip.core.domain.service.EvChargerService;
 import com.ssafy.enjoytrip.core.domain.service.HotplaceService;
-import com.ssafy.enjoytrip.core.domain.service.JwtTokenService;
+import com.ssafy.enjoytrip.core.domain.service.CourseService;
+import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MemberProfileImageService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
 import com.ssafy.enjoytrip.core.domain.service.NeighborhoodBriefingService;
 import com.ssafy.enjoytrip.core.domain.service.NewsService;
 import com.ssafy.enjoytrip.core.domain.service.NoticeService;
-import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService;
+import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.core.domain.service.PlanService;
 import com.ssafy.enjoytrip.core.domain.service.WeatherService;
 import com.ssafy.enjoytrip.core.domain.BoardPost;
@@ -71,6 +77,7 @@ class ApiDocumentationTest {
     private HotplaceService hotplaceService;
     private PlanService planService;
     private NoticeService noticeService;
+    private CourseService courseService;
     private MemberService memberService;
     private JwtTokenService tokenService;
     private OAuthSignupTicketService oauthSignupTicketService;
@@ -88,6 +95,7 @@ class ApiDocumentationTest {
         hotplaceService = mock(HotplaceService.class);
         planService = mock(PlanService.class);
         noticeService = mock(NoticeService.class);
+        courseService = mock(CourseService.class);
         memberService = mock(MemberService.class);
         tokenService = mock(JwtTokenService.class);
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
@@ -105,6 +113,7 @@ class ApiDocumentationTest {
                         new HotplaceController(hotplaceService),
                         new PlanController(planService),
                         new NoticeController(noticeService),
+                        new CourseController(courseService),
                         new MemberController(memberService, tokenService, oauthSignupTicketService),
                         new MemberProfileImageController(memberProfileImageService)
                 )
@@ -280,6 +289,79 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
     }
 
+    @DisplayName("코스 API 문서를 검증한다")
+    @Test
+    void courses() throws Exception {
+        Course course = course("course-1", "ssafy", 101L, 102L);
+        when(courseService.createCourse(any())).thenReturn(course);
+        when(courseService.updateCourse(eq("ssafy"), any())).thenReturn(course);
+        when(courseService.recommendCourseOrder(eq("ssafy"), eq("course-1"), any())).thenReturn(course);
+
+        mockMvc.perform(post("/api/courses")
+                        .principal(() -> "ssafy")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "id": "course-1",
+                                  "title": "서울 산책",
+                                  "visibility": "PRIVATE",
+                                  "status": "READY",
+                                  "items": [
+                                    {"itemType": "ATTRACTION", "attractionId": 1},
+                                    {"itemType": "ATTRACTION", "attractionId": 2}
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items[0].id").value(101L))
+                .andExpect(jsonPath("$.data.items[0].position").value(1))
+                .andDo(document("courses-create",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())));
+
+        mockMvc.perform(put("/api/courses/course-1")
+                        .principal(() -> "ssafy")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "title": "서울 산책 수정",
+                                  "visibility": "PRIVATE",
+                                  "items": [
+                                    {"itemType": "ATTRACTION", "attractionId": 2},
+                                    {"itemType": "ATTRACTION", "attractionId": 1}
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.routeSummary.stopCount").value(2))
+                .andDo(document("courses-update",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())));
+
+        mockMvc.perform(post("/api/courses/course-1/order-recommendation")
+                        .principal(() -> "ssafy")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "currentLatitude": 37.5665,
+                                  "currentLongitude": 126.9780
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items[0].id").value(101L))
+                .andExpect(jsonPath("$.data.items[0].position").value(1))
+                .andExpect(jsonPath("$.data.routeSummary.stopCount").value(2))
+                .andExpect(jsonPath("$.data.recommendationSource").doesNotExist())
+                .andExpect(jsonPath("$.data.fallbackReason").doesNotExist())
+                .andExpect(jsonPath("$.data.provider").doesNotExist())
+                .andDo(document("courses-order-recommendation",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())));
+    }
+
     @DisplayName("공지 API 문서를 검증한다")
     @Test
     void notices() throws Exception {
@@ -354,4 +436,41 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
     }
 
+    private static Course course(String id, String ownerUserId, Long firstItemId, Long secondItemId) {
+        return new Course(
+                id,
+                ownerUserId,
+                "서울 산책",
+                "서울",
+                "PRIVATE",
+                "READY",
+                null,
+                null,
+                null,
+                null,
+                false,
+                0,
+                "2026-06-23T00:00:00",
+                "2026-06-23T00:00:00",
+                CourseRoute.planned(
+                        List.of(
+                                attractionStop(firstItemId, 1L, 1),
+                                attractionStop(secondItemId, 2L, 2)
+                        ),
+                        List.of(new CourseRouteSegment(1, 1, 2, "WALK", 100, 140))
+                )
+        );
+    }
+
+    private static CourseStop attractionStop(Long itemId, Long attractionId, int position) {
+        return new CourseStop(
+                itemId,
+                CourseStopTarget.attraction(attractionId),
+                position,
+                1,
+                null,
+                60,
+                "장소 " + attractionId
+        );
+    }
 }

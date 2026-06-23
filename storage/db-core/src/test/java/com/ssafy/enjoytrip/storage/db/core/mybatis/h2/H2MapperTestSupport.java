@@ -39,7 +39,11 @@ abstract class H2MapperTestSupport {
         jdbcTemplate.update("delete from attraction_tags");
         jdbcTemplate.update("delete from attractions");
         jdbcTemplate.update("delete from friendships");
+        jdbcTemplate.update("delete from course_saves");
+        jdbcTemplate.update("delete from course_route_segments");
+        jdbcTemplate.update("delete from course_items");
         jdbcTemplate.update("delete from courses");
+        jdbcTemplate.update("delete from notes");
         jdbcTemplate.update("delete from plan_items");
         jdbcTemplate.update("delete from plans");
         jdbcTemplate.update("delete from news_items");
@@ -63,8 +67,8 @@ abstract class H2MapperTestSupport {
 
     protected void seedAttraction(Long attractionId, String title) {
         jdbcTemplate.update("""
-                insert into attractions (id, title, created_at)
-                values (?, ?, current_timestamp)
+                insert into attractions (id, title, status, created_at)
+                values (?, ?, 'ACTIVE', current_timestamp)
                 """, attractionId, title);
     }
 

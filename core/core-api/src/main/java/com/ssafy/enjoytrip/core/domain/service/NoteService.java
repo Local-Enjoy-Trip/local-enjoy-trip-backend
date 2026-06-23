@@ -7,8 +7,9 @@ import com.ssafy.enjoytrip.core.domain.NoteCategory;
 import com.ssafy.enjoytrip.core.domain.NoteStatus;
 import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
 import com.ssafy.enjoytrip.core.domain.NoteVisibility;
+import com.ssafy.enjoytrip.core.domain.NoteMapPin;
 import com.ssafy.enjoytrip.core.domain.query.MapNotesCondition;
-import com.ssafy.enjoytrip.core.domain.query.NearbyNotesCondition;
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
@@ -99,7 +100,7 @@ public class NoteService {
                 .toList();
     }
 
-    public List<Note> findNearbyNotes(NearbyNotesCondition condition, String viewerUserId) {
+    public List<Note> findNearbyNotes(DistanceSearchCondition condition, String viewerUserId) {
         return noteMapper.findNearbyAccessible(
                         condition.longitude(),
                         condition.latitude(),

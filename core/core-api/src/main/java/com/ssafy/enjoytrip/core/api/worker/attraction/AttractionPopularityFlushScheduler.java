@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.core.api.worker.attraction;
 
-import com.ssafy.enjoytrip.core.domain.service.AttractionPopularityDeltaCache;
+import com.ssafy.enjoytrip.core.domain.AttractionPopularityDeltaCache;
 import com.ssafy.enjoytrip.core.domain.service.AttractionPopularityStatsService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;

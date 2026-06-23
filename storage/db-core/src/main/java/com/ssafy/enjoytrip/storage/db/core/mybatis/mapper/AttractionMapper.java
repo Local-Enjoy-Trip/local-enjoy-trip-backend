@@ -1,6 +1,7 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionAdminRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionPopularityDeltaRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
@@ -29,6 +30,24 @@ public interface AttractionMapper {
                                             @Param("viewerUserId") String viewerUserId);
 
     int existsById(Long attractionId);
+
+    int existsPublicVisibleById(Long attractionId);
+
+    List<AttractionAdminRecord> findAllForAdmin(@Param("includeHidden") boolean includeHidden);
+
+    List<AttractionAdminRecord> findAdminPage(@Param("includeHidden") boolean includeHidden,
+                                              @Param("limit") int limit,
+                                              @Param("offset") int offset);
+
+    int countForAdmin(@Param("includeHidden") boolean includeHidden);
+
+    int insertAdmin(AttractionAdminRecord record);
+
+    int updateAdmin(AttractionAdminRecord record);
+
+    int hideForAdmin(@Param("attractionId") Long attractionId);
+
+    int restoreForAdmin(@Param("attractionId") Long attractionId);
 
     int insertSave(@Param("attractionId") Long attractionId, @Param("userId") String userId);
 

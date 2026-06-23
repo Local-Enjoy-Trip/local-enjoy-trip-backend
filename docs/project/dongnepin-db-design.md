@@ -413,7 +413,7 @@ flowchart TD
 | `title` | `varchar(120)` | not null | 코스명 |
 | `region_name` | `varchar(100)` | nullable | 대표 지역 |
 | `visibility` | `varchar(20)` | not null, check | `PUBLIC`, `FRIENDS`, `PRIVATE` |
-| `status` | `varchar(20)` | not null, check | `DRAFT`, `READY`, `IN_PROGRESS`, `COMPLETED`, `ARCHIVED` |
+| `status` | `varchar(20)` | not null, check | `READY`, `IN_PROGRESS`, `COMPLETED`, `ARCHIVED` |
 | `description` | `text` | nullable | 코스 설명 |
 | `cover_image_url` | `varchar(1024)` | nullable | 대표 이미지 |
 | `share_image_url` | `varchar(1024)` | nullable | 공유용 이미지 |
@@ -464,6 +464,27 @@ check (
 - `idx_course_items_course_position`: `(course_id, position)`
 - `idx_course_items_attraction`: `(attraction_id)`
 - `idx_course_items_note`: `(note_id)`
+
+### 7.5.1 `course_route_segments`
+
+코스 경로 세그먼트는 공개 API에 노출하지 않는 내부 경로 요약 계산용 스칼라 데이터다.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| `course_id` | `varchar(128)` | FK `courses(id)` on delete cascade | 코스 ID |
+| `from_course_item_id` | `bigint` | composite FK `(course_id, id)` | 출발 코스 항목 |
+| `to_course_item_id` | `bigint` | composite FK `(course_id, id)` | 도착 코스 항목 |
+| `segment_order` | `integer` | PK 일부, `> 0` | 세그먼트 순서 |
+| `travel_mode` | `varchar(20)` | not null, default `WALK` | 내부 이동 방식 |
+| `duration_seconds` | `integer` | not null, `>= 0` | 예상 소요 시간 |
+| `distance_meters` | `integer` | not null, `>= 0` | 예상 거리 |
+
+핵심 제약:
+
+- `primary key(course_id, segment_order)`
+- `course_items(course_id, id)` unique 제약을 통한 same-course composite FK
+- cross-course `from/to` 항목 참조 금지
+- 음수 시간/거리 금지
 
 ### 7.6 `friendships`
 

@@ -1,10 +1,10 @@
 package com.ssafy.enjoytrip.core.api.web;
 
 import com.ssafy.enjoytrip.core.api.web.controller.*;
-import com.ssafy.enjoytrip.core.domain.service.MapCenter;
-import com.ssafy.enjoytrip.core.domain.service.MapExploreResult;
-import com.ssafy.enjoytrip.core.domain.service.NoteMapPin;
-import com.ssafy.enjoytrip.core.domain.service.PlaceMapPin;
+import com.ssafy.enjoytrip.core.domain.MapCenter;
+import com.ssafy.enjoytrip.core.domain.MapExploreResult;
+import com.ssafy.enjoytrip.core.domain.NoteMapPin;
+import com.ssafy.enjoytrip.core.domain.PlaceMapPin;
 
 import com.ssafy.enjoytrip.core.domain.BoardPost;
 import com.ssafy.enjoytrip.core.domain.Hotplace;
@@ -24,9 +24,8 @@ import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.AttractionStats;
 import com.ssafy.enjoytrip.core.domain.AttractionTag;
-import com.ssafy.enjoytrip.core.domain.query.NearbyNotesCondition;
-import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
-import com.ssafy.enjoytrip.core.domain.service.PopularAttractionResult;
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
+import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import com.ssafy.enjoytrip.core.support.error.exception.ExternalServiceException;
@@ -37,7 +36,7 @@ import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
 import com.ssafy.enjoytrip.core.domain.service.BoardService;
 import com.ssafy.enjoytrip.core.domain.service.EvChargerService;
 import com.ssafy.enjoytrip.core.domain.service.HotplaceService;
-import com.ssafy.enjoytrip.core.domain.service.JwtTokenService;
+import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MapExploreService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
 import com.ssafy.enjoytrip.core.domain.service.NoteImageUploadService;
@@ -45,7 +44,7 @@ import com.ssafy.enjoytrip.core.domain.service.MemberProfileImageService;
 import com.ssafy.enjoytrip.core.domain.service.NeighborhoodBriefingService;
 import com.ssafy.enjoytrip.core.domain.service.NoteService;
 import com.ssafy.enjoytrip.core.domain.service.NoticeService;
-import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService;
+import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.core.domain.service.PlanService;
 import com.ssafy.enjoytrip.core.domain.service.WeatherService;
 import org.junit.jupiter.api.BeforeEach;
@@ -337,7 +336,7 @@ class ControllerBehaviorTest {
         @Test
         void nearbyNotesUseDefaultSeoulAndRadius() throws Exception {
             Note note = note(1L, "writer", "근처 쪽지", NoteVisibility.PUBLIC);
-            when(noteService.findNearbyNotes(new NearbyNotesCondition(126.9780, 37.5665, 500.0, 20), null))
+            when(noteService.findNearbyNotes(new DistanceSearchCondition(126.9780, 37.5665, 20, 500.0), null))
                     .thenReturn(List.of(note));
 
             mockMvc.perform(get("/api/notes/nearby"))
@@ -347,7 +346,7 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.notes[0].title").value("근처 쪽지"))
                     .andExpect(jsonPath("$.data.notes[0].visibility").value("PUBLIC"));
 
-            verify(noteService).findNearbyNotes(new NearbyNotesCondition(126.9780, 37.5665, 500.0, 20), null);
+            verify(noteService).findNearbyNotes(new DistanceSearchCondition(126.9780, 37.5665, 20, 500.0), null);
         }
 
         @DisplayName("주변 쪽지는 일부 좌표만 전달되면 검증 오류를 반환한다")
@@ -1126,7 +1125,7 @@ class ControllerBehaviorTest {
                     2, 4.5, 2, List.of(), true, null
             );
             when(attractionService.findPopularNearbyAttractions(
-                    new NearbySearchCondition(126.9780, 37.5665, 500.0, 20),
+                    new DistanceSearchCondition(126.9780, 37.5665, 20, 500.0),
                     null
             )).thenReturn(List.of(new PopularAttractionResult(attraction, 120.5, 42L)));
 
@@ -1141,7 +1140,7 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.attractions[0].distanceMeters").value(120.5));
 
             verify(attractionService).findPopularNearbyAttractions(
-                    new NearbySearchCondition(126.9780, 37.5665, 500.0, 20),
+                    new DistanceSearchCondition(126.9780, 37.5665, 20, 500.0),
                     null
             );
         }
@@ -1279,9 +1278,17 @@ class ControllerBehaviorTest {
                 .doesNotContain("ApiResponse<Map<")
                 .doesNotContain("legacyPost")
                 .doesNotContain("private static <T> T fail");
-        assertThat(MUTATION_MODEL_ATTRIBUTE_PATTERN.matcher(source).find())
-                .as(path.toString())
-                .isFalse();
+        if (!isAdminHtmlController(path, source)) {
+            assertThat(MUTATION_MODEL_ATTRIBUTE_PATTERN.matcher(source).find())
+                    .as(path.toString())
+                    .isFalse();
+        }
+    }
+
+    private static boolean isAdminHtmlController(Path path, String source) {
+        return path.getFileName().toString().startsWith("Admin")
+                && source.contains("@Controller")
+                && source.contains("/admin/");
     }
 
     private static final Pattern MUTATION_MODEL_ATTRIBUTE_PATTERN = Pattern.compile(

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>관리자 요청 오류</title>
+    <link rel="stylesheet" href="/assets/admin/admin.css">
+</head>
+<body class="admin-auth-page">
+<main class="admin-auth-card">
+    <a class="admin-brand" href="/admin">
+        <img src="/assets/admin/spot-logo.png" alt="이곳저곳 로고">
+        <span><small>Spot Admin</small><strong>이곳저곳</strong></span>
+    </a>
+    <p class="admin-eyebrow" style="margin-top:26px" th:text="${code}">ERROR</p>
+    <h1 class="admin-title">관리자 요청을 처리하지 못했습니다</h1>
+    <p class="admin-form-help" th:text="${message}">요청 처리 중 문제가 발생했습니다.</p>
+    <div class="admin-actions" style="margin-top:24px">
+        <a class="admin-button" href="/admin">대시보드</a>
+        <a class="admin-secondary-button" href="/admin/courses">코스 관리</a>
+        <a class="admin-secondary-button" href="/admin/places">장소 관리</a>
+    </div>
+</main>
+</body>
+</html>

@@ -5,8 +5,11 @@ import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_NOT_FOUND;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.AttractionTag;
+import com.ssafy.enjoytrip.core.domain.AttractionPopularityDeltaCache;
+import com.ssafy.enjoytrip.core.domain.NearbyAttractionCandidate;
+import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
-import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord;
@@ -26,7 +29,7 @@ public class AttractionService {
     private final AttractionPopularityDeltaCache popularityDeltaCache;
 
     public List<PopularAttractionResult> findPopularNearbyAttractions(
-            NearbySearchCondition condition,
+            DistanceSearchCondition condition,
             String userId
     ) {
         List<NearbyAttractionCandidate> candidates = findNearbyAttractionCandidates(condition, userId, false);
@@ -64,7 +67,7 @@ public class AttractionService {
     }
 
     public List<NearbyAttractionCandidate> findNearbyCandidates(
-            NearbySearchCondition condition,
+            DistanceSearchCondition condition,
             String userId,
             boolean savedOnly
     ) {
@@ -184,7 +187,7 @@ public class AttractionService {
     }
 
     private List<NearbyAttractionCandidate> findNearbyAttractionCandidates(
-            NearbySearchCondition condition,
+            DistanceSearchCondition condition,
             String userId,
             boolean savedOnly
     ) {

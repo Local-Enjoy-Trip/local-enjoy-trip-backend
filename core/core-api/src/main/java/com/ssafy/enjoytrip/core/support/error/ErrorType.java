@@ -13,6 +13,7 @@ public enum ErrorType {
             "아이디 또는 비밀번호가 올바르지 않습니다.",
             WARN
     ),
+    ATTRACTION_NOT_FOUND(ErrorCode.A001, HttpStatus.NOT_FOUND, "관광지를 찾을 수 없습니다.", WARN),
     TAG_NOT_FOUND(ErrorCode.A002, HttpStatus.NOT_FOUND, "태그를 찾을 수 없습니다.", WARN),
     TAG_ALREADY_EXISTS(ErrorCode.A003, HttpStatus.CONFLICT, "이미 존재하는 태그입니다.", WARN),
 
@@ -21,6 +22,19 @@ public enum ErrorType {
             ErrorCode.P002,
             HttpStatus.FORBIDDEN,
             "다른 사용자의 여행 계획에 접근할 수 없습니다.",
+            WARN
+    ),
+    COURSE_NOT_FOUND(ErrorCode.P003, HttpStatus.NOT_FOUND, "코스를 찾을 수 없습니다.", WARN),
+    COURSE_ACCESS_DENIED(
+            ErrorCode.P004,
+            HttpStatus.FORBIDDEN,
+            "다른 사용자의 코스에 접근할 수 없습니다.",
+            WARN
+    ),
+    COURSE_INVALID_ITEM(
+            ErrorCode.P005,
+            HttpStatus.BAD_REQUEST,
+            "코스 항목이 유효하지 않습니다.",
             WARN
     ),
 

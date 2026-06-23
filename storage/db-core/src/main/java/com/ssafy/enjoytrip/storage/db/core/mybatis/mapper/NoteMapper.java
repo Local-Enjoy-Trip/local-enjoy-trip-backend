@@ -16,6 +16,8 @@ public interface NoteMapper {
 
     int existsAccessibleActive(@Param("noteId") Long noteId, @Param("viewerUserId") String viewerUserId);
 
+    int existsPublicActive(Long noteId);
+
     int insertSave(@Param("noteId") Long noteId, @Param("userId") String userId);
 
     int deleteSave(@Param("noteId") Long noteId, @Param("userId") String userId);

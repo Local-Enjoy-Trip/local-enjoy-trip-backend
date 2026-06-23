@@ -3,8 +3,13 @@ package com.ssafy.enjoytrip.core.domain.service;
 import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
 import com.ssafy.enjoytrip.core.domain.NoteCategory;
+import com.ssafy.enjoytrip.core.domain.NearbyAttractionCandidate;
+import com.ssafy.enjoytrip.core.domain.MapCenter;
+import com.ssafy.enjoytrip.core.domain.MapExploreResult;
+import com.ssafy.enjoytrip.core.domain.NoteMapPin;
+import com.ssafy.enjoytrip.core.domain.PlaceMapPin;
 import com.ssafy.enjoytrip.core.domain.query.MapNotesCondition;
-import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -53,11 +58,11 @@ public class MapExploreService {
         }
 
         return attractionService.findNearbyCandidates(
-                        new NearbySearchCondition(
+                        new DistanceSearchCondition(
                                 center.longitude(),
                                 center.latitude(),
-                                radiusMeters,
-                                null
+                                null,
+                                radiusMeters
                         ),
                         viewerUserId,
                         filter.savedPlacesOnly()

@@ -9,9 +9,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserIdArgumentResolver;
 import com.ssafy.enjoytrip.core.api.web.controller.MemberController;
-import com.ssafy.enjoytrip.core.domain.service.JwtTokenService;
+import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
-import com.ssafy.enjoytrip.core.domain.service.OAuthSignupTicketService;
+import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -103,6 +103,19 @@ class SecurityErrorResponseTest {
                                 {
                                   "objectKey":"profiles/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
                                   "contentType":"image/jpeg"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("S401"))
+                .andExpect(jsonPath("$.error.message").value("인증이 필요합니다."));
+
+        mockMvc.perform(post("/api/courses/course-1/order-recommendation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "currentLatitude": 37.5665,
+                                  "currentLongitude": 126.9780
                                 }
                                 """))
                 .andExpect(status().isUnauthorized())

@@ -8,16 +8,24 @@ import javax.crypto.spec.SecretKeySpec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.ssafy.enjoytrip.core.api.security.AdminAccountDetailsService;
+import com.ssafy.enjoytrip.core.api.security.AdminAuthenticationSupport;
+import com.ssafy.enjoytrip.core.api.security.DbBackedJwtAuthenticationConverter;
 import com.ssafy.enjoytrip.core.support.error.ErrorCode;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
+import com.ssafy.enjoytrip.core.support.auth.JwtProperties;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -40,12 +48,74 @@ public class SecurityConfig {
     private static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS256;
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                           ObjectProvider<ClientRegistrationRepository> clientRegistrations,
-                                           ObjectProvider<AuthenticationSuccessHandler> successHandler,
-                                           ObjectProvider<AuthenticationFailureHandler> failureHandler,
-                                           ObjectMapper objectMapper)
+    @Order(1)
+    SecurityFilterChain adminSecurityFilterChain(HttpSecurity http,
+                                                 ObjectProvider<MemberMapper> memberMapper,
+                                                 ObjectProvider<AdminAuthenticationSupport> adminSupport,
+                                                 PasswordEncoder passwordEncoder)
             throws Exception {
+        MemberMapper roleMapper = memberMapper.getIfAvailable();
+        AdminAuthenticationSupport support = adminSupport.getIfAvailable();
+        http.authenticationProvider(adminAuthenticationProvider(roleMapper, passwordEncoder));
+        http
+                .securityMatcher("/admin/**")
+                .cors(Customizer.withDefaults())
+                .csrf(Customizer.withDefaults())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(HttpMethod.GET, "/admin/login", "/admin/forbidden").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/admin/login").permitAll()
+                        .anyRequest().access((authentication, context) -> new AuthorizationDecision(
+                                support != null && support.isAdmin(authentication.get())
+                        ))
+                )
+                .formLogin(formLogin -> formLogin
+                        .loginPage("/admin/login")
+                        .loginProcessingUrl("/admin/login")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
+                        .defaultSuccessUrl("/admin", true)
+                        .failureUrl("/admin/login?error")
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/admin/logout")
+                        .logoutSuccessUrl("/admin/login?logout")
+                        .permitAll())
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint((request, response, exception) ->
+                                response.sendRedirect("/admin/login"))
+                        .accessDeniedHandler((request, response, exception) -> {
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            request.getRequestDispatcher("/admin/forbidden").forward(request, response);
+                        })
+                );
+        return http.build();
+    }
+
+    private static DaoAuthenticationProvider adminAuthenticationProvider(
+            MemberMapper memberMapper,
+            PasswordEncoder passwordEncoder
+    ) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(
+                new AdminAccountDetailsService(memberMapper)
+        );
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+    @Bean
+    @Order(2)
+    SecurityFilterChain apiSecurityFilterChain(
+            HttpSecurity http,
+            ObjectProvider<ClientRegistrationRepository> clientRegistrations,
+            ObjectProvider<AuthenticationSuccessHandler> successHandler,
+            ObjectProvider<AuthenticationFailureHandler> failureHandler,
+            ObjectProvider<MemberMapper> memberMapper,
+            ObjectMapper objectMapper
+    )
+            throws Exception {
+        MemberMapper roleMapper = memberMapper.getIfAvailable();
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
@@ -86,6 +156,14 @@ public class SecurityConfig {
                                 "/api/notes/{id}/save"
                         ).authenticated()
                         .requestMatchers("/api/friendships/**", "/api/notifications/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/courses/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/courses").authenticated()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/courses/{id}/order-recommendation"
+                        ).authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/courses/{id}").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/courses/{id}").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/plans", "/api/plans/items").authenticated()
                         .requestMatchers(
                                 HttpMethod.PUT,
@@ -115,7 +193,8 @@ public class SecurityConfig {
                                 "접근 권한이 없습니다."
                         ))
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
+                        .jwtAuthenticationConverter(new DbBackedJwtAuthenticationConverter(roleMapper))));
 
         if (clientRegistrations.getIfAvailable() != null) {
             http.oauth2Login(oauth2 -> oauth2

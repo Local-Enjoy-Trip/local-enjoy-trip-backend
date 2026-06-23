@@ -7,7 +7,7 @@ import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.MapApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MapExploreRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.MapExploreResponse;
-import com.ssafy.enjoytrip.core.domain.service.MapExploreResult;
+import com.ssafy.enjoytrip.core.domain.MapExploreResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;

@@ -15,6 +15,7 @@ dependencies {
     api "org.springframework.boot:spring-boot"
     api "org.springframework.boot:spring-boot-autoconfigure"
     api "org.springframework.ai:spring-ai-starter-model-openai:${rootProject.ext.springAiVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
 
     implementation "io.minio:minio:${rootProject.ext.minioVersion}"
 

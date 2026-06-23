@@ -2,6 +2,11 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper">
     <sql id="baseColumns">id, title, addr1, addr2, zipcode, tel, first_image as firstImage, first_image2 as firstImage2, read_count as readCount, sido_code as sidoCode, gugun_code as gugunCode, ST_Y(location) as latitude, ST_X(location) as longitude, mlevel, content_type_id as contentTypeId, overview</sql>
+    <sql id="publicAttractionPredicate">
+        status = &apos;ACTIVE&apos;
+        and deleted_at is null
+        and duplicate_of_attraction_id is null
+    </sql>
     <sql id="searchRowColumns">
         a.id,
         a.title,
@@ -54,8 +59,9 @@
                    </choose> as distanceMeters
             from attractions
             <where>
+                <include refid="publicAttractionPredicate"/>
                 <if test="contentTypeId != null">
-                    content_type_id = #{contentTypeId}
+                    and content_type_id = #{contentTypeId}
                 </if>
                 <if test="keyword != null">
                     and (
@@ -107,6 +113,9 @@
                    ) as distanceMeters
             from attractions a
             where a.location is not null
+              and a.status = &apos;ACTIVE&apos;
+              and a.deleted_at is null
+              and a.duplicate_of_attraction_id is null
               and ST_DWithin(
                   a.location::geography,
                   ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography,
@@ -134,6 +143,131 @@
         order by a.distanceMeters asc, a.title asc, a.id asc, t.name asc
     </select>
     <select id="existsById" resultType="int">select count(*) from attractions where id = #{attractionId}</select>
+    <select id="existsPublicVisibleById" resultType="int">
+        select count(*)
+        from attractions
+        where id = #{attractionId}
+          and <include refid="publicAttractionPredicate"/>
+    </select>
+    <sql id="adminColumns">
+        id,
+        title,
+        addr1,
+        addr2,
+        first_image as firstImage,
+        first_image2 as firstImage2,
+        sido_code as sidoCode,
+        gugun_code as gugunCode,
+        null as latitude,
+        null as longitude,
+        content_type_id as contentTypeId,
+        overview,
+        status,
+        duplicate_of_attraction_id as duplicateOfAttractionId,
+        duplicate_reason as duplicateReason,
+        created_at as createdAt,
+        updated_at as updatedAt,
+        deleted_at as deletedAt
+    </sql>
+    <sql id="adminWhere">
+        <where>
+            <if test="!includeHidden">
+                status = &apos;ACTIVE&apos;
+                and deleted_at is null
+            </if>
+        </where>
+    </sql>
+    <sql id="adminOrder">
+        order by updated_at desc nulls last, created_at desc, id asc
+    </sql>
+    <select id="findAllForAdmin" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionAdminRecord">
+        select <include refid="adminColumns"/>
+        from attractions
+        <include refid="adminWhere"/>
+        <include refid="adminOrder"/>
+    </select>
+    <select id="findAdminPage" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionAdminRecord">
+        select <include refid="adminColumns"/>
+        from attractions
+        <include refid="adminWhere"/>
+        <include refid="adminOrder"/>
+        limit #{limit}
+        offset #{offset}
+    </select>
+    <select id="countForAdmin" resultType="int">
+        select count(*)
+        from attractions
+        <include refid="adminWhere"/>
+    </select>
+    <insert id="insertAdmin">
+        insert into attractions (
+            id,
+            title,
+            addr1,
+            addr2,
+            first_image,
+            first_image2,
+            sido_code,
+            gugun_code,
+            location,
+            content_type_id,
+            overview,
+            status,
+            created_at
+        )
+        values (
+            #{id},
+            #{title},
+            #{addr1},
+            #{addr2},
+            #{firstImage},
+            #{firstImage2},
+            #{sidoCode},
+            #{gugunCode},
+            ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326),
+            #{contentTypeId},
+            #{overview},
+            coalesce(#{status}, &apos;ACTIVE&apos;),
+            current_timestamp
+        )
+    </insert>
+    <update id="updateAdmin">
+        update attractions
+        set title = #{title},
+            addr1 = #{addr1},
+            addr2 = #{addr2},
+            first_image = #{firstImage},
+            first_image2 = #{firstImage2},
+            sido_code = #{sidoCode},
+            gugun_code = #{gugunCode},
+            location = ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326),
+            content_type_id = #{contentTypeId},
+            overview = #{overview},
+            status = coalesce(#{status}, status),
+            duplicate_of_attraction_id = #{duplicateOfAttractionId},
+            duplicate_reason = #{duplicateReason},
+            updated_at = current_timestamp,
+            deleted_at = case when coalesce(#{status}, status) = &apos;HIDDEN&apos;
+                              then coalesce(deleted_at, current_timestamp)
+                              else null
+                         end
+        where id = #{id}
+    </update>
+    <update id="hideForAdmin">
+        update attractions
+        set status = &apos;HIDDEN&apos;,
+            deleted_at = current_timestamp,
+            updated_at = current_timestamp
+        where id = #{attractionId}
+          and status &lt;&gt; &apos;HIDDEN&apos;
+    </update>
+    <update id="restoreForAdmin">
+        update attractions
+        set status = &apos;ACTIVE&apos;,
+            deleted_at = null,
+            updated_at = current_timestamp
+        where id = #{attractionId}
+    </update>
     <insert id="insertSave">insert into attraction_saves (attraction_id, user_id) values (#{attractionId}, #{userId}) on conflict (attraction_id, user_id) do nothing</insert>
     <delete id="deleteSave">delete from attraction_saves where attraction_id = #{attractionId} and user_id = #{userId}</delete>
     <insert id="upsertRating">insert into attraction_ratings (attraction_id, user_id, rating) values (#{attractionId}, #{userId}, #{rating}) on conflict (attraction_id, user_id) do update set rating = excluded.rating, updated_at = current_timestamp</insert>

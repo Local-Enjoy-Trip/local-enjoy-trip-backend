@@ -10,6 +10,7 @@
         password,
         profile_image_url as profileImageUrl,
         profile_image_object_key as profileImageObjectKey,
+        role,
         created_at as createdAt,
         updated_at as updatedAt
     </sql>
@@ -40,8 +41,17 @@
            or email = #{email}
     </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into members (user_id, name, nickname, email, password, profile_image_url, created_at)
-        values (#{userId}, #{name}, #{nickname}, #{email}, #{password}, #{profileImageUrl}, current_timestamp)
+        insert into members (user_id, name, nickname, email, password, profile_image_url, role, created_at)
+        values (
+            #{userId},
+            #{name},
+            #{nickname},
+            #{email},
+            #{password},
+            #{profileImageUrl},
+            coalesce(#{role}, &apos;USER&apos;),
+            current_timestamp
+        )
     </insert>
     <update id="update">
         update members

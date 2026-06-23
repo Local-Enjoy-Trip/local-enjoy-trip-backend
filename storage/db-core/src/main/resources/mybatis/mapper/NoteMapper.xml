@@ -17,6 +17,11 @@
              </if>
         )
     </sql>
+    <sql id="publicActivePredicate">
+        n.status = &apos;ACTIVE&apos;
+        and n.visibility = &apos;PUBLIC&apos;
+        and n.deleted_at is null
+    </sql>
     <select id="insert" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
         insert into notes (author_user_id, title, content, category, visibility, location, latitude, longitude, region_name, image_object_key, image_url, image_content_type)
         values (#{authorUserId}, #{title}, #{content}, #{category}, #{visibility}, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326), #{latitude}, #{longitude}, #{regionName}, #{imageObjectKey}, #{imageUrl}, #{imageContentType})
@@ -34,6 +39,12 @@
         from notes n
         where n.id = #{noteId}
           and <include refid="accessiblePredicate"/>
+    </select>
+    <select id="existsPublicActive" resultType="int">
+        select count(*)
+        from notes n
+        where n.id = #{noteId}
+          and <include refid="publicActivePredicate"/>
     </select>
     <insert id="insertSave">
         insert into note_saves (note_id, user_id)

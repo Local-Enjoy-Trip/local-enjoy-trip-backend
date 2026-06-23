@@ -25,6 +25,8 @@ public class MemberRecord extends BaseRecord {
 
     private String profileImageObjectKey;
 
+    private String role;
+
     public MemberRecord(String userId,
                         String name,
                         String nickname,
@@ -37,6 +39,7 @@ public class MemberRecord extends BaseRecord {
         this.email = email;
         this.password = password;
         this.profileImageUrl = profileImageUrl;
+        this.role = "USER";
     }
 
     public void updateNickname(String nickname) {

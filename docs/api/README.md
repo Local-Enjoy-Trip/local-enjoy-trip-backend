@@ -1,7 +1,8 @@
-﻿# API Documents
+# API Documents
 - [dongnepin-map](dongnepin-map.md)
 - [note-images](note-images.md)
 
+- [courses](courses.md)
 - [attractions](attractions.md)
 - [boards](boards.md)
 - [chargers](chargers.md)

@@ -5,14 +5,14 @@ import static com.ssafy.enjoytrip.core.support.error.ErrorType.PLAN_NOT_FOUND;
 import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.PlanItem;
 import com.ssafy.enjoytrip.core.domain.PlanRouteItem;
-import com.ssafy.enjoytrip.core.domain.Point;
+import com.ssafy.enjoytrip.core.domain.CoordinateRouteOrderOptimizer;
+
 import com.ssafy.enjoytrip.core.domain.TravelPlan;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.PlanItemRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.TravelPlanRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.PlanMapper;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PlanService {
     private final PlanMapper planMapper;
+    private final CoordinateRouteOrderOptimizer routeOrderOptimizer;
+
 
     public List<TravelPlan> findAllPlans() {
         return planMapper.findAllOrderByCreatedAtDesc().stream()
@@ -290,178 +292,22 @@ public class PlanService {
                 .map(PlanItem::attractionId)
                 .distinct()
                 .toList());
-        Map<Integer, List<PlanItem>> itemsByDay = groupItemsByDay(items);
-        List<PlanItem> optimized = new ArrayList<>();
-
-        for (List<PlanItem> dayItems : itemsByDay.values()) {
-            optimized.addAll(optimizeDayRouteItems(dayItems, attractions));
-        }
-
-        return optimized;
+        return routeOrderOptimizer.optimizeByDay(
+                items,
+                PlanItem::day,
+                item -> latitudeOf(item, attractions),
+                item -> longitudeOf(item, attractions)
+        );
     }
 
-    private static Map<Integer, List<PlanItem>> groupItemsByDay(List<PlanItem> items) {
-        Map<Integer, List<PlanItem>> itemsByDay = new LinkedHashMap<>();
-        for (PlanItem item : items) {
-            int day = Math.max(1, item.day());
-            itemsByDay.computeIfAbsent(day, ignored -> new ArrayList<>()).add(item);
-        }
-
-        return itemsByDay;
+    private static Double latitudeOf(PlanItem item, Map<Long, Attraction> attractions) {
+        Attraction attraction = attractions.get(item.attractionId());
+        return attraction == null ? null : attraction.latitude();
     }
 
-    private List<PlanItem> optimizeDayRouteItems(List<PlanItem> items, Map<Long, Attraction> attractions) {
-        if (items.size() < 2 || !hasOptimizableCoordinates(items, attractions)) {
-            return items;
-        }
-
-        List<Point> points = toPoints(items, attractions);
-        int[] optimizedOrder = optimizeVisitOrder(points);
-        if (optimizedOrder.length != items.size()) {
-            return items;
-        }
-
-        List<PlanItem> optimized = new ArrayList<>();
-        for (int index : optimizedOrder) {
-            optimized.add(items.get(index));
-        }
-
-        return optimized;
-    }
-
-    private static boolean hasOptimizableCoordinates(
-            List<PlanItem> items,
-            Map<Long, Attraction> attractions
-    ) {
-        for (PlanItem item : items) {
-            Attraction attraction = attractions.get(item.attractionId());
-            if (attraction == null || !isFiniteCoordinate(attraction.latitude(), attraction.longitude())) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static List<Point> toPoints(List<PlanItem> items, Map<Long, Attraction> attractions) {
-        List<Point> points = new ArrayList<>();
-        for (int index = 0; index < items.size(); index++) {
-            Attraction attraction = attractions.get(items.get(index).attractionId());
-            points.add(new Point(attraction.latitude(), attraction.longitude(), index));
-        }
-
-        return points;
-    }
-
-    private static boolean isFiniteCoordinate(Double latitude, Double longitude) {
-        return latitude != null
-                && longitude != null
-                && Double.isFinite(latitude)
-                && Double.isFinite(longitude);
-    }
-
-    private static int[] optimizeVisitOrder(List<Point> points) {
-        if (points.isEmpty()) {
-            return new int[0];
-        }
-        if (points.size() == 1) {
-            return new int[]{0};
-        }
-
-        int[] order = buildNearestNeighborOrder(points);
-        improveOrderWithTwoOpt(order, points);
-        return order;
-    }
-
-    private static int[] buildNearestNeighborOrder(List<Point> points) {
-        int count = points.size();
-        int[] order = new int[count];
-        boolean[] visited = new boolean[count];
-
-        order[0] = 0;
-        visited[0] = true;
-
-        for (int step = 1; step < count; step++) {
-            int currentIndex = order[step - 1];
-            int bestIndex = findNearestUnvisitedPoint(currentIndex, points, visited);
-            if (bestIndex == -1) {
-                break;
-            }
-
-            visited[bestIndex] = true;
-            order[step] = bestIndex;
-        }
-
-        return order;
-    }
-
-    private static int findNearestUnvisitedPoint(int currentIndex, List<Point> points, boolean[] visited) {
-        double bestDistance = Double.POSITIVE_INFINITY;
-        int bestIndex = -1;
-
-        for (int candidate = 0; candidate < points.size(); candidate++) {
-            if (visited[candidate]) {
-                continue;
-            }
-
-            double distance = points.get(currentIndex).distanceKmTo(points.get(candidate));
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                bestIndex = candidate;
-            }
-        }
-
-        return bestIndex;
-    }
-
-    private static void improveOrderWithTwoOpt(int[] order, List<Point> points) {
-        if (order.length < 4) {
-            return;
-        }
-
-        boolean improved = true;
-        while (improved) {
-            improved = improveOnePass(order, points);
-        }
-    }
-
-    private static boolean improveOnePass(int[] order, List<Point> points) {
-        boolean improved = false;
-        for (int left = 1; left < order.length - 2; left++) {
-            for (int right = left + 1; right < order.length - 1; right++) {
-                if (isSwapShorter(order, points, left, right)) {
-                    reverse(order, left, right);
-                    improved = true;
-                }
-            }
-        }
-
-        return improved;
-    }
-
-    private static boolean isSwapShorter(int[] order, List<Point> points, int left, int right) {
-        double currentCost = segmentDistance(order[left - 1], order[left], points)
-                + segmentDistance(order[right], order[right + 1], points);
-        double swappedCost = segmentDistance(order[left - 1], order[right], points)
-                + segmentDistance(order[left], order[right + 1], points);
-
-        return swappedCost + 1e-9d < currentCost;
-    }
-
-    private static double segmentDistance(int from, int to, List<Point> points) {
-        return points.get(from).distanceKmTo(points.get(to));
-    }
-
-    private static void reverse(int[] order, int left, int right) {
-        int i = left;
-        int j = right;
-        while (i < j) {
-            int temp = order[i];
-            order[i] = order[j];
-            order[j] = temp;
-            i++;
-            j--;
-        }
+    private static Double longitudeOf(PlanItem item, Map<Long, Attraction> attractions) {
+        Attraction attraction = attractions.get(item.attractionId());
+        return attraction == null ? null : attraction.longitude();
     }
 
     private Map<Long, Attraction> findAttractions(List<Long> attractionIds) {

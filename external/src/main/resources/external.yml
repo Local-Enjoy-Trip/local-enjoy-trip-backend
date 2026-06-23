@@ -5,7 +5,7 @@ spring:
     openai:
       api-key: ${GMS_KEY:local-fallback-disabled}
       chat:
-        base-url: ${GMS_CHAT_BASE_URL:https://gms.ssafy.io/gmsapi/api.openai.com}
+        base-url: ${GMS_CHAT_BASE_URL:https://gms.ssafy.io/gmsapi/api.openai.com/v1}
         api-key: ${GMS_KEY:local-fallback-disabled}
         model: ${GMS_CHAT_MODEL:gpt-5.4}
 

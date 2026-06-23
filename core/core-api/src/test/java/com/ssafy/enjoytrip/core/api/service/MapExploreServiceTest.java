@@ -4,7 +4,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
-import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -19,7 +19,7 @@ class MapExploreServiceTest {
         NoteService noteService = mock(NoteService.class);
         MapExploreService service = new MapExploreService(attractionService, noteService);
         when(attractionService.findNearbyCandidates(
-                new NearbySearchCondition(126.9780, 37.5665, 500.0, null),
+                new DistanceSearchCondition(126.9780, 37.5665, null, 500.0),
                 "viewer",
                 true
         )).thenReturn(List.of());
@@ -34,7 +34,7 @@ class MapExploreServiceTest {
         );
 
         verify(attractionService).findNearbyCandidates(
-                new NearbySearchCondition(126.9780, 37.5665, 500.0, null),
+                new DistanceSearchCondition(126.9780, 37.5665, null, 500.0),
                 "viewer",
                 true
         );

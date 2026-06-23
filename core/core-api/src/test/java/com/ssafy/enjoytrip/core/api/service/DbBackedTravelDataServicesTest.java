@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.ssafy.enjoytrip.core.domain.AttractionPopularityDeltaCache;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.EvChargerMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NewsMapper;
