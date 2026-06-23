@@ -4,6 +4,7 @@ import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_ACCESS_DEN
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_INVALID_ITEM;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_NOT_FOUND;
 
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
@@ -21,8 +22,6 @@ import org.springframework.stereotype.Component;
 public class CourseReader {
     private static final String TYPE_ATTRACTION = CourseStopTargetType.ATTRACTION.name();
     private static final String TYPE_NOTE = CourseStopTargetType.NOTE.name();
-    private static final int DEFAULT_FEED_LIMIT = 10;
-
     private final CourseMapper courseMapper;
 
     public List<Course> findMyCourses(String ownerUserId) {
@@ -60,21 +59,13 @@ public class CourseReader {
         return findCourse(record, true, SegmentReadPolicy.PLANNED_COURSE);
     }
 
-    public List<CourseFeedSection> findPublicFeed() {
-        return List.of(
-                new CourseFeedSection(
-                        "MD_RECOMMENDED",
-                        "MD 추천",
-                        "curationOrder",
-                        publicCourses(courseMapper.findMdRecommendedPublic(DEFAULT_FEED_LIMIT))
-                ),
-                new CourseFeedSection(
-                        "POPULAR",
-                        "인기 코스",
-                        "saveCountDesc",
-                        publicCourses(courseMapper.findPopularPublic(DEFAULT_FEED_LIMIT))
-                )
-        );
+    public List<Course> findPublicFeed(DistanceSearchCondition condition) {
+        return publicCourses(courseMapper.findDistanceOrderedPublicFeed(
+                condition.longitude(),
+                condition.latitude(),
+                condition.limit(),
+                condition.radiusMeters()
+        ));
     }
 
     private List<Course> publicCourses(List<CourseRecord> records) {
@@ -119,6 +110,9 @@ public class CourseReader {
                 record.getCurationSection(),
                 record.getCurationOrder(),
                 Boolean.TRUE.equals(record.getCreatedByAdmin()),
+                record.getStartLatitude(),
+                record.getStartLongitude(),
+                record.getDistanceMeters(),
                 countValue(record.getSaveCount()),
                 stringValue(record.getCreatedAt()),
                 stringValue(record.getUpdatedAt()),

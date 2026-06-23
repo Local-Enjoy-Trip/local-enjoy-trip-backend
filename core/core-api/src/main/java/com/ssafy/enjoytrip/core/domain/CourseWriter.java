@@ -40,24 +40,44 @@ public class CourseWriter {
         }
     }
 
-    private Course create(Course course, CourseRoute route) {
-        requireCompleteSegmentsWhenPresent(route);
+    private Course create(Course course, PlannedCourseRoute plannedRoute) {
+        requireCompleteSegmentsWhenPresent(plannedRoute.route());
         courseMapper.insert(toRecord(course));
-        return course.withRoute(saveRoute(course.id(), route));
+        updateStartLocation(course.id(), plannedRoute.startPoint());
+        return course.withStartLocation(plannedRoute.startPoint())
+                .withRoute(saveRoute(course.id(), plannedRoute.route()));
     }
 
-    private Course update(Course course, CourseRoute route) {
-        requireCompleteSegmentsWhenPresent(route);
+    private Course update(Course course, PlannedCourseRoute plannedRoute) {
+        requireCompleteSegmentsWhenPresent(plannedRoute.route());
         if (courseMapper.updateOwned(toRecord(course)) <= 0) {
             throw new CoreException(COURSE_NOT_FOUND);
         }
-        return course.withRoute(replaceRouteRows(course.id(), route));
+        updateStartLocation(course.id(), plannedRoute.startPoint());
+        return course.withStartLocation(plannedRoute.startPoint())
+                .withRoute(replaceRouteRows(course.id(), plannedRoute.route()));
     }
 
-    private CourseRoute planRoute(CourseRoute route) {
-        CourseRoute plannedRoute = courseRoutePlanner.plan(courseStopPointResolver.resolveAll(route.stops()));
+    private PlannedCourseRoute planRoute(CourseRoute route) {
+        List<CourseStopPoint> points = courseStopPointResolver.resolveAll(route.stops());
+        CourseRoute plannedRoute = courseRoutePlanner.plan(points);
         requireCompleteSegmentsWhenPresent(plannedRoute);
-        return plannedRoute;
+        return new PlannedCourseRoute(plannedRoute, firstPoint(points));
+    }
+
+    private void updateStartLocation(String courseId, CourseStopPoint startPoint) {
+        Double longitude = startPoint == null ? null : startPoint.longitude();
+        Double latitude = startPoint == null ? null : startPoint.latitude();
+        if (courseMapper.updateStartLocation(courseId, longitude, latitude) <= 0) {
+            throw new CoreException(COURSE_NOT_FOUND);
+        }
+    }
+
+    private static CourseStopPoint firstPoint(List<CourseStopPoint> points) {
+        if (points.isEmpty()) {
+            return null;
+        }
+        return points.get(0);
     }
 
     private CourseRoute replaceRouteRows(String courseId, CourseRoute route) {
@@ -201,5 +221,11 @@ public class CourseWriter {
             return route.segments().isEmpty();
         }
         return route.segments().size() == route.stops().size() - 1;
+    }
+
+    private record PlannedCourseRoute(
+            CourseRoute route,
+            CourseStopPoint startPoint
+    ) {
     }
 }

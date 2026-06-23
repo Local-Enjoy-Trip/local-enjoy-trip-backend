@@ -1,9 +1,9 @@
 package com.ssafy.enjoytrip.core.domain.query;
 
-public record NearbyNotesCondition(
+public record DistanceSearchCondition(
         double longitude,
         double latitude,
-        double radiusMeters,
-        int limit
+        Integer limit,
+        Double radiusMeters
 ) {
 }

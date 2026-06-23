@@ -1,11 +1,11 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.Course;
-import com.ssafy.enjoytrip.core.domain.CourseFeedSection;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizer;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
 import com.ssafy.enjoytrip.core.domain.CourseReader;
 import com.ssafy.enjoytrip.core.domain.CourseWriter;
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -58,7 +58,7 @@ public class CourseService {
         courseWriter.deleteOwned(courseId, ownerUserId);
     }
 
-    public List<CourseFeedSection> findPublicFeed() {
-        return courseReader.findPublicFeed();
+    public List<Course> findPublicFeed(DistanceSearchCondition condition) {
+        return courseReader.findPublicFeed(condition);
     }
 }

@@ -16,13 +16,13 @@ import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.AiCourseOrderOptimizer;
 import com.ssafy.enjoytrip.core.domain.CoordinateRouteOrderOptimizer;
-import com.ssafy.enjoytrip.core.domain.CourseFeedSection;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
 import com.ssafy.enjoytrip.core.domain.CourseOrderPreviewReader;
 import com.ssafy.enjoytrip.core.domain.CourseReader;
 import com.ssafy.enjoytrip.core.domain.CourseStopPointResolver;
 import com.ssafy.enjoytrip.core.domain.CourseWriter;
 import com.ssafy.enjoytrip.core.domain.DefaultCourseRoutePlanner;
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.external.courseorder.CourseOrderRecommendationException;
 import com.ssafy.enjoytrip.external.courseorder.CourseOrderRecommendationRequest;
 import com.ssafy.enjoytrip.external.courseorder.CourseOrderRecommendationResult;
@@ -64,6 +64,7 @@ class CourseServiceTest {
         attractionMapper = Mockito.mock(AttractionMapper.class);
         noteMapper = Mockito.mock(NoteMapper.class);
         courseOrderRecommendationClient = Mockito.mock(SpringAiCourseOrderRecommendationClient.class);
+        when(courseMapper.updateStartLocation(any(), any(), any())).thenReturn(1);
         CourseStopPointResolver stopPointResolver = new CourseStopPointResolver(attractionMapper, noteMapper);
         DefaultCourseRoutePlanner routePlanner = new DefaultCourseRoutePlanner();
         service = new CourseService(
@@ -105,6 +106,7 @@ class CourseServiceTest {
         assertThat(insertedItem.getItemType()).isEqualTo("ATTRACTION");
         assertThat(insertedItem.getAttractionId()).isEqualTo(10L);
         assertThat(insertedItem.getNoteId()).isNull();
+        verify(courseMapper).updateStartLocation("course-attraction", 127.0, 37.0);
     }
 
     @DisplayName("코스 생성은 쪽지 항목 저장 시 note_id만 채운다")
@@ -121,6 +123,7 @@ class CourseServiceTest {
         assertThat(insertedItem.getItemType()).isEqualTo("NOTE");
         assertThat(insertedItem.getAttractionId()).isNull();
         assertThat(insertedItem.getNoteId()).isEqualTo(30L);
+        verify(courseMapper).updateStartLocation("course-note", 127.0, 37.0);
     }
 
     @DisplayName("코스 생성은 비공개 쪽지를 항목으로 저장하지 않는다")
@@ -487,33 +490,38 @@ class CourseServiceTest {
                 );
     }
 
-    @DisplayName("공개 피드는 MD 추천과 인기 코스를 섹션별로 반환한다")
+    @DisplayName("공개 피드는 저장소 거리순 단일 목록을 반환한다")
     @Test
-    void publicFeedReturnsSectionedCourses() {
-        when(courseMapper.findMdRecommendedPublic(10)).thenReturn(List.of(
-                courseRecord("md-1", "admin", "MD_RECOMMENDED", 1, 0)
-        ));
-        when(courseMapper.findPopularPublic(10)).thenReturn(List.of(
-                courseRecord("popular-1", "admin", null, null, 3)
+    void publicFeedReturnsDistanceOrderedCourses() {
+        CourseRecord mdCourse = courseRecord("md-1", "admin", "MD_RECOMMENDED", 1, 0);
+        mdCourse.setStartLatitude(37.5665);
+        mdCourse.setStartLongitude(126.9780);
+        mdCourse.setDistanceMeters(42.5);
+        CourseRecord publicCourse = courseRecord("course-1", "user", null, null, 3);
+        publicCourse.setStartLatitude(37.5666);
+        publicCourse.setStartLongitude(126.9781);
+        publicCourse.setDistanceMeters(128.3);
+        when(courseMapper.findDistanceOrderedPublicFeed(126.9780, 37.5665, 20, null)).thenReturn(List.of(
+                mdCourse,
+                publicCourse
         ));
         when(courseMapper.findPublicItemsByCourseId(eq("md-1"))).thenReturn(List.of());
-        when(courseMapper.findPublicItemsByCourseId(eq("popular-1"))).thenReturn(List.of());
+        when(courseMapper.findPublicItemsByCourseId(eq("course-1"))).thenReturn(List.of());
         when(courseMapper.findSegmentsByCourseId(any(String.class))).thenReturn(List.of());
 
-        List<CourseFeedSection> feed = service.findPublicFeed();
+        List<Course> feed = service.findPublicFeed(new DistanceSearchCondition(126.9780, 37.5665, 20, null));
 
-        assertThat(feed).hasSize(2);
-        assertThat(feed.get(0).key()).isEqualTo("MD_RECOMMENDED");
-        assertThat(feed.get(0).courses()).extracting(Course::id).containsExactly("md-1");
-        assertThat(feed.get(0).courses()).extracting(Course::createdByAdmin).containsExactly(true);
-        assertThat(feed.get(1).key()).isEqualTo("POPULAR");
-        assertThat(feed.get(1).courses()).extracting(Course::saveCount).containsExactly(3);
-        assertThat(feed.get(1).courses()).extracting(Course::createdByAdmin).containsExactly(true);
+        assertThat(feed).extracting(Course::id).containsExactly("md-1", "course-1");
+        assertThat(feed).extracting(Course::distanceMeters).containsExactly(42.5, 128.3);
+        assertThat(feed).extracting(Course::startLatitude).containsExactly(37.5665, 37.5666);
+        assertThat(feed).extracting(Course::startLongitude).containsExactly(126.9780, 126.9781);
+        assertThat(feed).extracting(Course::createdByAdmin).containsExactly(true, false);
     }
 
     private void verifyNoCourseWrites() {
         verify(courseMapper, never()).insert(any(CourseRecord.class));
         verify(courseMapper, never()).updateOwned(any(CourseRecord.class));
+        verify(courseMapper, never()).updateStartLocation(any(), any(), any());
         verify(courseMapper, never()).deleteSegmentsByCourseId(any(String.class));
         verify(courseMapper, never()).deleteItemsByCourseId(any(String.class));
         verify(courseMapper, never()).insertItems(any());

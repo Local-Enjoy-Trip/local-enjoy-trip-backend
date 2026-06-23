@@ -4,8 +4,9 @@ import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedUserId;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseCreateRequest;
-import com.ssafy.enjoytrip.core.api.web.dto.request.CourseUpdateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.CourseFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseOrderRecommendationRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.CourseUpdateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseFeedResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CoursesResponse;
@@ -21,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -36,8 +38,8 @@ public class CourseController {
     private final CourseService courseService;
 
     @GetMapping("/feed")
-    public ApiResponse<CourseFeedResponse> feed() {
-        return success(CourseFeedResponse.from(courseService.findPublicFeed()));
+    public ApiResponse<CourseFeedResponse> feed(@Valid @ModelAttribute CourseFeedRequest request) {
+        return success(CourseFeedResponse.from(courseService.findPublicFeed(request.toCondition())));
     }
 
     @GetMapping("/{id}")

@@ -18,6 +18,10 @@ public interface CourseMapper {
 
     int updateOwned(CourseRecord record);
 
+    int updateStartLocation(@Param("id") String id,
+                            @Param("longitude") Double longitude,
+                            @Param("latitude") Double latitude);
+
     int softDeleteOwned(@Param("id") String id, @Param("ownerUserId") String ownerUserId);
 
     int deleteSegmentsByCourseId(String courseId);
@@ -40,7 +44,8 @@ public interface CourseMapper {
 
     List<CourseItemDetailRecord> findPublicItemsByCourseId(String courseId);
 
-    List<CourseRecord> findMdRecommendedPublic(@Param("limit") int limit);
-
-    List<CourseRecord> findPopularPublic(@Param("limit") int limit);
+    List<CourseRecord> findDistanceOrderedPublicFeed(@Param("longitude") double longitude,
+                                                      @Param("latitude") double latitude,
+                                                      @Param("limit") int limit,
+                                                      @Param("radiusMeters") Double radiusMeters);
 }

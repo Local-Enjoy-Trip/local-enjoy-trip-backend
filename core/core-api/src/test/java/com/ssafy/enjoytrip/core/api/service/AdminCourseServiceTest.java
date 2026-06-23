@@ -48,6 +48,7 @@ class AdminCourseServiceTest {
         memberMapper = Mockito.mock(MemberMapper.class);
         attractionMapper = Mockito.mock(AttractionMapper.class);
         noteMapper = Mockito.mock(NoteMapper.class);
+        when(courseMapper.updateStartLocation(any(), any(), any())).thenReturn(1);
         CourseStopPointResolver stopPointResolver = new CourseStopPointResolver(attractionMapper, noteMapper);
         DefaultCourseRoutePlanner routePlanner = new DefaultCourseRoutePlanner();
         service = new AdminCourseService(

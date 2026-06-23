@@ -75,6 +75,29 @@
         and n.status = &apos;ACTIVE&apos;
         and n.deleted_at is null
     </sql>
+    <sql id="feedOriginPoint">
+        ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)
+    </sql>
+    <sql id="feedDistanceColumns">
+        <include refid="courseColumns"/>,
+        ST_Y(c.start_location) as startLatitude,
+        ST_X(c.start_location) as startLongitude,
+        ST_Distance(
+            c.start_location::geography,
+            <include refid="feedOriginPoint"/>::geography
+        ) as distanceMeters
+    </sql>
+    <sql id="publicFeedPredicate">
+        <include refid="publicCoursePredicate"/>
+        and c.start_location is not null
+        <if test="radiusMeters != null">
+            and ST_DWithin(
+                c.start_location::geography,
+                <include refid="feedOriginPoint"/>::geography,
+                #{radiusMeters}
+            )
+        </if>
+    </sql>
 
     <insert id="insert">
         insert into courses (
@@ -141,6 +164,18 @@
             updated_at = current_timestamp
         where id = #{id}
           and owner_user_id = #{ownerUserId}
+          and deleted_at is null
+    </update>
+    <update id="updateStartLocation">
+        update courses
+        set start_location =
+            <choose>
+                <when test="longitude != null and latitude != null">
+                    ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)
+                </when>
+                <otherwise>null</otherwise>
+            </choose>
+        where id = #{id}
           and deleted_at is null
     </update>
 
@@ -300,28 +335,39 @@
         order by i.position asc, i.id asc
     </select>
 
-    <select id="findMdRecommendedPublic" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
-        select <include refid="courseColumns"/>
-        from courses c
-        where <include refid="publicCoursePredicate"/>
-          and c.curation_section = &apos;MD_RECOMMENDED&apos;
-        order by c.curation_order asc nulls last,
-                 c.updated_at desc nulls last,
-                 c.id asc
-        limit #{limit}
-    </select>
-
-    <select id="findPopularPublic" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
-        select <include refid="courseColumns"/>
-        from courses c
-        where <include refid="publicCoursePredicate"/>
-        order by (
-                     select count(*)
-                     from course_saves s
-                     where s.course_id = c.id
-                 ) desc,
-                 c.updated_at desc nulls last,
-                 c.id asc
-        limit #{limit}
+    <select id="findDistanceOrderedPublicFeed" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
+        with md_top as (
+            select <include refid="feedDistanceColumns"/>
+            from courses c
+            where <include refid="publicFeedPredicate"/>
+              and c.curation_section = &apos;MD_RECOMMENDED&apos;
+            order by c.start_location &lt;-&gt; <include refid="feedOriginPoint"/>,
+                     c.id asc
+            limit least(3, #{limit})
+        ),
+        rest as (
+            select <include refid="feedDistanceColumns"/>
+            from courses c
+            where <include refid="publicFeedPredicate"/>
+              and not exists (
+                  select 1
+                  from md_top m
+                  where m.id = c.id
+              )
+            order by c.start_location &lt;-&gt; <include refid="feedOriginPoint"/>,
+                     c.id asc
+            limit greatest(#{limit} - (select count(*) from md_top), 0)
+        )
+        select feed.*
+        from (
+            select 0 as feedBucket, md_top.*
+            from md_top
+            union all
+            select 1 as feedBucket, rest.*
+            from rest
+        ) feed
+        order by feed.feedBucket asc,
+                 feed.distanceMeters asc,
+                 feed.id asc
     </select>
 </mapper>

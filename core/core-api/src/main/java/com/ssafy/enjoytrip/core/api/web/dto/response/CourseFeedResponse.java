@@ -1,32 +1,16 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
-import com.ssafy.enjoytrip.core.domain.CourseFeedSection;
+import com.ssafy.enjoytrip.core.domain.Course;
 import java.util.List;
 
 public record CourseFeedResponse(
-        List<CourseFeedSectionResponse> sections
+        List<CourseResponse> courses
 ) {
-    public static CourseFeedResponse from(List<CourseFeedSection> sections) {
+    public static CourseFeedResponse from(List<Course> courses) {
         return new CourseFeedResponse(
-                sections.stream()
-                        .map(CourseFeedSectionResponse::from)
+                courses.stream()
+                        .map(CourseResponse::from)
                         .toList()
         );
-    }
-
-    public record CourseFeedSectionResponse(
-            String key,
-            String label,
-            String sort,
-            List<CourseResponse> courses
-    ) {
-        static CourseFeedSectionResponse from(CourseFeedSection section) {
-            return new CourseFeedSectionResponse(
-                    section.key(),
-                    section.label(),
-                    section.sort(),
-                    section.courses().stream().map(CourseResponse::from).toList()
-            );
-        }
     }
 }

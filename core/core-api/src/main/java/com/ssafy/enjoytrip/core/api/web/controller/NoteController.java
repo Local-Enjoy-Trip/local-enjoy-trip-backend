@@ -94,7 +94,7 @@ public class NoteController implements NoteApi {
             @AuthenticatedUserId(unauthenticated = NULL) String authenticatedUserId
     ) {
         List<Note> notes = service.findNearbyNotes(
-                request.toNotesCondition(),
+                request.toCondition(),
                 authenticatedUserId
         );
 

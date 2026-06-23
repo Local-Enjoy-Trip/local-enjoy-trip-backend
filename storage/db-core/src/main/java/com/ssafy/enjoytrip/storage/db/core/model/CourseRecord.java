@@ -32,6 +32,12 @@ public class CourseRecord {
 
     private Boolean createdByAdmin;
 
+    private Double startLatitude;
+
+    private Double startLongitude;
+
+    private Double distanceMeters;
+
     private Integer saveCount;
 
     private LocalDateTime createdAt;

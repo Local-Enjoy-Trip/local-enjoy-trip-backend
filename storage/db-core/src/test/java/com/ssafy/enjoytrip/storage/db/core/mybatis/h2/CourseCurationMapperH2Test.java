@@ -42,7 +42,7 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
                 1
         ));
 
-        CourseRecord found = courseMapper.findMdRecommendedPublic(10).get(0);
+        CourseRecord found = courseMapper.findById("course-md-1");
 
         assertThat(memberMapper.findByUserId("admin").getRole()).isEqualTo("ADMIN");
         assertThat(found.getId()).isEqualTo("course-md-1");
@@ -97,23 +97,6 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
                 .containsExactly("공개 장소", "공개 노트");
     }
 
-    @DisplayName("인기 코스는 저장 수 내림차순과 결정적 보조 정렬을 적용한다")
-    @Test
-    void popularCoursesUseSaveCountDescendingOrder() {
-        seedMember("admin", "admin@example.com");
-        seedMember("user1", "user1@example.com");
-        seedMember("user2", "user2@example.com");
-        courseMapper.insert(publicCourse("popular-a"));
-        courseMapper.insert(publicCourse("popular-b"));
-        jdbcTemplate.update("insert into course_saves (course_id, user_id) values ('popular-b', 'user1')");
-        jdbcTemplate.update("insert into course_saves (course_id, user_id) values ('popular-b', 'user2')");
-        jdbcTemplate.update("insert into course_saves (course_id, user_id) values ('popular-a', 'user1')");
-
-        assertThat(courseMapper.findPopularPublic(10))
-                .extracting(CourseRecord::getId)
-                .containsExactly("popular-b", "popular-a");
-    }
-
     @DisplayName("코스 상태 기본값은 READY이고 DRAFT 저장은 거부한다")
     @Test
     void courseStatusDefaultsToReadyAndRejectsDraft() {
@@ -158,6 +141,21 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
             assertThat(migrationSql).contains("alter column status set default 'READY'");
             assertThat(migrationSql)
                     .contains("check (status in ('READY', 'IN_PROGRESS', 'COMPLETED', 'ARCHIVED'))");
+        }
+    }
+
+    @DisplayName("V10 마이그레이션은 시작 지점 컬럼과 인덱스만 추가하고 backfill은 하지 않는다")
+    @Test
+    void migrationAddsCourseStartLocationWithoutBackfill() throws Exception {
+        try (InputStream inputStream = getClass().getResourceAsStream(
+                "/db/migration/V10__add_course_start_location.sql"
+        )) {
+            assertThat(inputStream).isNotNull();
+            String migrationSql = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+            assertThat(migrationSql).contains("add column start_location geometry(Point, 4326)");
+            assertThat(migrationSql).contains("idx_courses_start_location");
+            assertThat(migrationSql.toLowerCase()).doesNotContain("update courses");
         }
     }
 

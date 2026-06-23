@@ -24,8 +24,7 @@ import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.AttractionStats;
 import com.ssafy.enjoytrip.core.domain.AttractionTag;
-import com.ssafy.enjoytrip.core.domain.query.NearbyNotesCondition;
-import com.ssafy.enjoytrip.core.domain.query.NearbySearchCondition;
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
@@ -337,7 +336,7 @@ class ControllerBehaviorTest {
         @Test
         void nearbyNotesUseDefaultSeoulAndRadius() throws Exception {
             Note note = note(1L, "writer", "근처 쪽지", NoteVisibility.PUBLIC);
-            when(noteService.findNearbyNotes(new NearbyNotesCondition(126.9780, 37.5665, 500.0, 20), null))
+            when(noteService.findNearbyNotes(new DistanceSearchCondition(126.9780, 37.5665, 20, 500.0), null))
                     .thenReturn(List.of(note));
 
             mockMvc.perform(get("/api/notes/nearby"))
@@ -347,7 +346,7 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.notes[0].title").value("근처 쪽지"))
                     .andExpect(jsonPath("$.data.notes[0].visibility").value("PUBLIC"));
 
-            verify(noteService).findNearbyNotes(new NearbyNotesCondition(126.9780, 37.5665, 500.0, 20), null);
+            verify(noteService).findNearbyNotes(new DistanceSearchCondition(126.9780, 37.5665, 20, 500.0), null);
         }
 
         @DisplayName("주변 쪽지는 일부 좌표만 전달되면 검증 오류를 반환한다")
@@ -1126,7 +1125,7 @@ class ControllerBehaviorTest {
                     2, 4.5, 2, List.of(), true, null
             );
             when(attractionService.findPopularNearbyAttractions(
-                    new NearbySearchCondition(126.9780, 37.5665, 500.0, 20),
+                    new DistanceSearchCondition(126.9780, 37.5665, 20, 500.0),
                     null
             )).thenReturn(List.of(new PopularAttractionResult(attraction, 120.5, 42L)));
 
@@ -1141,7 +1140,7 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.attractions[0].distanceMeters").value(120.5));
 
             verify(attractionService).findPopularNearbyAttractions(
-                    new NearbySearchCondition(126.9780, 37.5665, 500.0, 20),
+                    new DistanceSearchCondition(126.9780, 37.5665, 20, 500.0),
                     null
             );
         }

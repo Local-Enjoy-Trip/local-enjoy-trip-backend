@@ -15,6 +15,8 @@ public record CourseResponse(
         String curationSection,
         Integer curationOrder,
         boolean createdByAdmin,
+        Double distanceMeters,
+        CourseStartLocationResponse startLocation,
         int saveCount,
         String createdAt,
         String updatedAt,
@@ -35,6 +37,8 @@ public record CourseResponse(
                 course.curationSection(),
                 course.curationOrder(),
                 course.createdByAdmin(),
+                course.distanceMeters(),
+                startLocation(course),
                 course.saveCount(),
                 course.createdAt(),
                 course.updatedAt(),
@@ -46,5 +50,18 @@ public record CourseResponse(
                         .map(CourseSegmentResponse::from)
                         .toList()
         );
+    }
+
+    private static CourseStartLocationResponse startLocation(Course course) {
+        if (course.startLatitude() == null || course.startLongitude() == null) {
+            return null;
+        }
+        return new CourseStartLocationResponse(course.startLongitude(), course.startLatitude());
+    }
+
+    public record CourseStartLocationResponse(
+            Double longitude,
+            Double latitude
+    ) {
     }
 }

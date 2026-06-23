@@ -19,8 +19,8 @@ import com.ssafy.enjoytrip.core.domain.CourseRoute;
 import com.ssafy.enjoytrip.core.domain.CourseRouteSegment;
 import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
-import com.ssafy.enjoytrip.core.domain.CourseFeedSection;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
+import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.domain.service.CourseService;
 import java.security.Principal;
 import java.util.List;
@@ -45,28 +45,69 @@ class CourseControllerTest {
                 .build();
     }
 
-    @DisplayName("공개 코스 피드는 섹션 DTO와 경로 요약으로 반환한다")
+    @DisplayName("공개 코스 피드는 단일 목록과 시작 지점 거리로 반환한다")
     @Test
-    void returnsPublicCourseFeedSections() throws Exception {
-        when(courseService.findPublicFeed()).thenReturn(List.of(
-                new CourseFeedSection("MD_RECOMMENDED", "MD 추천", "curationOrder", List.of(
-                        course("md-1", "admin", "PUBLIC", "READY", 0)
-                )),
-                new CourseFeedSection("POPULAR", "인기 코스", "saveCountDesc", List.of(
-                        course("popular-1", "admin", "PUBLIC", "READY", 2)
-                ))
+    void returnsPublicCourseFeedCourses() throws Exception {
+        when(courseService.findPublicFeed(any())).thenReturn(List.of(
+                feedCourse("md-1", "admin", "MD_RECOMMENDED", 42.5),
+                feedCourse("course-1", "ssafy", null, 128.3)
         ));
 
-        mockMvc.perform(get("/api/courses/feed"))
+        mockMvc.perform(get("/api/courses/feed")
+                        .param("mapX", "126.9780")
+                        .param("mapY", "37.5665")
+                        .param("limit", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.sections[0].key").value("MD_RECOMMENDED"))
-                .andExpect(jsonPath("$.data.sections[0].courses[0].id").value("md-1"))
-                .andExpect(jsonPath("$.data.sections[0].courses[0].createdByAdmin").value(true))
-                .andExpect(jsonPath("$.data.sections[0].courses[0].routeSummary.stopCount").value(2))
-                .andExpect(jsonPath("$.data.sections[0].courses[0].segments[0].distanceMeters").value(140))
-                .andExpect(jsonPath("$.data.sections[0].courses[0].encodedPolyline").doesNotExist())
-                .andExpect(jsonPath("$.data.sections[1].courses[0].saveCount").value(2));
+                .andExpect(jsonPath("$.data.sections").doesNotExist())
+                .andExpect(jsonPath("$.data.courses[0].id").value("md-1"))
+                .andExpect(jsonPath("$.data.courses[0].curationSection").value("MD_RECOMMENDED"))
+                .andExpect(jsonPath("$.data.courses[0].createdByAdmin").value(true))
+                .andExpect(jsonPath("$.data.courses[0].distanceMeters").value(42.5))
+                .andExpect(jsonPath("$.data.courses[0].startLocation.longitude").value(126.978))
+                .andExpect(jsonPath("$.data.courses[0].startLocation.latitude").value(37.5665))
+                .andExpect(jsonPath("$.data.courses[0].routeSummary.stopCount").value(2))
+                .andExpect(jsonPath("$.data.courses[0].segments[0].distanceMeters").value(140))
+                .andExpect(jsonPath("$.data.courses[0].encodedPolyline").doesNotExist())
+                .andExpect(jsonPath("$.data.courses[1].id").value("course-1"));
+
+        ArgumentCaptor<DistanceSearchCondition> conditionCaptor = ArgumentCaptor.forClass(DistanceSearchCondition.class);
+        verify(courseService).findPublicFeed(conditionCaptor.capture());
+        assertThat(conditionCaptor.getValue().longitude()).isEqualTo(126.9780);
+        assertThat(conditionCaptor.getValue().latitude()).isEqualTo(37.5665);
+        assertThat(conditionCaptor.getValue().limit()).isEqualTo(20);
+        assertThat(conditionCaptor.getValue().radiusMeters()).isNull();
+    }
+
+    @DisplayName("공개 코스 피드는 좌표를 필수로 검증한다")
+    @Test
+    void rejectsPublicCourseFeedWithoutCoordinates() throws Exception {
+        mockMvc.perform(get("/api/courses/feed")
+                        .param("limit", "20"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
+        verify(courseService, never()).findPublicFeed(any());
+    }
+
+    @DisplayName("공개 코스 피드는 limit과 radius 범위를 검증한다")
+    @Test
+    void rejectsPublicCourseFeedInvalidLimitAndRadius() throws Exception {
+        mockMvc.perform(get("/api/courses/feed")
+                        .param("mapX", "126.9780")
+                        .param("mapY", "37.5665")
+                        .param("limit", "51"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
+        mockMvc.perform(get("/api/courses/feed")
+                        .param("mapX", "126.9780")
+                        .param("mapY", "37.5665")
+                        .param("radius", "20000.1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
+        verify(courseService, never()).findPublicFeed(any());
     }
 
     @DisplayName("공개 코스 상세는 경로 요약과 items와 segments를 반환한다")
@@ -331,6 +372,35 @@ class CourseControllerTest {
                 null,
                 "admin".equals(ownerUserId),
                 saveCount,
+                "",
+                "",
+                CourseRoute.planned(
+                        List.of(attractionStop(null, 1L, 1), attractionStop(null, 2L, 2)),
+                        List.of(new CourseRouteSegment(1, 1, 2, "WALK", 100, 140))
+                )
+        );
+    }
+
+    private static Course feedCourse(String id,
+                                     String ownerUserId,
+                                     String curationSection,
+                                     Double distanceMeters) {
+        return new Course(
+                id,
+                ownerUserId,
+                id,
+                "서울",
+                "PUBLIC",
+                "READY",
+                null,
+                null,
+                curationSection,
+                null,
+                "admin".equals(ownerUserId),
+                37.5665,
+                126.9780,
+                distanceMeters,
+                0,
                 "",
                 "",
                 CourseRoute.planned(
