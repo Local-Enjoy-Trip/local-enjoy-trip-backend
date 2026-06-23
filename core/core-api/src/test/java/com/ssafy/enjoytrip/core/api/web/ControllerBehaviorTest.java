@@ -194,14 +194,21 @@ class ControllerBehaviorTest {
             WeatherSummary weather = new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25);
             List<WeatherForecast> forecasts = List.of(
                     new WeatherForecast("12:00", 22, "맑음", 10),
-                    new WeatherForecast("15:00", 24, "맑음", 10)
+                    new WeatherForecast("13:00", 23, "맑음", 10),
+                    new WeatherForecast("14:00", 24, "맑음", 10),
+                    new WeatherForecast("15:00", 25, "구름 많음", 20),
+                    new WeatherForecast("16:00", 24, "구름 많음", 20),
+                    new WeatherForecast("17:00", 23, "맑음", 10)
             );
-            when(neighborhoodBriefingService.brief(eq("서울"), any(), any(), anyString())).thenReturn(new NeighborhoodBriefing(
-                    "서울",
-                    "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?",
-                    weather,
-                    forecasts
-            ));
+            String generatedBriefing = "오늘 서울은 맑고 더운 편이라 "
+                    + "한강 저녁 산책 코스 어떠세요?";
+            when(neighborhoodBriefingService.brief(eq("서울"), any(), any(), anyString()))
+                    .thenReturn(new NeighborhoodBriefing(
+                            "서울",
+                            generatedBriefing,
+                            weather,
+                            forecasts
+                    ));
 
             mockMvc.perform(get("/api/neighborhood/briefing")
                             .param("regionName", "서울"))
@@ -216,7 +223,9 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.weather.region").value("서울"))
                     .andExpect(jsonPath("$.data.weather.tempMin").value(15))
                     .andExpect(jsonPath("$.data.weather.tempMax").value(25))
-                    .andExpect(jsonPath("$.data.forecasts[0].time").value("12:00"));
+                    .andExpect(jsonPath("$.data.forecasts.length()").value(6))
+                    .andExpect(jsonPath("$.data.forecasts[0].time").value("12:00"))
+                    .andExpect(jsonPath("$.data.forecasts[5].time").value("17:00"));
 
             verify(neighborhoodBriefingService).brief(eq("서울"), any(), any(), anyString());
         }
