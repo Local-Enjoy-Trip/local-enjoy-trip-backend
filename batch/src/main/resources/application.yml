@@ -23,8 +23,8 @@ enjoytrip:
         api-key: ${GMS_KEY:}
         timeout: ${GMS_EMBEDDING_TIMEOUT:30s}
         provider: gms
-        model: text-embedding-3-large
-        dimension: 3072
+        model: text-embedding-3-small
+        dimension: 1536
       expansion:
         gms:
           url: ${GMS_CHAT_COMPLETIONS_URL:https://gms.ssafy.io/gmsapi/api.openai.com/v1/chat/completions}

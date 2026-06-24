@@ -9,12 +9,12 @@ import java.util.stream.Collectors;
 
 @Component
 public class AttractionEmbeddingTargetRegionValidator {
-    private static final Set<String> REQUIRED_REGION_KEYS = Set.of("32:1:강원특별자치도:강릉시", "37:12:전북특별자치도:전주시");
+    private static final Set<String> REQUIRED_REGION_KEYS = Set.of("1:0:서울특별시:전체");
 
     public void validate(List<AttractionEmbeddingTargetRegion> regions) {
         if (regions == null || regions.size() != REQUIRED_REGION_KEYS.size()) {
             throw new IllegalStateException(
-                    "관광지 임베딩 대상 지역은 강릉과 전주만 포함해야 합니다."
+                    "관광지 임베딩 대상 지역은 서울만 포함해야 합니다."
             );
         }
         Set<String> actual = regions.stream()

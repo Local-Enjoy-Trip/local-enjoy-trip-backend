@@ -18,8 +18,10 @@ import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMap
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper.TargetRegionRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingSourceRecord;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AttractionEmbeddingBackfillService {
@@ -83,6 +85,7 @@ public class AttractionEmbeddingBackfillService {
         String sourceTextHash = sha256(embeddingText);
 
         if (alreadyEmbeddedWithSameExpandedSource(source, sourceVersion, sourceTextHash)) {
+            log.info("관광지 임베딩 건너뜀 (이미 최신 임베딩 존재) - ID: {}, 제목: {}", source.attractionId(), source.title());
             counter.skip();
             return;
         }
@@ -94,6 +97,7 @@ public class AttractionEmbeddingBackfillService {
                 embeddingText,
                 gateway.embed(embeddingText)
         );
+        log.info("관광지 임베딩 완료 및 저장 - ID: {}, 제목: {}", source.attractionId(), source.title());
         counter.embed();
     }
 
@@ -143,6 +147,8 @@ public class AttractionEmbeddingBackfillService {
                                        String attractionSourceText,
                                        AttractionEmbeddingFailure failure,
                                        BackfillCounter counter) {
+        log.error("관광지 임베딩 실패 기록 - ID: {}, 제목: {}, 에러코드: {}, 메시지: {}",
+                source.attractionId(), source.title(), failure.code(), failure.message());
         saveFailedResult(source, sourceVersion, sha256(attractionSourceText), failure);
         counter.fail();
     }

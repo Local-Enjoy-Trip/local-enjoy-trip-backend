@@ -18,6 +18,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.List;
 
 @Slf4j

@@ -13,8 +13,8 @@ public class GmsEmbeddingProperties {
     private String apiKey = "";
     private Duration timeout = Duration.ofSeconds(30);
     private String provider = "gms";
-    private String model = "text-embedding-3-large";
-    private int dimension = 3072;
+    private String model = "text-embedding-3-small";
+    private int dimension = 1536;
 
     public void assertLiveReady() {
         if (apiKey == null || apiKey.isBlank()) {
@@ -29,9 +29,9 @@ public class GmsEmbeddingProperties {
                     "GMS 임베딩 URL이 없습니다."
             );
         }
-        if (dimension != 3072) {
+        if (dimension != 1536) {
             throw new AttractionEmbeddingGatewayException("GMS_DIMENSION_UNSUPPORTED",
-                    "text-embedding-3-large 백필은 3072차원을 기대합니다.");
+                    "text-embedding-3-small 백필은 1536차원을 기대합니다.");
         }
     }
 

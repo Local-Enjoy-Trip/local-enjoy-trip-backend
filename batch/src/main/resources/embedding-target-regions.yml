@@ -3,13 +3,9 @@ enjoytrip:
     embedding:
       target-regions:
         regions:
-          - sido-name: 강원특별자치도
-            gugun-name: 강릉시
-            sido-code: 32
-            gugun-code: 1
-            provenance: 한국관광공사 TourAPI KorService2 areaCode/sigunguCode. 강릉 조회 예시는 area-code 32, sigungu-code 1을 사용하며, 한국관광공사 API 출처 관광지 샘플도 강릉시 행에 AREACODE=32/SIGUNGUCODE=1을 싣는다.
-          - sido-name: 전북특별자치도
-            gugun-name: 전주시
-            sido-code: 37
-            gugun-code: 12
-            provenance: 한국관광공사 TourAPI KorService2 areaCode/sigunguCode. 한국관광공사 API 출처 전주시 숙박/음식점 샘플은 AREACODE=37/SIGUNGUCODE=12를 싣는다.
+          - sido-name: 서울특별시
+            gugun-name: 전체
+            sido-code: 1
+            gugun-code: 0
+            provenance: 서울 지역 특별 설정. 코드로만 하면 부정확할 수 있어 addr1이 서울로 시작하는 경우도 포함한다.
+

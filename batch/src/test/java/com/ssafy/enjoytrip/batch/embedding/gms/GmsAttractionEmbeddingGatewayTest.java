@@ -22,8 +22,8 @@ class GmsAttractionEmbeddingGatewayTest {
         var result = gateway.embed("강릉 여행지");
 
         assertThat(result.provider()).isEqualTo("gms");
-        assertThat(result.model()).isEqualTo("text-embedding-3-large");
-        assertThat(result.dimension()).isEqualTo(3072);
+        assertThat(result.model()).isEqualTo("text-embedding-3-small");
+        assertThat(result.dimension()).isEqualTo(1536);
         assertThat(result.embedding()).startsWith(0.1, 0.2, 0.3);
         assertThat(http.requests()).hasSize(1);
         assertThat(http.requests().getFirst().uri().toString()).isEqualTo("https://gms.ssafy.io/gmsapi/api.openai.com/v1/embeddings");
@@ -51,12 +51,12 @@ class GmsAttractionEmbeddingGatewayTest {
 
     private static String embeddingResponse() {
         StringBuilder builder = new StringBuilder("{\"data\":[{\"embedding\":[");
-        for (int i = 0; i < 3072; i++) {
+        for (int i = 0; i < 1536; i++) {
             if (i > 0) {
                 builder.append(',');
             }
             builder.append((i % 10 + 1) / 10.0);
         }
-        return builder.append("]}],\"model\":\"text-embedding-3-large\"}").toString();
+        return builder.append("]}],\"model\":\"text-embedding-3-small\"}").toString();
     }
 }

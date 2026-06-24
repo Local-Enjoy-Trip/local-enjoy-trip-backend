@@ -3,7 +3,14 @@
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper">
     <sql id="regionCondition">
         <foreach collection="regions" item="region" separator=" or " open="(" close=")">
-            (a.sido_code = #{region.sidoCode} and a.gugun_code = #{region.gugunCode})
+            <choose>
+                <when test="region.sidoCode == 1">
+                    (a.sido_code = 1 or a.addr1 like '서울%')
+                </when>
+                <otherwise>
+                    (a.sido_code = #{region.sidoCode} and a.gugun_code = #{region.gugunCode})
+                </otherwise>
+            </choose>
         </foreach>
     </sql>
     <select id="findTargets" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingSourceRecord">
@@ -21,8 +28,8 @@
     </insert>
     <insert id="upsertFailed">
         insert into attraction_embeddings (attraction_id, source_version, source_text_hash, embedding_dimension, provider, model, status, failure_code, failure_message, attempt_count, last_attempted_at, updated_at)
-        values (#{attractionId}, #{sourceVersion}, #{sourceTextHash}, 3072, 'gms', 'text-embedding-3-large', 'FAILED', #{failureCode}, #{failureMessage}, 1, current_timestamp, current_timestamp)
-        on conflict (attraction_id) do update set source_version = excluded.source_version, source_text_hash = excluded.source_text_hash, embedding_dimension = 3072, provider = 'gms', model = 'text-embedding-3-large', status = 'FAILED', embedding = null, failure_code = excluded.failure_code, failure_message = excluded.failure_message, attempt_count = attraction_embeddings.attempt_count + 1, last_attempted_at = current_timestamp, embedded_at = null, updated_at = current_timestamp
+        values (#{attractionId}, #{sourceVersion}, #{sourceTextHash}, 1536, 'gms', 'text-embedding-3-small', 'FAILED', #{failureCode}, #{failureMessage}, 1, current_timestamp, current_timestamp)
+        on conflict (attraction_id) do update set source_version = excluded.source_version, source_text_hash = excluded.source_text_hash, embedding_dimension = 1536, provider = 'gms', model = 'text-embedding-3-small', status = 'FAILED', embedding = null, failure_code = excluded.failure_code, failure_message = excluded.failure_message, attempt_count = attraction_embeddings.attempt_count + 1, last_attempted_at = current_timestamp, embedded_at = null, updated_at = current_timestamp
     </insert>
     <select id="countOutsideTargetRegions" resultType="long">
         select count(*) from attraction_embeddings e join attractions a on e.attraction_id = a.id

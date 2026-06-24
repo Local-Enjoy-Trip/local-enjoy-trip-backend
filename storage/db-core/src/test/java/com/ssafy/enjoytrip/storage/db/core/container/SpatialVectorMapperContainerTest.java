@@ -107,6 +107,7 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
         String hash = "a".repeat(64);
         seedAttraction(targetAttractionId, "임베딩 대상", 1, 1);
         seedAttraction(outsideAttractionId, "임베딩 외부", 2, 2);
+        jdbcTemplate.update("update attractions set addr1 = '부산 해운대구' where id = ?", outsideAttractionId);
 
         attractionEmbeddingMapper.upsertFailed(
                 outsideAttractionId,
@@ -117,16 +118,16 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
         );
         attractionEmbeddingMapper.upsertEmbedded(
                 targetAttractionId,
-                vectorLiteral(3072),
+                vectorLiteral(1536),
                 "v1",
                 hash,
-                3072,
+                1536,
                 "임베딩 대상",
                 "gms",
-                "text-embedding-3-large"
+                "text-embedding-3-small"
         );
 
-        List<TargetRegionRecord> regions = List.of(new TargetRegionRecord(1, 1));
+        List<TargetRegionRecord> regions = List.of(new TargetRegionRecord(1, 0));
         List<AttractionEmbeddingSourceRecord> targets = attractionEmbeddingMapper.findTargets(regions, 10);
 
         assertThat(targets)
