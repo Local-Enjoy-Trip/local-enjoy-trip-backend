@@ -165,17 +165,7 @@ public class SecurityConfig {
                         ).authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/courses/{id}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/courses/{id}").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/plans", "/api/plans/items").authenticated()
-                        .requestMatchers(
-                                HttpMethod.PUT,
-                                "/api/plans/{id}",
-                                "/api/plans/{id}/items"
-                        ).authenticated()
-                        .requestMatchers(
-                                HttpMethod.DELETE,
-                                "/api/plans/{id}",
-                                "/api/plans/{id}/items/{itemId}"
-                        ).authenticated()
+
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling

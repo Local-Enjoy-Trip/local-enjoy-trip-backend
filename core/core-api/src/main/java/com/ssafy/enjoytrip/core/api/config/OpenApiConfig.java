@@ -31,13 +31,7 @@ import org.springframework.context.annotation.Configuration;
                 @Tag(name = "Health", description = "애플리케이션과 DB 연결 상태 확인 API"),
                 @Tag(name = "Members", description = "회원 가입, 로그인, 내 정보, 회원 관리 API"),
                 @Tag(name = "Attractions", description = "관광지 검색 API"),
-                @Tag(name = "Boards", description = "게시판 게시글 API"),
-                @Tag(name = "Notices", description = "공지사항 API"),
-                @Tag(name = "Hotplaces", description = "사용자 핫플레이스 API"),
-                @Tag(name = "Plans", description = "여행 계획 API"),
-                @Tag(name = "Route", description = "여행 경로 최적화 API"),
-                @Tag(name = "Chargers", description = "전기차 충전소 검색 API"),
-                @Tag(name = "News", description = "여행 뉴스 API")
+                @Tag(name = "Route", description = "여행 경로 최적화 API")
         }
 )
 @SecurityScheme(

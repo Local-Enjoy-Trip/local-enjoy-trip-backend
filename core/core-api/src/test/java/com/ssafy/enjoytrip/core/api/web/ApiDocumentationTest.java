@@ -12,8 +12,7 @@ import com.ssafy.enjoytrip.core.domain.vo.DateRange;
 import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
-import com.ssafy.enjoytrip.core.domain.ChargerResult;
-import com.ssafy.enjoytrip.core.domain.NewsResult;
+
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
@@ -21,25 +20,15 @@ import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.domain.service.DbHealthService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
-import com.ssafy.enjoytrip.core.domain.service.BoardService;
-import com.ssafy.enjoytrip.core.domain.service.EvChargerService;
-import com.ssafy.enjoytrip.core.domain.service.HotplaceService;
 import com.ssafy.enjoytrip.core.domain.service.CourseService;
 import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MemberProfileImageService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
 import com.ssafy.enjoytrip.core.domain.service.NeighborhoodBriefingService;
-import com.ssafy.enjoytrip.core.domain.service.NewsService;
-import com.ssafy.enjoytrip.core.domain.service.NoticeService;
-import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
-import com.ssafy.enjoytrip.core.domain.service.PlanService;
 import com.ssafy.enjoytrip.core.domain.service.WeatherService;
-import com.ssafy.enjoytrip.core.domain.BoardPost;
-import com.ssafy.enjoytrip.core.domain.Hotplace;
+import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.core.domain.Member;
 import com.ssafy.enjoytrip.core.domain.ProfileImageUploadUrl;
-import com.ssafy.enjoytrip.core.domain.Notice;
-import com.ssafy.enjoytrip.core.domain.TravelPlan;
 import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
 import com.ssafy.enjoytrip.core.domain.service.MapExploreService;
 import com.ssafy.enjoytrip.core.domain.service.MapSearchService;
@@ -87,15 +76,8 @@ class ApiDocumentationTest {
     private MockMvc mockMvc;
     private AttractionService attractionService;
     private AttractionStatsService attractionStatsService;
-    private EvChargerService chargerService;
-    private NewsService newsService;
-
     private WeatherService weatherService;
     private NeighborhoodBriefingService neighborhoodBriefingService;
-    private BoardService boardService;
-    private HotplaceService hotplaceService;
-    private PlanService planService;
-    private NoticeService noticeService;
     private CourseService courseService;
     private MemberService memberService;
     private JwtTokenService tokenService;
@@ -108,15 +90,8 @@ class ApiDocumentationTest {
     void setUp(RestDocumentationContextProvider restDocumentation) {
         attractionService = mock(AttractionService.class);
         attractionStatsService = mock(AttractionStatsService.class);
-        chargerService = mock(EvChargerService.class);
-        newsService = mock(NewsService.class);
-
         weatherService = mock(WeatherService.class);
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
-        boardService = mock(BoardService.class);
-        hotplaceService = mock(HotplaceService.class);
-        planService = mock(PlanService.class);
-        noticeService = mock(NoticeService.class);
         courseService = mock(CourseService.class);
         memberService = mock(MemberService.class);
         tokenService = mock(JwtTokenService.class);
@@ -129,14 +104,7 @@ class ApiDocumentationTest {
                 .standaloneSetup(
                         new HealthController(mock(DbHealthService.class)),
                         new AttractionController(attractionService, attractionStatsService),
-                        new ChargerController(chargerService),
-                        new NewsController(newsService),
-
                         new NeighborhoodBriefingController(neighborhoodBriefingService, weatherService),
-                        new BoardController(boardService),
-                        new HotplaceController(hotplaceService),
-                        new PlanController(planService),
-                        new NoticeController(noticeService),
                         new CourseController(courseService),
                         new MemberController(memberService, tokenService, oauthSignupTicketService),
                         new MemberProfileImageController(memberProfileImageService),
@@ -220,37 +188,7 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
     }
 
-    @DisplayName("충전소 API 문서를 검증한다")
-    @Test
-    void chargers() throws Exception {
-        when(chargerService.findChargers(null, "서울", 1, 150)).thenReturn(List.of(
-                new ChargerResult(
-                        "ST001", "서울충전소", "01", "06", "서울", "", 37.5, 127.0, "24시간", "환경부", "1661-9408", "2"
-                )
-        ));
 
-        mockMvc.perform(get("/api/chargers").param("keyword", "서울"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.chargers").isArray())
-                .andDo(document("chargers",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint())));
-    }
-
-    @DisplayName("뉴스 API 문서를 검증한다")
-    @Test
-    void news() throws Exception {
-        when(newsService.findNews()).thenReturn(List.of(
-                new NewsResult("news_1", "관광 뉴스", "https://example.com", "요약", "관광 뉴스", "2026-05-14")
-        ));
-
-        mockMvc.perform(get("/api/news"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.news").isArray())
-                .andDo(document("news",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint())));
-    }
 
 
 
@@ -288,56 +226,7 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
     }
 
-    @DisplayName("게시글 API 문서를 검증한다")
-    @Test
-    void boards() throws Exception {
-        when(boardService.findAllPosts()).thenReturn(List.of(
-                new BoardPost("b1", "제목", "내용", "ssafy", "2026-05-14 11:00:00", "")
-        ));
 
-        mockMvc.perform(get("/api/boards"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.boards").isArray())
-                .andDo(document("boards",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint())));
-    }
-
-    @DisplayName("핫플레이스 API 문서를 검증한다")
-    @Test
-    void hotplaces() throws Exception {
-        when(hotplaceService.findAllHotplaces()).thenReturn(List.of(
-                new Hotplace(
-                        "h1", 11L, "남산", "view", "2026-05-14", 37.55, 126.99, "야경", "",
-                        "2026-05-14 11:00:00"
-                )
-        ));
-
-        mockMvc.perform(get("/api/hotplaces"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.hotplaces").isArray())
-                .andDo(document("hotplaces",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint())));
-    }
-
-    @DisplayName("여행 계획 API 문서를 검증한다")
-    @Test
-    void plans() throws Exception {
-        when(planService.findAllPlans()).thenReturn(List.of(
-                new TravelPlan(
-                        "p1", 11L, "서울 여행", new DateRange("2026-05-14", "2026-05-15"), 100000, "메모", "[]",
-                        "2026-05-14 11:00:00"
-                )
-        ));
-
-        mockMvc.perform(get("/api/plans"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.plans").isArray())
-                .andDo(document("plans",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint())));
-    }
 
     @DisplayName("코스 API 문서를 검증한다")
     @Test
@@ -412,20 +301,7 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
     }
 
-    @DisplayName("공지 API 문서를 검증한다")
-    @Test
-    void notices() throws Exception {
-        when(noticeService.findAllNotices()).thenReturn(List.of(
-                new Notice(1L, "공지", "내용", "admin", "2026-05-14 11:00:00", "")
-        ));
 
-        mockMvc.perform(get("/api/notices"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.notices").isArray())
-                .andDo(document("notices",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint())));
-    }
 
     @DisplayName("회원 API 문서를 검증한다")
     @Test

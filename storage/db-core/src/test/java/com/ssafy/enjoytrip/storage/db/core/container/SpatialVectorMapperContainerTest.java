@@ -6,12 +6,12 @@ import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingSourceRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionStatsRowRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.ChargerItemRecord;
+
 import com.ssafy.enjoytrip.storage.db.core.model.TagRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper.TargetRegionRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.EvChargerMapper;
+
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.TagMapper;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -31,8 +31,7 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
     @Autowired
     private AttractionEmbeddingMapper attractionEmbeddingMapper;
 
-    @Autowired
-    private EvChargerMapper evChargerMapper;
+
 
     @DisplayName("AttractionMapper는 검색, 주변 검색, 저장, 평점 SQL을 실행한다")
     @Test
@@ -98,42 +97,7 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
         assertThat(tagMapper.delete(tag.id())).isEqualTo(1);
     }
 
-    @DisplayName("EvChargerMapper는 PostGIS 위치 컬럼을 포함해 충전소를 조건 검색한다")
-    @Test
-    void evChargerMapperReadsPostgisLocationRows() {
-        jdbcTemplate.update("""
-                insert into ev_chargers (
-                    stat_id,
-                    stat_nm,
-                    chger_id,
-                    chger_type,
-                    addr,
-                    location_desc,
-                    use_time,
-                    busi_nm,
-                    busi_call,
-                    stat,
-                    location
-                )
-                values (
-                    ?,
-                    '서비스커넥션 충전소',
-                    '01',
-                    'FAST',
-                    '서울 중구',
-                    '시청 앞',
-                    '24H',
-                    '사업자',
-                    '02',
-                    'AVAILABLE',
-                    ST_SetSRID(ST_MakePoint(126.9780, 37.5665), 4326)
-                )
-                """, uniqueId("charger"));
 
-        List<ChargerItemRecord> chargers = evChargerMapper.findChargers("서울", "서비스커넥션", 10, 0);
-
-        assertThat(chargers).extracting(ChargerItemRecord::statNm).contains("서비스커넥션 충전소");
-    }
 
     @DisplayName("AttractionEmbeddingMapper는 대상 조회와 임베딩 upsert 상태 SQL을 실행한다")
     @Test

@@ -6,8 +6,6 @@ import com.ssafy.enjoytrip.core.domain.MapExploreResult;
 import com.ssafy.enjoytrip.core.domain.NoteMapPin;
 import com.ssafy.enjoytrip.core.domain.PlaceMapPin;
 
-import com.ssafy.enjoytrip.core.domain.BoardPost;
-import com.ssafy.enjoytrip.core.domain.Hotplace;
 import com.ssafy.enjoytrip.core.domain.Member;
 import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
 import com.ssafy.enjoytrip.core.domain.NoteImageUploadUrl;
@@ -18,8 +16,6 @@ import com.ssafy.enjoytrip.core.domain.Note;
 import com.ssafy.enjoytrip.core.domain.NoteCategory;
 import com.ssafy.enjoytrip.core.domain.NoteStatus;
 import com.ssafy.enjoytrip.core.domain.NoteVisibility;
-import com.ssafy.enjoytrip.core.domain.PlanItem;
-import com.ssafy.enjoytrip.core.domain.TravelPlan;
 import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.AttractionStats;
@@ -39,10 +35,7 @@ import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.domain.service.DbHealthService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
-import com.ssafy.enjoytrip.core.domain.service.BoardService;
-import com.ssafy.enjoytrip.core.domain.service.EvChargerService;
-import com.ssafy.enjoytrip.core.domain.service.HotplaceService;
-import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
+import com.ssafy.enjoytrip.core.domain.service.WeatherService;
 import com.ssafy.enjoytrip.core.domain.service.MapExploreService;
 import com.ssafy.enjoytrip.core.domain.service.MapSearchService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
@@ -50,10 +43,8 @@ import com.ssafy.enjoytrip.core.domain.service.NoteImageUploadService;
 import com.ssafy.enjoytrip.core.domain.service.MemberProfileImageService;
 import com.ssafy.enjoytrip.core.domain.service.NeighborhoodBriefingService;
 import com.ssafy.enjoytrip.core.domain.service.NoteService;
-import com.ssafy.enjoytrip.core.domain.service.NoticeService;
+import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
-import com.ssafy.enjoytrip.core.domain.service.PlanService;
-import com.ssafy.enjoytrip.core.domain.service.WeatherService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -79,10 +70,6 @@ import java.util.regex.Pattern;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.INVALID_CREDENTIALS;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.ATTRACTION_NOT_FOUND;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.PLAN_NOT_FOUND;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.NOTICE_NOT_FOUND;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.HOTPLACE_NOT_FOUND;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.POST_NOT_FOUND;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -105,10 +92,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("web")
 class ControllerBehaviorTest {
-    private BoardService boardService;
-    private HotplaceService hotplaceService;
-    private PlanService planService;
-    private NoticeService noticeService;
     private NoteService noteService;
     private MapExploreService mapExploreService;
     private MapSearchService mapSearchService;
@@ -118,7 +101,6 @@ class ControllerBehaviorTest {
     private AttractionService attractionService;
     private AttractionStatsService attractionStatsService;
     private TagService tagService;
-    private EvChargerService chargerService;
 
     private WeatherService weatherService;
     private NeighborhoodBriefingService neighborhoodBriefingService;
@@ -129,10 +111,6 @@ class ControllerBehaviorTest {
 
     @BeforeEach
     void setUp() {
-        boardService = mock(BoardService.class);
-        hotplaceService = mock(HotplaceService.class);
-        planService = mock(PlanService.class);
-        noticeService = mock(NoticeService.class);
         noteService = mock(NoteService.class);
         mapExploreService = mock(MapExploreService.class);
         mapSearchService = mock(MapSearchService.class);
@@ -142,7 +120,6 @@ class ControllerBehaviorTest {
         attractionService = mock(AttractionService.class);
         attractionStatsService = mock(AttractionStatsService.class);
         tagService = mock(TagService.class);
-        chargerService = mock(EvChargerService.class);
 
         weatherService = mock(WeatherService.class);
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
@@ -150,16 +127,11 @@ class ControllerBehaviorTest {
         memberProfileImageService = mock(MemberProfileImageService.class);
         dbHealthService = mock(DbHealthService.class);
         mockMvc = MockMvcBuilders.standaloneSetup(
-                        new BoardController(boardService),
-                        new HotplaceController(hotplaceService),
-                        new PlanController(planService),
-                        new NoticeController(noticeService),
                         new NoteController(noteService),
                         new MemberController(memberService, tokenService, oauthSignupTicketService),
                         new MemberProfileImageController(memberProfileImageService),
                         new AttractionController(attractionService, attractionStatsService),
                         new TagController(tagService),
-                        new ChargerController(chargerService),
 
                         new NeighborhoodBriefingController(neighborhoodBriefingService, weatherService),
                         new MapController(mapExploreService, mapSearchService),
@@ -743,270 +715,6 @@ class ControllerBehaviorTest {
         }
     }
 
-    @Nested
-    class BoardEndpoints {
-        @DisplayName("게시글 생성은 값을 정리해 서비스에 전달한다")
-        @Test
-        void createTrimsAndPassesBoardPostToService() throws Exception {
-            mockMvc.perform(post("/api/boards")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {
-                                      "id":" b1 ",
-                                      "title":" title ",
-                                      "content":" content ",
-                                      "author":" ssafy "
-                                    }
-                                    """))
-                    .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.success").value(true));
-
-            ArgumentCaptor<BoardPost> captor = ArgumentCaptor.forClass(BoardPost.class);
-            verify(boardService).insertPost(captor.capture());
-            assertThat(captor.getValue()).isEqualTo(new BoardPost("b1", "title", "content", "ssafy", "", ""));
-        }
-
-        @DisplayName("검증 실패와 서비스 예외 응답을 보고한다")
-        @Test
-        void reportsValidationNotFoundAndServiceExceptionCases() throws Exception {
-            mockMvc.perform(post("/api/boards")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"id":"b1"}
-                                    """))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.code").value("C400"));
-
-            doThrow(new CoreException(POST_NOT_FOUND)).when(boardService).updatePost(any());
-            mockMvc.perform(put("/api/boards/b1")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"title":"title","content":"content"}
-                                    """))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.error.message").value("게시글을 찾을 수 없습니다."));
-
-            doThrow(new IllegalStateException("쓰기 작업에 실패했습니다."))
-                    .when(boardService)
-                    .insertPost(any());
-            mockMvc.perform(post("/api/boards")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"id":"b2","title":"title","content":"content","author":"ssafy"}
-                                    """))
-                    .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath("$.error.code").value("I500"));
-        }
-    }
-
-    @Nested
-    class HotplaceEndpoints {
-        @DisplayName("회원 식별자별 핫플레이스를 조회하고 좌표로 생성한다")
-        @Test
-        void findsHotplacesByUserAndCreatesWithCoordinates() throws Exception {
-            when(hotplaceService.findHotplacesByMemberId(11L)).thenReturn(List.of(
-                    new Hotplace(
-                            "h1", 11L, "남산", "view", "2026-05-14", 37.55, 126.99, "night", "",
-                            "created"
-                    )
-            ));
-
-            mockMvc.perform(get("/api/hotplaces").param("memberId", "11"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.hotplaces[0].id").value("h1"));
-
-            mockMvc.perform(post("/api/hotplaces")
-                            .principal(jwtPrincipal(11L))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {
-                                      "id":"h2",
-                                      "title":"광안리",
-                                      "type":"beach",
-                                      "visitDate":"2026-05-15",
-                                      "lat":35.153,
-                                      "lng":129.118,
-                                      "description":"sea"
-                                    }
-                                    """))
-                    .andExpect(status().isCreated());
-
-            ArgumentCaptor<Hotplace> captor = ArgumentCaptor.forClass(Hotplace.class);
-            verify(hotplaceService).insertHotplace(captor.capture());
-            assertThat(captor.getValue().lat()).isEqualTo(35.153);
-            assertThat(captor.getValue().lng()).isEqualTo(129.118);
-        }
-
-        @DisplayName("잘못된 좌표와 누락된 삭제 대상을 거부한다")
-        @Test
-        void rejectsInvalidCoordinatesAndMissingDeleteTarget() throws Exception {
-            mockMvc.perform(post("/api/hotplaces")
-                            .principal(jwtPrincipal(11L))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {
-                                      "id":"h1",
-                                      "title":"남산",
-                                      "type":"view",
-                                      "visitDate":"2026-05-14",
-                                      "lat":100.0,
-                                      "lng":126.99
-                                    }
-                                    """))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
-
-            doThrow(new CoreException(HOTPLACE_NOT_FOUND))
-                    .when(hotplaceService)
-                    .deleteHotplaceOrThrow("h-missing", 11L);
-            mockMvc.perform(delete("/api/hotplaces/h-missing").principal(jwtPrincipal(11L)))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.error.message")
-                            .value("핫플레이스를 찾을 수 없습니다."));
-        }
-    }
-
-    @Nested
-    class PlanAndNoticeEndpoints {
-        @DisplayName("계획 조회는 정규화된 경로 항목만 반환하고 저장 JSON 대체 파싱을 하지 않는다")
-        @Test
-        void planFindReturnsOnlyNormalizedRouteItemsAndDoesNotParseStoredJsonFallback() throws Exception {
-            when(planService.findPlansByMemberId(11L)).thenReturn(List.of(
-                    new TravelPlan(
-                            "p1", 11L, "서울", new DateRange("2026-05-14", "2026-05-15"), 1000, null,
-                            "[{\"title\":\"A\"}]", "created"
-                    ),
-                    new TravelPlan(
-                            "p2", 11L, "부산", new DateRange("2026-05-16", "2026-05-17"), 2000, "note",
-                            "not json", "created"
-                    )
-            ));
-
-            mockMvc.perform(get("/api/plans").param("memberId", "11"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.plans[0].routeItems", empty()))
-                    .andExpect(jsonPath("$.data.plans[0].note").value(""))
-                    .andExpect(jsonPath("$.data.plans[1].routeItems", empty()));
-        }
-
-        @DisplayName("없는 계획 삭제는 찾을 수 없음으로 응답한다")
-        @Test
-        void planDeleteMissingReturnsNotFound() throws Exception {
-            doThrow(new CoreException(PLAN_NOT_FOUND)).when(planService).deletePlan(11L, "missing");
-
-            mockMvc.perform(delete("/api/plans/missing").principal(jwtPrincipal(11L)))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.error.message").value("여행 계획을 찾을 수 없습니다."));
-        }
-
-        @DisplayName("표준 계획 생성은 인증 사용자 기준의 타입화된 경로 항목을 저장한다")
-        @Test
-        void canonicalPlanCreateStoresTypedRouteItemsFromAuthenticatedUser() throws Exception {
-            mockMvc.perform(post("/api/plans")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .principal(jwtPrincipal(11L))
-                            .content("""
-                                    {
-                                      "id":"p-route",
-                                      "title":"서울",
-                                      "startDate":"2026-05-14",
-                                      "endDate":"2026-05-15",
-                                      "routeItems":[
-                                        {"attractionId":10,"day":2,"memo":"lunch","stayMinutes":120},
-                                        {"attractionId":11}
-                                      ]
-                                    }
-                                    """))
-                    .andExpect(status().isOk());
-
-            ArgumentCaptor<TravelPlan> planCaptor = ArgumentCaptor.forClass(TravelPlan.class);
-            @SuppressWarnings("unchecked")
-            ArgumentCaptor<List<PlanItem>> itemCaptor = ArgumentCaptor.forClass(List.class);
-            verify(planService).createPlan(planCaptor.capture(), itemCaptor.capture());
-
-            assertThat(planCaptor.getValue().id()).isEqualTo("p-route");
-            assertThat(planCaptor.getValue().memberId()).isEqualTo(11L);
-            assertThat(itemCaptor.getValue())
-                    .extracting("attractionId")
-                    .containsExactly(10L, 11L);
-            assertThat(itemCaptor.getValue().getFirst().day()).isEqualTo(2);
-            assertThat(itemCaptor.getValue().getFirst().memo()).isEqualTo("lunch");
-        }
-
-        @DisplayName("표준 계획 생성 검증 실패는 표준 잘못된 요청 응답을 사용한다")
-        @Test
-        void canonicalPlanCreateValidationFailureUsesStandardBadRequestEnvelope() throws Exception {
-            mockMvc.perform(post("/api/plans")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .principal(jwtPrincipal(11L))
-                            .content("""
-                                    {
-                                      "id":"",
-                                      "title":"서울",
-                                      "startDate":"2026-05-14",
-                                      "endDate":"2026-05-15",
-                                      "budget":-1
-                                    }
-                                    """))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
-        }
-
-        @DisplayName("표준 계획 수정은 경로 항목 필드가 없으면 기존 항목을 유지한다")
-        @Test
-        void canonicalPlanUpdateKeepsRouteItemsWhenRouteItemsFieldIsAbsent() throws Exception {
-            mockMvc.perform(put("/api/plans/p-route")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .principal(jwtPrincipal(11L))
-                            .content("""
-                                    {
-                                      "title":"서울 수정",
-                                      "budget":2000
-                                    }
-                                    """))
-                    .andExpect(status().isOk());
-
-            verify(planService).updatePlan(
-                    11L,
-                    "p-route",
-                    "서울 수정",
-                    null,
-                    null,
-                    2000,
-                    null,
-                    null
-            );
-        }
-
-        @DisplayName("공지 생성과 수정 및 삭제의 검증 사례를 확인한다")
-        @Test
-        void noticeCreateUpdateAndDeleteValidationCases() throws Exception {
-            mockMvc.perform(post("/api/notices")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"title":"공지","content":"내용","author":"admin"}
-                                    """))
-                    .andExpect(status().isCreated());
-            verify(noticeService).insertNotice(any());
-
-            mockMvc.perform(put("/api/notices/0")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"title":"공지","content":"내용"}
-                                    """))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.message").value("유효하지 않은 id입니다."));
-
-            doThrow(new CoreException(NOTICE_NOT_FOUND)).when(noticeService).updateNoticeOrThrow(any());
-            mockMvc.perform(put("/api/notices/1")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"title":"공지","content":"내용"}
-                                    """))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.error.message").value("공지사항을 찾을 수 없습니다."));
-        }
-    }
 
     @Nested
     class MemberAuthEndpoints {
@@ -1065,9 +773,9 @@ class ControllerBehaviorTest {
 
     @Nested
     class ExternalAndHealthEndpoints {
-        @DisplayName("관광지와 충전소 컨트롤러는 정상 및 예외 사례를 변환한다")
+        @DisplayName("관광지 컨트롤러는 정상 및 예외 사례를 변환한다")
         @Test
-        void attractionAndChargerControllersTranslateNormalAndExceptionCases() throws Exception {
+        void attractionControllerTranslatesNormalAndExceptionCases() throws Exception {
             mockMvc.perform(post("/api/attractions"))
                     .andExpect(status().isMethodNotAllowed())
                     .andExpect(jsonPath("$.error.message").value("GET /api/attractions를 사용하세요."));
@@ -1093,20 +801,6 @@ class ControllerBehaviorTest {
                     .andExpect(status().isInternalServerError())
                     .andExpect(jsonPath("$.error.message")
                             .value("서버 내부 오류가 발생했습니다."));
-
-            mockMvc.perform(get("/api/chargers").param("pageNo", "bad").param("numOfRows", "bad"))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.message").value("유효하지 않은 요청입니다."));
-
-            when(chargerService.findChargers(null, null, 1, 150))
-                    .thenThrow(new ExternalServiceException(
-                            ExternalServiceException.Source.EV_CHARGER_API,
-                            new RuntimeException("요청 시간이 초과되었습니다.")
-                    ));
-            mockMvc.perform(get("/api/chargers"))
-                    .andExpect(status().isBadGateway())
-                    .andExpect(jsonPath("$.error.message")
-                            .value("EV 충전기 API 호출에 실패했습니다."));
         }
 
         @DisplayName("홈 인기 주변 관광지는 서울과 500m 기본값을 적용하고 전용 인기 수를 반환한다")

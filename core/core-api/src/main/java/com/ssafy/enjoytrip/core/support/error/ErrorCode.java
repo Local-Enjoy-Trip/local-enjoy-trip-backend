@@ -10,8 +10,6 @@ public enum ErrorCode {
     A002,
     A003,
 
-    P001,
-    P002,
     P003,
     P004,
     P005,
@@ -22,16 +20,11 @@ public enum ErrorCode {
     F004,
     F005,
 
-    N001,
     N002,
     N003,
     N004,
     N005,
     N006,
-
-    B001,
-
-    H001,
 
     C400,
     C405,

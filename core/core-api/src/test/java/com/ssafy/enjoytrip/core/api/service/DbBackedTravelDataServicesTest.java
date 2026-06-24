@@ -14,8 +14,6 @@ import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.external.minio.MinioNoteImageUploadUrlGenerator;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.EvChargerMapper;
-import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NewsMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -209,21 +207,5 @@ class DbBackedTravelDataServicesTest {
         }
     }
 
-    @Nested
-    class EvChargerServiceTests {
-        @DisplayName("EvChargerService는 MyBatis mapper로 생성된다")
-        @Test
-        void constructsWithMyBatisMapper() {
-            assertThat(new EvChargerService(mock(EvChargerMapper.class))).isNotNull();
-        }
-    }
 
-    @Nested
-    class NewsServiceTests {
-        @DisplayName("NewsService는 MyBatis mapper로 생성된다")
-        @Test
-        void constructsWithMyBatisMapper() {
-            assertThat(new NewsService(mock(NewsMapper.class))).isNotNull();
-        }
-    }
 }
