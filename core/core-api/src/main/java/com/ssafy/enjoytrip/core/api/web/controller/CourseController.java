@@ -5,7 +5,9 @@ import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseFeedRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.CourseMdFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseOrderRecommendationRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.CoursePopularFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseUpdateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseFeedResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseResponse;
@@ -40,6 +42,20 @@ public class CourseController {
     @GetMapping("/feed")
     public ApiResponse<CourseFeedResponse> feed(@Valid @ModelAttribute CourseFeedRequest request) {
         return success(CourseFeedResponse.from(courseService.findPublicFeed(request.toCondition())));
+    }
+
+    @GetMapping("/feed/md")
+    public ApiResponse<CourseFeedResponse> mdFeed(@Valid @ModelAttribute CourseMdFeedRequest request) {
+        return success(CourseFeedResponse.from(
+                courseService.findMdFeed(request.mapX(), request.mapY(), request.resolvedLimit())
+        ));
+    }
+
+    @GetMapping("/feed/popular")
+    public ApiResponse<CourseFeedResponse> popularFeed(@Valid @ModelAttribute CoursePopularFeedRequest request) {
+        return success(CourseFeedResponse.from(
+                courseService.findPopularByRegion(request.normalizedRegionName(), request.resolvedLimit())
+        ));
     }
 
     @GetMapping("/{id}")
@@ -88,6 +104,20 @@ public class CourseController {
 
     private static CourseOrderOptimizationContext toContext(CourseOrderRecommendationRequest request) {
         return request == null ? CourseOrderOptimizationContext.empty() : request.toContext();
+    }
+
+    @PostMapping("/{id}/save")
+    public ApiResponse<Void> save(@PathVariable @NotBlank String id,
+                                  @AuthenticatedMemberId Long authenticatedMemberId) {
+        courseService.saveCourse(authenticatedMemberId, id.strip());
+        return success();
+    }
+
+    @DeleteMapping("/{id}/save")
+    public ApiResponse<Void> unsave(@PathVariable @NotBlank String id,
+                                    @AuthenticatedMemberId Long authenticatedMemberId) {
+        courseService.unsaveCourse(authenticatedMemberId, id.strip());
+        return success();
     }
 
     @DeleteMapping("/{id}")
