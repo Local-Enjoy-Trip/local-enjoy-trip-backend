@@ -1,7 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
-import java.util.List;
 
 public record AttractionDetailResponse(
         Long id,
@@ -19,7 +18,6 @@ public record AttractionDetailResponse(
         int saveCount,
         double ratingAverage,
         int ratingCount,
-        List<Tag> tags,
         boolean saved,
         Integer myRating
 ) {
@@ -27,34 +25,21 @@ public record AttractionDetailResponse(
         this(
                 attraction.id(),
                 attraction.title(),
-                attraction.addr1(),
-                attraction.addr2(),
-                attraction.zipcode(),
+                attraction.address() != null ? attraction.address().address() : null,
+                attraction.address() != null ? attraction.address().addressDetail() : null,
+                attraction.address() != null ? attraction.address().zipcode() : null,
                 attraction.tel(),
                 attraction.primaryImageUrl(),
                 attraction.readcount(),
-                attraction.latitude(),
-                attraction.longitude(),
+                attraction.location() != null ? attraction.location().latitude() : null,
+                attraction.location() != null ? attraction.location().longitude() : null,
                 attraction.contentTypeId(),
                 attraction.overview(),
                 attraction.saveCount(),
-                attraction.ratingAverage(),
-                attraction.ratingCount(),
-                tags(attraction),
+                attraction.ratingStats() != null ? attraction.ratingStats().ratingAverage() : 0.0,
+                attraction.ratingStats() != null ? attraction.ratingStats().ratingCount() : 0,
                 attraction.saved(),
                 attraction.myRating()
         );
-    }
-
-    private static List<Tag> tags(Attraction attraction) {
-        return attraction.tags().stream()
-                .map(tag -> new Tag(tag.id(), tag.name()))
-                .toList();
-    }
-
-    public record Tag(
-            Long id,
-            String name
-    ) {
     }
 }

@@ -39,7 +39,7 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
         }
 
         try {
-            return course.withRoute(planPreviewRoute(recommendByAi(preview, context)));
+            return course.withStops(planPreviewRoute(recommendByAi(preview, context)));
         } catch (RuntimeException exception) {
             return fallbackOptimized(preview, exception);
         }
@@ -54,11 +54,11 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
         logRecommendationFallback(preview, RECOMMENDATION_FAILED, exception);
         List<CourseOrderPreviewItem> optimizedItems = coordinateRouteOrderOptimizer.optimizeByDay(
                 preview.items(),
-                CourseOrderPreviewItem::day,
+                item -> 1,
                 CourseOrderPreviewItem::latitude,
                 CourseOrderPreviewItem::longitude
         );
-        return preview.course().withRoute(planPreviewRoute(optimizedItems));
+        return preview.course().withStops(planPreviewRoute(optimizedItems));
     }
 
     private List<CourseOrderPreviewItem> recommendByAi(CourseOrderPreview preview,
@@ -70,17 +70,17 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
         return orderByRecommendedIds(preview, result.orderedItemIds());
     }
 
-    private CourseRoute planPreviewRoute(List<CourseOrderPreviewItem> orderedItems) {
-        CourseRoute orderedRoute = CourseRoute.ofStops(orderedItems.stream()
+    private List<CourseStop> planPreviewRoute(List<CourseOrderPreviewItem> orderedItems) {
+        List<CourseStop> orderedStops = orderedItems.stream()
                 .map(item -> item.stop().withTitle(item.title()))
-                .toList());
+                .toList();
         Map<Long, CourseOrderPreviewItem> itemsById = itemsById(orderedItems);
-        List<CourseStopPoint> points = orderedRoute.stops().stream()
+        List<CourseStopPoint> points = orderedStops.stream()
                 .map(stop -> pointOf(stop, itemsById))
                 .toList();
-        CourseRoute plannedRoute = courseRoutePlanner.plan(points);
-        requirePlannedSegments(plannedRoute);
-        return plannedRoute;
+        List<CourseStop> plannedStops = courseRoutePlanner.plan(points);
+        requireCompleteNextMetrics(plannedStops);
+        return plannedStops;
     }
 
     private static CourseStopPoint pointOf(CourseStop stop, Map<Long, CourseOrderPreviewItem> itemsById) {
@@ -107,9 +107,7 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
                 stop.target().type().name(),
                 stop.target().id(),
                 item.title(),
-                stop.day(),
                 stop.position(),
-                stop.stayMinutes(),
                 item.contentTypeId(),
                 item.latitude(),
                 item.longitude()
@@ -163,17 +161,16 @@ public class AiCourseOrderOptimizer implements CourseOrderOptimizer {
         return itemsById;
     }
 
-    private static void requirePlannedSegments(CourseRoute route) {
-        if (!hasCompleteSegmentSet(route.stops(), route.segments())) {
-            throw new CoreException(COURSE_INVALID_ITEM);
-        }
-    }
-
-    private static boolean hasCompleteSegmentSet(List<CourseStop> stops, List<CourseRouteSegment> segments) {
+    private static void requireCompleteNextMetrics(List<CourseStop> stops) {
         if (stops.size() < 2) {
-            return segments.isEmpty();
+            return;
         }
-        return segments.size() == stops.size() - 1;
+        for (int index = 0; index < stops.size() - 1; index++) {
+            CourseStop stop = stops.get(index);
+            if (stop.distanceToNext() == null || stop.durationToNext() == null) {
+                throw new CoreException(COURSE_INVALID_ITEM);
+            }
+        }
     }
 
     private static void logRecommendationFallback(CourseOrderPreview preview,

@@ -28,8 +28,6 @@
         coalesce(stats.save_count, 0) as saveCount,
         coalesce(stats.average_rating, 0) as ratingAverage,
         coalesce(stats.rating_count, 0) as ratingCount,
-        t.id as tagId,
-        t.name as tagName,
         case when s.attraction_id is null then false else true end as saved,
         my_rating.rating as myRating
     </sql>
@@ -41,8 +39,6 @@
         left join attraction_ratings my_rating
                on my_rating.attraction_id = a.id
               and my_rating.member_id = #{viewerMemberId}
-        left join attraction_tag_mappings m on m.attraction_id = a.id
-        left join attraction_tags t on t.id = m.tag_id
     </sql>
     <select id="search" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
         select <include refid="searchRowColumns"/>
@@ -99,8 +95,8 @@
         <include refid="searchRowJoins"/>
         order by
         <choose>
-            <when test="aroundSearch">a.distanceMeters asc, a.title asc, a.id asc, t.name asc</when>
-            <otherwise>a.readCount desc nulls last, a.title asc, a.id asc, t.name asc</otherwise>
+            <when test="aroundSearch">a.distanceMeters asc, a.title asc, a.id asc</when>
+            <otherwise>a.readCount desc nulls last, a.title asc, a.id asc</otherwise>
         </choose>
     </select>
     <select id="findNearby" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
@@ -140,9 +136,9 @@
             </if>
         ) a
         <include refid="searchRowJoins"/>
-        order by a.distanceMeters asc, a.title asc, a.id asc, t.name asc
+        order by a.distanceMeters asc, a.title asc, a.id asc
     </select>
-    <select id="findDetailRowsById" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
+    <select id="findDetailById" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
         select <include refid="searchRowColumns"/>
         from (
             select <include refid="baseColumns"/>,
@@ -152,7 +148,6 @@
               and <include refid="publicAttractionPredicate"/>
         ) a
         <include refid="searchRowJoins"/>
-        order by t.name asc
     </select>
     <select id="existsById" resultType="int">select count(*) from attractions where id = #{attractionId}</select>
     <select id="existsPublicVisibleById" resultType="int">
@@ -302,20 +297,11 @@
                       average_rating = excluded.average_rating,
                       updated_at = current_timestamp
     </insert>
-    <select id="findAllTags" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord">select id, name from attraction_tags order by name asc</select>
-    <select id="insertTag" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord">insert into attraction_tags (name) values (#{name}) returning id, name</select>
-    <update id="updateTag">update attraction_tags set name = #{name} where id = #{tagId}</update>
-    <delete id="deleteTag">delete from attraction_tags where id = #{tagId}</delete>
-    <select id="countTagsByIds" resultType="int">select count(*) from attraction_tags where id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>
-    <delete id="deleteTagMappings">delete from attraction_tag_mappings where attraction_id = #{attractionId}</delete>
-    <insert id="insertTagMapping">insert into attraction_tag_mappings (attraction_id, tag_id) values (#{attractionId}, #{tagId})</insert>
     <sql id="statsRowColumns">
         a.id as attractionId,
         coalesce(stats.save_count, 0) as saveCount,
         coalesce(stats.average_rating, 0) as averageRating,
         coalesce(stats.rating_count, 0) as ratingCount,
-        t.id as tagId,
-        t.name as tagName,
         case when s.attraction_id is null then false else true end as saved,
         my_rating.rating as myRating
     </sql>
@@ -328,21 +314,18 @@
         left join attraction_ratings my_rating
                on my_rating.attraction_id = a.id
               and my_rating.member_id = #{memberId}
-        left join attraction_tag_mappings m on m.attraction_id = a.id
-        left join attraction_tags t on t.id = m.tag_id
     </sql>
     <select id="findStatsRowsByAttractionId" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionStatsRowRecord">
         select <include refid="statsRowColumns"/>
         <include refid="statsRowJoins"/>
         where a.id = #{attractionId}
-        order by t.name asc
     </select>
     <select id="findStatsRowsByAttractionIds" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionStatsRowRecord">
         select <include refid="statsRowColumns"/>
         <include refid="statsRowJoins"/>
         where a.id in
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
-        order by a.id asc, t.name asc
+        order by a.id asc
     </select>
     <select id="findPopularityCounts" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord">
         select attraction_id as attractionId,
@@ -400,6 +383,6 @@
             </if>
         ) a
         <include refid="searchRowJoins"/>
-        order by a.matchTier asc, a.distanceMeters asc, a.title asc, a.id asc, t.name asc
+        order by a.matchTier asc, a.distanceMeters asc, a.title asc, a.id asc
     </select>
 </mapper>

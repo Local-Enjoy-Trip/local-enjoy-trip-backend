@@ -24,12 +24,12 @@ class CourseFeedMapperContainerTest extends StorageContainerTestSupport {
         Long adminMemberId = seedMember("admin", "admin@example.com");
         Long userMemberId = seedMember("user", "user@example.com");
         jdbcTemplate.update("update members set role = 'ADMIN' where id = ?", adminMemberId);
-        seedPublicCourse("md-1", adminMemberId, "MD_RECOMMENDED", ORIGIN_LONGITUDE + 0.0010);
-        seedPublicCourse("md-2", adminMemberId, "MD_RECOMMENDED", ORIGIN_LONGITUDE + 0.0020);
-        seedPublicCourse("md-3", adminMemberId, "MD_RECOMMENDED", ORIGIN_LONGITUDE + 0.0030);
-        seedPublicCourse("md-4", adminMemberId, "MD_RECOMMENDED", ORIGIN_LONGITUDE + 0.0040);
-        seedPublicCourse("near-user", userMemberId, null, ORIGIN_LONGITUDE + 0.0001);
-        seedPublicCourse("mid-user", userMemberId, null, ORIGIN_LONGITUDE + 0.0025);
+        seedPublicCourse("md-1", adminMemberId, ORIGIN_LONGITUDE + 0.0010);
+        seedPublicCourse("md-2", adminMemberId, ORIGIN_LONGITUDE + 0.0020);
+        seedPublicCourse("md-3", adminMemberId, ORIGIN_LONGITUDE + 0.0030);
+        seedPublicCourse("md-4", adminMemberId, ORIGIN_LONGITUDE + 0.0040);
+        seedPublicCourse("near-user", userMemberId, ORIGIN_LONGITUDE + 0.0001);
+        seedPublicCourse("mid-user", userMemberId, ORIGIN_LONGITUDE + 0.0025);
 
         List<CourseRecord> feed = courseMapper.findDistanceOrderedPublicFeed(
                 ORIGIN_LONGITUDE,
@@ -60,22 +60,8 @@ class CourseFeedMapperContainerTest extends StorageContainerTestSupport {
                 .containsExactly("md-1", "md-2", "md-3", "near-user");
     }
 
-    private void seedPublicCourse(String id,
-                                  Long ownerMemberId,
-                                  String curationSection,
-                                  double longitude) {
-        courseMapper.insert(new CourseRecord(
-                id,
-                ownerMemberId,
-                id,
-                "서울",
-                "PUBLIC",
-                "READY",
-                null,
-                null,
-                curationSection,
-                null
-        ));
+    private void seedPublicCourse(String id, Long ownerMemberId, double longitude) {
+        courseMapper.insert(new CourseRecord(id, ownerMemberId, id, "서울", null));
         assertThat(courseMapper.updateStartLocation(id, longitude, ORIGIN_LATITUDE)).isEqualTo(1);
     }
 }

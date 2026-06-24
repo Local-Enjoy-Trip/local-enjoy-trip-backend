@@ -18,17 +18,7 @@ public class CourseRecord {
 
     private String regionName;
 
-    private String visibility;
-
-    private String status;
-
-    private String description;
-
-    private String coverImageUrl;
-
-    private String curationSection;
-
-    private Integer curationOrder;
+    private String date;
 
     private Boolean createdByAdmin;
 
@@ -50,21 +40,11 @@ public class CourseRecord {
                         Long ownerMemberId,
                         String title,
                         String regionName,
-                        String visibility,
-                        String status,
-                        String description,
-                        String coverImageUrl,
-                        String curationSection,
-                        Integer curationOrder) {
+                        String date) {
         this.id = id;
         this.ownerMemberId = ownerMemberId;
         this.title = title;
         this.regionName = regionName;
-        this.visibility = visibility;
-        this.status = status;
-        this.description = description;
-        this.coverImageUrl = coverImageUrl;
-        this.curationSection = curationSection;
-        this.curationOrder = curationOrder;
+        this.date = date;
     }
 }

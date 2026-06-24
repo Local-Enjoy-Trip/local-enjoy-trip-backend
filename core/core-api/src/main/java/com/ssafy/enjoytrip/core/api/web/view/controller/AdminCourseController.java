@@ -78,17 +78,6 @@ public class AdminCourseController {
     }
 
     private static AdminCourseForm emptyForm() {
-        return new AdminCourseForm(
-                "",
-                "",
-                "",
-                "PUBLIC",
-                "READY",
-                "",
-                "",
-                "MD_RECOMMENDED",
-                null,
-                ""
-        );
+        return new AdminCourseForm("", "", "", "");
     }
 }

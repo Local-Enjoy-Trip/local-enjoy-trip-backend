@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: ${ENJOYTRIP_DB_URL:jdbc:postgresql://localhost:5432/enjoytrip}
-    username: ${ENJOYTRIP_DB_USER:${POSTGRES_USER:ssafy}}
-    password: ${ENJOYTRIP_DB_PASSWORD:${POSTGRES_PASSWORD:ssafy}}
+    username: ${ENJOYTRIP_DB_USER:${POSTGRES_USER:}}
+    password: ${ENJOYTRIP_DB_PASSWORD:${POSTGRES_PASSWORD:}}
     driver-class-name: org.postgresql.Driver
   flyway:
     baseline-on-migrate: true

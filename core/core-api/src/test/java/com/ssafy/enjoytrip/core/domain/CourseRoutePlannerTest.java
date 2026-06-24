@@ -12,32 +12,35 @@ import org.junit.jupiter.api.Test;
 class CourseRoutePlannerTest {
     private final CourseRoutePlanner planner = new DefaultCourseRoutePlanner();
 
-    @DisplayName("경로 플래너는 입력 순서대로 N-1 인접 구간을 생성한다")
+    @DisplayName("경로 플래너는 입력 순서대로 N-1 구간의 next metric을 계산한다")
     @Test
     void plansAdjacentSegmentsInInputOrder() {
-        CourseRoute route = planner.plan(List.of(
+        List<CourseStop> stops = planner.plan(List.of(
                 point(attractionStop(10L, 2), 37.1, 127.1),
                 point(attractionStop(20L, 1), 37.0, 127.0),
                 point(attractionStop(30L, 3), 37.2, 127.2)
         ));
 
-        assertThat(route.stops()).extracting(CourseStop::position).containsExactly(1, 2, 3);
-        assertThat(route.stops()).extracting(stop -> stop.target().id()).containsExactly(10L, 20L, 30L);
-        assertThat(route.segments()).hasSize(2);
-        assertThat(route.segments())
-                .extracting(segment -> segment.fromPosition() + ":" + segment.toPosition())
-                .containsExactly("1:2", "2:3");
-        assertThat(route.summary().totalDistanceMeters()).isPositive();
+        assertThat(stops).extracting(CourseStop::position).containsExactly(1, 2, 3);
+        assertThat(stops).extracting(stop -> stop.target().id()).containsExactly(10L, 20L, 30L);
+        assertThat(stops.get(0).distanceToNext()).isPositive();
+        assertThat(stops.get(1).distanceToNext()).isPositive();
+        assertThat(stops.get(2).distanceToNext()).isNull();
+        assertThat(stops.stream()
+                .mapToInt(s -> s.distanceToNext() == null ? 0 : s.distanceToNext())
+                .sum()).isPositive();
     }
 
-    @DisplayName("경로 플래너는 0개 또는 1개 항목에는 구간을 생성하지 않는다")
+    @DisplayName("경로 플래너는 0개 또는 1개 항목에는 next metric을 계산하지 않는다")
     @Test
-    void keepsZeroSegmentsForZeroOrSingleStop() {
-        CourseRoute empty = planner.plan(List.of());
-        CourseRoute single = planner.plan(List.of(point(attractionStop(10L, 1), 37.0, 127.0)));
+    void keepsNoMetricsForZeroOrSingleStop() {
+        List<CourseStop> empty = planner.plan(List.of());
+        List<CourseStop> single = planner.plan(List.of(point(attractionStop(10L, 1), 37.0, 127.0)));
 
-        assertThat(empty.segments()).isEmpty();
-        assertThat(single.segments()).isEmpty();
+        assertThat(empty).isEmpty();
+        assertThat(single).hasSize(1);
+        assertThat(single.get(0).distanceToNext()).isNull();
+        assertThat(single.get(0).durationToNext()).isNull();
     }
 
     @DisplayName("경로 플래너는 1개 항목도 좌표가 없으면 실패로 처리한다")
@@ -68,7 +71,6 @@ class CourseRoutePlannerTest {
                 null,
                 CourseStopTarget.attraction(attractionId),
                 position,
-                1,
                 null,
                 null,
                 null

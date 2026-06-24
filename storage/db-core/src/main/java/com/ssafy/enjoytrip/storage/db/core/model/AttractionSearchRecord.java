@@ -21,8 +21,6 @@ public record AttractionSearchRecord(
         int saveCount,
         double ratingAverage,
         int ratingCount,
-        Long tagId,
-        String tagName,
         boolean saved,
         Integer myRating
 ) {

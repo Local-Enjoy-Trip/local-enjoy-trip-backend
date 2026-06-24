@@ -1,24 +1,21 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.ATTRACTION_NOT_FOUND;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_ALREADY_EXISTS;
-import static com.ssafy.enjoytrip.core.support.error.ErrorType.TAG_NOT_FOUND;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
-import com.ssafy.enjoytrip.core.domain.AttractionTag;
 import com.ssafy.enjoytrip.core.domain.AttractionPopularityDeltaCache;
 import com.ssafy.enjoytrip.core.domain.NearbyAttractionCandidate;
 import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
+import com.ssafy.enjoytrip.core.domain.vo.Address;
+import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
+import com.ssafy.enjoytrip.core.domain.vo.RatingStats;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -74,12 +71,12 @@ public class AttractionService {
     }
 
     public Attraction findAttractionDetail(Long attractionId, Long memberId) {
-        List<AttractionSearchRecord> rows = attractionMapper.findDetailRowsById(attractionId, memberId);
-        if (rows.isEmpty()) {
+        AttractionSearchRecord record = attractionMapper.findDetailById(attractionId, memberId);
+        if (record == null) {
             throw new CoreException(ATTRACTION_NOT_FOUND);
         }
 
-        return toAttraction(rows);
+        return toAttraction(record);
     }
 
     public List<NearbyAttractionCandidate> findNearbyCandidates(
@@ -120,72 +117,6 @@ public class AttractionService {
         return deleted;
     }
 
-    public List<AttractionTag> findAllTags() {
-        return attractionMapper.findAllTags().stream()
-                .map(record -> new AttractionTag(record.id(), record.name()))
-                .toList();
-    }
-
-    public AttractionTag createTagOrThrow(String name) {
-        requireTagNameAvailable(null, name);
-        return insertTag(name);
-    }
-
-    public AttractionTag insertTag(String name) {
-        AttractionTagRecord record = attractionMapper.insertTag(name);
-        return new AttractionTag(record.id(), record.name());
-    }
-
-    public void updateTagOrThrow(Long tagId, String name) {
-        requireTagNameAvailable(tagId, name);
-        if (!updateTag(tagId, name)) {
-            throw new CoreException(TAG_NOT_FOUND);
-        }
-    }
-
-    public boolean updateTag(Long tagId, String name) {
-        return attractionMapper.updateTag(tagId, name) > 0;
-    }
-
-    public void deleteTagOrThrow(Long tagId) {
-        if (!deleteTag(tagId)) {
-            throw new CoreException(TAG_NOT_FOUND);
-        }
-    }
-
-    public boolean deleteTag(Long tagId) {
-        return attractionMapper.deleteTag(tagId) > 0;
-    }
-
-    public void replaceTagsOrThrow(Long attractionId, List<Long> tagIds) {
-        if (!replaceTags(attractionId, tagIds)) {
-            throw new CoreException(TAG_NOT_FOUND);
-        }
-    }
-
-    @Transactional
-    public boolean replaceTags(Long attractionId, List<Long> tagIds) {
-        List<Long> normalized = tagIds.stream().distinct().toList();
-        if (!normalized.isEmpty() && attractionMapper.countTagsByIds(normalized) != normalized.size()) {
-            return false;
-        }
-
-        attractionMapper.deleteTagMappings(attractionId);
-        for (Long tagId : normalized) {
-            attractionMapper.insertTagMapping(attractionId, tagId);
-        }
-
-        return true;
-    }
-
-    private void requireTagNameAvailable(Long currentId, String name) {
-        boolean exists = findAllTags().stream()
-                .anyMatch(tag -> tag.name().equals(name) && !tag.id().equals(currentId));
-        if (exists) {
-            throw new CoreException(TAG_ALREADY_EXISTS);
-        }
-    }
-
     private List<Attraction> executeAttractionSearch(AttractionSearchCondition condition, Long memberId) {
         List<AttractionSearchRecord> records = attractionMapper.search(
                 condition.contentTypeId(),
@@ -199,7 +130,9 @@ public class AttractionService {
                 200,
                 memberId
         );
-        return toAttractions(records);
+        return records.stream()
+                .map(this::toAttraction)
+                .toList();
     }
 
     private List<NearbyAttractionCandidate> findNearbyAttractionCandidates(
@@ -215,94 +148,48 @@ public class AttractionService {
                 savedOnly,
                 memberId
         );
-        return toNearbyCandidates(records);
-    }
-
-    private List<Attraction> toAttractions(List<AttractionSearchRecord> records) {
-        List<Attraction> attractions = new ArrayList<>();
-        List<AttractionSearchRecord> attractionRows = new ArrayList<>();
-        Long currentAttractionId = null;
-
-        for (AttractionSearchRecord record : records) {
-            if (currentAttractionId != null && !Objects.equals(currentAttractionId, record.id())) {
-                attractions.add(toAttraction(attractionRows));
-                attractionRows.clear();
-            }
-            currentAttractionId = record.id();
-            attractionRows.add(record);
-        }
-
-        if (!attractionRows.isEmpty()) {
-            attractions.add(toAttraction(attractionRows));
-        }
-
-        return attractions;
-    }
-
-    private List<NearbyAttractionCandidate> toNearbyCandidates(List<AttractionSearchRecord> records) {
-        List<NearbyAttractionCandidate> candidates = new ArrayList<>();
-        List<AttractionSearchRecord> attractionRows = new ArrayList<>();
-        Long currentAttractionId = null;
-
-        for (AttractionSearchRecord record : records) {
-            if (currentAttractionId != null && !Objects.equals(currentAttractionId, record.id())) {
-                candidates.add(toNearbyCandidate(attractionRows));
-                attractionRows.clear();
-            }
-            currentAttractionId = record.id();
-            attractionRows.add(record);
-        }
-
-        if (!attractionRows.isEmpty()) {
-            candidates.add(toNearbyCandidate(attractionRows));
-        }
-
-        return candidates;
-    }
-
-    private NearbyAttractionCandidate toNearbyCandidate(List<AttractionSearchRecord> attractionRows) {
-        AttractionSearchRecord first = attractionRows.get(0);
-        double distanceMeters = first.distanceMeters() == null ? 0.0 : first.distanceMeters();
-
-        return new NearbyAttractionCandidate(toAttraction(attractionRows), distanceMeters);
-    }
-
-    private Attraction toAttraction(List<AttractionSearchRecord> attractionRows) {
-        AttractionSearchRecord first = attractionRows.get(0);
-        return new Attraction(
-                first.id(),
-                first.title(),
-                first.addr1(),
-                first.addr2(),
-                first.zipcode(),
-                first.tel(),
-                first.firstImage(),
-                first.firstImage2(),
-                first.readCount(),
-                first.sidoCode(),
-                first.gugunCode(),
-                first.latitude(),
-                first.longitude(),
-                first.mlevel(),
-                first.contentTypeId(),
-                first.overview(),
-                first.saveCount(),
-                first.ratingAverage(),
-                first.ratingCount(),
-                toTags(attractionRows),
-                first.saved(),
-                first.myRating()
-        );
-    }
-
-    private List<AttractionTag> toTags(List<AttractionSearchRecord> attractionRows) {
-        return attractionRows.stream()
-                .filter(row -> row.tagId() != null)
-                .map(row -> new AttractionTag(row.tagId(), row.tagName()))
+        return records.stream()
+                .map(record -> new NearbyAttractionCandidate(
+                        toAttraction(record),
+                        record.distanceMeters() == null ? 0.0 : record.distanceMeters()
+                ))
                 .toList();
     }
 
-    public List<NearbyAttractionCandidate> searchMapPlaces(String keyword, String escapedKeyword, double longitude, double latitude, Double radiusMeters, Integer limit, Long viewerMemberId) {
+    private Attraction toAttraction(AttractionSearchRecord record) {
+        Coordinate location = (record.latitude() != null && record.longitude() != null)
+                ? new Coordinate(record.latitude(), record.longitude())
+                : null;
+        return new Attraction(
+                record.id(),
+                record.title(),
+                new Address(record.addr1(), record.addr2(), record.zipcode()),
+                record.tel(),
+                record.firstImage(),
+                record.firstImage2(),
+                record.readCount(),
+                record.sidoCode(),
+                record.gugunCode(),
+                location,
+                record.mlevel(),
+                record.contentTypeId(),
+                record.overview(),
+                record.saveCount(),
+                new RatingStats(record.ratingAverage(), record.ratingCount()),
+                record.saved(),
+                record.myRating()
+        );
+    }
+
+    public List<NearbyAttractionCandidate> searchMapPlaces(
+            String keyword,
+            String escapedKeyword,
+            double longitude,
+            double latitude,
+            Double radiusMeters,
+            Integer limit,
+            Long viewerMemberId
+    ) {
         long t0 = System.nanoTime();
         List<AttractionSearchRecord> records = attractionMapper.searchMapPlaces(
                 keyword,
@@ -314,8 +201,19 @@ public class AttractionService {
                 viewerMemberId
         );
         int rows = records.size();
-        log.info("map-search places keyword={} radius={} rows={} tookMs={}", keyword, radiusMeters, rows, (System.nanoTime() - t0) / 1_000_000.0);
+        log.info(
+                "map-search places keyword={} radius={} rows={} tookMs={}",
+                keyword,
+                radiusMeters,
+                rows,
+                (System.nanoTime() - t0) / 1_000_000.0
+        );
 
-        return toNearbyCandidates(records);
+        return records.stream()
+                .map(record -> new NearbyAttractionCandidate(
+                        toAttraction(record),
+                        record.distanceMeters() == null ? 0.0 : record.distanceMeters()
+                ))
+                .toList();
     }
 }

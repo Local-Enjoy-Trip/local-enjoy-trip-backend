@@ -61,28 +61,12 @@ class NewsBriefingMapperH2Test extends H2MapperTestSupport {
         String localCourseId = uniqueId("course-local");
         String otherCourseId = uniqueId("course-other");
         jdbcTemplate.update("""
-                insert into courses (id, owner_member_id, title, region_name, visibility, status, created_at)
-                values (
-                    ?,
-                    ?,
-                    '지역 코스',
-                    '서울 중구',
-                    'PUBLIC',
-                    'READY',
-                    timestamp '2026-06-18 00:00:00'
-                )
+                insert into courses (id, owner_member_id, title, region_name, created_at)
+                values (?, ?, '지역 코스', '서울 중구', timestamp '2026-06-18 00:00:00')
                 """, localCourseId, ownerMemberId);
         jdbcTemplate.update("""
-                insert into courses (id, owner_member_id, title, region_name, visibility, status, created_at)
-                values (
-                    ?,
-                    ?,
-                    '다른 지역 코스',
-                    '부산 해운대구',
-                    'PUBLIC',
-                    'READY',
-                    timestamp '2026-06-19 00:00:00'
-                )
+                insert into courses (id, owner_member_id, title, region_name, created_at)
+                values (?, ?, '다른 지역 코스', '부산 해운대구', timestamp '2026-06-19 00:00:00')
                 """, otherCourseId, ownerMemberId);
 
         List<CourseBriefingCandidateRecord> candidates =

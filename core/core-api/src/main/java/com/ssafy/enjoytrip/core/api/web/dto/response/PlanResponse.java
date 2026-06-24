@@ -18,8 +18,8 @@ public record PlanResponse(
         return new PlanResponse(
                 plan.id(),
                 plan.title(),
-                plan.startDate(),
-                plan.endDate(),
+                plan.planPeriod() != null ? plan.planPeriod().startDate() : null,
+                plan.planPeriod() != null ? plan.planPeriod().endDate() : null,
                 plan.budget(),
                 value(plan.note()),
                 toRouteItemResponses(routeItems),

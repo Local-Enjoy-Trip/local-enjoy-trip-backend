@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
-import com.ssafy.enjoytrip.core.domain.RouteSummary;
+import com.ssafy.enjoytrip.core.domain.Course;
 
 public record RouteSummaryResponse(
         int stopCount,
@@ -8,12 +8,12 @@ public record RouteSummaryResponse(
         int totalDurationSeconds,
         int totalDistanceMeters
 ) {
-    public static RouteSummaryResponse from(RouteSummary summary) {
+    public static RouteSummaryResponse from(Course course) {
         return new RouteSummaryResponse(
-                summary.stopCount(),
-                summary.segmentCount(),
-                summary.totalDurationSeconds(),
-                summary.totalDistanceMeters()
+                course.stopCount(),
+                course.segmentCount(),
+                course.totalDurationSeconds(),
+                course.totalDistanceMeters()
         );
     }
 }

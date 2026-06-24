@@ -23,8 +23,13 @@ import com.ssafy.enjoytrip.core.domain.TravelPlan;
 import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.AttractionStats;
-import com.ssafy.enjoytrip.core.domain.AttractionTag;
 import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
+import com.ssafy.enjoytrip.core.domain.vo.Address;
+import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
+import com.ssafy.enjoytrip.core.domain.vo.RatingStats;
+import com.ssafy.enjoytrip.core.domain.vo.TemperatureRange;
+import com.ssafy.enjoytrip.core.domain.vo.DateRange;
+import com.ssafy.enjoytrip.core.domain.service.TagService;
 import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
@@ -112,6 +117,7 @@ class ControllerBehaviorTest {
     private OAuthSignupTicketService oauthSignupTicketService;
     private AttractionService attractionService;
     private AttractionStatsService attractionStatsService;
+    private TagService tagService;
     private EvChargerService chargerService;
 
     private WeatherService weatherService;
@@ -135,6 +141,7 @@ class ControllerBehaviorTest {
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
         attractionService = mock(AttractionService.class);
         attractionStatsService = mock(AttractionStatsService.class);
+        tagService = mock(TagService.class);
         chargerService = mock(EvChargerService.class);
 
         weatherService = mock(WeatherService.class);
@@ -151,7 +158,7 @@ class ControllerBehaviorTest {
                         new MemberController(memberService, tokenService, oauthSignupTicketService),
                         new MemberProfileImageController(memberProfileImageService),
                         new AttractionController(attractionService, attractionStatsService),
-                        new AttractionTagController(attractionService),
+                        new TagController(tagService),
                         new ChargerController(chargerService),
 
                         new NeighborhoodBriefingController(neighborhoodBriefingService, weatherService),
@@ -172,7 +179,7 @@ class ControllerBehaviorTest {
         @DisplayName("동네 브리핑을 반환하고 구조화 추천 ID를 노출하지 않는다")
         @Test
         void returnsNeighborhoodBriefingWithoutStructuredRecommendationIds() throws Exception {
-            WeatherSummary weather = new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25);
+            WeatherSummary weather = new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", new TemperatureRange(15, 25));
             List<WeatherForecast> forecasts = List.of(
                     new WeatherForecast("12:00", 22, "맑음", 10),
                     new WeatherForecast("13:00", 23, "맑음", 10),
@@ -866,11 +873,11 @@ class ControllerBehaviorTest {
         void planFindReturnsOnlyNormalizedRouteItemsAndDoesNotParseStoredJsonFallback() throws Exception {
             when(planService.findPlansByMemberId(11L)).thenReturn(List.of(
                     new TravelPlan(
-                            "p1", 11L, "서울", "2026-05-14", "2026-05-15", 1000, null,
+                            "p1", 11L, "서울", new DateRange("2026-05-14", "2026-05-15"), 1000, null,
                             "[{\"title\":\"A\"}]", "created"
                     ),
                     new TravelPlan(
-                            "p2", 11L, "부산", "2026-05-16", "2026-05-17", 2000, "note",
+                            "p2", 11L, "부산", new DateRange("2026-05-16", "2026-05-17"), 2000, "note",
                             "not json", "created"
                     )
             ));
@@ -1106,9 +1113,11 @@ class ControllerBehaviorTest {
         @Test
         void popularNearbyAttractionsApplyHomeDefaultsAndReturnPopularityCount() throws Exception {
             Attraction attraction = new Attraction(
-                    1L, "경복궁", "서울 종로구", "", "zip", "tel", "image", "image2",
-                    7, 1, 2, 37.579617, 126.977041, "6", "12", "overview",
-                    2, 4.5, 2, List.of(), true, null
+                    1L, "경복궁", new Address("서울 종로구", "", "zip"),
+                    "tel", "image", "image2",
+                    7, 1, 2, new Coordinate(37.579617, 126.977041),
+                    "6", "12", "overview",
+                    2, new RatingStats(4.5, 2), true, null
             );
             when(attractionService.findPopularNearbyAttractions(
                     new DistanceSearchCondition(126.9780, 37.5665, 20, 500.0),
@@ -1146,24 +1155,19 @@ class ControllerBehaviorTest {
             Attraction attraction = new Attraction(
                     1L,
                     "경복궁",
-                    "서울 종로구",
-                    "",
-                    "03045",
+                    new Address("서울 종로구", "", "03045"),
                     "02-3700-3900",
                     "image",
                     "image2",
                     7,
                     1,
                     2,
-                    37.579617,
-                    126.977041,
+                    new Coordinate(37.579617, 126.977041),
                     "6",
                     "12",
                     "조선 시대 궁궐입니다.",
                     2,
-                    4.5,
-                    2,
-                    List.of(new AttractionTag(3L, "역사")),
+                    new RatingStats(4.5, 2),
                     true,
                     5
             );
@@ -1179,7 +1183,6 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.saveCount").value(2))
                     .andExpect(jsonPath("$.data.saved").value(true))
                     .andExpect(jsonPath("$.data.myRating").value(5))
-                    .andExpect(jsonPath("$.data.tags[0].name").value("역사"))
                     .andExpect(jsonPath("$.data.attraction").doesNotExist())
                     .andExpect(jsonPath("$.data.firstImage").doesNotExist())
                     .andExpect(jsonPath("$.data.firstImage2").doesNotExist())
@@ -1205,10 +1208,8 @@ class ControllerBehaviorTest {
         @Test
         void attractionEngagementAndTagEndpointsValidateAndDelegate() throws Exception {
             when(attractionStatsService.findStats(1L, 11L)).thenReturn(new AttractionStats(
-                    1L, 3, 4.5, 2, List.of(new AttractionTag(3L, "family")), true, 5
+                    1L, 3, 4.5, 2, true, 5
             ));
-            when(attractionService.findAllTags()).thenReturn(List.of(new AttractionTag(3L, "family")));
-            when(attractionService.replaceTags(1L, List.of(3L))).thenReturn(true);
 
             mockMvc.perform(put("/api/attractions/1/save").principal(jwtPrincipal(11L)))
                     .andExpect(status().isOk());
@@ -1230,21 +1231,7 @@ class ControllerBehaviorTest {
             mockMvc.perform(get("/api/attractions/1/stats").principal(jwtPrincipal(11L)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.stats.saveCount").value(3))
-                    .andExpect(jsonPath("$.data.stats.saved").value(true))
-                    .andExpect(jsonPath("$.data.stats.tags[0].name").value("family"));
-
-            mockMvc.perform(put("/api/attractions/1/tags")
-                            .principal(jwtPrincipal(11L))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"tagIds":[3]}
-                                    """))
-                    .andExpect(status().isOk());
-            verify(attractionService).replaceTagsOrThrow(1L, List.of(3L));
-
-            mockMvc.perform(get("/api/attraction-tags"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.tags[0].name").value("family"));
+                    .andExpect(jsonPath("$.data.stats.saved").value(true));
         }
 
         @DisplayName("헬스 체크는 DB 상태를 보고하고 전역 핸들러는 예상 밖 예외를 잡는다")

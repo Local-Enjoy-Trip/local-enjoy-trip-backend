@@ -15,13 +15,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.ssafy.enjoytrip.core.api.web.controller.CourseController;
 import com.ssafy.enjoytrip.core.domain.Course;
-import com.ssafy.enjoytrip.core.domain.CourseRoute;
-import com.ssafy.enjoytrip.core.domain.CourseRouteSegment;
 import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
 import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.domain.service.CourseService;
+import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
 import java.security.Principal;
 import java.util.List;
 import org.mockito.ArgumentCaptor;
@@ -49,8 +48,8 @@ class CourseControllerTest {
     @Test
     void returnsPublicCourseFeedCourses() throws Exception {
         when(courseService.findPublicFeed(any())).thenReturn(List.of(
-                feedCourse("md-1", null, "MD_RECOMMENDED", 42.5),
-                feedCourse("course-1", 11L, null, 128.3)
+                feedCourse("md-1", null, 42.5),
+                feedCourse("course-1", 11L, 128.3)
         ));
 
         mockMvc.perform(get("/api/courses/feed")
@@ -61,13 +60,12 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.sections").doesNotExist())
                 .andExpect(jsonPath("$.data.courses[0].id").value("md-1"))
-                .andExpect(jsonPath("$.data.courses[0].curationSection").value("MD_RECOMMENDED"))
                 .andExpect(jsonPath("$.data.courses[0].createdByAdmin").value(true))
                 .andExpect(jsonPath("$.data.courses[0].distanceMeters").value(42.5))
                 .andExpect(jsonPath("$.data.courses[0].startLocation.longitude").value(126.978))
                 .andExpect(jsonPath("$.data.courses[0].startLocation.latitude").value(37.5665))
                 .andExpect(jsonPath("$.data.courses[0].routeSummary.stopCount").value(2))
-                .andExpect(jsonPath("$.data.courses[0].segments[0].distanceMeters").value(140))
+                .andExpect(jsonPath("$.data.courses[0].items[0].distanceToNext").value(140))
                 .andExpect(jsonPath("$.data.courses[0].encodedPolyline").doesNotExist())
                 .andExpect(jsonPath("$.data.courses[1].id").value("course-1"));
 
@@ -110,11 +108,11 @@ class CourseControllerTest {
         verify(courseService, never()).findPublicFeed(any());
     }
 
-    @DisplayName("공개 코스 상세는 경로 요약과 items와 segments를 반환한다")
+    @DisplayName("공개 코스 상세는 경로 요약과 items를 반환한다")
     @Test
     void returnsPublicCourseDetail() throws Exception {
         when(courseService.findPublicRequired("course-1")).thenReturn(
-                course("course-1", null, "PUBLIC", "READY", 0)
+                course("course-1", null, 0)
         );
 
         mockMvc.perform(get("/api/courses/course-1"))
@@ -124,8 +122,7 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.data.createdByAdmin").value(true))
                 .andExpect(jsonPath("$.data.routeSummary.stopCount").value(2))
                 .andExpect(jsonPath("$.data.items").isArray())
-                .andExpect(jsonPath("$.data.segments[0].fromPosition").value(1))
-                .andExpect(jsonPath("$.data.segments[0].toPosition").value(2))
+                .andExpect(jsonPath("$.data.items[0].distanceToNext").value(140))
                 .andExpect(jsonPath("$.data.encodedPolyline").doesNotExist());
     }
 
@@ -133,7 +130,7 @@ class CourseControllerTest {
     @Test
     void returnsMyCoursesWithRouteSummary() throws Exception {
         when(courseService.findMyCourses(11L)).thenReturn(List.of(
-                course("course-1", 11L, "PRIVATE", "READY", 0)
+                course("course-1", 11L, 0)
         ));
 
         mockMvc.perform(get("/api/courses/me").principal(jwtPrincipal(11L)))
@@ -142,15 +139,14 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.data.courses[0].id").value("course-1"))
                 .andExpect(jsonPath("$.data.courses[0].routeSummary.stopCount").value(2))
                 .andExpect(jsonPath("$.data.courses[0].items").isArray())
-                .andExpect(jsonPath("$.data.courses[0].segments").isArray())
                 .andExpect(jsonPath("$.data.courses[0].encodedPolyline").doesNotExist());
     }
 
-    @DisplayName("인증 사용자는 JSON 요청으로 READY 상태의 본인 코스를 생성한다")
+    @DisplayName("인증 사용자는 JSON 요청으로 본인 코스를 생성한다")
     @Test
     void authenticatedUserCreatesCourse() throws Exception {
         when(courseService.createCourse(any())).thenReturn(
-                course("course-1", 11L, "PRIVATE", "READY", 0)
+                course("course-1", 11L, 0)
         );
 
         mockMvc.perform(post("/api/courses")
@@ -160,8 +156,6 @@ class CourseControllerTest {
                                 {
                                   "id":"course-1",
                                   "title":"서울 산책",
-                                  "visibility":"PRIVATE",
-                                  "status":"READY",
                                   "items":[
                                     {"itemType":"ATTRACTION","attractionId":1,"position":1},
                                     {"itemType":"ATTRACTION","attractionId":2,"position":2}
@@ -174,34 +168,12 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.data.ownerMemberId").doesNotExist())
                 .andExpect(jsonPath("$.data.routeSummary.stopCount").value(2))
                 .andExpect(jsonPath("$.data.items").isArray())
-                .andExpect(jsonPath("$.data.segments[0].distanceMeters").value(140))
+                .andExpect(jsonPath("$.data.items[0].distanceToNext").value(140))
                 .andExpect(jsonPath("$.data.encodedPolyline").doesNotExist());
 
         verify(courseService).createCourse(any());
     }
 
-    @DisplayName("코스 생성 요청은 최소 2개 항목이 필요하다")
-    @Test
-    void createCourseRejectsSingleItem() throws Exception {
-        mockMvc.perform(post("/api/courses")
-                        .principal(jwtPrincipal(11L))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "id":"course-single-item",
-                                  "title":"서울 산책",
-                                  "visibility":"PRIVATE",
-                                  "status":"READY",
-                                  "items":[
-                                    {"itemType":"ATTRACTION","attractionId":1}
-                                  ]
-                                }
-                                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
-
-        verify(courseService, never()).createCourse(any());
-    }
 
     @DisplayName("코스 생성 요청은 position 값이 아니라 items 배열 순서를 사용한다")
     @Test
@@ -215,8 +187,6 @@ class CourseControllerTest {
                                 {
                                   "id":"course-array-order",
                                   "title":"서울 산책",
-                                  "visibility":"PRIVATE",
-                                  "status":"READY",
                                   "items":[
                                     {"itemType":"ATTRACTION","attractionId":2,"position":99},
                                     {"itemType":"ATTRACTION","attractionId":1,"position":-10}
@@ -228,9 +198,9 @@ class CourseControllerTest {
 
         ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
         verify(courseService).createCourse(courseCaptor.capture());
-        assertThat(courseCaptor.getValue().route().stops()).extracting(stop -> stop.target().id())
+        assertThat(courseCaptor.getValue().stops()).extracting(stop -> stop.target().id())
                 .containsExactly(2L, 1L);
-        assertThat(courseCaptor.getValue().route().stops()).extracting(CourseStop::position)
+        assertThat(courseCaptor.getValue().stops()).extracting(CourseStop::position)
                 .containsExactly(1, 2);
     }
 
@@ -238,7 +208,7 @@ class CourseControllerTest {
     @Test
     void authenticatedUserUpdatesCourse() throws Exception {
         when(courseService.updateCourse(eq(11L), any())).thenReturn(
-                course("course-1", 11L, "PRIVATE", "READY", 0)
+                course("course-1", 11L, 0)
         );
 
         mockMvc.perform(put("/api/courses/course-1")
@@ -247,7 +217,6 @@ class CourseControllerTest {
                         .content("""
                                 {
                                   "title":"서울 산책 수정",
-                                  "visibility":"PRIVATE",
                                   "items":[
                                     {"itemType":"ATTRACTION","attractionId":1,"position":1},
                                     {"itemType":"ATTRACTION","attractionId":2,"position":2}
@@ -259,7 +228,6 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.data.id").value("course-1"))
                 .andExpect(jsonPath("$.data.routeSummary.stopCount").value(2))
                 .andExpect(jsonPath("$.data.items").isArray())
-                .andExpect(jsonPath("$.data.segments").isArray())
                 .andExpect(jsonPath("$.data.encodedPolyline").doesNotExist());
 
         verify(courseService).updateCourse(eq(11L), any());
@@ -277,7 +245,6 @@ class CourseControllerTest {
                         .content("""
                                 {
                                   "title":"서울 산책 수정",
-                                  "visibility":"PRIVATE",
                                   "items":[
                                     {"itemType":"ATTRACTION","attractionId":2,"position":99},
                                     {"itemType":"ATTRACTION","attractionId":1,"position":-10}
@@ -289,9 +256,9 @@ class CourseControllerTest {
 
         ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
         verify(courseService).updateCourse(eq(11L), courseCaptor.capture());
-        assertThat(courseCaptor.getValue().route().stops()).extracting(stop -> stop.target().id())
+        assertThat(courseCaptor.getValue().stops()).extracting(stop -> stop.target().id())
                 .containsExactly(2L, 1L);
-        assertThat(courseCaptor.getValue().route().stops()).extracting(CourseStop::position)
+        assertThat(courseCaptor.getValue().stops()).extracting(CourseStop::position)
                 .containsExactly(1, 2);
     }
 
@@ -317,7 +284,6 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.data.items[0].id").value(101L))
                 .andExpect(jsonPath("$.data.items[0].position").value(1))
                 .andExpect(jsonPath("$.data.routeSummary.stopCount").value(2))
-                .andExpect(jsonPath("$.data.segments").isArray())
                 .andExpect(jsonPath("$.data.recommendationSource").doesNotExist())
                 .andExpect(jsonPath("$.data.fallbackReason").doesNotExist())
                 .andExpect(jsonPath("$.data.provider").doesNotExist());
@@ -330,83 +296,45 @@ class CourseControllerTest {
         assertThat(contextCaptor.getValue().currentLongitude()).isEqualTo(126.9780);
     }
 
-    @DisplayName("코스 생성 요청은 DRAFT 상태를 거부한다")
-    @Test
-    void rejectsDraftStatus() throws Exception {
-        mockMvc.perform(post("/api/courses")
-                        .principal(jwtPrincipal(11L))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "id":"course-1",
-                                  "title":"서울 산책",
-                                  "visibility":"PRIVATE",
-                                  "status":"DRAFT",
-                                  "items":[
-                                    {"itemType":"ATTRACTION","attractionId":1},
-                                    {"itemType":"ATTRACTION","attractionId":2}
-                                  ]
-                                }
-                                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
-
-        verify(courseService, never()).createCourse(any());
-    }
-
-    private static Course course(String id,
-                                 Long ownerMemberId,
-                                 String visibility,
-                                 String status,
-                                 int saveCount) {
+    private static Course course(String id, Long ownerMemberId, int saveCount) {
         return new Course(
                 id,
                 ownerMemberId,
                 id,
                 "서울",
-                visibility,
-                status,
-                null,
-                null,
-                null,
                 null,
                 ownerMemberId == null,
+                new Coordinate(37.5665, 126.9780),
+                null,
                 saveCount,
                 "",
                 "",
-                CourseRoute.planned(
-                        List.of(attractionStop(null, 1L, 1), attractionStop(null, 2L, 2)),
-                        List.of(new CourseRouteSegment(1, 1, 2, "WALK", 100, 140))
-                )
+                List.of(
+                        attractionStop(null, 1L, 1, 140, 100),
+                        attractionStop(null, 2L, 2, null, null)
+                ),
+                List.of()
         );
     }
 
-    private static Course feedCourse(String id,
-                                     Long ownerMemberId,
-                                     String curationSection,
-                                     Double distanceMeters) {
+    private static Course feedCourse(String id, Long ownerMemberId, Double distanceMeters) {
         return new Course(
                 id,
                 ownerMemberId,
                 id,
                 "서울",
-                "PUBLIC",
-                "READY",
-                null,
-                null,
-                curationSection,
                 null,
                 ownerMemberId == null,
-                37.5665,
-                126.9780,
+                new Coordinate(37.5665, 126.9780),
                 distanceMeters,
                 0,
                 "",
                 "",
-                CourseRoute.planned(
-                        List.of(attractionStop(null, 1L, 1), attractionStop(null, 2L, 2)),
-                        List.of(new CourseRouteSegment(1, 1, 2, "WALK", 100, 140))
-                )
+                List.of(
+                        attractionStop(null, 1L, 1, 140, 100),
+                        attractionStop(null, 2L, 2, null, null)
+                ),
+                List.of()
         );
     }
 
@@ -419,47 +347,30 @@ class CourseControllerTest {
                 ownerMemberId,
                 id,
                 "서울",
-                "PRIVATE",
-                "READY",
-                null,
-                null,
-                null,
                 null,
                 false,
+                null,
+                null,
                 0,
                 "",
                 "",
-                CourseRoute.planned(
-                        List.of(
-                                attractionStop(firstItemId, 1L, 1),
-                                attractionStop(secondItemId, 2L, 2)
-                        ),
-                        List.of(new CourseRouteSegment(1, 1, 2, "WALK", 100, 140))
-                )
+                List.of(
+                        attractionStop(firstItemId, 1L, 1, 140, 100),
+                        attractionStop(secondItemId, 2L, 2, null, null)
+                ),
+                List.of()
         );
     }
 
-    private static CourseStop attractionStop(Long attractionId) {
-        return new CourseStop(
-                null,
-                CourseStopTarget.attraction(attractionId),
-                1,
-                1,
-                null,
-                null,
-                "장소"
-        );
-    }
-
-    private static CourseStop attractionStop(Long itemId, Long attractionId, int position) {
+    private static CourseStop attractionStop(Long itemId, Long attractionId, int position,
+                                             Integer distanceToNext, Integer durationToNext) {
         return new CourseStop(
                 itemId,
                 CourseStopTarget.attraction(attractionId),
                 position,
-                1,
-                null,
-                null,
-                "장소 " + attractionId
+                "장소 " + attractionId,
+                distanceToNext,
+                durationToNext
         );
     }
 

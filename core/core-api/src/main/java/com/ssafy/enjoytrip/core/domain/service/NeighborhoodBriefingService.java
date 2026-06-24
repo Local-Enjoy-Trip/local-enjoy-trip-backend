@@ -23,7 +23,7 @@ public class NeighborhoodBriefingService {
     private final SpringAiNeighborhoodBriefingGenerator generator;
     private final NeighborhoodBriefingMapper neighborhoodBriefingMapper;
 
-    @Cacheable(cacheNames = "neighborhoodBriefings", key = "#regionName + ':' + #currentHour")
+    @Cacheable(cacheNames = "neighborhoodBriefings", key = "#regionName + ':' + #currentHour", unless = "#result == null || #result.isFallback()")
     public NeighborhoodBriefing brief(String regionName, WeatherWithForecast weatherWithForecast, String currentHour) {
         WeatherSummary weather = weatherWithForecast.current();
         List<WeatherForecast> forecasts = weatherWithForecast.forecasts();
@@ -39,8 +39,8 @@ public class NeighborhoodBriefingService {
                         weather.rainChance(),
                         weather.sunrise(),
                         weather.sunset(),
-                        weather.tempMin(),
-                        weather.tempMax()
+                        weather.temperatureRange() != null ? weather.temperatureRange().tempMin() : null,
+                        weather.temperatureRange() != null ? weather.temperatureRange().tempMax() : null
                 ),
                 localPlaces
         );
@@ -68,7 +68,8 @@ public class NeighborhoodBriefingService {
                 "오늘 %s은 %s이고 기온은 %d도예요.\n%s 동네 곳곳을 구경해보세요."
                         .formatted(region, weather.condition(), weather.temperature(), region),
                 weather,
-                forecasts
+                forecasts,
+                true
         );
     }
 

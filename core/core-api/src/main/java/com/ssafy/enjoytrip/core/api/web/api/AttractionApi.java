@@ -1,7 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.api;
 
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
-import com.ssafy.enjoytrip.core.api.web.dto.request.AttractionTagsRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.AttractionSearchRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NearbySectionRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.RatingRequest;
@@ -313,32 +312,4 @@ public interface AttractionApi {
             @Parameter(hidden = true) Long memberId
     );
 
-    @Operation(
-            summary = "관광지 태그 연결",
-            description = "관광지에 연결된 태그 목록을 교체합니다.",
-            operationId = "replaceAttractionTags",
-            requestBody = @RequestBody(
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AttractionTagsRequest.class),
-                            examples = @ExampleObject(value = ApiExamples.ATTRACTION_TAGS_REQUEST)
-                    )
-            )
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "관광지 태그 연결 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            examples = @ExampleObject(value = ApiExamples.SUCCESS_VOID)
-                    )
-            )
-    })
-    ApiResponse<Void> replaceTags(
-            @Parameter(description = "태그를 교체할 관광지 ID", example = "125405", required = true) Long id,
-            AttractionTagsRequest request,
-            @Parameter(hidden = true) Long memberId
-    );
 }

@@ -1,18 +1,14 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
 import com.ssafy.enjoytrip.core.domain.Course;
+import com.ssafy.enjoytrip.core.domain.CourseTag;
 import java.util.List;
 
 public record CourseResponse(
         String id,
         String title,
         String regionName,
-        String visibility,
-        String status,
-        String description,
-        String coverImageUrl,
-        String curationSection,
-        Integer curationOrder,
+        String date,
         boolean createdByAdmin,
         Double distanceMeters,
         CourseStartLocationResponse startLocation,
@@ -21,45 +17,49 @@ public record CourseResponse(
         String updatedAt,
         RouteSummaryResponse routeSummary,
         List<CourseItemResponse> items,
-        List<CourseSegmentResponse> segments
+        List<TagResponse> tags
 ) {
     public static CourseResponse from(Course course) {
         return new CourseResponse(
                 course.id(),
                 course.title(),
                 course.regionName(),
-                course.visibility(),
-                course.status(),
-                course.description(),
-                course.coverImageUrl(),
-                course.curationSection(),
-                course.curationOrder(),
+                course.date(),
                 course.createdByAdmin(),
                 course.distanceMeters(),
                 startLocation(course),
                 course.saveCount(),
                 course.createdAt(),
                 course.updatedAt(),
-                RouteSummaryResponse.from(course.routeSummary()),
-                course.route().stops().stream()
+                RouteSummaryResponse.from(course),
+                course.stops().stream()
                         .map(CourseItemResponse::from)
                         .toList(),
-                course.route().segments().stream()
-                        .map(CourseSegmentResponse::from)
+                course.tags().stream()
+                        .map(tag -> new TagResponse(tag.tagId(), tag.tagName()))
                         .toList()
         );
     }
 
     private static CourseStartLocationResponse startLocation(Course course) {
-        if (course.startLatitude() == null || course.startLongitude() == null) {
+        if (course.startLocation() == null) {
             return null;
         }
-        return new CourseStartLocationResponse(course.startLongitude(), course.startLatitude());
+        return new CourseStartLocationResponse(
+                course.startLocation().longitude(),
+                course.startLocation().latitude()
+        );
     }
 
     public record CourseStartLocationResponse(
             Double longitude,
             Double latitude
+    ) {
+    }
+
+    public record TagResponse(
+            Long id,
+            String name
     ) {
     }
 }

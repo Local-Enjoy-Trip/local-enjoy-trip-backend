@@ -3,7 +3,6 @@ package com.ssafy.enjoytrip.core.domain.service;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.ATTRACTION_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -110,7 +109,7 @@ class DbBackedTravelDataServicesTest {
             verify(attractionMapper, never()).refreshPopularityRatingStats(2L);
         }
 
-        @DisplayName("AttractionService는 상세 join row를 단건 상세 도메인으로 묶어 반환한다")
+        @DisplayName("AttractionService는 상세 row를 단건 상세 도메인으로 반환한다")
         @Test
         void findsAttractionDetailFromJoinedRows() {
             AttractionMapper attractionMapper = mock(AttractionMapper.class);
@@ -118,10 +117,9 @@ class DbBackedTravelDataServicesTest {
                     attractionMapper,
                     mock(AttractionPopularityDeltaCache.class)
             );
-            when(attractionMapper.findDetailRowsById(1L, 11L)).thenReturn(List.of(
-                    attractionRow(1L, 3L, "역사"),
-                    attractionRow(1L, 4L, "야경")
-            ));
+            when(attractionMapper.findDetailById(1L, 11L)).thenReturn(
+                    attractionRow(1L)
+            );
 
             Attraction attraction = service.findAttractionDetail(1L, 11L);
 
@@ -129,12 +127,6 @@ class DbBackedTravelDataServicesTest {
             assertThat(attraction.title()).isEqualTo("경복궁");
             assertThat(attraction.saved()).isTrue();
             assertThat(attraction.myRating()).isEqualTo(5);
-            assertThat(attraction.tags())
-                    .extracting("id", "name")
-                    .containsExactly(
-                            tuple(3L, "역사"),
-                            tuple(4L, "야경")
-                    );
         }
 
         @DisplayName("AttractionService는 상세 row가 없으면 관광지 없음 예외를 던진다")
@@ -145,7 +137,7 @@ class DbBackedTravelDataServicesTest {
                     attractionMapper,
                     mock(AttractionPopularityDeltaCache.class)
             );
-            when(attractionMapper.findDetailRowsById(999L, null)).thenReturn(List.of());
+            when(attractionMapper.findDetailById(999L, null)).thenReturn(null);
 
             assertThatThrownBy(() -> service.findAttractionDetail(999L, null))
                     .isInstanceOf(CoreException.class)
@@ -153,7 +145,7 @@ class DbBackedTravelDataServicesTest {
                     .isEqualTo(ATTRACTION_NOT_FOUND);
         }
 
-        private AttractionSearchRecord attractionRow(Long attractionId, Long tagId, String tagName) {
+        private AttractionSearchRecord attractionRow(Long attractionId) {
             return new AttractionSearchRecord(
                     attractionId,
                     "경복궁",
@@ -175,8 +167,6 @@ class DbBackedTravelDataServicesTest {
                     2,
                     4.5,
                     2,
-                    tagId,
-                    tagName,
                     true,
                     5
             );

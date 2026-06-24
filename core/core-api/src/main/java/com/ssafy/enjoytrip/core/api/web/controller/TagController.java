@@ -2,13 +2,13 @@ package com.ssafy.enjoytrip.core.api.web.controller;
 
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
-import com.ssafy.enjoytrip.core.domain.AttractionTag;
-import com.ssafy.enjoytrip.core.domain.service.AttractionService;
+import com.ssafy.enjoytrip.core.domain.Tag;
+import com.ssafy.enjoytrip.core.domain.service.TagService;
 import com.ssafy.enjoytrip.core.support.error.exception.ClientInputException;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
-import com.ssafy.enjoytrip.core.api.web.api.AttractionTagApi;
+import com.ssafy.enjoytrip.core.api.web.api.TagApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.TagRequest;
-import com.ssafy.enjoytrip.core.api.web.dto.response.AttractionTagsResponse;
+import com.ssafy.enjoytrip.core.api.web.dto.response.TagsResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,32 +24,31 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/attraction-tags")
+@RequestMapping("/api/tags")
 @RequiredArgsConstructor
-public class AttractionTagController implements AttractionTagApi {
-    private final AttractionService service;
+public class TagController implements TagApi {
+    private final TagService tagService;
 
     @GetMapping
     @Override
-    public ApiResponse<AttractionTagsResponse> tags() {
-        return success(new AttractionTagsResponse(service.findAllTags()));
+    public ApiResponse<TagsResponse> tags() {
+        return success(new TagsResponse(tagService.findAll()));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Override
-    public ApiResponse<AttractionTagsResponse> create(@Valid @RequestBody TagRequest request) {
+    public ApiResponse<TagsResponse> create(@Valid @RequestBody TagRequest request) {
         String name = request.normalizedName();
-        AttractionTag tag = service.createTagOrThrow(name);
-        return success(new AttractionTagsResponse(List.of(tag)));
+        Tag tag = tagService.createOrThrow(name);
+        return success(new TagsResponse(List.of(tag)));
     }
 
     @PutMapping("/{id}")
     @Override
     public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody TagRequest request) {
         requireId(id);
-        String name = request.normalizedName();
-        service.updateTagOrThrow(id, name);
+        tagService.updateOrThrow(id, request.normalizedName());
         return success();
     }
 
@@ -57,7 +56,7 @@ public class AttractionTagController implements AttractionTagApi {
     @Override
     public ApiResponse<Void> delete(@PathVariable Long id) {
         requireId(id);
-        service.deleteTagOrThrow(id);
+        tagService.deleteOrThrow(id);
         return success();
     }
 

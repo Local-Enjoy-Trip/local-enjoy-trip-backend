@@ -6,12 +6,7 @@
         c.owner_member_id as ownerMemberId,
         c.title,
         c.region_name as regionName,
-        c.visibility,
-        c.status,
-        c.description,
-        c.cover_image_url as coverImageUrl,
-        c.curation_section as curationSection,
-        c.curation_order as curationOrder,
+        c.date,
         exists (
             select 1
             from members m
@@ -27,16 +22,6 @@
         c.updated_at as updatedAt,
         c.deleted_at as deletedAt
     </sql>
-    <sql id="courseRouteSegmentColumns">
-        s.course_id as courseId,
-        s.from_course_item_id as fromCourseItemId,
-        s.to_course_item_id as toCourseItemId,
-        s.segment_order as segmentOrder,
-        s.travel_mode as travelMode,
-        s.duration_seconds as durationSeconds,
-        s.distance_meters as distanceMeters
-    </sql>
-
 
     <sql id="courseItemColumns">
         i.id,
@@ -45,9 +30,8 @@
         i.attraction_id as attractionId,
         i.note_id as noteId,
         i.position,
-        i.day,
-        i.memo,
-        i.stay_minutes as stayMinutes,
+        i.distance_to_next as distanceToNext,
+        i.duration_to_next as durationToNext,
         a.title as attractionTitle,
         n.title as noteTitle,
         case i.item_type
@@ -56,12 +40,6 @@
         end as itemTitle,
         n.author_member_id as noteAuthorMemberId,
         i.created_at as createdAt
-    </sql>
-
-    <sql id="publicCoursePredicate">
-        c.visibility = &apos;PUBLIC&apos;
-        and c.status = &apos;READY&apos;
-        and c.deleted_at is null
     </sql>
 
     <sql id="publicAttractionPredicate">
@@ -75,6 +53,7 @@
         and n.status = &apos;ACTIVE&apos;
         and n.deleted_at is null
     </sql>
+
     <sql id="feedOriginPoint">
         ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)
     </sql>
@@ -88,7 +67,7 @@
         ) as distanceMeters
     </sql>
     <sql id="publicFeedPredicate">
-        <include refid="publicCoursePredicate"/>
+        c.deleted_at is null
         and c.start_location is not null
         <if test="radiusMeters != null">
             and ST_DWithin(
@@ -105,12 +84,7 @@
             owner_member_id,
             title,
             region_name,
-            visibility,
-            status,
-            description,
-            cover_image_url,
-            curation_section,
-            curation_order,
+            date,
             created_at
         )
         values (
@@ -118,12 +92,7 @@
             #{ownerMemberId},
             #{title},
             #{regionName},
-            #{visibility},
-            #{status},
-            #{description},
-            #{coverImageUrl},
-            #{curationSection},
-            #{curationOrder},
+            #{date},
             current_timestamp
         )
     </insert>
@@ -155,17 +124,13 @@
         update courses
         set title = #{title},
             region_name = #{regionName},
-            visibility = #{visibility},
-            status = #{status},
-            description = #{description},
-            cover_image_url = #{coverImageUrl},
-            curation_section = #{curationSection},
-            curation_order = #{curationOrder},
+            date = #{date},
             updated_at = current_timestamp
         where id = #{id}
           and owner_member_id = #{ownerMemberId}
           and deleted_at is null
     </update>
+
     <update id="updateStartLocation">
         update courses
         set start_location =
@@ -188,11 +153,6 @@
           and deleted_at is null
     </update>
 
-    <delete id="deleteSegmentsByCourseId">
-        delete from course_route_segments
-        where course_id = #{courseId}
-    </delete>
-
     <delete id="deleteItemsByCourseId">
         delete from course_items
         where course_id = #{courseId}
@@ -205,9 +165,8 @@
             attraction_id,
             note_id,
             position,
-            day,
-            memo,
-            stay_minutes,
+            distance_to_next,
+            duration_to_next,
             created_at
         )
         values (
@@ -216,9 +175,8 @@
             #{attractionId},
             #{noteId},
             #{position},
-            #{day},
-            #{memo},
-            #{stayMinutes},
+            #{distanceToNext},
+            #{durationToNext},
             current_timestamp
         )
     </insert>
@@ -230,9 +188,8 @@
             attraction_id,
             note_id,
             position,
-            day,
-            memo,
-            stay_minutes,
+            distance_to_next,
+            duration_to_next,
             created_at
         )
         values
@@ -243,9 +200,8 @@
                 #{record.attractionId},
                 #{record.noteId},
                 #{record.position},
-                #{record.day},
-                #{record.memo},
-                #{record.stayMinutes},
+                #{record.distanceToNext},
+                #{record.durationToNext},
                 current_timestamp
             )
         </foreach>
@@ -258,58 +214,6 @@
         from course_items
         where course_id = #{courseId}
         order by position asc, id asc
-    </select>
-
-    <insert id="insertSegment">
-        insert into course_route_segments (
-            course_id,
-            from_course_item_id,
-            to_course_item_id,
-            segment_order,
-            travel_mode,
-            duration_seconds,
-            distance_meters
-        )
-        values (
-            #{courseId},
-            #{fromCourseItemId},
-            #{toCourseItemId},
-            #{segmentOrder},
-            #{travelMode},
-            #{durationSeconds},
-            #{distanceMeters}
-        )
-    </insert>
-
-    <insert id="insertSegments">
-        insert into course_route_segments (
-            course_id,
-            from_course_item_id,
-            to_course_item_id,
-            segment_order,
-            travel_mode,
-            duration_seconds,
-            distance_meters
-        )
-        values
-        <foreach collection="list" item="record" separator=",">
-            (
-                #{record.courseId},
-                #{record.fromCourseItemId},
-                #{record.toCourseItemId},
-                #{record.segmentOrder},
-                #{record.travelMode},
-                #{record.durationSeconds},
-                #{record.distanceMeters}
-            )
-        </foreach>
-    </insert>
-
-    <select id="findSegmentsByCourseId" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRouteSegmentRecord">
-        select <include refid="courseRouteSegmentColumns"/>
-        from course_route_segments s
-        where s.course_id = #{courseId}
-        order by s.segment_order asc
     </select>
 
     <select id="findItemsByCourseId" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord">
@@ -339,8 +243,9 @@
         with md_top as (
             select <include refid="feedDistanceColumns"/>
             from courses c
+            join members m on m.id = c.owner_member_id
             where <include refid="publicFeedPredicate"/>
-              and c.curation_section = &apos;MD_RECOMMENDED&apos;
+              and m.role = &apos;ADMIN&apos;
             order by c.start_location &lt;-&gt; <include refid="feedOriginPoint"/>,
                      c.id asc
             limit least(3, #{limit})
@@ -370,4 +275,58 @@
                  feed.distanceMeters asc,
                  feed.id asc
     </select>
+
+    <select id="findAdminOwnedByDistance" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
+        select <include refid="feedDistanceColumns"/>
+        from courses c
+        join members m on m.id = c.owner_member_id
+        where m.role = &apos;ADMIN&apos;
+          and c.deleted_at is null
+          and c.start_location is not null
+        order by c.start_location &lt;-&gt; <include refid="feedOriginPoint"/>,
+                 c.id asc
+        limit #{limit}
+    </select>
+
+    <select id="findByRegionOrderedBySaveCount" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
+        select <include refid="courseColumns"/>
+        from courses c
+        where c.region_name = #{regionName}
+          and c.deleted_at is null
+        order by (
+            select count(*) from course_saves s where s.course_id = c.id
+        ) desc, c.created_at desc, c.id asc
+        limit #{limit}
+    </select>
+
+    <insert id="insertSave">
+        insert into course_saves (course_id, member_id)
+        values (#{courseId}, #{memberId})
+        on conflict (course_id, member_id) do nothing
+    </insert>
+
+    <delete id="deleteSave">
+        delete from course_saves
+        where course_id = #{courseId}
+          and member_id = #{memberId}
+    </delete>
+
+    <select id="findTagsByCourseId" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseTagRecord">
+        select ct.course_id as courseId,
+               ct.tag_id as tagId,
+               t.name as tagName
+        from course_tags ct
+        join tags t on t.id = ct.tag_id
+        where ct.course_id = #{courseId}
+        order by t.name asc
+    </select>
+
+    <insert id="insertCourseTag">
+        insert into course_tags (course_id, tag_id) values (#{courseId}, #{tagId})
+        on conflict (course_id, tag_id) do nothing
+    </insert>
+
+    <delete id="deleteTagsByCourseId">
+        delete from course_tags where course_id = #{courseId}
+    </delete>
 </mapper>

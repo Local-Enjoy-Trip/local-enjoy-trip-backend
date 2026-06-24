@@ -22,12 +22,12 @@ public record PopularAttractionResponse(
         this(
                 popularAttraction.attraction().id(),
                 popularAttraction.attraction().title(),
-                popularAttraction.attraction().addr1(),
-                popularAttraction.attraction().addr2(),
+                addr1(popularAttraction.attraction()),
+                addr2(popularAttraction.attraction()),
                 popularAttraction.attraction().firstImage(),
                 popularAttraction.attraction().readcount(),
-                popularAttraction.attraction().latitude(),
-                popularAttraction.attraction().longitude(),
+                latitude(popularAttraction.attraction()),
+                longitude(popularAttraction.attraction()),
                 popularAttraction.attraction().contentTypeId(),
                 popularAttraction.attraction().saveCount(),
                 popularAttraction.attraction().saved(),
@@ -38,5 +38,21 @@ public record PopularAttractionResponse(
 
     public PopularAttractionResponse(Attraction attraction, long popularityCount, double distanceMeters) {
         this(new PopularAttractionResult(attraction, distanceMeters, popularityCount));
+    }
+
+    private static String addr1(Attraction a) {
+        return a.address() != null ? a.address().address() : null;
+    }
+
+    private static String addr2(Attraction a) {
+        return a.address() != null ? a.address().addressDetail() : null;
+    }
+
+    private static Double latitude(Attraction a) {
+        return a.location() != null ? a.location().latitude() : null;
+    }
+
+    private static Double longitude(Attraction a) {
+        return a.location() != null ? a.location().longitude() : null;
     }
 }

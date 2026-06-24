@@ -35,12 +35,11 @@ abstract class H2MapperTestSupport {
         jdbcTemplate.update("delete from attraction_popularity_stats");
         jdbcTemplate.update("delete from attraction_saves");
         jdbcTemplate.update("delete from attraction_ratings");
-        jdbcTemplate.update("delete from attraction_tag_mappings");
-        jdbcTemplate.update("delete from attraction_tags");
+        jdbcTemplate.update("delete from course_tags");
+        jdbcTemplate.update("delete from tags");
         jdbcTemplate.update("delete from attractions");
         jdbcTemplate.update("delete from friendships");
         jdbcTemplate.update("delete from course_saves");
-        jdbcTemplate.update("delete from course_route_segments");
         jdbcTemplate.update("delete from course_items");
         jdbcTemplate.update("delete from courses");
         jdbcTemplate.update("delete from notes");

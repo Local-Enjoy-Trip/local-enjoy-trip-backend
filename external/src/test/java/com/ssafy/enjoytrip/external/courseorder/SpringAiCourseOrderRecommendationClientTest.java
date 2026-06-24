@@ -107,7 +107,6 @@ class SpringAiCourseOrderRecommendationClientTest {
                 .contains(
                         "Current location: latitude=37.5665, longitude=126.978",
                         "Meal windows: lunch=11:30-13:30, dinner=17:30-19:30",
-                        "stayMinutes=90",
                         "contentTypeId=39"
                 );
     }
@@ -122,7 +121,6 @@ class SpringAiCourseOrderRecommendationClientTest {
                                 10L,
                                 "첫 장소",
                                 1,
-                                1,
                                 37.0,
                                 127.0
                         ),
@@ -131,7 +129,6 @@ class SpringAiCourseOrderRecommendationClientTest {
                                 "ATTRACTION",
                                 20L,
                                 "두 번째 장소",
-                                1,
                                 2,
                                 37.1,
                                 127.1
@@ -152,8 +149,6 @@ class SpringAiCourseOrderRecommendationClientTest {
                                 10L,
                                 "첫 장소",
                                 1,
-                                1,
-                                90,
                                 "39",
                                 37.0,
                                 127.0
@@ -163,9 +158,7 @@ class SpringAiCourseOrderRecommendationClientTest {
                                 "ATTRACTION",
                                 20L,
                                 "두 번째 장소",
-                                1,
                                 2,
-                                60,
                                 "12",
                                 37.1,
                                 127.1

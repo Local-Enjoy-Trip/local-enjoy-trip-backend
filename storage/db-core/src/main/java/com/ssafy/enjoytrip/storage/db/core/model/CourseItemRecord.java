@@ -22,11 +22,9 @@ public class CourseItemRecord {
 
     private Integer position;
 
-    private Integer day;
+    private Integer distanceToNext;
 
-    private String memo;
-
-    private Integer stayMinutes;
+    private Integer durationToNext;
 
     private LocalDateTime createdAt;
 
@@ -35,16 +33,14 @@ public class CourseItemRecord {
                             Long attractionId,
                             Long noteId,
                             Integer position,
-                            Integer day,
-                            String memo,
-                            Integer stayMinutes) {
+                            Integer distanceToNext,
+                            Integer durationToNext) {
         this.courseId = courseId;
         this.itemType = itemType;
         this.attractionId = attractionId;
         this.noteId = noteId;
         this.position = position;
-        this.day = day;
-        this.memo = memo;
-        this.stayMinutes = stayMinutes;
+        this.distanceToNext = distanceToNext;
+        this.durationToNext = durationToNext;
     }
 }

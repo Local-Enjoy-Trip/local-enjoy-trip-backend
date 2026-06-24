@@ -19,8 +19,8 @@ public class CourseOrderPreviewReader {
     private final NoteMapper noteMapper;
 
     public CourseOrderPreview read(Course course) {
-        Map<Long, AttractionRecord> attractions = findAttractions(course.route().stops());
-        List<CourseOrderPreviewItem> items = course.route().stops().stream()
+        Map<Long, AttractionRecord> attractions = findAttractions(course.stops());
+        List<CourseOrderPreviewItem> items = course.stops().stream()
                 .map(stop -> previewItem(stop, attractions))
                 .toList();
         return new CourseOrderPreview(course, items);

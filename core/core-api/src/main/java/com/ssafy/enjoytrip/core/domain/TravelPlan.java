@@ -2,14 +2,14 @@ package com.ssafy.enjoytrip.core.domain;
 
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.PLAN_ACCESS_DENIED;
 
+import com.ssafy.enjoytrip.core.domain.vo.DateRange;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 
 public record TravelPlan(
         String id,
         Long memberId,
         String title,
-        String startDate,
-        String endDate,
+        DateRange planPeriod,
         int budget,
         String note,
         String routeItemsJson,
@@ -31,8 +31,7 @@ public record TravelPlan(
                 id,
                 memberId,
                 title,
-                startDate,
-                endDate,
+                new DateRange(startDate, endDate),
                 budget,
                 note,
                 DEFAULT_ROUTE_ITEMS_JSON,
@@ -47,12 +46,13 @@ public record TravelPlan(
             Integer budget,
             String note
     ) {
+        String newStartDate = valueOrCurrent(startDate, this.planPeriod.startDate());
+        String newEndDate = valueOrCurrent(endDate, this.planPeriod.endDate());
         return new TravelPlan(
                 id,
                 memberId,
                 valueOrCurrent(title, this.title),
-                valueOrCurrent(startDate, this.startDate),
-                valueOrCurrent(endDate, this.endDate),
+                new DateRange(newStartDate, newEndDate),
                 valueOrCurrent(budget, this.budget),
                 valueOrCurrent(note, this.note),
                 routeItemsJson,

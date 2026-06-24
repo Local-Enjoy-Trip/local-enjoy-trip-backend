@@ -1,28 +1,25 @@
 package com.ssafy.enjoytrip.core.domain;
 
-import java.util.List;
+import com.ssafy.enjoytrip.core.domain.vo.Address;
+import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
+import com.ssafy.enjoytrip.core.domain.vo.RatingStats;
 
 public record Attraction(
         Long id,
         String title,
-        String addr1,
-        String addr2,
-        String zipcode,
+        Address address,
         String tel,
         String firstImage,
         String firstImage2,
         Integer readcount,
         Integer sidoCode,
         Integer gugunCode,
-        Double latitude,
-        Double longitude,
+        Coordinate location,
         String mlevel,
         String contentTypeId,
         String overview,
         int saveCount,
-        double ratingAverage,
-        int ratingCount,
-        List<AttractionTag> tags,
+        RatingStats ratingStats,
         boolean saved,
         Integer myRating
 ) {

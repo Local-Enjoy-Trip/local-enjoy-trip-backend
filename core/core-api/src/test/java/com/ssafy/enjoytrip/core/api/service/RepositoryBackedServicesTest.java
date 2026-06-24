@@ -19,6 +19,7 @@ import com.ssafy.enjoytrip.core.domain.Member;
 import com.ssafy.enjoytrip.core.domain.Notice;
 import com.ssafy.enjoytrip.core.domain.PlanItem;
 import com.ssafy.enjoytrip.core.domain.TravelPlan;
+import com.ssafy.enjoytrip.core.domain.vo.DateRange;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.HotplaceRecord;
@@ -111,7 +112,7 @@ class RepositoryBackedServicesTest {
         @DisplayName("여행 계획 등록은 db-core TravelPlanRecord를 MyBatis mapper로 저장한다")
         @Test
         void savesTravelPlanRecord() {
-            TravelPlan plan = new TravelPlan("p1", 1L, "서울", "2026-05-14", "2026-05-15",
+            TravelPlan plan = new TravelPlan("p1", 1L, "서울", new DateRange("2026-05-14", "2026-05-15"),
                     1000, "note", "[]", "created");
 
             service.createPlan(plan, List.of());
@@ -122,7 +123,7 @@ class RepositoryBackedServicesTest {
         @DisplayName("여행 계획 코스 저장은 관광지 좌표 기준으로 같은 일자 안에서 순서를 최적화한다")
         @Test
         void savesPlanItemsInOptimizedOrderByAttractionCoordinates() {
-            TravelPlan plan = new TravelPlan("p1", 1L, "서울", "2026-05-14", "2026-05-15",
+            TravelPlan plan = new TravelPlan("p1", 1L, "서울", new DateRange("2026-05-14", "2026-05-15"),
                     1000, "note", "[]", "created");
             List<PlanItem> items = List.of(
                     new PlanItem(null, "p1", 1L, 0, 1, "start", 90),

@@ -4,9 +4,7 @@
     <select id="findPublicReadyCandidates" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseBriefingCandidateRecord">
         select id, title, region_name as regionName
         from courses
-        where visibility = 'PUBLIC'
-          and status = 'READY'
-          and deleted_at is null
+        where deleted_at is null
         order by case when #{regionName} is not null and region_name = #{regionName} then 0 else 1 end,
                  created_at desc,
                  id asc

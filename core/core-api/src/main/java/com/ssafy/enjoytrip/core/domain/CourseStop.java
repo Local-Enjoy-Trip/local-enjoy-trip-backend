@@ -7,34 +7,40 @@ public record CourseStop(
         Long id,
         CourseStopTarget target,
         int position,
-        int day,
-        String memo,
-        Integer stayMinutes,
-        String title
+        String title,
+        Integer distanceToNext,
+        Integer durationToNext
 ) {
     public CourseStop {
-        if (target == null || position <= 0 || day <= 0 || invalidStayMinutes(stayMinutes)) {
+        if (target == null || position <= 0) {
+            throw new CoreException(ErrorType.COURSE_INVALID_ITEM);
+        }
+        if (invalidNextMetric(distanceToNext) || invalidNextMetric(durationToNext)) {
             throw new CoreException(ErrorType.COURSE_INVALID_ITEM);
         }
     }
 
     public CourseStop withId(Long nextId) {
-        return new CourseStop(nextId, target, position, day, memo, stayMinutes, title);
+        return new CourseStop(nextId, target, position, title, distanceToNext, durationToNext);
     }
 
     public CourseStop withPosition(int nextPosition) {
-        return new CourseStop(id, target, nextPosition, day, memo, stayMinutes, title);
+        return new CourseStop(id, target, nextPosition, title, distanceToNext, durationToNext);
     }
 
     public CourseStop withTitle(String nextTitle) {
-        return new CourseStop(id, target, position, day, memo, stayMinutes, nextTitle);
+        return new CourseStop(id, target, position, nextTitle, distanceToNext, durationToNext);
+    }
+
+    public CourseStop withNextMetrics(Integer nextDistanceToNext, Integer nextDurationToNext) {
+        return new CourseStop(id, target, position, title, nextDistanceToNext, nextDurationToNext);
     }
 
     public CourseStop withoutStorageId() {
         return withId(null);
     }
 
-    private static boolean invalidStayMinutes(Integer stayMinutes) {
-        return stayMinutes != null && stayMinutes <= 0;
+    private static boolean invalidNextMetric(Integer metric) {
+        return metric != null && metric < 0;
     }
 }

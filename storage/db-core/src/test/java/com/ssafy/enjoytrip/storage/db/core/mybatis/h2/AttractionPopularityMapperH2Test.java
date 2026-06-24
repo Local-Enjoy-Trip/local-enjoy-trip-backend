@@ -38,7 +38,7 @@ class AttractionPopularityMapperH2Test extends H2MapperTestSupport {
                 .containsExactly(tuple(1L, 5));
     }
 
-    @DisplayName("AttractionMapper는 통계와 회원 상태와 태그를 단일 join row로 조회한다")
+    @DisplayName("AttractionMapper는 통계와 회원 상태를 단일 join row로 조회한다")
     @Test
     void findStatsRowsReadsStatsUserStateAndTagsWithSingleJoinProjection() {
         seedAttraction(1L, "저장 관광지");
@@ -49,8 +49,6 @@ class AttractionPopularityMapperH2Test extends H2MapperTestSupport {
         insertAttractionSave(1L, otherMemberId);
         insertAttractionSave(2L, memberId);
         insertAttractionRating(1L, memberId, 5);
-        insertAttractionTag(10L, "가족");
-        insertAttractionTagMapping(1L, 10L);
         jdbcTemplate.update("""
                 insert into attraction_popularity_stats (
                     attraction_id,
@@ -72,14 +70,12 @@ class AttractionPopularityMapperH2Test extends H2MapperTestSupport {
                         AttractionStatsRowRecord::saveCount,
                         AttractionStatsRowRecord::ratingCount,
                         AttractionStatsRowRecord::averageRating,
-                        AttractionStatsRowRecord::tagId,
-                        AttractionStatsRowRecord::tagName,
                         AttractionStatsRowRecord::saved,
                         AttractionStatsRowRecord::myRating
                 )
                 .containsExactlyInAnyOrder(
-                        tuple(1L, 7, 3, 4.3, 10L, "가족", true, 5),
-                        tuple(2L, 3, 1, 2.5, null, null, true, null)
+                        tuple(1L, 7, 3, 4.3, true, 5),
+                        tuple(2L, 3, 1, 2.5, true, null)
                 );
     }
 
@@ -126,17 +122,4 @@ class AttractionPopularityMapperH2Test extends H2MapperTestSupport {
                 """, attractionId, memberId, rating);
     }
 
-    private void insertAttractionTag(Long tagId, String name) {
-        jdbcTemplate.update("""
-                insert into attraction_tags (id, name)
-                values (?, ?)
-                """, tagId, name);
-    }
-
-    private void insertAttractionTagMapping(Long attractionId, Long tagId) {
-        jdbcTemplate.update("""
-                insert into attraction_tag_mappings (attraction_id, tag_id)
-                values (?, ?)
-                """, attractionId, tagId);
-    }
 }

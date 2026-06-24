@@ -6,7 +6,6 @@ import com.ssafy.enjoytrip.storage.db.core.model.AttractionPopularityDeltaRecord
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionStatsRowRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
@@ -37,8 +36,8 @@ public interface AttractionMapper {
                                                  @Param("limit") Integer limit,
                                                  @Param("viewerMemberId") Long viewerMemberId);
 
-    List<AttractionSearchRecord> findDetailRowsById(@Param("attractionId") Long attractionId,
-                                                    @Param("viewerMemberId") Long viewerMemberId);
+    AttractionSearchRecord findDetailById(@Param("attractionId") Long attractionId,
+                                         @Param("viewerMemberId") Long viewerMemberId);
 
     int existsById(Long attractionId);
 
@@ -71,20 +70,6 @@ public interface AttractionMapper {
     int deleteRating(@Param("attractionId") Long attractionId, @Param("memberId") Long memberId);
 
     int refreshPopularityRatingStats(Long attractionId);
-
-    List<AttractionTagRecord> findAllTags();
-
-    AttractionTagRecord insertTag(String name);
-
-    int updateTag(@Param("tagId") Long tagId, @Param("name") String name);
-
-    int deleteTag(Long tagId);
-
-    int countTagsByIds(@Param("ids") List<Long> ids);
-
-    int deleteTagMappings(Long attractionId);
-
-    int insertTagMapping(@Param("attractionId") Long attractionId, @Param("tagId") Long tagId);
 
     List<AttractionStatsRowRecord> findStatsRowsByAttractionId(@Param("attractionId") Long attractionId,
                                                                @Param("memberId") Long memberId);

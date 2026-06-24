@@ -1,5 +1,6 @@
 package com.ssafy.enjoytrip.core.domain;
 
+import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.support.error.ErrorType;
 import java.util.List;
@@ -9,60 +10,19 @@ public record Course(
         Long ownerMemberId,
         String title,
         String regionName,
-        String visibility,
-        String status,
-        String description,
-        String coverImageUrl,
-        String curationSection,
-        Integer curationOrder,
+        String date,
         boolean createdByAdmin,
-        Double startLatitude,
-        Double startLongitude,
+        Coordinate startLocation,
         Double distanceMeters,
         int saveCount,
         String createdAt,
         String updatedAt,
-        CourseRoute route
+        List<CourseStop> stops,
+        List<CourseTag> tags
 ) {
     public Course {
-        route = route == null ? CourseRoute.empty() : route;
-    }
-
-    public Course(String id,
-                  Long ownerMemberId,
-                  String title,
-                  String regionName,
-                  String visibility,
-                  String status,
-                  String description,
-                  String coverImageUrl,
-                  String curationSection,
-                  Integer curationOrder,
-                  boolean createdByAdmin,
-                  int saveCount,
-                  String createdAt,
-                  String updatedAt,
-                  CourseRoute route) {
-        this(
-                id,
-                ownerMemberId,
-                title,
-                regionName,
-                visibility,
-                status,
-                description,
-                coverImageUrl,
-                curationSection,
-                curationOrder,
-                createdByAdmin,
-                null,
-                null,
-                null,
-                saveCount,
-                createdAt,
-                updatedAt,
-                route
-        );
+        stops = List.copyOf(stops == null ? List.of() : stops);
+        tags = List.copyOf(tags == null ? List.of() : tags);
     }
 
     public void requireOwnedBy(Long memberId) {
@@ -72,56 +32,65 @@ public record Course(
     }
 
     public List<CourseStop> items() {
-        return route.stops();
+        return stops;
     }
 
-    public RouteSummary routeSummary() {
-        return route.summary();
-    }
-
-    public Course withRoute(CourseRoute nextRoute) {
+    public Course withStops(List<CourseStop> nextStops) {
         return new Course(
                 id,
                 ownerMemberId,
                 title,
                 regionName,
-                visibility,
-                status,
-                description,
-                coverImageUrl,
-                curationSection,
-                curationOrder,
+                date,
                 createdByAdmin,
-                startLatitude,
-                startLongitude,
+                startLocation,
                 distanceMeters,
                 saveCount,
                 createdAt,
                 updatedAt,
-                nextRoute
+                nextStops,
+                tags
         );
     }
 
     public Course withStartLocation(CourseStopPoint startPoint) {
+        Coordinate location = startPoint == null
+                ? null
+                : new Coordinate(startPoint.latitude(), startPoint.longitude());
         return new Course(
                 id,
                 ownerMemberId,
                 title,
                 regionName,
-                visibility,
-                status,
-                description,
-                coverImageUrl,
-                curationSection,
-                curationOrder,
+                date,
                 createdByAdmin,
-                startPoint == null ? null : startPoint.latitude(),
-                startPoint == null ? null : startPoint.longitude(),
+                location,
                 distanceMeters,
                 saveCount,
                 createdAt,
                 updatedAt,
-                route
+                stops,
+                tags
         );
+    }
+
+    public int stopCount() {
+        return stops.size();
+    }
+
+    public int segmentCount() {
+        return Math.max(stops.size() - 1, 0);
+    }
+
+    public int totalDistanceMeters() {
+        return stops.stream()
+                .mapToInt(stop -> stop.distanceToNext() == null ? 0 : stop.distanceToNext())
+                .sum();
+    }
+
+    public int totalDurationSeconds() {
+        return stops.stream()
+                .mapToInt(stop -> stop.durationToNext() == null ? 0 : stop.durationToNext())
+                .sum();
     }
 }

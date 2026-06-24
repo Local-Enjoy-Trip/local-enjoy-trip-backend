@@ -10,7 +10,6 @@ import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
 import com.ssafy.enjoytrip.core.support.error.ErrorCode;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.AttractionApi;
-import com.ssafy.enjoytrip.core.api.web.dto.request.AttractionTagsRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.AttractionSearchRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NearbySectionRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.RatingRequest;
@@ -139,18 +138,6 @@ public class AttractionController implements AttractionApi {
         return success(new AttractionStatsResponse(
                 statsService.findStats(id, memberId)
         ));
-    }
-
-    @PutMapping("/{id}/tags")
-    @Override
-    public ApiResponse<Void> replaceTags(
-            @PathVariable Long id,
-            @Valid @RequestBody AttractionTagsRequest request,
-            @AuthenticatedMemberId Long memberId
-    ) {
-        service.replaceTagsOrThrow(id, request.tagIds());
-
-        return success();
     }
 
 }

@@ -16,10 +16,6 @@ public record CourseOrderPreviewItem(
         return stop.id();
     }
 
-    public int day() {
-        return stop.day();
-    }
-
     public int position() {
         return stop.position();
     }

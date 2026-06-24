@@ -33,8 +33,8 @@ public class AdminPageController {
         model.addAttribute("totalUserCount", users.size());
         model.addAttribute("totalPlaceCount", placeSummary.totalCount());
         model.addAttribute("hiddenPlaceCount", placeSummary.hiddenCount());
-        model.addAttribute("publicCourseCount", courseStatusCount(courses, "PUBLIC"));
-        model.addAttribute("readyCourseCount", courseStatusCount(courses, "READY"));
+        model.addAttribute("publicCourseCount", courses.size());
+        model.addAttribute("readyCourseCount", 0);
         model.addAttribute("adminUserCount", adminUserService.countAdmins(users));
         return "admin/dashboard";
     }
@@ -74,11 +74,5 @@ public class AdminPageController {
                 .toList();
     }
 
-
-    private static long courseStatusCount(List<Course> courses, String status) {
-        return courses.stream()
-                .filter(course -> status.equals(course.status()))
-                .count();
-    }
 
 }

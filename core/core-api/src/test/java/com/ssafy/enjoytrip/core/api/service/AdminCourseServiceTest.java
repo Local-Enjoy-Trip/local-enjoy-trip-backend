@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.ssafy.enjoytrip.core.domain.Course;
-import com.ssafy.enjoytrip.core.domain.CourseRoute;
 import com.ssafy.enjoytrip.core.domain.CourseReader;
 import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopPointResolver;
@@ -22,7 +21,6 @@ import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.CourseRouteSegmentRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
@@ -61,9 +59,9 @@ class AdminCourseServiceTest {
         );
     }
 
-    @DisplayName("관리자 코스 생성도 계획된 경로를 저장하고 구간을 재구성한다")
+    @DisplayName("관리자 코스 생성은 계획된 경로로 next metric을 저장한다")
     @Test
-    void createAdminCoursePersistsAndReadsPlannedRoute() {
+    void createAdminCoursePersistsNextMetrics() {
         Course course = course(
                 "admin-course",
                 ADMIN_MEMBER_ID,
@@ -74,14 +72,11 @@ class AdminCourseServiceTest {
         stubAttraction(10L, 37.0, 127.0);
         stubAttraction(20L, 37.1, 127.1);
         stubGeneratedItemIds(301L, 302L);
-        when(courseMapper.insertSegments(any())).thenReturn(1);
 
         Course created = service.createAdminCourse(course);
 
-        assertThat(created.routeSummary().segmentCount()).isEqualTo(1);
-        verify(courseMapper, never()).deleteSegmentsByCourseId("admin-course");
+        assertThat(created.segmentCount()).isEqualTo(1);
         verify(courseMapper, never()).deleteItemsByCourseId("admin-course");
-        verify(courseMapper).insertSegments(any());
     }
 
     @DisplayName("관리자 코스 생성은 쪽지 항목 저장 시 note_id만 채운다")
@@ -113,9 +108,9 @@ class AdminCourseServiceTest {
         verify(courseMapper, never()).insert(any(CourseRecord.class));
     }
 
-    @DisplayName("관리자 코스 수정도 계획된 경로로 기존 항목과 구간을 교체한다")
+    @DisplayName("관리자 코스 수정은 기존 항목을 교체하고 next metric을 저장한다")
     @Test
-    void updateAdminCourseReplacesExistingSegments() {
+    void updateAdminCourseReplacesExistingItems() {
         Course course = course(
                 "admin-update",
                 ADMIN_MEMBER_ID,
@@ -130,18 +125,13 @@ class AdminCourseServiceTest {
                 itemDetail(501L, "admin-update", 10L, 1, "첫 장소"),
                 itemDetail(502L, "admin-update", 20L, 2, "두 번째 장소")
         ));
-        when(courseMapper.findSegmentsByCourseId("admin-update")).thenReturn(List.of(
-                new CourseRouteSegmentRecord("admin-update", 501L, 502L, 1, "WALK", 100, 140)
-        ));
         when(courseMapper.updateOwned(any(CourseRecord.class))).thenReturn(1);
         stubGeneratedItemIds(501L, 502L);
-        when(courseMapper.insertSegments(any())).thenReturn(1);
 
         Course updated = service.updateAdminCourse(ADMIN_MEMBER_ID, course);
 
-        assertThat(updated.routeSummary().segmentCount()).isEqualTo(1);
+        assertThat(updated.segmentCount()).isEqualTo(1);
         verify(courseMapper).updateOwned(any(CourseRecord.class));
-        verify(courseMapper).deleteSegmentsByCourseId("admin-update");
         verify(courseMapper).deleteItemsByCourseId("admin-update");
     }
 
@@ -180,51 +170,31 @@ class AdminCourseServiceTest {
                 ownerMemberId,
                 id,
                 "서울",
-                "PUBLIC",
-                "READY",
                 null,
-                null,
-                "MD_RECOMMENDED",
-                1,
                 true,
+                null,
+                null,
                 0,
                 "",
                 "",
-                CourseRoute.ofStops(List.of(stops))
+                List.of(stops),
+                List.of()
         );
     }
 
     private static CourseStop attractionStop(Long attractionId, int position) {
-        return new CourseStop(
-                null,
-                CourseStopTarget.attraction(attractionId),
-                position,
-                1,
-                null,
-                null,
-                null
-        );
+        return new CourseStop(null, CourseStopTarget.attraction(attractionId), position,
+                null, null, null);
     }
 
     private static CourseStop noteStop(Long noteId, int position) {
-        return new CourseStop(
-                null,
-                CourseStopTarget.note(noteId),
-                position,
-                1,
-                null,
-                null,
-                null
-        );
+        return new CourseStop(null, CourseStopTarget.note(noteId), position,
+                null, null, null);
     }
 
     private static MemberRecord adminMember() {
         MemberRecord member = new MemberRecord(
-                "관리자",
-                null,
-                "admin@example.com",
-                "encoded-password",
-                null
+                "관리자", null, "admin@example.com", "encoded-password", null
         );
         member.setId(ADMIN_MEMBER_ID);
         member.setRole(MemberRole.ADMIN.name());
@@ -233,39 +203,15 @@ class AdminCourseServiceTest {
 
     private static AttractionRecord attraction(Long id, Double latitude, Double longitude) {
         return new AttractionRecord(
-                id,
-                "장소 " + id,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                0,
-                null,
-                null,
-                latitude,
-                longitude,
-                null,
-                null,
-                null
+                id, "장소 " + id, null, null, null, null, null, null, 0, null, null,
+                latitude, longitude, null, null, null
         );
     }
 
     private static NoteRecord note(Long id, Double latitude, Double longitude) {
         return new NoteRecord(
-                id,
-                11L,
-                "쪽지 " + id,
-                "내용",
-                "TIP",
-                "PUBLIC",
-                bigDecimal(latitude),
-                bigDecimal(longitude),
-                "서울",
-                null,
-                null,
-                null
+                id, 11L, "쪽지 " + id, "내용", "TIP", "PUBLIC",
+                bigDecimal(latitude), bigDecimal(longitude), "서울", null, null, null
         );
     }
 
@@ -279,36 +225,13 @@ class AdminCourseServiceTest {
                                                      Integer position,
                                                      String title) {
         return new CourseItemDetailRecord(
-                id,
-                courseId,
-                "ATTRACTION",
-                attractionId,
-                null,
-                position,
-                1,
-                null,
-                null,
-                title,
-                null,
-                title,
-                null,
-                null
+                id, courseId, "ATTRACTION", attractionId, null, position,
+                null, null, title, null, title, null, null
         );
     }
 
     private static CourseRecord courseRecord(String id, Long ownerMemberId) {
-        CourseRecord record = new CourseRecord(
-                id,
-                ownerMemberId,
-                id,
-                "서울",
-                "PUBLIC",
-                "READY",
-                null,
-                null,
-                null,
-                null
-        );
+        CourseRecord record = new CourseRecord(id, ownerMemberId, id, "서울", null);
         record.setCreatedByAdmin(ADMIN_MEMBER_ID.equals(ownerMemberId));
         return record;
     }

@@ -1,5 +1,6 @@
 package com.ssafy.enjoytrip.core.domain;
 
+import com.ssafy.enjoytrip.core.domain.vo.TemperatureRange;
 import java.io.Serializable;
 
 public record WeatherSummary(
@@ -9,9 +10,7 @@ public record WeatherSummary(
         Integer rainChance,
         String sunrise,
         String sunset,
-        Integer tempMin,
-        Integer tempMax
+        TemperatureRange temperatureRange
 ) implements Serializable {
     private static final long serialVersionUID = 1L;
-
 }

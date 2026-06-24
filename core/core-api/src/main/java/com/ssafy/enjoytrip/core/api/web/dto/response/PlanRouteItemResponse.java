@@ -1,10 +1,7 @@
 package com.ssafy.enjoytrip.core.api.web.dto.response;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
-import com.ssafy.enjoytrip.core.domain.AttractionTag;
 import com.ssafy.enjoytrip.core.domain.PlanRouteItem;
-
-import java.util.List;
 
 public record PlanRouteItemResponse(
         String routeId,
@@ -30,8 +27,7 @@ public record PlanRouteItemResponse(
         int stayMinutes,
         int saveCount,
         double ratingAverage,
-        int ratingCount,
-        List<AttractionTag> tags
+        int ratingCount
 ) {
     public static PlanRouteItemResponse from(PlanRouteItem item) {
         Attraction attraction = item.attraction();
@@ -41,8 +37,8 @@ public record PlanRouteItemResponse(
                 attraction.id(),
                 item.attractionId(),
                 attraction.title(),
-                attraction.addr1(),
-                attraction.addr2(),
+                attraction.address() != null ? attraction.address().address() : null,
+                attraction.address() != null ? attraction.address().addressDetail() : null,
                 attraction.tel(),
                 attraction.firstImage(),
                 attraction.firstImage2(),
@@ -50,17 +46,16 @@ public record PlanRouteItemResponse(
                 attraction.sidoCode(),
                 attraction.gugunCode(),
                 attraction.contentTypeId(),
-                attraction.latitude(),
-                attraction.longitude(),
+                attraction.location() != null ? attraction.location().latitude() : null,
+                attraction.location() != null ? attraction.location().longitude() : null,
                 attraction.overview(),
                 item.position(),
                 item.day(),
                 item.memo(),
                 item.stayMinutes(),
                 attraction.saveCount(),
-                attraction.ratingAverage(),
-                attraction.ratingCount(),
-                attraction.tags()
+                attraction.ratingStats() != null ? attraction.ratingStats().ratingAverage() : 0.0,
+                attraction.ratingStats() != null ? attraction.ratingStats().ratingCount() : 0
         );
     }
 }

@@ -2,7 +2,7 @@ package com.ssafy.enjoytrip.core.api.web.api;
 
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.request.TagRequest;
-import com.ssafy.enjoytrip.core.api.web.dto.response.AttractionTagsResponse;
+import com.ssafy.enjoytrip.core.api.web.dto.response.TagsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,26 +12,26 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-@Tag(name = "Attraction Tags", description = "관광지 태그 관리 API")
-public interface AttractionTagApi {
-    @Operation(summary = "태그 목록 조회", description = "관광지 태그 목록을 조회합니다.", operationId = "findAttractionTags")
+@Tag(name = "Tags", description = "태그 관리 API")
+public interface TagApi {
+    @Operation(summary = "태그 목록 조회", description = "태그 목록을 조회합니다.", operationId = "findTags")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "태그 목록 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = AttractionTagsResponse.class),
+                            schema = @Schema(implementation = TagsResponse.class),
                             examples = @ExampleObject(value = ApiExamples.ATTRACTION_TAGS_RESPONSE)
                     )
             )
     })
-    ApiResponse<AttractionTagsResponse> tags();
+    ApiResponse<TagsResponse> tags();
 
     @Operation(
             summary = "태그 생성",
-            description = "관광지 태그를 생성합니다.",
-            operationId = "createAttractionTag",
+            description = "태그를 생성합니다.",
+            operationId = "createTag",
             requestBody = @RequestBody(
                     required = true,
                     content = @Content(
@@ -47,17 +47,17 @@ public interface AttractionTagApi {
                     description = "태그 생성 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = AttractionTagsResponse.class),
+                            schema = @Schema(implementation = TagsResponse.class),
                             examples = @ExampleObject(value = ApiExamples.ATTRACTION_TAGS_RESPONSE)
                     )
             )
     })
-    ApiResponse<AttractionTagsResponse> create(TagRequest request);
+    ApiResponse<TagsResponse> create(TagRequest request);
 
     @Operation(
             summary = "태그 수정",
-            description = "관광지 태그 이름을 수정합니다.",
-            operationId = "updateAttractionTag",
+            description = "태그 이름을 수정합니다.",
+            operationId = "updateTag",
             requestBody = @RequestBody(
                     required = true,
                     content = @Content(
@@ -82,7 +82,7 @@ public interface AttractionTagApi {
             TagRequest request
     );
 
-    @Operation(summary = "태그 삭제", description = "관광지 태그를 삭제합니다.", operationId = "deleteAttractionTag")
+    @Operation(summary = "태그 삭제", description = "태그를 삭제합니다.", operationId = "deleteTag")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",

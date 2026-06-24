@@ -6,12 +6,13 @@ import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingSourceRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionStatsRowRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.AttractionTagRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.ChargerItemRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.TagRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionEmbeddingMapper.TargetRegionRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.EvChargerMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.TagMapper;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -25,12 +26,15 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
     private AttractionMapper attractionMapper;
 
     @Autowired
+    private TagMapper tagMapper;
+
+    @Autowired
     private AttractionEmbeddingMapper attractionEmbeddingMapper;
 
     @Autowired
     private EvChargerMapper evChargerMapper;
 
-    @DisplayName("AttractionMapper는 검색, 주변 검색, 태그, 저장, 평점 SQL을 실행한다")
+    @DisplayName("AttractionMapper는 검색, 주변 검색, 저장, 평점 SQL을 실행한다")
     @Test
     void attractionMapperRunsSearchAndUserInteractionQueries() {
         long attractionId = 9200001L;
@@ -42,8 +46,7 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
                 on conflict (attraction_id) do update set save_count = excluded.save_count
                 """, attractionId);
 
-        AttractionTagRecord tag = attractionMapper.insertTag(uniqueId("tag"));
-        attractionMapper.insertTagMapping(attractionId, tag.id());
+        TagRecord tag = tagMapper.insert(uniqueId("tag"));
         attractionMapper.insertSave(attractionId, memberId);
         attractionMapper.upsertRating(attractionId, memberId, 5);
         attractionMapper.refreshPopularityRatingStats(attractionId);
@@ -75,7 +78,6 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
 
         assertThat(attractionMapper.existsById(attractionId)).isEqualTo(1);
         assertThat(searched).extracting(AttractionSearchRecord::id).contains(attractionId);
-        assertThat(searched).extracting(AttractionSearchRecord::tagId).contains(tag.id());
         assertThat(searched).extracting(AttractionSearchRecord::saveCount).contains(7);
         assertThat(searched).extracting(AttractionSearchRecord::saved).contains(true);
         assertThat(searched).extracting(AttractionSearchRecord::ratingCount).contains(1);
@@ -83,9 +85,8 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
         assertThat(searched).extracting(AttractionSearchRecord::myRating).contains(5);
         assertThat(nearby).extracting(AttractionSearchRecord::id).contains(attractionId);
         assertThat(attractionMapper.findByIds(List.of(attractionId))).hasSize(1);
-        assertThat(attractionMapper.countTagsByIds(List.of(tag.id()))).isEqualTo(1);
-        assertThat(attractionMapper.findAllTags()).extracting(AttractionTagRecord::id).contains(tag.id());
-        assertThat(statsRows).extracting(AttractionStatsRowRecord::tagId).contains(tag.id());
+        assertThat(tagMapper.countByIds(List.of(tag.id()))).isEqualTo(1);
+        assertThat(tagMapper.findAll()).extracting(TagRecord::id).contains(tag.id());
         assertThat(statsRows).extracting(AttractionStatsRowRecord::saveCount).contains(7);
         assertThat(statsRows).extracting(AttractionStatsRowRecord::saved).contains(true);
         assertThat(statsRows).extracting(AttractionStatsRowRecord::ratingCount).contains(1);
@@ -94,8 +95,7 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
         assertThat(popularityCounts).extracting(AttractionCountRecord::count).contains(7);
         assertThat(attractionMapper.deleteRating(attractionId, memberId)).isEqualTo(1);
         assertThat(attractionMapper.deleteSave(attractionId, memberId)).isEqualTo(1);
-        assertThat(attractionMapper.deleteTagMappings(attractionId)).isEqualTo(1);
-        assertThat(attractionMapper.deleteTag(tag.id())).isEqualTo(1);
+        assertThat(tagMapper.delete(tag.id())).isEqualTo(1);
     }
 
     @DisplayName("EvChargerMapper는 PostGIS 위치 컬럼을 포함해 충전소를 조건 검색한다")

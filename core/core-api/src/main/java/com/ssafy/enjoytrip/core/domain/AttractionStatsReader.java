@@ -2,7 +2,6 @@ package com.ssafy.enjoytrip.core.domain;
 
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionStatsRowRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -21,7 +20,7 @@ public class AttractionStatsReader {
             return emptyStats(attractionId);
         }
 
-        return toStats(attractionId, rows);
+        return toStats(attractionId, rows.get(0));
     }
 
     public List<AttractionStats> findStatsByAttractionIds(List<Long> attractionIds, Long memberId) {
@@ -34,7 +33,9 @@ public class AttractionStatsReader {
                 memberId
         );
 
-        return toStatsList(rows);
+        return rows.stream()
+                .map(row -> toStats(row.attractionId(), row))
+                .toList();
     }
 
     private AttractionStats emptyStats(Long attractionId) {
@@ -43,50 +44,19 @@ public class AttractionStatsReader {
                 0,
                 0.0,
                 0,
-                List.of(),
                 false,
                 null
         );
     }
 
-    private List<AttractionStats> toStatsList(List<AttractionStatsRowRecord> rows) {
-        List<AttractionStats> stats = new ArrayList<>();
-        List<AttractionStatsRowRecord> attractionRows = new ArrayList<>();
-        Long currentAttractionId = null;
-
-        for (AttractionStatsRowRecord row : rows) {
-            if (currentAttractionId != null && !currentAttractionId.equals(row.attractionId())) {
-                stats.add(toStats(currentAttractionId, attractionRows));
-                attractionRows.clear();
-            }
-            currentAttractionId = row.attractionId();
-            attractionRows.add(row);
-        }
-
-        if (!attractionRows.isEmpty()) {
-            stats.add(toStats(currentAttractionId, attractionRows));
-        }
-
-        return stats;
-    }
-
-    private AttractionStats toStats(Long attractionId, List<AttractionStatsRowRecord> rows) {
-        AttractionStatsRowRecord first = rows.get(0);
+    private AttractionStats toStats(Long attractionId, AttractionStatsRowRecord row) {
         return new AttractionStats(
                 attractionId,
-                first.saveCount(),
-                first.averageRating(),
-                first.ratingCount(),
-                findTags(rows),
-                first.saved(),
-                first.myRating()
+                row.saveCount(),
+                row.averageRating(),
+                row.ratingCount(),
+                row.saved(),
+                row.myRating()
         );
-    }
-
-    private List<AttractionTag> findTags(List<AttractionStatsRowRecord> rows) {
-        return rows.stream()
-                .filter(row -> row.tagId() != null)
-                .map(row -> new AttractionTag(row.tagId(), row.tagName()))
-                .toList();
     }
 }

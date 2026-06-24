@@ -5,9 +5,7 @@ public record CourseOrderRecommendationItem(
         String itemType,
         Long targetId,
         String title,
-        int day,
         int currentPosition,
-        Integer stayMinutes,
         String contentTypeId,
         Double latitude,
         Double longitude
@@ -16,10 +14,9 @@ public record CourseOrderRecommendationItem(
                                          String itemType,
                                          Long targetId,
                                          String title,
-                                         int day,
                                          int currentPosition,
                                          Double latitude,
                                          Double longitude) {
-        this(id, itemType, targetId, title, day, currentPosition, null, null, latitude, longitude);
+        this(id, itemType, targetId, title, currentPosition, null, latitude, longitude);
     }
 }

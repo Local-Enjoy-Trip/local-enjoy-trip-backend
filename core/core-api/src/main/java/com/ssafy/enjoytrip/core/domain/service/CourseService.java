@@ -61,4 +61,20 @@ public class CourseService {
     public List<Course> findPublicFeed(DistanceSearchCondition condition) {
         return courseReader.findPublicFeed(condition);
     }
+
+    public List<Course> findMdFeed(double longitude, double latitude, int limit) {
+        return courseReader.findMdFeed(longitude, latitude, limit);
+    }
+
+    public List<Course> findPopularByRegion(String regionName, int limit) {
+        return courseReader.findPopularByRegion(regionName, limit);
+    }
+
+    public void saveCourse(Long memberId, String courseId) {
+        courseWriter.save(courseId, memberId);
+    }
+
+    public void unsaveCourse(Long memberId, String courseId) {
+        courseWriter.unsave(courseId, memberId);
+    }
 }

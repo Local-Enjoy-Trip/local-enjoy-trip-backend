@@ -48,7 +48,7 @@ class MapSearchServiceTest {
                 101L, "아름다운 경복궁", "서울", "중구", "123", "02",
                 "image.png", null, 10, 1, 1, 37.5665, 126.9780,
                 "1", "12", "overview", 100.0, 1, 4.5, 3,
-                null, null, false, null
+                false, null
         );
 
         NoteMapPinRecord noteRecord = new NoteMapPinRecord(

@@ -1,8 +1,9 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
-import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
+import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
+import com.ssafy.enjoytrip.core.domain.vo.TemperatureRange;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.external.KmaWeatherClient;
 import com.ssafy.enjoytrip.external.WeatherBriefingWithForecast;
@@ -50,8 +51,7 @@ public class WeatherService {
                     clientResult.current().rainChance(),
                     clientResult.current().sunrise(),
                     clientResult.current().sunset(),
-                    clientResult.current().tempMin(),
-                    clientResult.current().tempMax()
+                    new TemperatureRange(clientResult.current().tempMin(), clientResult.current().tempMax())
             );
 
             List<WeatherForecast> forecasts = clientResult.forecasts().stream()
@@ -73,8 +73,7 @@ public class WeatherService {
                     10,
                     "05:23",
                     "19:33",
-                    15,
-                    25
+                    new TemperatureRange(15, 25)
             );
             return new WeatherWithForecast(fallbackWeather, fallbackForecasts(), true);
         }

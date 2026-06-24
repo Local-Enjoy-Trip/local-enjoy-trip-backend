@@ -1,6 +1,6 @@
 package com.ssafy.enjoytrip.storage.db.core.model;
 
-public record AttractionTagRecord(
+public record TagRecord(
         Long id,
         String name
 ) {

@@ -5,15 +5,14 @@ import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_INVALID_IT
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_NOT_FOUND;
 
 import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
+import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.CourseRouteSegmentRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.CourseTagRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -26,27 +25,27 @@ public class CourseReader {
 
     public List<Course> findMyCourses(Long ownerMemberId) {
         return courseMapper.findByOwnerMemberId(ownerMemberId).stream()
-                .map(record -> findCourse(record, true, SegmentReadPolicy.USER_COURSE))
+                .map(record -> findCourse(record, true))
                 .toList();
     }
 
     public Course findRequired(String id) {
         CourseRecord record = courseMapper.findById(id);
         requireExisting(record);
-        return findCourse(record, true, SegmentReadPolicy.USER_COURSE);
+        return findCourse(record, true);
     }
 
     public Course findPublicRequired(String id) {
         CourseRecord record = courseMapper.findById(id);
-        if (record == null || record.getDeletedAt() != null || !isPublicReady(record)) {
+        if (record == null || record.getDeletedAt() != null) {
             throw new CoreException(COURSE_NOT_FOUND);
         }
-        return findCourse(record, false, SegmentReadPolicy.PUBLIC_COURSE);
+        return findCourse(record, false);
     }
 
     public List<Course> findAdminCourses() {
         return courseMapper.findAdminOwned().stream()
-                .map(record -> findCourse(record, true, SegmentReadPolicy.PLANNED_COURSE))
+                .map(record -> findCourse(record, true))
                 .toList();
     }
 
@@ -56,36 +55,38 @@ public class CourseReader {
         if (!ownerMemberId.equals(record.getOwnerMemberId())) {
             throw new CoreException(COURSE_ACCESS_DENIED);
         }
-        return findCourse(record, true, SegmentReadPolicy.PLANNED_COURSE);
+        return findCourse(record, true);
     }
 
     public List<Course> findPublicFeed(DistanceSearchCondition condition) {
-        return publicCourses(courseMapper.findDistanceOrderedPublicFeed(
+        return courseMapper.findDistanceOrderedPublicFeed(
                 condition.longitude(),
                 condition.latitude(),
                 condition.limit(),
                 condition.radiusMeters()
-        ));
-    }
-
-    private List<Course> publicCourses(List<CourseRecord> records) {
-        return records.stream()
-                .map(record -> findCourse(record, false, SegmentReadPolicy.PUBLIC_COURSE))
+        ).stream()
+                .map(record -> findCourse(record, false))
                 .toList();
     }
 
-    private Course findCourse(CourseRecord record,
-                              boolean includePrivateItems,
-                              SegmentReadPolicy segmentReadPolicy) {
+    public List<Course> findMdFeed(double longitude, double latitude, int limit) {
+        return courseMapper.findAdminOwnedByDistance(longitude, latitude, limit).stream()
+                .map(record -> findCourse(record, false))
+                .toList();
+    }
+
+    public List<Course> findPopularByRegion(String regionName, int limit) {
+        return courseMapper.findByRegionOrderedBySaveCount(regionName, limit).stream()
+                .map(record -> findCourse(record, false))
+                .toList();
+    }
+
+    private Course findCourse(CourseRecord record, boolean includePrivateItems) {
         List<CourseItemDetailRecord> items = includePrivateItems
                 ? courseMapper.findItemsByCourseId(record.getId())
                 : courseMapper.findPublicItemsByCourseId(record.getId());
-        return toCourse(
-                record,
-                items,
-                courseMapper.findSegmentsByCourseId(record.getId()),
-                segmentReadPolicy
-        );
+        List<CourseTagRecord> tagRecords = courseMapper.findTagsByCourseId(record.getId());
+        return toCourse(record, items, tagRecords);
     }
 
     private static void requireExisting(CourseRecord record) {
@@ -94,58 +95,37 @@ public class CourseReader {
         }
     }
 
-    private static Course toCourse(CourseRecord record,
-                                   List<CourseItemDetailRecord> items,
-                                   List<CourseRouteSegmentRecord> segments,
-                                   SegmentReadPolicy segmentReadPolicy) {
+    private static Course toCourse(
+            CourseRecord record,
+            List<CourseItemDetailRecord> items,
+            List<CourseTagRecord> tagRecords
+    ) {
+        Coordinate startLocation = null;
+        if (record.getStartLatitude() != null && record.getStartLongitude() != null) {
+            startLocation = new Coordinate(record.getStartLatitude(), record.getStartLongitude());
+        }
+
+        List<CourseTag> tags = tagRecords.stream()
+                .map(t -> new CourseTag(t.tagId(), t.tagName()))
+                .toList();
+
         return new Course(
                 record.getId(),
                 record.getOwnerMemberId(),
                 record.getTitle(),
                 record.getRegionName(),
-                record.getVisibility(),
-                record.getStatus(),
-                record.getDescription(),
-                record.getCoverImageUrl(),
-                record.getCurationSection(),
-                record.getCurationOrder(),
+                record.getDate(),
                 Boolean.TRUE.equals(record.getCreatedByAdmin()),
-                record.getStartLatitude(),
-                record.getStartLongitude(),
+                startLocation,
                 record.getDistanceMeters(),
                 countValue(record.getSaveCount()),
                 stringValue(record.getCreatedAt()),
                 stringValue(record.getUpdatedAt()),
-                toRoute(items, segments, segmentReadPolicy)
+                items.stream()
+                        .map(CourseReader::toStop)
+                        .toList(),
+                tags
         );
-    }
-
-    private static CourseRoute toRoute(List<CourseItemDetailRecord> items,
-                                       List<CourseRouteSegmentRecord> segments,
-                                       SegmentReadPolicy segmentReadPolicy) {
-        List<CourseStop> stops = items.stream()
-                .map(CourseReader::toStop)
-                .toList();
-        Map<Long, Integer> positionsByItemId = positionsByItemId(stops);
-        List<CourseRouteSegment> routeSegments = segments.stream()
-                .filter(segment -> positionsByItemId.containsKey(segment.getFromCourseItemId()))
-                .filter(segment -> positionsByItemId.containsKey(segment.getToCourseItemId()))
-                .map(segment -> toSegment(segment, positionsByItemId))
-                .toList();
-        if (routeSegments.isEmpty()) {
-            if (segmentReadPolicy.requiresCompleteSegments()
-                    && !hasCompleteSegmentSet(stops, routeSegments)) {
-                throw new CoreException(COURSE_INVALID_ITEM);
-            }
-            return CourseRoute.ofStops(stops);
-        }
-        if (!hasCompleteSegmentSet(stops, routeSegments)) {
-            if (!segmentReadPolicy.allowsIncompleteSegments()) {
-                throw new CoreException(COURSE_INVALID_ITEM);
-            }
-            return CourseRoute.ofStops(stops);
-        }
-        return CourseRoute.planned(stops, routeSegments);
     }
 
     private static CourseStop toStop(CourseItemDetailRecord record) {
@@ -153,40 +133,10 @@ public class CourseReader {
                 record.id(),
                 target(record),
                 countValue(record.position()),
-                countValue(record.day()),
-                record.memo(),
-                record.stayMinutes(),
-                record.itemTitle()
+                record.itemTitle(),
+                record.distanceToNext(),
+                record.durationToNext()
         );
-    }
-
-    private static CourseRouteSegment toSegment(CourseRouteSegmentRecord record,
-                                                Map<Long, Integer> positionsByItemId) {
-        return new CourseRouteSegment(
-                countValue(record.getSegmentOrder()),
-                positionsByItemId.get(record.getFromCourseItemId()),
-                positionsByItemId.get(record.getToCourseItemId()),
-                record.getTravelMode(),
-                countValue(record.getDurationSeconds()),
-                countValue(record.getDistanceMeters())
-        );
-    }
-
-    private static Map<Long, Integer> positionsByItemId(List<CourseStop> stops) {
-        Map<Long, Integer> positionsByItemId = new HashMap<>();
-        for (CourseStop stop : stops) {
-            if (stop.id() != null) {
-                positionsByItemId.put(stop.id(), stop.position());
-            }
-        }
-        return positionsByItemId;
-    }
-
-    private static boolean hasCompleteSegmentSet(List<CourseStop> stops, List<CourseRouteSegment> segments) {
-        if (stops.size() < 2) {
-            return segments.isEmpty();
-        }
-        return segments.size() == stops.size() - 1;
     }
 
     private static CourseStopTarget target(CourseItemDetailRecord record) {
@@ -205,23 +155,5 @@ public class CourseReader {
 
     private static String stringValue(LocalDateTime value) {
         return value == null ? "" : value.toString();
-    }
-
-    private static boolean isPublicReady(CourseRecord record) {
-        return "PUBLIC".equals(record.getVisibility()) && "READY".equals(record.getStatus());
-    }
-
-    private enum SegmentReadPolicy {
-        USER_COURSE,
-        PUBLIC_COURSE,
-        PLANNED_COURSE;
-
-        private boolean requiresCompleteSegments() {
-            return this == PLANNED_COURSE;
-        }
-
-        private boolean allowsIncompleteSegments() {
-            return this == PUBLIC_COURSE;
-        }
     }
 }

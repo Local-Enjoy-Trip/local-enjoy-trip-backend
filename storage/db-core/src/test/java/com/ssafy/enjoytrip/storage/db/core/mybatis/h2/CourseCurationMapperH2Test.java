@@ -5,12 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemRecord;
-import com.ssafy.enjoytrip.storage.db.core.model.CourseRouteSegmentRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,32 +20,31 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
     @Autowired
     private MemberMapper memberMapper;
 
-    @DisplayName("회원 role과 관리자 코스 큐레이션 메타데이터를 저장하고 조회한다")
+    @DisplayName("관리자 멤버가 소유한 코스는 createdByAdmin이 true로 조회된다")
     @Test
-    void storesMemberRoleAndCourseCurationMetadata() {
+    void adminOwnedCourseHasCreatedByAdminTrue() {
         Long adminMemberId = seedMember("admin", "admin@example.com");
         jdbcTemplate.update("update members set role = 'ADMIN' where id = ?", adminMemberId);
 
-        courseMapper.insert(new CourseRecord(
-                "course-md-1",
-                adminMemberId,
-                "서울 산책",
-                "서울",
-                "PUBLIC",
-                "READY",
-                "추천 코스",
-                "cover.jpg",
-                "MD_RECOMMENDED",
-                1
-        ));
+        courseMapper.insert(new CourseRecord("course-admin", adminMemberId, "서울 산책", "서울", null));
 
-        CourseRecord found = courseMapper.findById("course-md-1");
+        CourseRecord found = courseMapper.findById("course-admin");
 
         assertThat(memberMapper.findById(adminMemberId).getRole()).isEqualTo("ADMIN");
-        assertThat(found.getId()).isEqualTo("course-md-1");
-        assertThat(found.getCurationSection()).isEqualTo("MD_RECOMMENDED");
-        assertThat(found.getCurationOrder()).isEqualTo(1);
+        assertThat(found.getId()).isEqualTo("course-admin");
         assertThat(found.getCreatedByAdmin()).isTrue();
+    }
+
+    @DisplayName("일반 멤버가 소유한 코스는 createdByAdmin이 false로 조회된다")
+    @Test
+    void userOwnedCourseHasCreatedByAdminFalse() {
+        Long userMemberId = seedMember("user", "user@example.com");
+
+        courseMapper.insert(new CourseRecord("course-user", userMemberId, "내 코스", "부산", null));
+
+        CourseRecord found = courseMapper.findById("course-user");
+
+        assertThat(found.getCreatedByAdmin()).isFalse();
     }
 
     @DisplayName("공개 코스 아이템 조회는 숨김 장소와 비공개 노트를 제외한다")
@@ -75,18 +71,7 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
                 )
                 values (2, ?, '비공개 노트', '내용', 'PRIVATE', 37.5, 127.0, 'ACTIVE')
                 """, adminMemberId);
-        courseMapper.insert(new CourseRecord(
-                "course-public",
-                adminMemberId,
-                "공개 코스",
-                "서울",
-                "PUBLIC",
-                "READY",
-                null,
-                null,
-                null,
-                null
-        ));
+        courseMapper.insert(new CourseRecord("course-public", adminMemberId, "공개 코스", "서울", null));
         insertCourseItem("course-public", "ATTRACTION", 1L, null, 1);
         insertCourseItem("course-public", "ATTRACTION", 2L, null, 2);
         insertCourseItem("course-public", "NOTE", null, 1L, 3);
@@ -97,197 +82,76 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
                 .containsExactly("공개 장소", "공개 노트");
     }
 
-    @DisplayName("코스 상태 기본값은 READY이고 DRAFT 저장은 거부한다")
+    @DisplayName("코스 아이템은 next metric을 포함해 batch insert하고 id와 next metric을 반환한다")
     @Test
-    void courseStatusDefaultsToReadyAndRejectsDraft() {
-        Long adminMemberId = seedMember("admin", "admin@example.com");
-
-        jdbcTemplate.update("""
-                insert into courses (id, owner_member_id, title, visibility)
-                values ('course-default', ?, '기본 상태 코스', 'PUBLIC')
-                """, adminMemberId);
-
-        String status = jdbcTemplate.queryForObject(
-                "select status from courses where id = 'course-default'",
-                String.class
-        );
-
-        assertThat(status).isEqualTo("READY");
-        assertThatThrownBy(() -> courseMapper.insert(new CourseRecord(
-                "course-draft",
-                adminMemberId,
-                "초안 코스",
-                "서울",
-                "PUBLIC",
-                "DRAFT",
-                null,
-                null,
-                null,
-                null
-        ))).isInstanceOf(RuntimeException.class);
-    }
-
-    @DisplayName("V9 마이그레이션은 기존 DRAFT를 READY로 변환한다")
-    @Test
-    void migrationConvertsExistingDraftRowsToReady() throws Exception {
-        try (InputStream inputStream = getClass().getResourceAsStream(
-                "/db/migration/V9__redesign_course_route_segments.sql"
-        )) {
-            assertThat(inputStream).isNotNull();
-            String migrationSql = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-
-            assertThat(migrationSql).contains("set status = 'READY'");
-            assertThat(migrationSql).contains("where status = 'DRAFT'");
-            assertThat(migrationSql).contains("alter column status set default 'READY'");
-            assertThat(migrationSql)
-                    .contains("check (status in ('READY', 'IN_PROGRESS', 'COMPLETED', 'ARCHIVED'))");
-        }
-    }
-
-    @DisplayName("V10 마이그레이션은 시작 지점 컬럼과 인덱스만 추가하고 backfill은 하지 않는다")
-    @Test
-    void migrationAddsCourseStartLocationWithoutBackfill() throws Exception {
-        try (InputStream inputStream = getClass().getResourceAsStream(
-                "/db/migration/V10__add_course_start_location.sql"
-        )) {
-            assertThat(inputStream).isNotNull();
-            String migrationSql = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-
-            assertThat(migrationSql).contains("add column start_location geometry(Point, 4326)");
-            assertThat(migrationSql).contains("idx_courses_start_location");
-            assertThat(migrationSql.toLowerCase()).doesNotContain("update courses");
-        }
-    }
-
-    @DisplayName("코스 아이템과 구간은 batch insert로 저장하고 생성 id를 반환한다")
-    @Test
-    void batchInsertCourseItemsAndSegmentsAssignsGeneratedIds() {
+    void batchInsertCourseItemsWithNextMetrics() {
         Long adminMemberId = seedMember("admin", "admin@example.com");
         seedAttraction(1L, "첫 장소");
         seedAttraction(2L, "두 번째 장소");
-        courseMapper.insert(publicCourse("course-batch", adminMemberId));
+        courseMapper.insert(new CourseRecord("course-batch", adminMemberId, "배치 코스", "서울", null));
+
         CourseItemRecord first = new CourseItemRecord(
-                "course-batch",
-                "ATTRACTION",
-                1L,
-                null,
-                1,
-                1,
-                null,
-                null
+                "course-batch", "ATTRACTION", 1L, null, 1, 420, 300
         );
         CourseItemRecord second = new CourseItemRecord(
-                "course-batch",
-                "ATTRACTION",
-                2L,
-                null,
-                2,
-                1,
-                null,
-                null
+                "course-batch", "ATTRACTION", 2L, null, 2, null, null
         );
 
-        int insertedItems = courseMapper.insertItems(List.of(first, second));
-        int insertedSegments = courseMapper.insertSegments(List.of(new CourseRouteSegmentRecord(
-                "course-batch",
-                first.getId(),
-                second.getId(),
-                1,
-                "WALK",
-                300,
-                420
-        )));
+        int inserted = courseMapper.insertItems(List.of(first, second));
 
-        assertThat(insertedItems).isEqualTo(2);
+        assertThat(inserted).isEqualTo(2);
         assertThat(first.getId()).isNotNull();
         assertThat(second.getId()).isNotNull();
-        assertThat(insertedSegments).isEqualTo(1);
-        assertThat(courseMapper.findSegmentsByCourseId("course-batch"))
-                .extracting(CourseRouteSegmentRecord::getDistanceMeters)
-                .containsExactly(420);
+
+        List<CourseItemDetailRecord> items = courseMapper.findItemsByCourseId("course-batch");
+
+        assertThat(items).hasSize(2);
+        assertThat(items.get(0).distanceToNext()).isEqualTo(420);
+        assertThat(items.get(0).durationToNext()).isEqualTo(300);
+        assertThat(items.get(1).distanceToNext()).isNull();
+        assertThat(items.get(1).durationToNext()).isNull();
     }
 
-    @DisplayName("코스 구간 mapper는 생성된 아이템 id로 저장하고 제약 조건을 검증한다")
+    @DisplayName("H2 스키마 제약은 음수 next metric을 거부한다")
     @Test
-    void courseRouteSegmentsUseReloadedItemIdsAndConstraints() {
+    void schemaConstraintRejectsNegativeNextMetrics() {
         Long adminMemberId = seedMember("admin", "admin@example.com");
-        seedAttraction(1L, "첫 장소");
-        seedAttraction(2L, "두 번째 장소");
-        seedAttraction(3L, "다른 코스 장소");
-        courseMapper.insert(publicCourse("course-segments", adminMemberId));
-        courseMapper.insert(publicCourse("course-other", adminMemberId));
-        insertCourseItem("course-segments", "ATTRACTION", 1L, null, 1);
-        insertCourseItem("course-segments", "ATTRACTION", 2L, null, 2);
-        insertCourseItem("course-other", "ATTRACTION", 3L, null, 1);
+        seedAttraction(1L, "장소");
+        courseMapper.insert(new CourseRecord("course-constraint", adminMemberId, "제약 테스트", "서울", null));
 
-        Long firstItemId = courseMapper.findItemIdsByCourseId("course-segments").get(0).getId();
-        Long secondItemId = courseMapper.findItemIdsByCourseId("course-segments").get(1).getId();
-        Long otherCourseItemId = courseMapper.findItemIdsByCourseId("course-other").get(0).getId();
+        assertThatThrownBy(() -> courseMapper.insertItem(new CourseItemRecord(
+                "course-constraint", "ATTRACTION", 1L, null, 1, -1, 300
+        ))).isInstanceOf(RuntimeException.class);
 
-        courseMapper.insertSegment(new CourseRouteSegmentRecord(
-                "course-segments",
-                firstItemId,
-                secondItemId,
-                1,
-                "WALK",
-                300,
-                420
-        ));
-
-        assertThat(courseMapper.findSegmentsByCourseId("course-segments"))
-                .extracting(CourseRouteSegmentRecord::getDistanceMeters)
-                .containsExactly(420);
-        assertThatThrownBy(() -> courseMapper.insertSegment(new CourseRouteSegmentRecord(
-                "course-segments",
-                firstItemId,
-                secondItemId,
-                1,
-                "WALK",
-                301,
-                421
-        ))).isInstanceOf(RuntimeException.class);
-        assertThatThrownBy(() -> courseMapper.insertSegment(new CourseRouteSegmentRecord(
-                "course-segments",
-                firstItemId,
-                otherCourseItemId,
-                2,
-                "WALK",
-                10,
-                10
-        ))).isInstanceOf(RuntimeException.class);
-        assertThatThrownBy(() -> courseMapper.insertSegment(new CourseRouteSegmentRecord(
-                "course-segments",
-                firstItemId,
-                secondItemId,
-                2,
-                "WALK",
-                -1,
-                10
-        ))).isInstanceOf(RuntimeException.class);
-        assertThatThrownBy(() -> courseMapper.insertSegment(new CourseRouteSegmentRecord(
-                "course-segments",
-                firstItemId,
-                secondItemId,
-                2,
-                "WALK",
-                10,
-                -1
+        assertThatThrownBy(() -> courseMapper.insertItem(new CourseItemRecord(
+                "course-constraint", "ATTRACTION", 1L, null, 1, 300, -1
         ))).isInstanceOf(RuntimeException.class);
     }
+
+    @DisplayName("V13 마이그레이션 파일은 next metric 컬럼 추가와 segment 테이블 삭제를 포함한다")
+    @Test
+    void migrationV13AddsNextMetricColumnsAndDropsSegmentTable() throws Exception {
+        try (var inputStream = getClass().getResourceAsStream(
+                "/db/migration/V13__simplify_course_schema.sql"
+        )) {
+            assertThat(inputStream).isNotNull();
+            String sql = new String(inputStream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+
+            assertThat(sql).contains("distance_to_next");
+            assertThat(sql).contains("duration_to_next");
+            assertThat(sql).contains("drop table if exists course_route_segments");
+            assertThat(sql).contains("drop column if exists visibility");
+            assertThat(sql).contains("drop column if exists status");
+        }
+    }
+
     private void insertCourseItem(String courseId,
                                   String itemType,
                                   Long attractionId,
                                   Long noteId,
                                   int position) {
         courseMapper.insertItem(new CourseItemRecord(
-                courseId,
-                itemType,
-                attractionId,
-                noteId,
-                position,
-                1,
-                null,
-                null
+                courseId, itemType, attractionId, noteId, position, null, null
         ));
     }
 
@@ -296,8 +160,5 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
             return item.attractionTitle();
         }
         return item.noteTitle();
-    }
-    private static CourseRecord publicCourse(String id, Long ownerMemberId) {
-        return new CourseRecord(id, ownerMemberId, id, "서울", "PUBLIC", "READY", null, null, null, null);
     }
 }

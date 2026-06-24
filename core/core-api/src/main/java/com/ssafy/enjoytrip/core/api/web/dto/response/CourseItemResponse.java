@@ -8,10 +8,9 @@ public record CourseItemResponse(
         Long attractionId,
         Long noteId,
         int position,
-        int day,
-        String memo,
-        Integer stayMinutes,
-        String title
+        String title,
+        Integer distanceToNext,
+        Integer durationToNext
 ) {
     public static CourseItemResponse from(CourseStop stop) {
         return new CourseItemResponse(
@@ -20,11 +19,9 @@ public record CourseItemResponse(
                 stop.target().attractionIdOrNull(),
                 stop.target().noteIdOrNull(),
                 stop.position(),
-                stop.day(),
-                stop.memo(),
-                stop.stayMinutes(),
-                stop.title()
+                stop.title(),
+                stop.distanceToNext(),
+                stop.durationToNext()
         );
     }
-
 }

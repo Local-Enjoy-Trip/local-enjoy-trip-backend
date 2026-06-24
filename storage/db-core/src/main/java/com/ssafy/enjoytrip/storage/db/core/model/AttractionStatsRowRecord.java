@@ -5,8 +5,6 @@ public record AttractionStatsRowRecord(
         int saveCount,
         double averageRating,
         int ratingCount,
-        Long tagId,
-        String tagName,
         boolean saved,
         Integer myRating
 ) {

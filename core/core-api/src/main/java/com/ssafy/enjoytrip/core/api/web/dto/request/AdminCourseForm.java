@@ -1,12 +1,8 @@
 package com.ssafy.enjoytrip.core.api.web.dto.request;
 
 import com.ssafy.enjoytrip.core.domain.Course;
-import com.ssafy.enjoytrip.core.domain.CourseRoute;
-import com.ssafy.enjoytrip.core.domain.CourseStatus;
 import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
-import com.ssafy.enjoytrip.core.support.error.ErrorType;
 import jakarta.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,12 +12,6 @@ public record AdminCourseForm(
         @NotBlank String id,
         @NotBlank String title,
         String regionName,
-        String visibility,
-        String status,
-        String description,
-        String coverImageUrl,
-        String curationSection,
-        Integer curationOrder,
         String itemsText
 ) {
     public Course toCourse(Long adminMemberId) {
@@ -34,31 +24,29 @@ public record AdminCourseForm(
                 adminMemberId,
                 title.strip(),
                 blankToNull(regionName),
-                defaultValue(visibility, "PUBLIC"),
-                statusValue(status),
-                blankToNull(description),
-                blankToNull(coverImageUrl),
-                blankToNull(curationSection),
-                curationOrder,
+                null,
                 true,
+                null,
+                null,
                 0,
                 "",
                 "",
-                route()
+                stops(),
+                List.of()
         );
     }
 
-    private CourseRoute route() {
+    private List<CourseStop> stops() {
         if (itemsText == null || itemsText.isBlank()) {
-            return CourseRoute.empty();
+            return List.of();
         }
 
-        List<CourseStop> stops = new ArrayList<>();
+        List<CourseStop> result = new ArrayList<>();
         String[] lines = itemsText.strip().split("\\R");
         for (int index = 0; index < lines.length; index++) {
-            stops.add(toStop(lines[index], index + 1));
+            result.add(toStop(lines[index], index + 1));
         }
-        return CourseRoute.ofStops(stops);
+        return result;
     }
 
     private static CourseStop toStop(String line, int position) {
@@ -68,7 +56,7 @@ public record AdminCourseForm(
         }
         String type = parts[0].strip().toUpperCase(Locale.ROOT);
         Long id = Long.valueOf(parts[1].strip());
-        return new CourseStop(null, target(type, id), position, 1, null, null, null);
+        return new CourseStop(null, target(type, id), position, null, null, null);
     }
 
     private static CourseStopTarget target(String type, Long id) {
@@ -79,23 +67,6 @@ public record AdminCourseForm(
             return CourseStopTarget.note(id);
         }
         throw new IllegalArgumentException("코스 아이템 type은 ATTRACTION 또는 NOTE만 허용됩니다.");
-    }
-
-    private static String defaultValue(String value, String fallback) {
-        if (value == null || value.isBlank()) {
-            return fallback;
-        }
-        return value.strip().toUpperCase(Locale.ROOT);
-    }
-
-    private static String statusValue(String value) {
-        String normalized = defaultValue(value, "READY");
-        try {
-            CourseStatus.valueOf(normalized);
-            return normalized;
-        } catch (IllegalArgumentException exception) {
-            throw new CoreException(ErrorType.COURSE_INVALID_ITEM);
-        }
     }
 
     private static String blankToNull(String value) {

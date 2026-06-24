@@ -89,7 +89,6 @@ class ApiContractModuleBoundaryTest {
                         "saveCount",
                         "ratingAverage",
                         "ratingCount",
-                        "tags",
                         "saved",
                         "myRating"
                 )

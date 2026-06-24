@@ -3,10 +3,12 @@ package com.ssafy.enjoytrip.core.api.web;
 import com.ssafy.enjoytrip.core.api.web.controller.*;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
-import com.ssafy.enjoytrip.core.domain.AttractionTag;
 import com.ssafy.enjoytrip.core.domain.Course;
-import com.ssafy.enjoytrip.core.domain.CourseRoute;
-import com.ssafy.enjoytrip.core.domain.CourseRouteSegment;
+import com.ssafy.enjoytrip.core.domain.vo.Address;
+import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
+import com.ssafy.enjoytrip.core.domain.vo.RatingStats;
+import com.ssafy.enjoytrip.core.domain.vo.TemperatureRange;
+import com.ssafy.enjoytrip.core.domain.vo.DateRange;
 import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
@@ -171,8 +173,9 @@ class ApiDocumentationTest {
         )))
                 .thenReturn(List.of(
                 new Attraction(
-                        1L, "경복궁", "서울 종로구", "", "", "", "", "", 0, 1, 1, 37.5796, 126.9770, "6", "", "",
-                        0, 0.0, 0, List.of(), false, null)
+                        1L, "경복궁", new Address("서울 종로구", "", ""), "", "", "", 0, 1, 1,
+                        new Coordinate(37.5796, 126.9770), "6", "", "",
+                        0, new RatingStats(0.0, 0), false, null)
         ));
 
         mockMvc.perform(get("/api/attractions").param("sidoCode", "1").param("keyword", "궁"))
@@ -190,24 +193,19 @@ class ApiDocumentationTest {
                 .thenReturn(new Attraction(
                         1L,
                         "경복궁",
-                        "서울 종로구",
-                        "",
-                        "03045",
+                        new Address("서울 종로구", "", "03045"),
                         "02-3700-3900",
                         "https://example.com/gyeongbokgung.jpg",
                         "",
                         42,
                         1,
                         1,
-                        37.5796,
-                        126.9770,
+                        new Coordinate(37.5796, 126.9770),
                         "6",
                         "12",
                         "조선 시대 궁궐입니다.",
                         12,
-                        4.5,
-                        8,
-                        List.of(new AttractionTag(1L, "역사")),
+                        new RatingStats(4.5, 8),
                         false,
                         null
                 ));
@@ -259,7 +257,7 @@ class ApiDocumentationTest {
     @DisplayName("동네 AI 브리핑 API 문서를 검증한다")
     @Test
     void neighborhoodBriefing() throws Exception {
-        WeatherSummary weather = new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25);
+        WeatherSummary weather = new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", new TemperatureRange(15, 25));
         List<WeatherForecast> forecasts = List.of(
                 new WeatherForecast("12:00", 22, "맑음", 10),
                 new WeatherForecast("13:00", 23, "맑음", 10),
@@ -328,7 +326,7 @@ class ApiDocumentationTest {
     void plans() throws Exception {
         when(planService.findAllPlans()).thenReturn(List.of(
                 new TravelPlan(
-                        "p1", 11L, "서울 여행", "2026-05-14", "2026-05-15", 100000, "메모", "[]",
+                        "p1", 11L, "서울 여행", new DateRange("2026-05-14", "2026-05-15"), 100000, "메모", "[]",
                         "2026-05-14 11:00:00"
                 )
         ));
@@ -494,23 +492,18 @@ class ApiDocumentationTest {
                 ownerMemberId,
                 "서울 산책",
                 "서울",
-                "PRIVATE",
-                "READY",
-                null,
-                null,
-                null,
-                null,
+                "2026-06-23",
                 false,
+                null,
+                null,
                 0,
                 "2026-06-23T00:00:00",
                 "2026-06-23T00:00:00",
-                CourseRoute.planned(
-                        List.of(
-                                attractionStop(firstItemId, 1L, 1),
-                                attractionStop(secondItemId, 2L, 2)
-                        ),
-                        List.of(new CourseRouteSegment(1, 1, 2, "WALK", 100, 140))
-                )
+                List.of(
+                        attractionStop(firstItemId, 1L, 1),
+                        attractionStop(secondItemId, 2L, 2)
+                ),
+                List.of()
         );
     }
 
@@ -519,10 +512,9 @@ class ApiDocumentationTest {
                 itemId,
                 CourseStopTarget.attraction(attractionId),
                 position,
-                1,
-                null,
-                60,
-                "장소 " + attractionId
+                "장소 " + attractionId,
+                position < 2 ? 140 : null,
+                position < 2 ? 100 : null
         );
     }
 

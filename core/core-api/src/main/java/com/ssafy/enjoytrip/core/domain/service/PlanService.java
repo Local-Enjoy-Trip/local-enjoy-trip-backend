@@ -3,6 +3,10 @@ package com.ssafy.enjoytrip.core.domain.service;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.PLAN_NOT_FOUND;
 
 import com.ssafy.enjoytrip.core.domain.Attraction;
+import com.ssafy.enjoytrip.core.domain.vo.Address;
+import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
+import com.ssafy.enjoytrip.core.domain.vo.DateRange;
+import com.ssafy.enjoytrip.core.domain.vo.RatingStats;
 import com.ssafy.enjoytrip.core.domain.CoordinateRouteOrderOptimizer;
 import com.ssafy.enjoytrip.core.domain.PlanItem;
 import com.ssafy.enjoytrip.core.domain.PlanRouteItem;
@@ -132,8 +136,7 @@ public class PlanService {
                 record.getId(),
                 record.getMemberId(),
                 record.getTitle(),
-                record.getStartDate(),
-                record.getEndDate(),
+                new DateRange(record.getStartDate(), record.getEndDate()),
                 record.getBudget(),
                 record.getNote(),
                 record.getRouteItemsJson(),
@@ -146,8 +149,8 @@ public class PlanService {
                 plan.id(),
                 plan.memberId(),
                 plan.title(),
-                plan.startDate(),
-                plan.endDate(),
+                plan.planPeriod().startDate(),
+                plan.planPeriod().endDate(),
                 plan.budget(),
                 plan.note(),
                 plan.routeItemsJson()
@@ -166,8 +169,8 @@ public class PlanService {
         }
         record.update(
                 plan.title(),
-                plan.startDate(),
-                plan.endDate(),
+                plan.planPeriod().startDate(),
+                plan.planPeriod().endDate(),
                 plan.budget(),
                 plan.note(),
                 plan.routeItemsJson()
@@ -252,12 +255,12 @@ public class PlanService {
 
     private static Double latitudeOf(PlanItem item, Map<Long, Attraction> attractions) {
         Attraction attraction = attractions.get(item.attractionId());
-        return attraction == null ? null : attraction.latitude();
+        return (attraction == null || attraction.location() == null) ? null : attraction.location().latitude();
     }
 
     private static Double longitudeOf(PlanItem item, Map<Long, Attraction> attractions) {
         Attraction attraction = attractions.get(item.attractionId());
-        return attraction == null ? null : attraction.longitude();
+        return (attraction == null || attraction.location() == null) ? null : attraction.location().longitude();
     }
 
     private Map<Long, Attraction> findAttractions(List<Long> attractionIds) {
@@ -265,30 +268,30 @@ public class PlanService {
             return Map.of();
         }
         return planMapper.findAttractionsByIds(attractionIds).stream()
-                .map(record -> new Attraction(
-                        record.id(),
-                        record.title(),
-                        record.addr1(),
-                        record.addr2(),
-                        record.zipcode(),
-                        record.tel(),
-                        record.firstImage(),
-                        record.firstImage2(),
-                        record.readCount(),
-                        record.sidoCode(),
-                        record.gugunCode(),
-                        record.latitude(),
-                        record.longitude(),
-                        record.mlevel(),
-                        record.contentTypeId(),
-                        record.overview(),
-                        0,
-                        0.0,
-                        0,
-                        List.of(),
-                        false,
-                        null
-                ))
+                .map(record -> {
+                    Coordinate location = (record.latitude() != null && record.longitude() != null)
+                            ? new Coordinate(record.latitude(), record.longitude())
+                            : null;
+                    return new Attraction(
+                            record.id(),
+                            record.title(),
+                            new Address(record.addr1(), record.addr2(), record.zipcode()),
+                            record.tel(),
+                            record.firstImage(),
+                            record.firstImage2(),
+                            record.readCount(),
+                            record.sidoCode(),
+                            record.gugunCode(),
+                            location,
+                            record.mlevel(),
+                            record.contentTypeId(),
+                            record.overview(),
+                            0,
+                            new RatingStats(0.0, 0),
+                            false,
+                            null
+                    );
+                })
                 .collect(Collectors.toMap(Attraction::id, attraction -> attraction));
     }
 
