@@ -31,15 +31,15 @@
 - `GET /api/news`
 - `GET /api/attractions`
 - `GET /api/chargers`
-- `GET /api/hotplaces?userId={userId}`
+- `GET /api/hotplaces?memberId={memberId}`
 - `POST /api/hotplaces?action=create|delete`
-- `GET /api/plans?userId={userId}`
+- `GET /api/plans?memberId={memberId}`
 - `GET /api/boards`
 - `POST /api/boards?action=create|update|delete`
 
 Mutation 경로:
 
-- `POST /api/members/signup`, `POST /api/members/login`, `PUT /api/members/{userId}`, `DELETE /api/members/{userId}`
+- `POST /api/members/signup`, `POST /api/members/login`, `PUT /api/members/me`, `DELETE /api/members/me`
 - `POST /api/notices/items`, `PUT /api/notices/{id}`, `DELETE /api/notices/{id}`
 - `POST /api/boards/posts`, `PUT /api/boards/{id}`, `DELETE /api/boards/{id}`
 - `POST /api/hotplaces/items`, `DELETE /api/hotplaces/{id}`
@@ -47,7 +47,7 @@ Mutation 경로:
 
 ### Plans canonical JSON 예시
 
-여행 계획 mutation은 JSON request body만 사용한다. `userId`는 요청 body에서 받지 않고 인증된 JWT subject를 사용한다.
+여행 계획 mutation은 JSON request body만 사용한다. `memberId`는 요청 body에서 받지 않고 인증된 JWT subject를 사용한다.
 
 ```http
 POST /api/plans/items

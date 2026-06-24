@@ -207,8 +207,8 @@ Migration 작성 시:
 예시:
 
 ```java
-public Member login(String userId, String password) {
-    Member member = findAuthenticatableMember(userId, password);
+public Member login(String email, String password) {
+    Member member = findAuthenticatableMember(email, password);
     recordLogin(member);
     return member;
 }
@@ -264,7 +264,7 @@ monolithic `core-api` 전환 구조에서는 `core-api` service가 `storage:db-c
 ```bash
 curl -s 'http://localhost:8080/api/attractions?sidoCode=1&keyword=%EA%B6%81' | jq '.success, .data.attractions[0]'
 curl -s 'http://localhost:8080/api/weather/briefings' | jq '.success, .data.weather'
-curl -s 'http://localhost:8080/api/plans?userId=ssafy' | jq '.success, .data.plans'
+curl -s 'http://localhost:8080/api/plans?memberId=11' | jq '.success, .data.plans'
 ```
 
 완료 보고에는 다음을 남긴다.

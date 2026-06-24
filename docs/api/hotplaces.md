@@ -20,7 +20,6 @@ Content-Length: 370
   "data" : {
     "hotplaces" : [ {
       "id" : "h1",
-      "userId" : "ssafy",
       "title" : "남산",
       "type" : "view",
       "visitDate" : "2026-05-14",

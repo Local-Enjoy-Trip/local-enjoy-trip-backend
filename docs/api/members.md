@@ -19,7 +19,6 @@ Content-Length: 224
 {
   "data" : {
     "users" : [ {
-      "userId" : "ssafy",
       "name" : "SSAFY",
       "nickname" : "SSAFY",
       "email" : "ssafy@example.com",

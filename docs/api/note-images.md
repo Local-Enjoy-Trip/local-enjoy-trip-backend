@@ -30,10 +30,10 @@ Expected response:
 {
   "success": true,
   "data": {
-    "objectKey": "notes/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
-    "uploadUrl": "http://localhost:9000/dongnepin-notes/notes/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg?...",
+    "objectKey": "notes/11/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
+    "uploadUrl": "http://localhost:9000/dongnepin-notes/notes/11/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg?...",
     "expiresAt": "2026-06-15T05:10:00Z",
-    "publicUrl": "http://localhost:9000/dongnepin-notes/notes/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg"
+    "publicUrl": "http://localhost:9000/dongnepin-notes/notes/11/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg"
   },
   "error": null
 }
@@ -54,7 +54,7 @@ After uploading to the returned `uploadUrl`, note create/update may reference th
   "latitude": 37.5665,
   "longitude": 126.978,
   "regionName": "서울 중구",
-  "imageObjectKey": "notes/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg"
+  "imageObjectKey": "notes/11/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg"
 }
 ```
 

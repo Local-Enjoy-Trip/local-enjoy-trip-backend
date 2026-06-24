@@ -20,7 +20,6 @@ Content-Length: 362
   "data" : {
     "plans" : [ {
       "id" : "p1",
-      "userId" : "ssafy",
       "title" : "서울 여행",
       "startDate" : "2026-05-14",
       "endDate" : "2026-05-15",
@@ -59,7 +58,7 @@ $ curl 'http://localhost:8080/api/plans' -i -X GET
 
 ### Course Management
 
-코스 변경 API는 인증이 필요하며 JWT subject가 계획의 `userId`와 일치해야 합니다. Mutation API는 JSON request body만 사용하고, 서버는 `routeItems` 배열을 `plan_items` 테이블에 정규화해 저장합니다.
+코스 변경 API는 인증이 필요하며 JWT subject의 `memberId`가 계획 소유자와 일치해야 합니다. Mutation API는 JSON request body만 사용하고, 서버는 `routeItems` 배열을 `plan_items` 테이블에 정규화해 저장합니다.
 
 ```http
 GET /api/plans/p1 HTTP/1.1

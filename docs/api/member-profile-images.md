@@ -9,7 +9,7 @@ Member profile images use MinIO/S3-compatible presigned `PUT` upload. The backen
 
 - Signup remains URL-only compatible and does not require a presigned upload flow.
 - `PUT /api/members/me` updates general member fields only; profile-image mutation is handled here.
-- The server generates object keys under `profiles/{authenticatedUserId}/` and rejects foreign prefixes.
+- The server generates object keys under `profiles/{authenticatedMemberId}/` and rejects foreign prefixes.
 - Clients never send `publicUrl` to persist profile images; the backend recalculates it from `enjoytrip.minio.public-base-url`.
 
 ## Create presigned upload URL
@@ -32,10 +32,10 @@ Expected response:
 {
   "success": true,
   "data": {
-    "objectKey": "profiles/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
-    "uploadUrl": "http://localhost:9000/dongnepin-notes/profiles/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg?...",
+    "objectKey": "profiles/11/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
+    "uploadUrl": "http://localhost:9000/dongnepin-notes/profiles/11/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg?...",
     "expiresAt": "2026-06-22T05:10:00Z",
-    "publicUrl": "http://localhost:9000/dongnepin-notes/profiles/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg"
+    "publicUrl": "http://localhost:9000/dongnepin-notes/profiles/11/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg"
   },
   "error": null
 }
@@ -45,7 +45,7 @@ Rules:
 
 - Authentication is required; unauthenticated requests return `401` with `error.code=S401`.
 - `contentType` must be `image/*`; non-image requests return `400` with `error.code=C400`.
-- Returned `objectKey` always starts with `profiles/{authenticatedUserId}/`.
+- Returned `objectKey` always starts with `profiles/{authenticatedMemberId}/`.
 
 ## Save or replace profile image
 
@@ -58,7 +58,7 @@ Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "objectKey": "profiles/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
+  "objectKey": "profiles/11/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
   "contentType": "image/jpeg"
 }
 ```
@@ -76,7 +76,7 @@ Expected response:
 Rules:
 
 - Authentication is required; unauthenticated requests return `401` with `error.code=S401`.
-- `objectKey` must start with `profiles/{authenticatedUserId}/`; foreign prefixes return `400`.
+- `objectKey` must start with `profiles/{authenticatedMemberId}/`; foreign prefixes return `400`.
 - `contentType` must be `image/*`; non-image requests return `400`.
 - The database stores `profile_image_object_key` and `profile_image_url` together for this endpoint.
 - `GET /api/members/me` returns `profileImageUrl` only and does not expose `profileImageObjectKey`.

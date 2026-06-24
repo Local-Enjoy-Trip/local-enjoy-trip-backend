@@ -75,16 +75,12 @@ The response must keep map-only privacy fields separate from CRUD `NoteResponse`
         "latitude": 37.5665,
         "longitude": 126.978,
         "regionName": "서울 중구",
-        "author": {
-          "userId": "author1",
-          "nickname": "동네친구",
-          "profileImageUrl": null,
-          "relationshipToViewer": "NONE"
-        },
-        "image": {
-          "objectKey": "notes/author1/sample.jpg",
-          "publicUrl": "http://localhost:9000/dongnepin-notes/notes/author1/sample.jpg"
-        }
+        "distanceMeters": 120.5,
+        "imageObjectKey": "notes/11/sample.jpg",
+        "authorNickname": "동네친구",
+        "authorProfileImageUrl": null,
+        "relationshipToViewer": "NONE",
+        "createdAt": "2026-06-15T10:00:00"
       }
     ]
   },
