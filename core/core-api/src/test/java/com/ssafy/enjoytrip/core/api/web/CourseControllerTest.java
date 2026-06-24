@@ -174,26 +174,6 @@ class CourseControllerTest {
         verify(courseService).createCourse(any());
     }
 
-    @DisplayName("코스 생성 요청은 최소 2개 항목이 필요하다")
-    @Test
-    void createCourseRejectsSingleItem() throws Exception {
-        mockMvc.perform(post("/api/courses")
-                        .principal(jwtPrincipal(11L))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "id":"course-single-item",
-                                  "title":"서울 산책",
-                                  "items":[
-                                    {"itemType":"ATTRACTION","attractionId":1}
-                                  ]
-                                }
-                                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
-
-        verify(courseService, never()).createCourse(any());
-    }
 
     @DisplayName("코스 생성 요청은 position 값이 아니라 items 배열 순서를 사용한다")
     @Test

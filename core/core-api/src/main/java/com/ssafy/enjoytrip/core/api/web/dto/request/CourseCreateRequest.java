@@ -19,9 +19,6 @@ public record CourseCreateRequest(
         List<Long> tagIds
 ) {
     public Course toCourse(Long ownerMemberId) {
-        if (items == null || items.size() < 2) {
-            throw new CoreException(ErrorType.COURSE_INVALID_ITEM);
-        }
         return new Course(
                 id.strip(),
                 ownerMemberId,
@@ -40,6 +37,9 @@ public record CourseCreateRequest(
     }
 
     private List<CourseStop> normalizedStops() {
+        if (items == null) {
+            return List.of();
+        }
         return IntStream.range(0, items.size())
                 .mapToObj(index -> items.get(index).toStop().withPosition(index + 1))
                 .toList();
