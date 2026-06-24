@@ -21,6 +21,8 @@ public class CacheConfiguration {
         Map<String, RedisCacheConfiguration> configurations = new HashMap<>();
         configurations.put("weatherForecasts", RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(1)));
+        configurations.put("neighborhoodBriefings", RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(1)));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
