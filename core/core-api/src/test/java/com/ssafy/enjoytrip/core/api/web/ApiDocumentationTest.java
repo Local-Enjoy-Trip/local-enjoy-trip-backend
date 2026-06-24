@@ -258,7 +258,7 @@ class ApiDocumentationTest {
     void hotplaces() throws Exception {
         when(hotplaceService.findAllHotplaces()).thenReturn(List.of(
                 new Hotplace(
-                        "h1", "ssafy", "남산", "view", "2026-05-14", 37.55, 126.99, "야경", "",
+                        "h1", 11L, "남산", "view", "2026-05-14", 37.55, 126.99, "야경", "",
                         "2026-05-14 11:00:00"
                 )
         ));
@@ -276,7 +276,7 @@ class ApiDocumentationTest {
     void plans() throws Exception {
         when(planService.findAllPlans()).thenReturn(List.of(
                 new TravelPlan(
-                        "p1", "ssafy", "서울 여행", "2026-05-14", "2026-05-15", 100000, "메모", "[]",
+                        "p1", 11L, "서울 여행", "2026-05-14", "2026-05-15", 100000, "메모", "[]",
                         "2026-05-14 11:00:00"
                 )
         ));
@@ -292,13 +292,13 @@ class ApiDocumentationTest {
     @DisplayName("코스 API 문서를 검증한다")
     @Test
     void courses() throws Exception {
-        Course course = course("course-1", "ssafy", 101L, 102L);
+        Course course = course("course-1", 11L, 101L, 102L);
         when(courseService.createCourse(any())).thenReturn(course);
-        when(courseService.updateCourse(eq("ssafy"), any())).thenReturn(course);
-        when(courseService.recommendCourseOrder(eq("ssafy"), eq("course-1"), any())).thenReturn(course);
+        when(courseService.updateCourse(eq(11L), any())).thenReturn(course);
+        when(courseService.recommendCourseOrder(eq(11L), eq("course-1"), any())).thenReturn(course);
 
         mockMvc.perform(post("/api/courses")
-                        .principal(() -> "ssafy")
+                        .principal(() -> "11")
                         .contentType("application/json")
                         .content("""
                                 {
@@ -321,7 +321,7 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
 
         mockMvc.perform(put("/api/courses/course-1")
-                        .principal(() -> "ssafy")
+                        .principal(() -> "11")
                         .contentType("application/json")
                         .content("""
                                 {
@@ -341,7 +341,7 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
 
         mockMvc.perform(post("/api/courses/course-1/order-recommendation")
-                        .principal(() -> "ssafy")
+                        .principal(() -> "11")
                         .contentType("application/json")
                         .content("""
                                 {
@@ -381,7 +381,7 @@ class ApiDocumentationTest {
     @Test
     void members() throws Exception {
         when(memberService.findAllUsers()).thenReturn(List.of(
-                new Member("ssafy", "SSAFY", "ssafy@example.com", "secret")
+                new Member(null, "SSAFY", "ssafy", "ssafy@example.com", "secret", null)
         ));
 
         mockMvc.perform(get("/api/members"))
@@ -396,8 +396,8 @@ class ApiDocumentationTest {
     @DisplayName("회원 프로필 이미지 API 문서를 검증한다")
     @Test
     void memberProfileImages() throws Exception {
-        String objectKey = "profiles/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg";
-        when(memberProfileImageService.createPresignedUpload("ssafy", "image/jpeg", "jpg"))
+        String objectKey = "profiles/11/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg";
+        when(memberProfileImageService.createPresignedUpload(11L, "image/jpeg", "jpg"))
                 .thenReturn(new ProfileImageUploadUrl(
                         objectKey,
                         "http://localhost:9000/dongnepin-notes/" + objectKey + "?signature=abc",
@@ -406,7 +406,7 @@ class ApiDocumentationTest {
                 ));
 
         mockMvc.perform(post("/api/members/me/profile-image/presigned-upload")
-                        .principal(() -> "ssafy")
+                        .principal(() -> "11")
                         .contentType("application/json")
                         .content("""
                                 {
@@ -421,7 +421,7 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
 
         mockMvc.perform(put("/api/members/me/profile-image")
-                        .principal(() -> "ssafy")
+                        .principal(() -> "11")
                         .contentType("application/json")
                         .content("""
                                 {
@@ -436,7 +436,7 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
     }
 
-    private static Course course(String id, String ownerMemberId, Long firstItemId, Long secondItemId) {
+    private static Course course(String id, Long ownerMemberId, Long firstItemId, Long secondItemId) {
         return new Course(
                 id,
                 ownerMemberId,

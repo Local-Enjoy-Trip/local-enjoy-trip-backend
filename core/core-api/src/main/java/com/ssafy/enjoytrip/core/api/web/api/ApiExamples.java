@@ -48,9 +48,9 @@ final class ApiExamples {
               "data": {
                 "friendship": {
                   "id": 10,
-                  "requesterUserId": "ssafy",
+                  "requesterEmail": "ssafy@example.com",
                   "requesterDisplayName": "김싸피",
-                  "addresseeUserId": "dongne",
+                  "addresseeEmail": "dongne@example.com",
                   "addresseeDisplayName": "동네친구",
                   "status": "PENDING",
                   "requestedAt": "2026-06-22T10:00:00",
@@ -68,7 +68,7 @@ final class ApiExamples {
                 "friends": [
                   {
                     "friendshipId": 10,
-                    "userId": "dongne",
+                    "email": "dongne@example.com",
                     "displayName": "동네친구"
                   }
                 ]
@@ -84,9 +84,9 @@ final class ApiExamples {
                 "requests": [
                   {
                     "id": 10,
-                    "requesterUserId": "ssafy",
+                    "requesterEmail": "ssafy@example.com",
                     "requesterDisplayName": "김싸피",
-                    "addresseeUserId": "dongne",
+                    "addresseeEmail": "dongne@example.com",
                     "addresseeDisplayName": "동네친구",
                     "status": "PENDING",
                     "requestedAt": "2026-06-22T10:00:00",
@@ -187,7 +187,6 @@ final class ApiExamples {
               "success": true,
               "data": {
                 "user": {
-                  "userId": "ssafy",
                   "name": "김싸피",
                   "nickname": "동네핀러",
                   "email": "ssafy@example.com",
@@ -216,7 +215,6 @@ final class ApiExamples {
               "success": true,
               "data": {
                 "id": 1,
-                "authorUserId": "ssafy",
                 "title": "서울 산책 메모",
                 "content": "시청 근처 산책 기록",
                 "category": "DAILY",
@@ -240,7 +238,6 @@ final class ApiExamples {
                 "notes": [
                   {
                     "id": 1,
-                    "authorUserId": "ssafy",
                     "title": "서울 산책 메모",
                     "content": "시청 근처 산책 기록",
                     "category": "DAILY",
@@ -308,7 +305,6 @@ final class ApiExamples {
               "success": true,
               "data": {
                 "id": "p1",
-                "userId": "ssafy",
                 "title": "제주 여행",
                 "startDate": "2026-07-01",
                 "endDate": "2026-07-03",
@@ -341,7 +337,7 @@ final class ApiExamples {
 
     static final String FRIEND_REQUEST = """
             {
-              "targetUserId": "dongne"
+              "targetEmail": "dongne@example.com"
             }
             """;
 
@@ -376,7 +372,6 @@ final class ApiExamples {
     static final String HOTPLACE_CREATE_REQUEST = """
             {
               "id": "h1",
-              "userId": "ssafy",
               "title": "성산일출봉",
               "type": "nature",
               "visitDate": "2026-07-01",
@@ -389,7 +384,6 @@ final class ApiExamples {
 
     static final String MEMBER_SIGNUP_REQUEST = """
             {
-              "userId": "ssafy",
               "name": "김싸피",
               "nickname": "동네핀러",
               "email": "ssafy@example.com",
@@ -400,7 +394,7 @@ final class ApiExamples {
 
     static final String MEMBER_LOGIN_REQUEST = """
             {
-              "userId": "ssafy",
+              "email": "ssafy@example.com",
               "password": "passw0rd!"
             }
             """;
@@ -413,11 +407,6 @@ final class ApiExamples {
             }
             """;
 
-    static final String MEMBER_LOGOUT_REQUEST = """
-            {
-              "userId": "ssafy"
-            }
-            """;
 
     static final String MEMBER_UPDATE_REQUEST = """
             {

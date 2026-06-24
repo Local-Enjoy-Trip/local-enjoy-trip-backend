@@ -15,12 +15,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class ProfileImageUploadUrlGeneratorTest {
-    @DisplayName("프로필 이미지 presigned URL은 사용자 prefix objectKey와 정규화된 public URL을 반환한다")
+    @DisplayName("프로필 이미지 presigned URL은 회원 prefix objectKey와 정규화된 public URL을 반환한다")
     @Test
     void generatesProfileImageUploadResult() throws Exception {
         MinioClient minioClient = mock(MinioClient.class);
         when(minioClient.getPresignedObjectUrl(any(GetPresignedObjectUrlArgs.class)))
-                .thenReturn("http://localhost:9000/dongnepin-notes/profiles/ssafy/sample.jpg?signature=abc");
+                .thenReturn("http://localhost:9000/dongnepin-notes/profiles/11/sample.jpg?signature=abc");
         MinioProperties properties = new MinioProperties();
         properties.setBucket("dongnepin-notes");
         properties.setPublicBaseUrl("http://localhost:9000/dongnepin-notes/");
@@ -30,9 +30,9 @@ class ProfileImageUploadUrlGeneratorTest {
                 properties
         );
 
-        ProfileImageUploadResult result = generator.generate("ssafy", "image/jpeg", "jpg");
+        ProfileImageUploadResult result = generator.generate("11", "image/jpeg", "jpg");
 
-        assertThat(result.objectKey()).startsWith("profiles/ssafy/").endsWith(".jpg");
+        assertThat(result.objectKey()).startsWith("profiles/11/").endsWith(".jpg");
         assertThat(result.uploadUrl()).contains("signature=abc");
         assertThat(result.publicUrl()).isEqualTo(
                 "http://localhost:9000/dongnepin-notes/" + result.objectKey()

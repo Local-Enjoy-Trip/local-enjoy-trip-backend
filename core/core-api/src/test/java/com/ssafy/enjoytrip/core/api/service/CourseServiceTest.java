@@ -82,7 +82,7 @@ class CourseServiceTest {
     @DisplayName("코스 생성은 숨김 장소나 비공개 노트를 항목으로 저장하지 않는다")
     @Test
     void createCourseRejectsNonPublicItems() {
-        Course course = course("course-1", "user", "PRIVATE", "READY", attractionStop(10L, 1));
+        Course course = course("course-1", 11L, "PRIVATE", "READY", attractionStop(10L, 1));
         when(attractionMapper.existsPublicVisibleById(10L)).thenReturn(0);
 
         assertThatThrownBy(() -> service.createCourse(course))
@@ -95,7 +95,7 @@ class CourseServiceTest {
     @DisplayName("코스 생성은 장소 항목 저장 시 attraction_id만 채운다")
     @Test
     void createCoursePersistsAttractionTargetOnly() {
-        Course course = course("course-attraction", "user", "PRIVATE", "READY", attractionStop(10L, 1));
+        Course course = course("course-attraction", 11L, "PRIVATE", "READY", attractionStop(10L, 1));
         stubAttraction(10L, 37.0, 127.0);
         stubGeneratedItemIds(101L);
 
@@ -112,7 +112,7 @@ class CourseServiceTest {
     @DisplayName("코스 생성은 쪽지 항목 저장 시 note_id만 채운다")
     @Test
     void createCoursePersistsNoteTargetOnly() {
-        Course course = course("course-note", "user", "PRIVATE", "READY", noteStop(30L, 1));
+        Course course = course("course-note", 11L, "PRIVATE", "READY", noteStop(30L, 1));
         stubNote(30L, 37.0, 127.0);
         stubGeneratedItemIds(301L);
 
@@ -129,7 +129,7 @@ class CourseServiceTest {
     @DisplayName("코스 생성은 비공개 쪽지를 항목으로 저장하지 않는다")
     @Test
     void createCourseRejectsNonPublicNote() {
-        Course course = course("course-private-note", "user", "PRIVATE", "READY", noteStop(30L, 1));
+        Course course = course("course-private-note", 11L, "PRIVATE", "READY", noteStop(30L, 1));
         when(noteMapper.existsPublicActive(30L)).thenReturn(0);
 
         assertThatThrownBy(() -> service.createCourse(course))
@@ -144,7 +144,7 @@ class CourseServiceTest {
     void createCoursePersistsUserOrderWithSegments() {
         Course course = course(
                 "course-1",
-                "user",
+                11L,
                 "PRIVATE",
                 "READY",
                 attractionStop(10L, 1),
@@ -169,7 +169,7 @@ class CourseServiceTest {
     void createCoursePersistsDuplicateTargetsByPosition() {
         Course course = course(
                 "course-duplicate",
-                "user",
+                11L,
                 "PRIVATE",
                 "READY",
                 attractionStop(10L, 1),
@@ -191,7 +191,7 @@ class CourseServiceTest {
     void createCourseRejectsMissingCoordinates() {
         Course course = course(
                 "course-missing-coordinate",
-                "user",
+                11L,
                 "PRIVATE",
                 "READY",
                 attractionStop(10L, 1),
@@ -212,7 +212,7 @@ class CourseServiceTest {
     void createCourseRejectsMissingGeneratedItemId() {
         Course course = course(
                 "course-reload-mismatch",
-                "user",
+                11L,
                 "PRIVATE",
                 "READY",
                 attractionStop(10L, 1),
@@ -236,7 +236,7 @@ class CourseServiceTest {
     void updateCoursePersistsUserOrderWithSegments() {
         Course course = course(
                 "course-1",
-                "user",
+                11L,
                 "PRIVATE",
                 "READY",
                 attractionStop(20L, 1),
@@ -244,7 +244,7 @@ class CourseServiceTest {
         );
         stubAttraction(10L, 37.0, 127.0);
         stubAttraction(20L, 37.1, 127.1);
-        when(courseMapper.findById("course-1")).thenReturn(courseRecord("course-1", "user", null, null, 0));
+        when(courseMapper.findById("course-1")).thenReturn(courseRecord("course-1", 11L, null, null, 0));
         when(courseMapper.findItemsByCourseId("course-1")).thenReturn(List.of(
                 itemDetail(101L, "course-1", 10L, 1, "기존 첫 장소"),
                 itemDetail(102L, "course-1", 20L, 2, "기존 두 번째 장소")
@@ -256,7 +256,7 @@ class CourseServiceTest {
         stubGeneratedItemIds(201L, 202L);
         when(courseMapper.insertSegments(any())).thenReturn(1);
 
-        Course updated = service.updateCourse("user", course);
+        Course updated = service.updateCourse(11L, course);
 
         assertThat(updated.route().stops()).extracting(stop -> stop.target().id()).containsExactly(20L, 10L);
         assertThat(updated.routeSummary().segmentCount()).isEqualTo(1);
@@ -269,7 +269,7 @@ class CourseServiceTest {
     @DisplayName("AI 추천 미리보기는 아이템 id 순열로 응답하고 저장하지 않는다")
     @Test
     void recommendCourseOrderUsesAiPermutationWithoutPersistence() {
-        stubFoundCourseWithSegment("course-1", "user", 101L, 102L, 10L, 20L);
+        stubFoundCourseWithSegment("course-1", 11L, 101L, 102L, 10L, 20L);
         when(attractionMapper.findByIds(List.of(10L, 20L))).thenReturn(List.of(
                 attraction(10L, 37.0, 127.0),
                 attraction(20L, 37.1, 127.1)
@@ -278,7 +278,7 @@ class CourseServiceTest {
                 new CourseOrderRecommendationResult(List.of(102L, 101L), "ok")
         );
 
-        Course recommended = service.recommendCourseOrder("user", "course-1");
+        Course recommended = service.recommendCourseOrder(11L, "course-1");
 
         assertThat(recommended.route().stops()).extracting(CourseStop::id).containsExactly(102L, 101L);
         assertThat(recommended.route().stops()).extracting(CourseStop::position).containsExactly(1, 2);
@@ -289,7 +289,7 @@ class CourseServiceTest {
     @DisplayName("AI 추천 요청은 프론트 현재 위치를 외부 프롬프트 요청으로 전달한다")
     @Test
     void recommendCourseOrderPassesCurrentLocationToAiRequest() {
-        stubFoundCourseWithSegment("course-location", "user", 101L, 102L, 10L, 20L);
+        stubFoundCourseWithSegment("course-location", 11L, 101L, 102L, 10L, 20L);
         when(attractionMapper.findByIds(List.of(10L, 20L))).thenReturn(List.of(
                 attraction(10L, 37.0, 127.0),
                 attraction(20L, 37.1, 127.1)
@@ -299,7 +299,7 @@ class CourseServiceTest {
         );
 
         service.recommendCourseOrder(
-                "user",
+                11L,
                 "course-location",
                 new CourseOrderOptimizationContext(37.5665, 126.9780)
         );
@@ -318,7 +318,7 @@ class CourseServiceTest {
     void recommendCourseOrderFallsBackToCoordinateOptimizer(CapturedOutput output) {
         stubFoundCourseWithThreeStops(
                 "course-optimizer",
-                "user",
+                11L,
                 List.of(101L, 103L, 102L),
                 List.of(10L, 30L, 20L)
         );
@@ -334,7 +334,7 @@ class CourseServiceTest {
                 )
         );
 
-        Course recommended = service.recommendCourseOrder("user", "course-optimizer");
+        Course recommended = service.recommendCourseOrder(11L, "course-optimizer");
 
         assertThat(recommended.route().stops()).extracting(CourseStop::id)
                 .containsExactly(101L, 102L, 103L);
@@ -344,7 +344,7 @@ class CourseServiceTest {
                 .contains(
                         "reason=RECOMMENDATION_FAILED",
                         "courseId=course-optimizer",
-                        "ownerMemberId=user",
+                        "ownerMemberId=11",
                         "itemCount=3",
                         "providerException=com.ssafy.enjoytrip.external.courseorder."
                                 + "CourseOrderRecommendationException"
@@ -364,7 +364,7 @@ class CourseServiceTest {
     ) {
         stubFoundCourseWithThreeStops(
                 "course-provider-fallback",
-                "user",
+                11L,
                 List.of(101L, 103L, 102L),
                 List.of(10L, 30L, 20L)
         );
@@ -377,7 +377,7 @@ class CourseServiceTest {
                 new CourseOrderRecommendationException(reason, reason.name())
         );
 
-        Course recommended = service.recommendCourseOrder("user", "course-provider-fallback");
+        Course recommended = service.recommendCourseOrder(11L, "course-provider-fallback");
 
         assertThat(recommended.route().stops()).extracting(CourseStop::id)
                 .containsExactly(101L, 102L, 103L);
@@ -388,7 +388,7 @@ class CourseServiceTest {
     @DisplayName("AI가 아이템 id를 누락하면 좌표 최적화 fallback을 사용한다")
     @Test
     void recommendCourseOrderRejectsMissingAiIds() {
-        stubFoundCourseWithSegment("course-missing-ai", "user", 101L, 102L, 10L, 20L);
+        stubFoundCourseWithSegment("course-missing-ai", 11L, 101L, 102L, 10L, 20L);
         when(attractionMapper.findByIds(List.of(10L, 20L))).thenReturn(List.of(
                 attraction(10L, 37.0, 127.0),
                 attraction(20L, 37.1, 127.1)
@@ -397,7 +397,7 @@ class CourseServiceTest {
                 new CourseOrderRecommendationResult(List.of(101L), "missing")
         );
 
-        Course recommended = service.recommendCourseOrder("user", "course-missing-ai");
+        Course recommended = service.recommendCourseOrder(11L, "course-missing-ai");
 
         assertThat(recommended.route().stops()).extracting(CourseStop::id)
                 .containsExactly(101L, 102L);
@@ -407,7 +407,7 @@ class CourseServiceTest {
     @DisplayName("AI가 없는 아이템 id를 반환하면 좌표 최적화 fallback을 사용한다")
     @Test
     void recommendCourseOrderRejectsHallucinatedAiIds() {
-        stubFoundCourseWithSegment("course-hallucinated-ai", "user", 101L, 102L, 10L, 20L);
+        stubFoundCourseWithSegment("course-hallucinated-ai", 11L, 101L, 102L, 10L, 20L);
         when(attractionMapper.findByIds(List.of(10L, 20L))).thenReturn(List.of(
                 attraction(10L, 37.0, 127.0),
                 attraction(20L, 37.1, 127.1)
@@ -416,7 +416,7 @@ class CourseServiceTest {
                 new CourseOrderRecommendationResult(List.of(101L, 999L), "hallucinated")
         );
 
-        Course recommended = service.recommendCourseOrder("user", "course-hallucinated-ai");
+        Course recommended = service.recommendCourseOrder(11L, "course-hallucinated-ai");
 
         assertThat(recommended.route().stops()).extracting(CourseStop::id)
                 .containsExactly(101L, 102L);
@@ -426,9 +426,9 @@ class CourseServiceTest {
     @DisplayName("추천은 소유자를 확인한 뒤에만 미리보기 hydrator와 AI를 호출한다")
     @Test
     void recommendCourseOrderRejectsNonOwnerBeforePreviewAndAi() {
-        stubFoundCourseWithSegment("course-owner-only", "owner", 101L, 102L, 10L, 20L);
+        stubFoundCourseWithSegment("course-owner-only", 22L, 101L, 102L, 10L, 20L);
 
-        assertThatThrownBy(() -> service.recommendCourseOrder("intruder", "course-owner-only"))
+        assertThatThrownBy(() -> service.recommendCourseOrder(33L, "course-owner-only"))
                 .isInstanceOfSatisfying(CoreException.class,
                         exception -> assertThat(exception.errorType()).isEqualTo(COURSE_ACCESS_DENIED));
 
@@ -440,13 +440,13 @@ class CourseServiceTest {
     @DisplayName("좌표가 부족한 코스 추천은 AI 호출 없이 현재 순서를 반환한다")
     @Test
     void recommendCourseOrderReturnsCurrentPreviewWhenCoordinatesAreInsufficient(CapturedOutput output) {
-        stubFoundCourseWithSegment("course-missing-coordinate", "user", 101L, 102L, 10L, 20L);
+        stubFoundCourseWithSegment("course-missing-coordinate", 11L, 101L, 102L, 10L, 20L);
         when(attractionMapper.findByIds(List.of(10L, 20L))).thenReturn(List.of(
                 attraction(10L, 37.0, 127.0),
                 attraction(20L, null, 127.1)
         ));
 
-        Course recommended = service.recommendCourseOrder("user", "course-missing-coordinate");
+        Course recommended = service.recommendCourseOrder(11L, "course-missing-coordinate");
 
         assertThat(recommended.route().stops()).extracting(CourseStop::id)
                 .containsExactly(101L, 102L);
@@ -457,7 +457,7 @@ class CourseServiceTest {
                 .contains(
                         "reason=COORDINATE_INSUFFICIENT",
                         "courseId=course-missing-coordinate",
-                        "ownerMemberId=user",
+                        "ownerMemberId=11",
                         "itemCount=2",
                         "providerException="
                 );
@@ -466,7 +466,7 @@ class CourseServiceTest {
     @DisplayName("AI가 중복 아이템 id를 반환하면 좌표 최적화 fallback을 사용한다")
     @Test
     void recommendCourseOrderRejectsDuplicateAiIds(CapturedOutput output) {
-        stubFoundCourseWithSegment("course-duplicate-ai", "user", 101L, 102L, 10L, 20L);
+        stubFoundCourseWithSegment("course-duplicate-ai", 11L, 101L, 102L, 10L, 20L);
         when(attractionMapper.findByIds(List.of(10L, 20L))).thenReturn(List.of(
                 attraction(10L, 37.0, 127.0),
                 attraction(20L, 37.1, 127.1)
@@ -475,7 +475,7 @@ class CourseServiceTest {
                 new CourseOrderRecommendationResult(List.of(101L, 101L), "duplicate")
         );
 
-        Course recommended = service.recommendCourseOrder("user", "course-duplicate-ai");
+        Course recommended = service.recommendCourseOrder(11L, "course-duplicate-ai");
 
         assertThat(recommended.route().stops()).extracting(CourseStop::id)
                 .containsExactly(101L, 102L);
@@ -484,7 +484,7 @@ class CourseServiceTest {
                 .contains(
                         "reason=RECOMMENDATION_FAILED",
                         "courseId=course-duplicate-ai",
-                        "ownerMemberId=user",
+                        "ownerMemberId=11",
                         "itemCount=2",
                         "providerException="
                 );
@@ -493,11 +493,11 @@ class CourseServiceTest {
     @DisplayName("공개 피드는 저장소 거리순 단일 목록을 반환한다")
     @Test
     void publicFeedReturnsDistanceOrderedCourses() {
-        CourseRecord mdCourse = courseRecord("md-1", "admin", "MD_RECOMMENDED", 1, 0);
+        CourseRecord mdCourse = courseRecord("md-1", 1L, "MD_RECOMMENDED", 1, 0);
         mdCourse.setStartLatitude(37.5665);
         mdCourse.setStartLongitude(126.9780);
         mdCourse.setDistanceMeters(42.5);
-        CourseRecord publicCourse = courseRecord("course-1", "user", null, null, 3);
+        CourseRecord publicCourse = courseRecord("course-1", 11L, null, null, 3);
         publicCourse.setStartLatitude(37.5666);
         publicCourse.setStartLongitude(126.9781);
         publicCourse.setDistanceMeters(128.3);
@@ -559,7 +559,7 @@ class CourseServiceTest {
 
 
     private void stubFoundCourseWithSegment(String courseId,
-                                            String ownerMemberId,
+                                            Long ownerMemberId,
                                             Long firstItemId,
                                             Long secondItemId,
                                             Long firstAttractionId,
@@ -575,7 +575,7 @@ class CourseServiceTest {
     }
 
     private void stubFoundCourseWithThreeStops(String courseId,
-                                               String ownerMemberId,
+                                               Long ownerMemberId,
                                                List<Long> itemIds,
                                                List<Long> attractionIds) {
         when(courseMapper.findById(courseId)).thenReturn(courseRecord(courseId, ownerMemberId, null, null, 0));
@@ -591,7 +591,7 @@ class CourseServiceTest {
     }
 
     private static Course course(String id,
-                                 String ownerMemberId,
+                                 Long ownerMemberId,
                                  String visibility,
                                  String status,
                                  CourseStop... stops) {
@@ -662,7 +662,7 @@ class CourseServiceTest {
     private static NoteRecord note(Long id, Double latitude, Double longitude) {
         return new NoteRecord(
                 id,
-                "author",
+                11L,
                 "쪽지 " + id,
                 "내용",
                 "TIP",
@@ -704,7 +704,7 @@ class CourseServiceTest {
     }
 
     private static CourseRecord courseRecord(String id,
-                                             String ownerMemberId,
+                                             Long ownerMemberId,
                                              String curationSection,
                                              Integer curationOrder,
                                              Integer saveCount) {
@@ -721,7 +721,7 @@ class CourseServiceTest {
                 curationOrder
         );
         record.setSaveCount(saveCount);
-        record.setCreatedByAdmin("admin".equals(ownerMemberId));
+        record.setCreatedByAdmin(Long.valueOf(1L).equals(ownerMemberId));
         return record;
     }
 }

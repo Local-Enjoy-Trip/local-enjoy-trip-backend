@@ -9,36 +9,41 @@ import static org.mockito.Mockito.when;
 
 import com.ssafy.enjoytrip.core.domain.Notification;
 import com.ssafy.enjoytrip.core.domain.service.NotificationService;
+import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NotificationRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.FriendshipMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NotificationMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class NotificationServiceTest {
-    @DisplayName("친구 요청 알림 payload는 JSON 문자열이 아니라 요청자 userId를 그대로 저장한다")
+    @DisplayName("친구 요청 알림 payload는 JSON 문자열이 아니라 요청자 email을 그대로 저장한다")
     @Test
-    void saveFriendRequestReceivedStoresRequesterUserIdAsPayload() {
+    void saveFriendRequestReceivedStoresRequesterEmailAsPayload() {
         NotificationMapper notificationMapper = mock(NotificationMapper.class);
         FriendshipMapper friendshipMapper = mock(FriendshipMapper.class);
-        NotificationService service = new NotificationService(notificationMapper, friendshipMapper);
+        MemberMapper memberMapper = mock(MemberMapper.class);
+        NotificationService service = new NotificationService(notificationMapper, friendshipMapper, memberMapper);
+        MemberRecord requester = new MemberRecord("Alice", "alice", "alice@example.com", "password", null);
+        when(memberMapper.findById(11L)).thenReturn(requester);
         NotificationRecord saved = new NotificationRecord(
-                "bob",
+                22L,
                 FRIEND_REQUEST_RECEIVED,
                 FRIENDSHIP,
-                11L,
-                "alice"
+                33L,
+                "alice@example.com"
         );
         saved.setId(1L);
-        when(notificationMapper.findByBusinessKey("bob", FRIEND_REQUEST_RECEIVED, FRIENDSHIP, 11L))
+        when(notificationMapper.findByBusinessKey(22L, FRIEND_REQUEST_RECEIVED, FRIENDSHIP, 33L))
                 .thenReturn(saved);
 
-        Notification notification = service.saveFriendRequestReceived(11L, "alice", "bob");
+        Notification notification = service.saveFriendRequestReceived(33L, 11L, 22L);
 
         ArgumentCaptor<NotificationRecord> recordCaptor = ArgumentCaptor.forClass(NotificationRecord.class);
         verify(notificationMapper).upsertFriendRequest(recordCaptor.capture());
-        assertThat(recordCaptor.getValue().getPayload()).isEqualTo("alice");
-        assertThat(notification.payload()).isEqualTo("alice");
+        assertThat(recordCaptor.getValue().getPayload()).isEqualTo("alice@example.com");
+        assertThat(notification.payload()).isEqualTo("alice@example.com");
     }
 }

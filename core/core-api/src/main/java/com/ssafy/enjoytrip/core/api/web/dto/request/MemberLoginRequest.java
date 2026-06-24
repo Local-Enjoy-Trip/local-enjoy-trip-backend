@@ -1,5 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.AssertTrue;
@@ -10,6 +11,7 @@ import java.util.Map;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class MemberLoginRequest {
     @NotBlank
     @Email

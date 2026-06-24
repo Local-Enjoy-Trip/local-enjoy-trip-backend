@@ -16,8 +16,8 @@ public class MinioNoteImageUploadUrlGenerator {
     private final MinioClient minioClient;
     private final MinioProperties properties;
 
-    public NoteImageUploadResult generate(String userId, String contentType, String fileExtension) {
-        String objectKey = objectKey(userId, fileExtension);
+    public NoteImageUploadResult generate(String memberId, String contentType, String fileExtension) {
+        String objectKey = objectKey(memberId, fileExtension);
         Instant expiresAt = Instant.now().plus(properties.getUploadExpiry());
 
         try {
@@ -35,8 +35,8 @@ public class MinioNoteImageUploadUrlGenerator {
         }
     }
 
-    private static String objectKey(String userId, String extension) {
-        return "notes/" + userId + "/" + UUID.randomUUID() + "." + extension;
+    private static String objectKey(String memberId, String extension) {
+        return "notes/" + memberId + "/" + UUID.randomUUID() + "." + extension;
     }
 
     private String publicUrl(String objectKey) {

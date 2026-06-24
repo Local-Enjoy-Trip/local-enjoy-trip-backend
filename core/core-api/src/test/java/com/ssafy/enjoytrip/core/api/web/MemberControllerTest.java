@@ -1,5 +1,4 @@
 package com.ssafy.enjoytrip.core.api.web;
-
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.USER_ALREADY_EXISTS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -74,7 +73,7 @@ class MemberControllerTest {
 
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(signupJson("SSAFY", "Case@Test.example", "secret123")))
+                        .content(signupJson("SSAFY", "Case@Test.com", "secret123")))
                 .andExpect(status().isConflict());
     }
 
@@ -87,7 +86,7 @@ class MemberControllerTest {
                                 {
                                   "userId": "ssafy",
                                   "name": "SSAFY",
-                                  "email": "Case@Test.example",
+                                  "email": "Case@Test.com",
                                   "password": "secret123"
                                 }
                                 """))
@@ -97,15 +96,15 @@ class MemberControllerTest {
     @DisplayName("로그인은 JWT 토큰을 반환하고 userId를 응답하지 않는다")
     @Test
     void loginReturnsJwtToken() throws Exception {
-        Member member = new Member(1L, "SSAFY", "동네핀러", "Case@Test.example", "hidden", null);
-        when(memberService.login("Case@Test.example", "secret")).thenReturn(member);
+        Member member = new Member(1L, "SSAFY", "동네핀러", "Case@Test.com", "hidden", null);
+        when(memberService.login("Case@Test.com", "secret")).thenReturn(member);
         when(tokenService.issue(member)).thenReturn(new IssuedToken("jwt-token", "Bearer", 7200));
 
         mockMvc.perform(post("/api/members/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "email": "Case@Test.example",
+                                  "email": "Case@Test.com",
                                   "password": "secret"
                                 }
                                 """))
@@ -113,7 +112,7 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.data.expiresIn").value(7200))
-                .andExpect(jsonPath("$.data.user.email").value("Case@Test.example"))
+                .andExpect(jsonPath("$.data.user.email").value("Case@Test.com"))
                 .andExpect(jsonPath("$.data.user.userId").doesNotExist())
                 .andExpect(jsonPath("$.data.user.password").doesNotExist());
     }
@@ -256,10 +255,7 @@ class MemberControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "nickname": "동네핀러",
-                                  "email": "changed@example.com",
-                                  "password": "new-secret1",
-                                  "profileImageUrl": "https://cdn.example.com/profile.png"
+                                  "nickname": "동네핀러"
                                 }
                                 """))
                 .andExpect(status().isOk());

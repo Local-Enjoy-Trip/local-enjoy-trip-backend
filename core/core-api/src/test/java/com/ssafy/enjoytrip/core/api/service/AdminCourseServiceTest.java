@@ -3,6 +3,7 @@ package com.ssafy.enjoytrip.core.domain.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,9 +35,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 class AdminCourseServiceTest {
+    private static final Long ADMIN_MEMBER_ID = 1L;
+
     private CourseMapper courseMapper;
     private MemberMapper memberMapper;
     private AttractionMapper attractionMapper;
@@ -45,10 +47,10 @@ class AdminCourseServiceTest {
 
     @BeforeEach
     void setUp() {
-        courseMapper = Mockito.mock(CourseMapper.class);
-        memberMapper = Mockito.mock(MemberMapper.class);
-        attractionMapper = Mockito.mock(AttractionMapper.class);
-        noteMapper = Mockito.mock(NoteMapper.class);
+        courseMapper = mock(CourseMapper.class);
+        memberMapper = mock(MemberMapper.class);
+        attractionMapper = mock(AttractionMapper.class);
+        noteMapper = mock(NoteMapper.class);
         when(courseMapper.updateStartLocation(any(), any(), any())).thenReturn(1);
         CourseStopPointResolver stopPointResolver = new CourseStopPointResolver(attractionMapper, noteMapper);
         DefaultCourseRoutePlanner routePlanner = new DefaultCourseRoutePlanner();
@@ -64,11 +66,11 @@ class AdminCourseServiceTest {
     void createAdminCoursePersistsAndReadsPlannedRoute() {
         Course course = course(
                 "admin-course",
-                "admin",
+                ADMIN_MEMBER_ID,
                 attractionStop(10L, 1),
                 attractionStop(20L, 2)
         );
-        when(memberMapper.findByUserId("admin")).thenReturn(adminMember());
+        when(memberMapper.findById(ADMIN_MEMBER_ID)).thenReturn(adminMember());
         stubAttraction(10L, 37.0, 127.0);
         stubAttraction(20L, 37.1, 127.1);
         stubGeneratedItemIds(301L, 302L);
@@ -85,8 +87,8 @@ class AdminCourseServiceTest {
     @DisplayName("관리자 코스 생성은 쪽지 항목 저장 시 note_id만 채운다")
     @Test
     void createAdminCoursePersistsNoteTargetOnly() {
-        Course course = course("admin-note", "admin", noteStop(30L, 1));
-        when(memberMapper.findByUserId("admin")).thenReturn(adminMember());
+        Course course = course("admin-note", ADMIN_MEMBER_ID, noteStop(30L, 1));
+        when(memberMapper.findById(ADMIN_MEMBER_ID)).thenReturn(adminMember());
         stubNote(30L, 37.0, 127.0);
         stubGeneratedItemIds(401L);
 
@@ -101,8 +103,8 @@ class AdminCourseServiceTest {
     @DisplayName("관리자 코스 생성은 숨김 장소를 항목으로 저장하지 않는다")
     @Test
     void createAdminCourseRejectsHiddenAttraction() {
-        Course course = course("admin-hidden", "admin", attractionStop(10L, 1));
-        when(memberMapper.findByUserId("admin")).thenReturn(adminMember());
+        Course course = course("admin-hidden", ADMIN_MEMBER_ID, attractionStop(10L, 1));
+        when(memberMapper.findById(ADMIN_MEMBER_ID)).thenReturn(adminMember());
         when(attractionMapper.existsPublicVisibleById(10L)).thenReturn(0);
 
         assertThatThrownBy(() -> service.createAdminCourse(course))
@@ -116,14 +118,14 @@ class AdminCourseServiceTest {
     void updateAdminCourseReplacesExistingSegments() {
         Course course = course(
                 "admin-update",
-                "admin",
+                ADMIN_MEMBER_ID,
                 attractionStop(10L, 1),
                 attractionStop(20L, 2)
         );
-        when(memberMapper.findByUserId("admin")).thenReturn(adminMember());
+        when(memberMapper.findById(ADMIN_MEMBER_ID)).thenReturn(adminMember());
         stubAttraction(10L, 37.0, 127.0);
         stubAttraction(20L, 37.1, 127.1);
-        when(courseMapper.findById("admin-update")).thenReturn(courseRecord("admin-update", "admin"));
+        when(courseMapper.findById("admin-update")).thenReturn(courseRecord("admin-update", ADMIN_MEMBER_ID));
         when(courseMapper.findItemsByCourseId("admin-update")).thenReturn(List.of(
                 itemDetail(501L, "admin-update", 10L, 1, "첫 장소"),
                 itemDetail(502L, "admin-update", 20L, 2, "두 번째 장소")
@@ -135,7 +137,7 @@ class AdminCourseServiceTest {
         stubGeneratedItemIds(501L, 502L);
         when(courseMapper.insertSegments(any())).thenReturn(1);
 
-        Course updated = service.updateAdminCourse("admin", course);
+        Course updated = service.updateAdminCourse(ADMIN_MEMBER_ID, course);
 
         assertThat(updated.routeSummary().segmentCount()).isEqualTo(1);
         verify(courseMapper).updateOwned(any(CourseRecord.class));
@@ -172,7 +174,7 @@ class AdminCourseServiceTest {
         return itemCaptor.getValue().get(0);
     }
 
-    private static Course course(String id, String ownerMemberId, CourseStop... stops) {
+    private static Course course(String id, Long ownerMemberId, CourseStop... stops) {
         return new Course(
                 id,
                 ownerMemberId,
@@ -218,13 +220,13 @@ class AdminCourseServiceTest {
 
     private static MemberRecord adminMember() {
         MemberRecord member = new MemberRecord(
-                "admin",
                 "관리자",
                 null,
                 "admin@example.com",
                 "encoded-password",
                 null
         );
+        member.setId(ADMIN_MEMBER_ID);
         member.setRole(MemberRole.ADMIN.name());
         return member;
     }
@@ -253,7 +255,7 @@ class AdminCourseServiceTest {
     private static NoteRecord note(Long id, Double latitude, Double longitude) {
         return new NoteRecord(
                 id,
-                "author",
+                11L,
                 "쪽지 " + id,
                 "내용",
                 "TIP",
@@ -294,7 +296,7 @@ class AdminCourseServiceTest {
         );
     }
 
-    private static CourseRecord courseRecord(String id, String ownerMemberId) {
+    private static CourseRecord courseRecord(String id, Long ownerMemberId) {
         CourseRecord record = new CourseRecord(
                 id,
                 ownerMemberId,
@@ -307,7 +309,7 @@ class AdminCourseServiceTest {
                 null,
                 null
         );
-        record.setCreatedByAdmin("admin".equals(ownerMemberId));
+        record.setCreatedByAdmin(ADMIN_MEMBER_ID.equals(ownerMemberId));
         return record;
     }
 }

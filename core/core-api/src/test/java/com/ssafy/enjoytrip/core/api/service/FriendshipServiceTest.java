@@ -4,12 +4,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.ssafy.enjoytrip.core.domain.event.FriendshipRequestedEvent;
 import com.ssafy.enjoytrip.core.domain.event.listener.FriendshipNotificationEventListener;
 import com.ssafy.enjoytrip.core.domain.service.FriendshipService;
 import com.ssafy.enjoytrip.core.domain.service.NotificationService;
 import com.ssafy.enjoytrip.storage.db.core.model.FriendshipRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.FriendshipMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NotificationMapper;
@@ -37,9 +39,14 @@ class FriendshipServiceTest {
             return 1;
         }).when(friendshipMapper).insert(any(FriendshipRecord.class));
 
-        service.requestFriendship("alice", "bob");
+        MemberRecord addressee = member(2L, "bob@example.com", "bob");
+        when(memberMapper.findByEmail("bob@example.com")).thenReturn(addressee);
+        when(memberMapper.findById(1L)).thenReturn(member(1L, "alice@example.com", "alice"));
+        when(memberMapper.findById(2L)).thenReturn(addressee);
 
-        verify(eventPublisher).publishEvent(new FriendshipRequestedEvent(11L, "alice", "bob"));
+        service.requestFriendship(1L, "bob@example.com");
+
+        verify(eventPublisher).publishEvent(new FriendshipRequestedEvent(11L, 1L, 2L));
     }
 
     @DisplayName("친구 요청 이벤트 리스너는 알림 생성을 별도 경계에서 실행한다")
@@ -49,8 +56,20 @@ class FriendshipServiceTest {
         FriendshipNotificationEventListener listener =
                 new FriendshipNotificationEventListener(notificationService);
 
-        listener.saveFriendRequestNotification(new FriendshipRequestedEvent(11L, "alice", "bob"));
+        listener.saveFriendRequestNotification(new FriendshipRequestedEvent(11L, 1L, 2L));
 
-        verify(notificationService).saveFriendRequestReceived(11L, "alice", "bob");
+        verify(notificationService).saveFriendRequestReceived(11L, 1L, 2L);
+    }
+
+    private static MemberRecord member(Long id, String email, String nickname) {
+        MemberRecord member = new MemberRecord(
+                nickname,
+                nickname,
+                email,
+                "encoded-password",
+                null
+        );
+        member.setId(id);
+        return member;
     }
 }

@@ -67,13 +67,13 @@ class RepositoryBackedServicesTest {
         @DisplayName("핫플레이스 등록과 삭제는 MyBatis mapper를 사용한다")
         @Test
         void savesAndDeletesHotplaceRecord() {
-            Hotplace hotplace = new Hotplace("h1", "ssafy", "남산", "view", "2026-05-14", 37.55,
+            Hotplace hotplace = new Hotplace("h1", 1L, "남산", "view", "2026-05-14", 37.55,
                     126.99, "night", "", "created");
             when(mapper.existsById("h1")).thenReturn(1);
             when(mapper.deleteByIdAndMemberId("h1", 1L)).thenReturn(1);
 
             service.insertHotplace(hotplace);
-            assertThat(service.deleteHotplaceOrThrow("h1", 1L)).isTrue();
+            service.deleteHotplaceOrThrow("h1", 1L);
 
             verify(mapper).insert(any(HotplaceRecord.class));
             verify(mapper).deleteByIdAndMemberId("h1", 1L);
@@ -108,7 +108,7 @@ class RepositoryBackedServicesTest {
         @DisplayName("여행 계획 등록은 db-core TravelPlanRecord를 MyBatis mapper로 저장한다")
         @Test
         void savesTravelPlanRecord() {
-            TravelPlan plan = new TravelPlan("p1", "ssafy", "서울", "2026-05-14", "2026-05-15",
+            TravelPlan plan = new TravelPlan("p1", 1L, "서울", "2026-05-14", "2026-05-15",
                     1000, "note", "[]", "created");
 
             service.insertPlan(plan);
@@ -119,7 +119,7 @@ class RepositoryBackedServicesTest {
         @DisplayName("여행 계획 코스 저장은 관광지 좌표 기준으로 같은 일자 안에서 순서를 최적화한다")
         @Test
         void savesPlanItemsInOptimizedOrderByAttractionCoordinates() {
-            TravelPlan plan = new TravelPlan("p1", "ssafy", "서울", "2026-05-14", "2026-05-15",
+            TravelPlan plan = new TravelPlan("p1", 1L, "서울", "2026-05-14", "2026-05-15",
                     1000, "note", "[]", "created");
             List<PlanItem> items = List.of(
                     new PlanItem(null, "p1", 1L, 0, 1, "start", 90),
@@ -177,9 +177,9 @@ class RepositoryBackedServicesTest {
         @DisplayName("회원가입은 중복 사용자를 등록하지 않는다")
         @Test
         void signupDoesNotInsertDuplicateUser() {
-            when(mapper.existsByEmail("ssafy", "ssafy@example.com")).thenReturn(1);
+            when(mapper.existsByEmail("ssafy@example.com")).thenReturn(1);
 
-            Member duplicate = new Member("ssafy", "SSAFY", "ssafy@example.com", "secret");
+            Member duplicate = new Member(null, "SSAFY", "SSAFY", "ssafy@example.com", "secret", null);
 
             assertThatThrownBy(() -> service.signup(duplicate))
                     .isInstanceOfSatisfying(CoreException.class,
@@ -191,17 +191,16 @@ class RepositoryBackedServicesTest {
         @DisplayName("로그인은 없는 회원과 빈 비밀번호 및 빈 저장 비밀번호를 거부한다")
         @Test
         void loginRejectsMissingMemberBlankPasswordAndBlankStoredPassword() {
-            when(mapper.findByUserId("missing")).thenReturn(null);
-            when(mapper.findByUserId("blank-input")).thenReturn(new MemberRecord(
-                    "blank-input",
+            when(mapper.findByEmail("missing")).thenReturn(null);
+            when(mapper.findByEmail("blank-input")).thenReturn(new MemberRecord(
                     "A",
                     null,
-                    "a@example.com",
+                    "blank-input@example.com",
                     passwordEncoder.encode("secret"),
                     ""
             ));
-            when(mapper.findByUserId("blank-stored")).thenReturn(new MemberRecord(
-                    "blank-stored", "A", null, "a@example.com", " ", ""));
+            when(mapper.findByEmail("blank-stored")).thenReturn(new MemberRecord(
+                    "A", null, "blank-stored@example.com", " ", ""));
 
             assertThatThrownBy(() -> service.login("missing", "secret"))
                     .isInstanceOfSatisfying(CoreException.class,
@@ -220,18 +219,17 @@ class RepositoryBackedServicesTest {
         @Test
         void updateDoesNotChangeEmailAndPassword() {
             MemberRecord record = new MemberRecord(
-                    "ssafy",
                     "SSAFY",
                     "기존닉네임",
                     "old@example.com",
                     "old",
                     "https://cdn.example.com/old.png"
             );
-            when(mapper.findByUserId("ssafy")).thenReturn(record);
+            when(mapper.findById(1L)).thenReturn(record);
             when(mapper.update(record)).thenReturn(1);
 
             service.update(new Member(
-                    "ssafy",
+                    1L,
                     "Changed Name",
                     "동네핀러",
                     "new@example.com",
@@ -244,12 +242,12 @@ class RepositoryBackedServicesTest {
             assertThat(record.getNickname()).isEqualTo("동네핀러");
             assertThat(record.getProfileImageUrl()).isEqualTo("https://cdn.example.com/old.png");
 
-            service.update(new Member("ssafy", null, null, null, null, null));
+            service.update(new Member(1L, null, null, null, null, null));
             assertThat(record.getNickname()).isNull();
             assertThat(record.getProfileImageUrl()).isEqualTo("https://cdn.example.com/old.png");
 
-            when(mapper.findByUserId("missing")).thenReturn(null);
-            Member missing = new Member("missing", "SSAFY", "ssafy@example.com", " ");
+            when(mapper.findById(99L)).thenReturn(null);
+            Member missing = new Member(99L, "SSAFY", "SSAFY", "ssafy@example.com", " ", null);
 
             assertThatThrownBy(() -> service.update(missing))
                     .isInstanceOfSatisfying(CoreException.class,

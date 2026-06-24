@@ -49,8 +49,8 @@ class CourseControllerTest {
     @Test
     void returnsPublicCourseFeedCourses() throws Exception {
         when(courseService.findPublicFeed(any())).thenReturn(List.of(
-                feedCourse("md-1", "admin", "MD_RECOMMENDED", 42.5),
-                feedCourse("course-1", "ssafy", null, 128.3)
+                feedCourse("md-1", null, "MD_RECOMMENDED", 42.5),
+                feedCourse("course-1", 11L, null, 128.3)
         ));
 
         mockMvc.perform(get("/api/courses/feed")
@@ -114,7 +114,7 @@ class CourseControllerTest {
     @Test
     void returnsPublicCourseDetail() throws Exception {
         when(courseService.findPublicRequired("course-1")).thenReturn(
-                course("course-1", "admin", "PUBLIC", "READY", 0)
+                course("course-1", null, "PUBLIC", "READY", 0)
         );
 
         mockMvc.perform(get("/api/courses/course-1"))
@@ -132,11 +132,11 @@ class CourseControllerTest {
     @DisplayName("인증 사용자는 본인 코스 목록에서 경로 요약을 확인한다")
     @Test
     void returnsMyCoursesWithRouteSummary() throws Exception {
-        when(courseService.findMyCourses("ssafy")).thenReturn(List.of(
-                course("course-1", "ssafy", "PRIVATE", "READY", 0)
+        when(courseService.findMyCourses(11L)).thenReturn(List.of(
+                course("course-1", 11L, "PRIVATE", "READY", 0)
         ));
 
-        mockMvc.perform(get("/api/courses/me").principal(jwtPrincipal("1")))
+        mockMvc.perform(get("/api/courses/me").principal(jwtPrincipal(11L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.courses[0].id").value("course-1"))
@@ -150,11 +150,11 @@ class CourseControllerTest {
     @Test
     void authenticatedUserCreatesCourse() throws Exception {
         when(courseService.createCourse(any())).thenReturn(
-                course("course-1", "ssafy", "PRIVATE", "READY", 0)
+                course("course-1", 11L, "PRIVATE", "READY", 0)
         );
 
         mockMvc.perform(post("/api/courses")
-                        .principal(jwtPrincipal("1"))
+                        .principal(jwtPrincipal(11L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -171,7 +171,7 @@ class CourseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value("course-1"))
-                .andExpect(jsonPath("$.data.ownerMemberId").value("ssafy"))
+                .andExpect(jsonPath("$.data.ownerMemberId").doesNotExist())
                 .andExpect(jsonPath("$.data.routeSummary.stopCount").value(2))
                 .andExpect(jsonPath("$.data.items").isArray())
                 .andExpect(jsonPath("$.data.segments[0].distanceMeters").value(140))
@@ -184,7 +184,7 @@ class CourseControllerTest {
     @Test
     void createCourseRejectsSingleItem() throws Exception {
         mockMvc.perform(post("/api/courses")
-                        .principal(jwtPrincipal("1"))
+                        .principal(jwtPrincipal(11L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -209,7 +209,7 @@ class CourseControllerTest {
         when(courseService.createCourse(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         mockMvc.perform(post("/api/courses")
-                        .principal(jwtPrincipal("1"))
+                        .principal(jwtPrincipal(11L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -237,12 +237,12 @@ class CourseControllerTest {
     @DisplayName("인증 사용자는 본인 코스를 수정하고 경로 요약 응답을 받는다")
     @Test
     void authenticatedUserUpdatesCourse() throws Exception {
-        when(courseService.updateCourse(eq("ssafy"), any())).thenReturn(
-                course("course-1", "ssafy", "PRIVATE", "READY", 0)
+        when(courseService.updateCourse(eq(11L), any())).thenReturn(
+                course("course-1", 11L, "PRIVATE", "READY", 0)
         );
 
         mockMvc.perform(put("/api/courses/course-1")
-                        .principal(jwtPrincipal("1"))
+                        .principal(jwtPrincipal(11L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -262,17 +262,17 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.data.segments").isArray())
                 .andExpect(jsonPath("$.data.encodedPolyline").doesNotExist());
 
-        verify(courseService).updateCourse(eq("ssafy"), any());
+        verify(courseService).updateCourse(eq(11L), any());
     }
 
     @DisplayName("코스 수정 요청은 position 값이 아니라 items 배열 순서를 사용한다")
     @Test
     void updateCourseUsesItemArrayOrderIgnoringPositions() throws Exception {
-        when(courseService.updateCourse(eq("ssafy"), any()))
+        when(courseService.updateCourse(eq(11L), any()))
                 .thenAnswer(invocation -> invocation.getArgument(1));
 
         mockMvc.perform(put("/api/courses/course-1")
-                        .principal(jwtPrincipal("1"))
+                        .principal(jwtPrincipal(11L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -288,7 +288,7 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.success").value(true));
 
         ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
-        verify(courseService).updateCourse(eq("ssafy"), courseCaptor.capture());
+        verify(courseService).updateCourse(eq(11L), courseCaptor.capture());
         assertThat(courseCaptor.getValue().route().stops()).extracting(stop -> stop.target().id())
                 .containsExactly(2L, 1L);
         assertThat(courseCaptor.getValue().route().stops()).extracting(CourseStop::position)
@@ -298,12 +298,12 @@ class CourseControllerTest {
     @DisplayName("코스 순서 추천 미리보기는 저장된 아이템 id를 반환한다")
     @Test
     void recommendCourseOrderReturnsCourseResponseShape() throws Exception {
-        when(courseService.recommendCourseOrder(eq("ssafy"), eq("course-1"), any())).thenReturn(
-                courseWithStoredStops("course-1", "ssafy", 101L, 102L)
+        when(courseService.recommendCourseOrder(eq(11L), eq("course-1"), any())).thenReturn(
+                courseWithStoredStops("course-1", 11L, 101L, 102L)
         );
 
         mockMvc.perform(post("/api/courses/course-1/order-recommendation")
-                        .principal(jwtPrincipal("1"))
+                        .principal(jwtPrincipal(11L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -325,7 +325,7 @@ class CourseControllerTest {
         ArgumentCaptor<CourseOrderOptimizationContext> contextCaptor = ArgumentCaptor.forClass(
                 CourseOrderOptimizationContext.class
         );
-        verify(courseService).recommendCourseOrder(eq("ssafy"), eq("course-1"), contextCaptor.capture());
+        verify(courseService).recommendCourseOrder(eq(11L), eq("course-1"), contextCaptor.capture());
         assertThat(contextCaptor.getValue().currentLatitude()).isEqualTo(37.5665);
         assertThat(contextCaptor.getValue().currentLongitude()).isEqualTo(126.9780);
     }
@@ -334,7 +334,7 @@ class CourseControllerTest {
     @Test
     void rejectsDraftStatus() throws Exception {
         mockMvc.perform(post("/api/courses")
-                        .principal(jwtPrincipal("1"))
+                        .principal(jwtPrincipal(11L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -355,7 +355,7 @@ class CourseControllerTest {
     }
 
     private static Course course(String id,
-                                 String ownerMemberId,
+                                 Long ownerMemberId,
                                  String visibility,
                                  String status,
                                  int saveCount) {
@@ -370,7 +370,7 @@ class CourseControllerTest {
                 null,
                 null,
                 null,
-                "admin".equals(ownerMemberId),
+                ownerMemberId == null,
                 saveCount,
                 "",
                 "",
@@ -382,7 +382,7 @@ class CourseControllerTest {
     }
 
     private static Course feedCourse(String id,
-                                     String ownerMemberId,
+                                     Long ownerMemberId,
                                      String curationSection,
                                      Double distanceMeters) {
         return new Course(
@@ -396,7 +396,7 @@ class CourseControllerTest {
                 null,
                 curationSection,
                 null,
-                "admin".equals(ownerMemberId),
+                ownerMemberId == null,
                 37.5665,
                 126.9780,
                 distanceMeters,
@@ -411,7 +411,7 @@ class CourseControllerTest {
     }
 
     private static Course courseWithStoredStops(String id,
-                                                String ownerMemberId,
+                                                Long ownerMemberId,
                                                 Long firstItemId,
                                                 Long secondItemId) {
         return new Course(
@@ -463,7 +463,7 @@ class CourseControllerTest {
         );
     }
 
-    private static Principal jwtPrincipal(String userId) {
-        return () -> userId;
+    private static Principal jwtPrincipal(long memberId) {
+        return () -> String.valueOf(memberId);
     }
 }

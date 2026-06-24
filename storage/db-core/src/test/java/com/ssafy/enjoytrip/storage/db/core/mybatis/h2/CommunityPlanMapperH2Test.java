@@ -95,7 +95,7 @@ class CommunityPlanMapperH2Test extends H2MapperTestSupport {
         assertThat(hotplaceMapper.findAllOrderByCreatedAtDesc())
                 .extracting(HotplaceRecord::getId)
                 .contains(id);
-        assertThat(hotplaceMapper.deleteById(id)).isEqualTo(1);
+        assertThat(hotplaceMapper.deleteByIdAndMemberId(id, memberId)).isEqualTo(1);
     }
 
     @DisplayName("PlanMapper는 H2 인메모리 DB에서 여행 계획과 경유지 item SQL을 실행한다")

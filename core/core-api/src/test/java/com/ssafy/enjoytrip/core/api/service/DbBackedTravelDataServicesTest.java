@@ -42,9 +42,9 @@ class DbBackedTravelDataServicesTest {
             AttractionMapper attractionMapper = mock(AttractionMapper.class);
             AttractionPopularityDeltaCache deltaCache = mock(AttractionPopularityDeltaCache.class);
             AttractionService service = newAttractionService(attractionMapper, deltaCache);
-            when(attractionMapper.insertSave(1L, "ssafy")).thenReturn(1);
+            when(attractionMapper.insertSave(1L, 11L)).thenReturn(1);
 
-            service.addSave(1L, "ssafy");
+            service.addSave(1L, 11L);
 
             verify(deltaCache).recordSaveDelta(1L, 1);
         }
@@ -55,9 +55,9 @@ class DbBackedTravelDataServicesTest {
             AttractionMapper attractionMapper = mock(AttractionMapper.class);
             AttractionPopularityDeltaCache deltaCache = mock(AttractionPopularityDeltaCache.class);
             AttractionService service = newAttractionService(attractionMapper, deltaCache);
-            when(attractionMapper.insertSave(1L, "ssafy")).thenReturn(0);
+            when(attractionMapper.insertSave(1L, 11L)).thenReturn(0);
 
-            service.addSave(1L, "ssafy");
+            service.addSave(1L, 11L);
 
             verify(deltaCache, never()).recordSaveDelta(1L, 1);
         }
@@ -68,9 +68,9 @@ class DbBackedTravelDataServicesTest {
             AttractionMapper attractionMapper = mock(AttractionMapper.class);
             AttractionPopularityDeltaCache deltaCache = mock(AttractionPopularityDeltaCache.class);
             AttractionService service = newAttractionService(attractionMapper, deltaCache);
-            when(attractionMapper.deleteSave(1L, "ssafy")).thenReturn(1);
+            when(attractionMapper.deleteSave(1L, 11L)).thenReturn(1);
 
-            boolean deleted = service.removeSave(1L, "ssafy");
+            boolean deleted = service.removeSave(1L, 11L);
 
             assertThat(deleted).isTrue();
             verify(deltaCache).recordSaveDelta(1L, -1);
@@ -83,9 +83,9 @@ class DbBackedTravelDataServicesTest {
             AttractionPopularityDeltaCache deltaCache = mock(AttractionPopularityDeltaCache.class);
             AttractionService service = newAttractionService(attractionMapper, deltaCache);
 
-            service.upsertRating(1L, "ssafy", 5);
+            service.upsertRating(1L, 11L, 5);
 
-            verify(attractionMapper).upsertRating(1L, "ssafy", 5);
+            verify(attractionMapper).upsertRating(1L, 11L, 5);
             verify(attractionMapper).refreshPopularityRatingStats(1L);
         }
 
@@ -95,11 +95,11 @@ class DbBackedTravelDataServicesTest {
             AttractionMapper attractionMapper = mock(AttractionMapper.class);
             AttractionPopularityDeltaCache deltaCache = mock(AttractionPopularityDeltaCache.class);
             AttractionService service = newAttractionService(attractionMapper, deltaCache);
-            when(attractionMapper.deleteRating(1L, "ssafy")).thenReturn(1);
-            when(attractionMapper.deleteRating(2L, "ssafy")).thenReturn(0);
+            when(attractionMapper.deleteRating(1L, 11L)).thenReturn(1);
+            when(attractionMapper.deleteRating(2L, 11L)).thenReturn(0);
 
-            assertThat(service.removeRating(1L, "ssafy")).isTrue();
-            assertThat(service.removeRating(2L, "ssafy")).isFalse();
+            assertThat(service.removeRating(1L, 11L)).isTrue();
+            assertThat(service.removeRating(2L, 11L)).isFalse();
 
             verify(attractionMapper).refreshPopularityRatingStats(1L);
             verify(attractionMapper, never()).refreshPopularityRatingStats(2L);
@@ -121,11 +121,11 @@ class DbBackedTravelDataServicesTest {
         void savesOnlyAccessibleActiveNotes() {
             NoteMapper noteMapper = mock(NoteMapper.class);
             NoteService service = new NoteService(noteMapper);
-            when(noteMapper.existsAccessibleActive(1L, "ssafy")).thenReturn(1);
+            when(noteMapper.existsAccessibleActive(1L, 11L)).thenReturn(1);
 
-            service.addSave(1L, "ssafy");
+            service.addSave(1L, 11L);
 
-            verify(noteMapper).insertSave(1L, "ssafy");
+            verify(noteMapper).insertSave(1L, 11L);
         }
 
         @DisplayName("NoteService는 접근 불가 쪽지를 저장하지 않는다")
@@ -133,12 +133,12 @@ class DbBackedTravelDataServicesTest {
         void rejectsInaccessibleNoteSave() {
             NoteMapper noteMapper = mock(NoteMapper.class);
             NoteService service = new NoteService(noteMapper);
-            when(noteMapper.existsAccessibleActive(1L, "ssafy")).thenReturn(0);
+            when(noteMapper.existsAccessibleActive(1L, 11L)).thenReturn(0);
 
-            assertThatThrownBy(() -> service.addSave(1L, "ssafy"))
+            assertThatThrownBy(() -> service.addSave(1L, 11L))
                     .isInstanceOf(CoreException.class);
 
-            verify(noteMapper, never()).insertSave(1L, "ssafy");
+            verify(noteMapper, never()).insertSave(1L, 11L);
         }
     }
 

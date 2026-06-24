@@ -20,12 +20,12 @@ class MapExploreServiceTest {
         MapExploreService service = new MapExploreService(attractionService, noteService);
         when(attractionService.findNearbyCandidates(
                 new DistanceSearchCondition(126.9780, 37.5665, null, 500.0),
-                "viewer",
+                11L,
                 true
         )).thenReturn(List.of());
 
         service.explore(
-                "viewer",
+                11L,
                 126.9780,
                 37.5665,
                 500.0,
@@ -35,7 +35,7 @@ class MapExploreServiceTest {
 
         verify(attractionService).findNearbyCandidates(
                 new DistanceSearchCondition(126.9780, 37.5665, null, 500.0),
-                "viewer",
+                11L,
                 true
         );
     }

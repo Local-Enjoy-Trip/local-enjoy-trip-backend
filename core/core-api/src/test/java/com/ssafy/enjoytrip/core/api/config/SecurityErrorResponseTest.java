@@ -101,7 +101,7 @@ class SecurityErrorResponseTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "objectKey":"profiles/ssafy/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
+                                  "objectKey":"profiles/11/018f0a2a-55c1-7a7c-b3f5-fb2ed9e6b51b.jpg",
                                   "contentType":"image/jpeg"
                                 }
                                 """))
@@ -145,7 +145,7 @@ class SecurityErrorResponseTest {
         }
 
         @Bean
-        AuthenticatedMemberIdArgumentResolver authenticatedUserIdArgumentResolver() {
+        AuthenticatedMemberIdArgumentResolver authenticatedMemberIdArgumentResolver() {
             return new AuthenticatedMemberIdArgumentResolver();
         }
 
