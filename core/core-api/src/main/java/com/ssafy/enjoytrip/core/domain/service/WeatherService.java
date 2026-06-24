@@ -34,7 +34,7 @@ public class WeatherService {
 
     public List<WeatherSummary> findWeatherBriefings() {
         try {
-            return completeWithFallback(weatherClient.findWeatherBriefings().stream()
+            return weatherClient.findWeatherBriefings().stream()
                     .map(briefing -> new WeatherSummary(
                             briefing.region(),
                             briefing.condition(),
@@ -45,7 +45,7 @@ public class WeatherService {
                             briefing.tempMin(),
                             briefing.tempMax()
                     ))
-                    .toList());
+                    .toList();
         } catch (Exception e) {
             log.error("날씨 브리핑 호출 에러 발생 : ", e);
             return FALLBACK_BRIEFINGS;
@@ -128,22 +128,4 @@ public class WeatherService {
         return forecasts;
     }
 
-    private List<WeatherSummary> completeWithFallback(List<WeatherSummary> liveBriefings) {
-        if (liveBriefings == null || liveBriefings.isEmpty()) {
-            return FALLBACK_BRIEFINGS;
-        }
-
-        Map<String, WeatherSummary> liveByRegion = new LinkedHashMap<>();
-        for (WeatherSummary briefing : liveBriefings) {
-            if (briefing != null && briefing.region() != null && !briefing.region().isBlank()) {
-                liveByRegion.putIfAbsent(briefing.region(), briefing);
-            }
-        }
-
-        return FALLBACK_BRIEFINGS.stream()
-                .map(fallback -> liveByRegion
-                        .getOrDefault(fallback.region(), fallback)
-                        .withFallback(fallback))
-                .toList();
-    }
 }
