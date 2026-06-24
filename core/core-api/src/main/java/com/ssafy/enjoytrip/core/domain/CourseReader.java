@@ -43,12 +43,6 @@ public class CourseReader {
         return findCourse(record, false);
     }
 
-    public List<Course> findAdminCourses() {
-        return courseMapper.findAdminOwned().stream()
-                .map(record -> findCourse(record, true))
-                .toList();
-    }
-
     public Course findRequiredOwned(Long ownerMemberId, String courseId) {
         CourseRecord record = courseMapper.findById(courseId);
         requireExisting(record);
@@ -69,14 +63,24 @@ public class CourseReader {
                 .toList();
     }
 
-    public List<Course> findMdFeed(double longitude, double latitude, int limit) {
-        return courseMapper.findAdminOwnedByDistance(longitude, latitude, limit).stream()
+    public List<Course> findPopularByRegion(String regionName, int limit) {
+        return courseMapper.findByRegionOrderedBySaveCount(regionName, limit).stream()
                 .map(record -> findCourse(record, false))
                 .toList();
     }
 
-    public List<Course> findPopularByRegion(String regionName, int limit) {
-        return courseMapper.findByRegionOrderedBySaveCount(regionName, limit).stream()
+    public List<Course> findAllBySaveCount(int limit) {
+        return courseMapper.findAllBySaveCount(limit).stream()
+                .map(record -> findCourse(record, false))
+                .toList();
+    }
+
+    public long countMemberFavorites(Long memberId) {
+        return courseMapper.countMemberFavorites(memberId);
+    }
+
+    public List<Course> findRecommended(Long memberId, int limit) {
+        return courseMapper.findRecommendedCourses(memberId, limit).stream()
                 .map(record -> findCourse(record, false))
                 .toList();
     }
@@ -115,7 +119,6 @@ public class CourseReader {
                 record.getTitle(),
                 record.getRegionName(),
                 record.getDate(),
-                Boolean.TRUE.equals(record.getCreatedByAdmin()),
                 startLocation,
                 record.getDistanceMeters(),
                 countValue(record.getSaveCount()),

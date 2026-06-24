@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteEmbeddingMapper">
+    <insert id="upsertEmbedded">
+        insert into note_embeddings (
+            note_id,
+            embedding,
+            source_version,
+            source_text_hash,
+            embedding_dimension,
+            embedding_input,
+            provider,
+            model,
+            status,
+            failure_code,
+            failure_message,
+            attempt_count,
+            last_attempted_at,
+            embedded_at,
+            updated_at
+        )
+        values (
+            #{noteId},
+            #{vectorLiteral}::vector,
+            #{sourceVersion},
+            #{sourceTextHash},
+            #{dimension},
+            #{embeddingInput},
+            #{provider},
+            #{model},
+            'EMBEDDED',
+            null,
+            null,
+            1,
+            current_timestamp,
+            current_timestamp,
+            current_timestamp
+        )
+        on conflict (note_id) do update set
+            embedding = excluded.embedding,
+            source_version = excluded.source_version,
+            source_text_hash = excluded.source_text_hash,
+            embedding_dimension = excluded.embedding_dimension,
+            embedding_input = excluded.embedding_input,
+            provider = excluded.provider,
+            model = excluded.model,
+            status = 'EMBEDDED',
+            failure_code = null,
+            failure_message = null,
+            attempt_count = note_embeddings.attempt_count + 1,
+            last_attempted_at = current_timestamp,
+            embedded_at = current_timestamp,
+            updated_at = current_timestamp
+    </insert>
+
+    <insert id="upsertFailed">
+        insert into note_embeddings (
+            note_id,
+            source_version,
+            source_text_hash,
+            embedding_dimension,
+            provider,
+            model,
+            status,
+            failure_code,
+            failure_message,
+            attempt_count,
+            last_attempted_at,
+            updated_at
+        )
+        values (
+            #{noteId},
+            #{sourceVersion},
+            #{sourceTextHash},
+            1536,
+            #{provider},
+            #{model},
+            'FAILED',
+            #{failureCode},
+            #{failureMessage},
+            1,
+            current_timestamp,
+            current_timestamp
+        )
+        on conflict (note_id) do update set
+            source_version = excluded.source_version,
+            source_text_hash = excluded.source_text_hash,
+            embedding_dimension = 1536,
+            provider = excluded.provider,
+            model = excluded.model,
+            status = 'FAILED',
+            embedding = null,
+            failure_code = excluded.failure_code,
+            failure_message = excluded.failure_message,
+            attempt_count = note_embeddings.attempt_count + 1,
+            last_attempted_at = current_timestamp,
+            embedded_at = null,
+            updated_at = current_timestamp
+    </insert>
+</mapper>

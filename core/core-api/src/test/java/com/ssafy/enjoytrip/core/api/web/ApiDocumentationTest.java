@@ -369,7 +369,6 @@ class ApiDocumentationTest {
                 "서울 산책",
                 "서울",
                 "2026-06-23",
-                false,
                 null,
                 null,
                 0,

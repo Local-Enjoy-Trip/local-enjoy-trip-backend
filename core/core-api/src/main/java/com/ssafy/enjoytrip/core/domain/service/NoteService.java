@@ -8,6 +8,7 @@ import com.ssafy.enjoytrip.core.domain.NoteMapPin;
 import com.ssafy.enjoytrip.core.domain.NoteStatus;
 import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
 import com.ssafy.enjoytrip.core.domain.NoteVisibility;
+import com.ssafy.enjoytrip.core.domain.event.NoteEmbeddingRequestedEvent;
 import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.domain.query.MapNotesCondition;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +39,9 @@ public class NoteService {
 
     private final NoteMapper noteMapper;
     private final MinioNoteImageUploadUrlGenerator noteImageUploadUrlGenerator;
+    private final ApplicationEventPublisher eventPublisher;
 
+    @Transactional
     public Note createNote(Note note) {
         NoteRecord record = new NoteRecord(
                 note.authorMemberId(),
@@ -54,7 +58,12 @@ public class NoteService {
         );
         NoteRecord saved = noteMapper.insert(record);
 
-        return toNote(saved);
+        Note created = toNote(saved);
+        eventPublisher.publishEvent(new NoteEmbeddingRequestedEvent(
+                created.id(),
+                embeddingContent(created)
+        ));
+        return created;
     }
 
     @Transactional
@@ -82,7 +91,26 @@ public class NoteService {
             throw new CoreException(NOTE_NOT_FOUND);
         }
 
-        return toNote(updated);
+        Note result = toNote(updated);
+        eventPublisher.publishEvent(new NoteEmbeddingRequestedEvent(
+                result.id(),
+                embeddingContent(result)
+        ));
+        return result;
+    }
+
+    private static String embeddingContent(Note note) {
+        StringBuilder sb = new StringBuilder();
+        if (note.title() != null && !note.title().isBlank()) {
+            sb.append(note.title().strip());
+        }
+        if (note.content() != null && !note.content().isBlank()) {
+            if (!sb.isEmpty()) {
+                sb.append('\n');
+            }
+            sb.append(note.content().strip());
+        }
+        return sb.toString();
     }
 
     private String noteImageObjectKey(Long memberId, String objectKey) {

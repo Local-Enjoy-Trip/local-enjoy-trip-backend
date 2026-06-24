@@ -20,31 +20,34 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
     @Autowired
     private MemberMapper memberMapper;
 
-    @DisplayName("관리자 멤버가 소유한 코스는 createdByAdmin이 true로 조회된다")
+    @DisplayName("코스 조회는 ownerMemberId와 saveCount를 반환한다")
     @Test
-    void adminOwnedCourseHasCreatedByAdminTrue() {
-        Long adminMemberId = seedMember("admin", "admin@example.com");
-        jdbcTemplate.update("update members set role = 'ADMIN' where id = ?", adminMemberId);
+    void courseFindsOwnerMemberIdAndSaveCount() {
+        Long memberAId = seedMember("memberA", "a@example.com");
+        Long memberBId = seedMember("memberB", "b@example.com");
 
-        courseMapper.insert(new CourseRecord("course-admin", adminMemberId, "서울 산책", "서울", null));
+        courseMapper.insert(new CourseRecord("course-A", memberAId, "서울 산책", "서울", null));
 
-        CourseRecord found = courseMapper.findById("course-admin");
+        jdbcTemplate.update("insert into course_saves (course_id, member_id) values (?, ?)",
+                "course-A", memberBId);
 
-        assertThat(memberMapper.findById(adminMemberId).getRole()).isEqualTo("ADMIN");
-        assertThat(found.getId()).isEqualTo("course-admin");
-        assertThat(found.getCreatedByAdmin()).isTrue();
+        CourseRecord found = courseMapper.findById("course-A");
+
+        assertThat(found.getId()).isEqualTo("course-A");
+        assertThat(found.getOwnerMemberId()).isEqualTo(memberAId);
+        assertThat(found.getSaveCount()).isEqualTo(1);
     }
 
-    @DisplayName("일반 멤버가 소유한 코스는 createdByAdmin이 false로 조회된다")
+    @DisplayName("저장 없는 코스의 saveCount는 0이다")
     @Test
-    void userOwnedCourseHasCreatedByAdminFalse() {
-        Long userMemberId = seedMember("user", "user@example.com");
+    void courseWithNoSavesHasZeroSaveCount() {
+        Long memberAId = seedMember("memberA", "a@example.com");
 
-        courseMapper.insert(new CourseRecord("course-user", userMemberId, "내 코스", "부산", null));
+        courseMapper.insert(new CourseRecord("course-no-saves", memberAId, "내 코스", "부산", null));
 
-        CourseRecord found = courseMapper.findById("course-user");
+        CourseRecord found = courseMapper.findById("course-no-saves");
 
-        assertThat(found.getCreatedByAdmin()).isFalse();
+        assertThat(found.getSaveCount()).isZero();
     }
 
     @DisplayName("공개 코스 아이템 조회는 숨김 장소와 비공개 노트를 제외한다")

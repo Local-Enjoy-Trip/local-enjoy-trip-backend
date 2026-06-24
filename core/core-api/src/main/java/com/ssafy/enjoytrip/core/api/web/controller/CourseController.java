@@ -5,9 +5,9 @@ import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseFeedRequest;
-import com.ssafy.enjoytrip.core.api.web.dto.request.CourseMdFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseOrderRecommendationRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CoursePopularFeedRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.CourseRecommendationRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseUpdateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseFeedResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseResponse;
@@ -44,10 +44,16 @@ public class CourseController {
         return success(CourseFeedResponse.from(courseService.findPublicFeed(request.toCondition())));
     }
 
-    @GetMapping("/feed/md")
-    public ApiResponse<CourseFeedResponse> mdFeed(@Valid @ModelAttribute CourseMdFeedRequest request) {
+    @GetMapping("/recommendations")
+    public ApiResponse<CourseFeedResponse> recommendations(
+            @Valid @ModelAttribute CourseRecommendationRequest request,
+            @AuthenticatedMemberId Long authenticatedMemberId) {
         return success(CourseFeedResponse.from(
-                courseService.findMdFeed(request.mapX(), request.mapY(), request.resolvedLimit())
+                courseService.findRecommendations(
+                        authenticatedMemberId,
+                        request.normalizedRegionName(),
+                        request.resolvedLimit()
+                )
         ));
     }
 

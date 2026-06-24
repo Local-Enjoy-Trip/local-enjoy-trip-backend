@@ -7,12 +7,6 @@
         c.title,
         c.region_name as regionName,
         c.date,
-        exists (
-            select 1
-            from members m
-            where m.id = c.owner_member_id
-              and m.role = &apos;ADMIN&apos;
-        ) as createdByAdmin,
         (
             select count(*)
             from course_saves s
@@ -109,15 +103,6 @@
         where c.owner_member_id = #{ownerMemberId}
           and c.deleted_at is null
         order by c.created_at desc, c.id asc
-    </select>
-
-    <select id="findAdminOwned" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
-        select <include refid="courseColumns"/>
-        from courses c
-        join members m on m.id = c.owner_member_id
-        where m.role = &apos;ADMIN&apos;
-          and c.deleted_at is null
-        order by c.updated_at desc nulls last, c.created_at desc, c.id asc
     </select>
 
     <update id="updateOwned">
@@ -240,49 +225,9 @@
     </select>
 
     <select id="findDistanceOrderedPublicFeed" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
-        with md_top as (
-            select <include refid="feedDistanceColumns"/>
-            from courses c
-            join members m on m.id = c.owner_member_id
-            where <include refid="publicFeedPredicate"/>
-              and m.role = &apos;ADMIN&apos;
-            order by c.start_location &lt;-&gt; <include refid="feedOriginPoint"/>,
-                     c.id asc
-            limit least(3, #{limit})
-        ),
-        rest as (
-            select <include refid="feedDistanceColumns"/>
-            from courses c
-            where <include refid="publicFeedPredicate"/>
-              and not exists (
-                  select 1
-                  from md_top m
-                  where m.id = c.id
-              )
-            order by c.start_location &lt;-&gt; <include refid="feedOriginPoint"/>,
-                     c.id asc
-            limit greatest(#{limit} - (select count(*) from md_top), 0)
-        )
-        select feed.*
-        from (
-            select 0 as feedBucket, md_top.*
-            from md_top
-            union all
-            select 1 as feedBucket, rest.*
-            from rest
-        ) feed
-        order by feed.feedBucket asc,
-                 feed.distanceMeters asc,
-                 feed.id asc
-    </select>
-
-    <select id="findAdminOwnedByDistance" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
         select <include refid="feedDistanceColumns"/>
         from courses c
-        join members m on m.id = c.owner_member_id
-        where m.role = &apos;ADMIN&apos;
-          and c.deleted_at is null
-          and c.start_location is not null
+        where <include refid="publicFeedPredicate"/>
         order by c.start_location &lt;-&gt; <include refid="feedOriginPoint"/>,
                  c.id asc
         limit #{limit}
@@ -329,4 +274,66 @@
     <delete id="deleteTagsByCourseId">
         delete from course_tags where course_id = #{courseId}
     </delete>
+
+    <select id="findAllBySaveCount" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
+        select <include refid="courseColumns"/>
+        from courses c
+        where c.deleted_at is null
+        order by (
+            select count(*) from course_saves s where s.course_id = c.id
+        ) desc, c.created_at desc, c.id asc
+        limit #{limit}
+    </select>
+
+    <select id="countMemberFavorites" resultType="long">
+        select count(*)
+        from (
+            select attraction_id from attraction_saves where member_id = #{memberId}
+            union all
+            select note_id from note_saves where member_id = #{memberId}
+        ) t
+    </select>
+
+    <select id="findRecommendedCourses" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
+        with member_embedding_sources as (
+            select ae.embedding
+            from attraction_saves s
+            join attraction_embeddings ae on ae.attraction_id = s.attraction_id
+            where s.member_id = #{memberId}
+              and ae.status = &apos;EMBEDDED&apos;
+              and ae.embedding is not null
+            union all
+            select ne.embedding
+            from note_saves s
+            join note_embeddings ne on ne.note_id = s.note_id
+            where s.member_id = #{memberId}
+              and ne.status = &apos;EMBEDDED&apos;
+              and ne.embedding is not null
+        ),
+        user_preference as (
+            select avg(embedding) as pref_vector
+            from member_embedding_sources
+        ),
+        course_item_avg as (
+            select ci.course_id,
+                   avg(coalesce(ae.embedding, ne.embedding)) as avg_embedding
+            from course_items ci
+            left join attraction_embeddings ae
+                      on ci.attraction_id = ae.attraction_id
+                      and ae.status = &apos;EMBEDDED&apos;
+            left join note_embeddings ne
+                      on ci.note_id = ne.note_id
+                      and ne.status = &apos;EMBEDDED&apos;
+            where coalesce(ae.embedding, ne.embedding) is not null
+            group by ci.course_id
+        )
+        select <include refid="courseColumns"/>
+        from courses c
+        join course_item_avg cia on cia.course_id = c.id
+        cross join user_preference up
+        where c.deleted_at is null
+          and up.pref_vector is not null
+        order by cia.avg_embedding &lt;=&gt; up.pref_vector asc, c.id asc
+        limit #{limit}
+    </select>
 </mapper>

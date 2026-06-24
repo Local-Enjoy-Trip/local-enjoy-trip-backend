@@ -60,7 +60,7 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.sections").doesNotExist())
                 .andExpect(jsonPath("$.data.courses[0].id").value("md-1"))
-                .andExpect(jsonPath("$.data.courses[0].createdByAdmin").value(true))
+
                 .andExpect(jsonPath("$.data.courses[0].distanceMeters").value(42.5))
                 .andExpect(jsonPath("$.data.courses[0].startLocation.longitude").value(126.978))
                 .andExpect(jsonPath("$.data.courses[0].startLocation.latitude").value(37.5665))
@@ -119,7 +119,7 @@ class CourseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value("course-1"))
-                .andExpect(jsonPath("$.data.createdByAdmin").value(true))
+
                 .andExpect(jsonPath("$.data.routeSummary.stopCount").value(2))
                 .andExpect(jsonPath("$.data.items").isArray())
                 .andExpect(jsonPath("$.data.items[0].distanceToNext").value(140))
@@ -303,7 +303,6 @@ class CourseControllerTest {
                 id,
                 "서울",
                 null,
-                ownerMemberId == null,
                 new Coordinate(37.5665, 126.9780),
                 null,
                 saveCount,
@@ -324,7 +323,6 @@ class CourseControllerTest {
                 id,
                 "서울",
                 null,
-                ownerMemberId == null,
                 new Coordinate(37.5665, 126.9780),
                 distanceMeters,
                 0,
@@ -348,7 +346,6 @@ class CourseControllerTest {
                 id,
                 "서울",
                 null,
-                false,
                 null,
                 null,
                 0,

@@ -18,46 +18,39 @@ class CourseFeedMapperContainerTest extends StorageContainerTestSupport {
     @Autowired
     private CourseMapper courseMapper;
 
-    @DisplayName("공개 코스 피드는 가까운 MD 추천 3개를 먼저 두고 나머지를 거리순으로 채운다")
+    @DisplayName("공개 코스 피드는 거리순으로 정렬된다")
     @Test
-    void publicFeedUsesStartLocationKnnWithMdPriority() {
+    void publicFeedOrderedByDistance() {
         Long adminMemberId = seedMember("admin", "admin@example.com");
         Long userMemberId = seedMember("user", "user@example.com");
         jdbcTemplate.update("update members set role = 'ADMIN' where id = ?", adminMemberId);
-        seedPublicCourse("md-1", adminMemberId, ORIGIN_LONGITUDE + 0.0010);
-        seedPublicCourse("md-2", adminMemberId, ORIGIN_LONGITUDE + 0.0020);
-        seedPublicCourse("md-3", adminMemberId, ORIGIN_LONGITUDE + 0.0030);
-        seedPublicCourse("md-4", adminMemberId, ORIGIN_LONGITUDE + 0.0040);
-        seedPublicCourse("near-user", userMemberId, ORIGIN_LONGITUDE + 0.0001);
-        seedPublicCourse("mid-user", userMemberId, ORIGIN_LONGITUDE + 0.0025);
+        seedPublicCourse("admin-far", adminMemberId, ORIGIN_LONGITUDE + 0.0030);
+        seedPublicCourse("user-near", userMemberId, ORIGIN_LONGITUDE + 0.0001);
+        seedPublicCourse("user-mid", userMemberId, ORIGIN_LONGITUDE + 0.0020);
 
         List<CourseRecord> feed = courseMapper.findDistanceOrderedPublicFeed(
                 ORIGIN_LONGITUDE,
                 ORIGIN_LATITUDE,
                 5,
-                300.0
-        );
-
-        assertThat(feed).extracting(CourseRecord::getId)
-                .containsExactly("md-1", "md-2", "md-3", "near-user", "mid-user");
-        assertThat(feed).extracting(CourseRecord::getStartLongitude)
-                .doesNotContainNull();
-        assertThat(feed).extracting(CourseRecord::getStartLatitude)
-                .containsOnly(ORIGIN_LATITUDE);
-        assertThat(feed).extracting(CourseRecord::getDistanceMeters)
-                .doesNotContainNull();
-        assertThat(feed).extracting(CourseRecord::getCreatedByAdmin)
-                .containsExactly(true, true, true, false, false);
-
-        List<CourseRecord> feedWithoutRadius = courseMapper.findDistanceOrderedPublicFeed(
-                ORIGIN_LONGITUDE,
-                ORIGIN_LATITUDE,
-                4,
                 null
         );
 
-        assertThat(feedWithoutRadius).extracting(CourseRecord::getId)
-                .containsExactly("md-1", "md-2", "md-3", "near-user");
+        assertThat(feed).extracting(CourseRecord::getId)
+                .containsExactly("user-near", "user-mid", "admin-far");
+        assertThat(feed).extracting(CourseRecord::getStartLongitude)
+                .doesNotContainNull();
+        assertThat(feed).extracting(CourseRecord::getDistanceMeters)
+                .doesNotContainNull();
+
+        List<CourseRecord> feedWithRadius = courseMapper.findDistanceOrderedPublicFeed(
+                ORIGIN_LONGITUDE,
+                ORIGIN_LATITUDE,
+                5,
+                100.0
+        );
+
+        assertThat(feedWithRadius).extracting(CourseRecord::getId)
+                .containsExactly("user-near");
     }
 
     private void seedPublicCourse(String id, Long ownerMemberId, double longitude) {

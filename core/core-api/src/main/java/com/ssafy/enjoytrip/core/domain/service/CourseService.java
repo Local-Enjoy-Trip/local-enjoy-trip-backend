@@ -62,12 +62,20 @@ public class CourseService {
         return courseReader.findPublicFeed(condition);
     }
 
-    public List<Course> findMdFeed(double longitude, double latitude, int limit) {
-        return courseReader.findMdFeed(longitude, latitude, limit);
-    }
-
     public List<Course> findPopularByRegion(String regionName, int limit) {
         return courseReader.findPopularByRegion(regionName, limit);
+    }
+
+    public List<Course> findAllBySaveCount(int limit) {
+        return courseReader.findAllBySaveCount(limit);
+    }
+
+    public List<Course> findRecommendations(Long memberId, String regionName, int limit) {
+        long favoriteCount = courseReader.countMemberFavorites(memberId);
+        if (favoriteCount == 0) {
+            return courseReader.findPopularByRegion(regionName, limit);
+        }
+        return courseReader.findRecommended(memberId, limit);
     }
 
     public void saveCourse(Long memberId, String courseId) {
