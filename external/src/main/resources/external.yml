@@ -7,17 +7,17 @@ spring:
       chat:
         base-url: ${GMS_CHAT_BASE_URL:https://gms.ssafy.io/gmsapi/api.openai.com/v1}
         api-key: ${GMS_KEY:local-fallback-disabled}
-        model: ${GMS_CHAT_MODEL:gpt-5.4}
+        model: ${GMS_CHAT_MODEL:gpt-5.4-nano}
 
 enjoytrip:
   ai:
     briefing:
       gms:
         api-key: ${GMS_KEY:}
-        max-length: ${GMS_BRIEFING_MAX_LENGTH:160}
+        max-length: ${GMS_BRIEFING_MAX_LENGTH:200}
   external:
-    open-weather-map:
-      api-key: ${OPENWEATHERMAP_API_KEY:${OPENWEATHER_API_KEY:}}
+    kma:
+      api-key: ${KMA_API_KEY:}
   minio:
     endpoint: ${ENJOYTRIP_MINIO_ENDPOINT:http://localhost:9000}
     bucket: ${ENJOYTRIP_MINIO_BUCKET:dongnepin-notes}

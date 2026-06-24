@@ -15,6 +15,7 @@ import com.ssafy.enjoytrip.core.domain.NewsResult;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
+import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.domain.service.DbHealthService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
@@ -37,6 +38,16 @@ import com.ssafy.enjoytrip.core.domain.Member;
 import com.ssafy.enjoytrip.core.domain.ProfileImageUploadUrl;
 import com.ssafy.enjoytrip.core.domain.Notice;
 import com.ssafy.enjoytrip.core.domain.TravelPlan;
+import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
+import com.ssafy.enjoytrip.core.domain.service.MapExploreService;
+import com.ssafy.enjoytrip.core.domain.service.MapSearchService;
+import com.ssafy.enjoytrip.core.domain.MapExploreResult;
+import com.ssafy.enjoytrip.core.domain.MapCenter;
+import com.ssafy.enjoytrip.core.domain.PlaceMapPin;
+import com.ssafy.enjoytrip.core.domain.NoteMapPin;
+import com.ssafy.enjoytrip.core.domain.NoteCategory;
+import com.ssafy.enjoytrip.core.domain.NoteVisibility;
+import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +56,8 @@ import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.time.LocalDateTime;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
@@ -60,6 +73,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 
 import java.time.Instant;
@@ -72,6 +87,7 @@ class ApiDocumentationTest {
     private AttractionStatsService attractionStatsService;
     private EvChargerService chargerService;
     private NewsService newsService;
+
     private WeatherService weatherService;
     private NeighborhoodBriefingService neighborhoodBriefingService;
     private BoardService boardService;
@@ -83,6 +99,8 @@ class ApiDocumentationTest {
     private JwtTokenService tokenService;
     private OAuthSignupTicketService oauthSignupTicketService;
     private MemberProfileImageService memberProfileImageService;
+    private MapExploreService mapExploreService;
+    private MapSearchService mapSearchService;
 
     @BeforeEach
     void setUp(RestDocumentationContextProvider restDocumentation) {
@@ -90,6 +108,7 @@ class ApiDocumentationTest {
         attractionStatsService = mock(AttractionStatsService.class);
         chargerService = mock(EvChargerService.class);
         newsService = mock(NewsService.class);
+
         weatherService = mock(WeatherService.class);
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         boardService = mock(BoardService.class);
@@ -101,6 +120,8 @@ class ApiDocumentationTest {
         tokenService = mock(JwtTokenService.class);
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
         memberProfileImageService = mock(MemberProfileImageService.class);
+        mapExploreService = mock(MapExploreService.class);
+        mapSearchService = mock(MapSearchService.class);
 
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(
@@ -108,15 +129,16 @@ class ApiDocumentationTest {
                         new AttractionController(attractionService, attractionStatsService),
                         new ChargerController(chargerService),
                         new NewsController(newsService),
-                        new WeatherController(weatherService),
-                        new NeighborhoodBriefingController(neighborhoodBriefingService),
+
+                        new NeighborhoodBriefingController(neighborhoodBriefingService, weatherService),
                         new BoardController(boardService),
                         new HotplaceController(hotplaceService),
                         new PlanController(planService),
                         new NoticeController(noticeService),
                         new CourseController(courseService),
                         new MemberController(memberService, tokenService, oauthSignupTicketService),
-                        new MemberProfileImageController(memberProfileImageService)
+                        new MemberProfileImageController(memberProfileImageService),
+                        new MapController(mapExploreService, mapSearchService)
                 )
                 .setCustomArgumentResolvers(new TestAuthenticationPrincipalResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -232,20 +254,7 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
     }
 
-    @DisplayName("날씨 브리핑 API 문서를 검증한다")
-    @Test
-    void weatherBriefings() throws Exception {
-        when(weatherService.findWeatherBriefings()).thenReturn(List.of(
-                new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25)
-        ));
 
-        mockMvc.perform(get("/api/weather/briefings"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.weather").isArray())
-                .andDo(document("weather-briefings",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint())));
-    }
 
     @DisplayName("동네 AI 브리핑 API 문서를 검증한다")
     @Test
@@ -259,7 +268,10 @@ class ApiDocumentationTest {
                 new WeatherForecast("16:00", 24, "구름 많음", 20),
                 new WeatherForecast("17:00", 23, "맑음", 10)
         );
-        when(neighborhoodBriefingService.brief(eq("서울"), any(), any(), anyString()))
+        WeatherWithForecast weatherWithForecast = new WeatherWithForecast(weather, forecasts);
+        when(weatherService.findWeatherWithForecast(any(), any(), eq("서울"), anyString()))
+                .thenReturn(weatherWithForecast);
+        when(neighborhoodBriefingService.brief(eq("서울"), any(WeatherWithForecast.class), anyString()))
                 .thenReturn(new NeighborhoodBriefing(
                         "서울",
                         "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?",
@@ -512,5 +524,66 @@ class ApiDocumentationTest {
                 60,
                 "장소 " + attractionId
         );
+    }
+
+    @DisplayName("지도 탐색 API 문서를 검증한다")
+    @Test
+    void mapExplore() throws Exception {
+        when(mapExploreService.explore(eq(11L), eq(126.9780), eq(37.5665), eq(500.0), any(), any()))
+                .thenReturn(new MapExploreResult(
+                        new MapCenter(126.9780, 37.5665, "서울 중구"),
+                        500.0,
+                        MapExploreFilter.ALL,
+                        List.of(new PlaceMapPin(125405L, "경복궁", "서울 중구", 37.579617, 126.977041, "https://cdn.example.com/place.png", "12", 1450.2, true, 12, 4.5, 8, 0)),
+                        List.of(new NoteMapPin(1L, "서울 산책 메모", NoteCategory.TIP, NoteVisibility.PUBLIC, 37.5665, 126.9780, "서울 중구", 42.0, null, "동네핀러", null, NoteViewerRelationship.NONE, LocalDateTime.of(2026, 6, 22, 10, 0, 0), 1))
+                ));
+
+        mockMvc.perform(get("/api/map/explore")
+                        .principal(() -> "11")
+                        .param("mapX", "126.9780")
+                        .param("mapY", "37.5665")
+                        .param("radius", "500.0")
+                        .param("filter", "ALL"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andDo(document("map-explore",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())));
+    }
+
+    @DisplayName("지도 키워드 검색 API 문서를 검증한다")
+    @Test
+    void mapSearch() throws Exception {
+        when(mapSearchService.search(anyString(), anyDouble(), anyDouble(), any(), any(), any(), anyInt(), eq(11L)))
+                .thenReturn(List.of(
+                        new PlaceMapPin(125405L, "경복궁", "서울 중구", 37.579617, 126.977041, "https://cdn.example.com/place.png", "12", 1450.2, true, 12, 4.5, 8, 0),
+                        new NoteMapPin(1L, "서울 산책 메모", NoteCategory.TIP, NoteVisibility.PUBLIC, 37.5665, 126.9780, "서울 중구", 42.0, null, "동네핀러", null, NoteViewerRelationship.NONE, LocalDateTime.of(2026, 6, 22, 10, 0, 0), 1)
+                ));
+
+        mockMvc.perform(get("/api/map/search")
+                        .principal(() -> "11")
+                        .param("keyword", "경복궁")
+                        .param("mapX", "126.9780")
+                        .param("mapY", "37.5665")
+                        .param("radius", "500.0")
+                        .param("target", "ALL"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].type").value("PLACE"))
+                .andExpect(jsonPath("$.data[1].type").value("NOTE"))
+                .andDo(document("map-search",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())));
+    }
+
+    @DisplayName("지도 키워드 검색 시 키워드가 없으면 400 에러를 반환한다")
+    @Test
+    void mapSearchMissingKeywordThrows400() throws Exception {
+        mockMvc.perform(get("/api/map/search")
+                        .principal(() -> "11")
+                        .param("mapX", "126.9780")
+                        .param("mapY", "37.5665"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
     }
 }

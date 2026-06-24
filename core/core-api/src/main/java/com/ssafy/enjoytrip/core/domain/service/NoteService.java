@@ -21,9 +21,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NoteService {
@@ -207,7 +209,35 @@ public class NoteService {
         );
     }
 
+    public List<NoteMapPin> searchMapNotes(String keyword, String escapedKeyword, double longitude, double latitude, Double radiusMeters, NoteCategory category, Integer limit, Long viewerMemberId) {
+        long t0 = System.nanoTime();
+        String categoryStr = category == null ? null : category.name();
+        List<NoteMapPinRecord> records = noteMapper.searchMapNotes(
+                keyword,
+                escapedKeyword,
+                longitude,
+                latitude,
+                radiusMeters,
+                categoryStr,
+                limit,
+                viewerMemberId
+        );
+        int rows = records.size();
+        log.info("map-search notes keyword={} radius={} rows={} tookMs={}", keyword, radiusMeters, rows, (System.nanoTime() - t0) / 1_000_000.0);
+
+        return records.stream()
+                .map(r -> {
+                    int tier = r.title().equalsIgnoreCase(keyword) ? 0 : 1;
+                    return toNoteMapPin(r, tier);
+                })
+                .toList();
+    }
+
     private NoteMapPin toNoteMapPin(NoteMapPinRecord record) {
+        return toNoteMapPin(record, 0);
+    }
+
+    private NoteMapPin toNoteMapPin(NoteMapPinRecord record, int matchTier) {
         return new NoteMapPin(
                 record.id(),
                 record.title(),
@@ -221,8 +251,8 @@ public class NoteService {
                 record.authorNickname(),
                 record.authorProfileImageUrl(),
                 NoteViewerRelationship.valueOf(record.relationship()),
-                record.createdAt()
+                record.createdAt(),
+                matchTier
         );
     }
-
 }

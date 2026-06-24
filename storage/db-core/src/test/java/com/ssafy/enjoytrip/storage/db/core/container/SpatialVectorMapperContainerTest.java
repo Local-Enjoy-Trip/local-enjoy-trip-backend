@@ -176,4 +176,96 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
     private static String vectorLiteral(int dimension) {
         return "[" + "0.001,".repeat(dimension - 1) + "0.001]";
     }
+
+    @DisplayName("searchMapPlaces는 관광지 제목으로만 키워드 검색을 수행하며 정확히 일치하는 결과가 먼저 나오도록 랭킹과 거리를 정렬하고 반경 조건을 적용한다")
+    @Test
+    void searchMapPlacesFiltersAndRanksCorrectly() {
+        Long memberId = seedMember("place-viewer", uniqueId("place-viewer") + "@example.com");
+
+        // 1. EXACT match, 가까운 거리 (약 0m)
+        long idExactNear = 9200101L;
+        seedAttraction(idExactNear, "경복궁", 1, 1);
+
+        // 2. EXACT match, 먼 거리
+        long idExactFar = 9200102L;
+        jdbcTemplate.update("""
+                insert into attractions (id, title, addr1, read_count, sido_code, gugun_code, content_type_id, overview, location)
+                values (?, '경복궁', '서울 중구', 10, 1, 1, '12', '경복궁 overview', ST_SetSRID(ST_MakePoint(126.9790, 37.5670), 4326))
+                on conflict (id) do nothing
+                """, idExactFar);
+
+        // 3. CONTAINS match, 가까운 거리
+        long idContainsNear = 9200103L;
+        jdbcTemplate.update("""
+                insert into attractions (id, title, addr1, read_count, sido_code, gugun_code, content_type_id, overview, location)
+                values (?, '아름다운 경복궁', '서울 중구', 10, 1, 1, '12', '경복궁 overview', ST_SetSRID(ST_MakePoint(126.97805, 37.56655), 4326))
+                on conflict (id) do nothing
+                """, idContainsNear);
+
+        // 4. 주소에만 키워드가 포함된 경우 (검색에서 제외되어야 함)
+        long idAddrMatchOnly = 9200104L;
+        jdbcTemplate.update("""
+                insert into attractions (id, title, addr1, read_count, sido_code, gugun_code, content_type_id, overview, location)
+                values (?, '창덕궁', '서울 종로구 경복궁길', 10, 1, 1, '12', '창덕궁 overview', ST_SetSRID(ST_MakePoint(126.9780, 37.5665), 4326))
+                on conflict (id) do nothing
+                """, idAddrMatchOnly);
+
+        // 5. 개요에만 키워드가 포함된 경우 (검색에서 제외되어야 함)
+        long idOverviewMatchOnly = 9200105L;
+        jdbcTemplate.update("""
+                insert into attractions (id, title, addr1, read_count, sido_code, gugun_code, content_type_id, overview, location)
+                values (?, '덕수궁', '서울 중구', 10, 1, 1, '12', '경복궁 근처에 있습니다.', ST_SetSRID(ST_MakePoint(126.9780, 37.5665), 4326))
+                on conflict (id) do nothing
+                """, idOverviewMatchOnly);
+
+        // 6. 와일드카드 이스케이프 확인용
+        long idWildcard = 9200106L;
+        jdbcTemplate.update("""
+                insert into attractions (id, title, addr1, read_count, sido_code, gugun_code, content_type_id, overview, location)
+                values (?, '궁 %_ 특수문자', '서울 중구', 10, 1, 1, '12', 'overview', ST_SetSRID(ST_MakePoint(126.9780, 37.5665), 4326))
+                on conflict (id) do nothing
+                """, idWildcard);
+
+        // 일반 검색 검증 (radius는 null)
+        List<AttractionSearchRecord> results = attractionMapper.searchMapPlaces(
+                "경복궁",
+                "경복궁",
+                126.9780,
+                37.5665,
+                null,
+                50,
+                memberId
+        );
+
+        // 정렬 순서: EXACT match 중 거리가 가까운 순 -> idExactNear -> idExactFar -> idContainsNear
+        // 주소나 개요에만 매칭된 것(idAddrMatchOnly, idOverviewMatchOnly)은 제외
+        assertThat(results).extracting(AttractionSearchRecord::id)
+                .containsExactly(idExactNear, idExactFar, idContainsNear);
+
+        // 반경 적용(radius=50m) 검색 검증 -> idExactFar (약 100m이상 거리)는 제외되어야 함.
+        List<AttractionSearchRecord> radiusResults = attractionMapper.searchMapPlaces(
+                "경복궁",
+                "경복궁",
+                126.9780,
+                37.5665,
+                50.0, // 50m
+                50,
+                memberId
+        );
+        assertThat(radiusResults).extracting(AttractionSearchRecord::id)
+                .containsExactly(idExactNear, idContainsNear);
+
+        // 와일드카드 이스케이프 검증
+        List<AttractionSearchRecord> wildcardResults = attractionMapper.searchMapPlaces(
+                "%",
+                "\\%",
+                126.9780,
+                37.5665,
+                null,
+                50,
+                memberId
+        );
+        assertThat(wildcardResults).extracting(AttractionSearchRecord::id)
+                .containsExactly(idWildcard);
+    }
 }

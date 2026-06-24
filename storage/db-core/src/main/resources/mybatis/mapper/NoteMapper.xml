@@ -68,33 +68,37 @@
         order by n.created_at desc, n.id desc
         limit #{limit}
     </select>
+    <sql id="mapPinColumns">
+        n.id, n.title, n.category, n.visibility, n.latitude, n.longitude, n.region_name as regionName, n.image_object_key as imageObjectKey, n.author_member_id as authorMemberId, coalesce(m.nickname, m.name, m.email) as authorNickname,
+        <choose>
+            <when test="viewerMemberId != null">
+                case when n.author_member_id = #{viewerMemberId} or exists (
+                    select 1 from friendships f where f.status = &apos;ACCEPTED&apos;
+                      and ((f.requester_member_id = #{viewerMemberId} and f.addressee_member_id = n.author_member_id)
+                        or (f.requester_member_id = n.author_member_id and f.addressee_member_id = #{viewerMemberId}))
+                ) then m.profile_image_url else null end
+            </when>
+            <otherwise>null</otherwise>
+        </choose> as authorProfileImageUrl,
+        <choose>
+            <when test="viewerMemberId != null">
+                case when n.author_member_id = #{viewerMemberId} then &apos;SELF&apos;
+                     when exists (
+                         select 1 from friendships f where f.status = &apos;ACCEPTED&apos;
+                           and ((f.requester_member_id = #{viewerMemberId} and f.addressee_member_id = n.author_member_id)
+                             or (f.requester_member_id = n.author_member_id and f.addressee_member_id = #{viewerMemberId}))
+                     ) then &apos;FRIEND&apos;
+                     else &apos;NONE&apos;
+                end
+            </when>
+            <otherwise>&apos;NONE&apos;</otherwise>
+        </choose> as relationship,
+        n.created_at as createdAt,
+        ST_Distance(n.location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography) as distanceMeters
+    </sql>
+
     <select id="findMapPins" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord">
-        select n.id, n.title, n.category, n.visibility, n.latitude, n.longitude, n.region_name as regionName, n.image_object_key as imageObjectKey, n.author_member_id as authorMemberId, coalesce(m.nickname, m.name, m.email) as authorNickname,
-               <choose>
-                   <when test="viewerMemberId != null">
-                       case when n.author_member_id = #{viewerMemberId} or exists (
-                           select 1 from friendships f where f.status = &apos;ACCEPTED&apos;
-                             and ((f.requester_member_id = #{viewerMemberId} and f.addressee_member_id = n.author_member_id)
-                               or (f.requester_member_id = n.author_member_id and f.addressee_member_id = #{viewerMemberId}))
-                       ) then m.profile_image_url else null end
-                   </when>
-                   <otherwise>null</otherwise>
-               </choose> as authorProfileImageUrl,
-               <choose>
-                   <when test="viewerMemberId != null">
-                       case when n.author_member_id = #{viewerMemberId} then &apos;SELF&apos;
-                            when exists (
-                                select 1 from friendships f where f.status = &apos;ACCEPTED&apos;
-                                  and ((f.requester_member_id = #{viewerMemberId} and f.addressee_member_id = n.author_member_id)
-                                    or (f.requester_member_id = n.author_member_id and f.addressee_member_id = #{viewerMemberId}))
-                            ) then &apos;FRIEND&apos;
-                            else &apos;NONE&apos;
-                       end
-                   </when>
-                   <otherwise>&apos;NONE&apos;</otherwise>
-               </choose> as relationship,
-               n.created_at as createdAt,
-               ST_Distance(n.location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography) as distanceMeters
+        select <include refid="mapPinColumns"/>
         from notes n join members m on m.id = n.author_member_id
         where ST_DWithin(n.location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography, #{radiusMeters})
           and <include refid="accessiblePredicate"/>
@@ -113,6 +117,22 @@
               </when>
           </choose>
         order by distanceMeters asc, n.created_at desc, n.id desc
+        <if test="limit != null">
+            limit #{limit}
+        </if>
+    </select>
+
+    <select id="searchMapNotes" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord">
+        select <include refid="mapPinColumns"/>
+        from notes n join members m on m.id = n.author_member_id
+        where <include refid="accessiblePredicate"/>
+          and n.content ilike concat(&apos;%&apos;, #{escapedKeyword}, &apos;%&apos;) ESCAPE &apos;\&apos;
+          <if test="category != null">and n.category = #{category}</if>
+          <if test="radiusMeters != null">
+              and n.location is not null
+              and ST_DWithin(n.location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography, #{radiusMeters})
+          </if>
+        order by (case when lower(n.content) = lower(#{keyword}) then 0 else 1 end) asc, distanceMeters asc, n.created_at desc, n.id desc
         <if test="limit != null">
             limit #{limit}
         </if>

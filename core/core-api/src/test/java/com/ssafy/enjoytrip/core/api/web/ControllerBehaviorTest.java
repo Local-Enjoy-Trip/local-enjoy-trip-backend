@@ -28,6 +28,7 @@ import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
+import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.support.error.exception.ExternalServiceException;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.domain.service.DbHealthService;
@@ -38,6 +39,7 @@ import com.ssafy.enjoytrip.core.domain.service.EvChargerService;
 import com.ssafy.enjoytrip.core.domain.service.HotplaceService;
 import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MapExploreService;
+import com.ssafy.enjoytrip.core.domain.service.MapSearchService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
 import com.ssafy.enjoytrip.core.domain.service.NoteImageUploadService;
 import com.ssafy.enjoytrip.core.domain.service.MemberProfileImageService;
@@ -104,12 +106,14 @@ class ControllerBehaviorTest {
     private NoticeService noticeService;
     private NoteService noteService;
     private MapExploreService mapExploreService;
+    private MapSearchService mapSearchService;
     private MemberService memberService;
     private JwtTokenService tokenService;
     private OAuthSignupTicketService oauthSignupTicketService;
     private AttractionService attractionService;
     private AttractionStatsService attractionStatsService;
     private EvChargerService chargerService;
+
     private WeatherService weatherService;
     private NeighborhoodBriefingService neighborhoodBriefingService;
     private NoteImageUploadService noteImageUploadService;
@@ -125,12 +129,14 @@ class ControllerBehaviorTest {
         noticeService = mock(NoticeService.class);
         noteService = mock(NoteService.class);
         mapExploreService = mock(MapExploreService.class);
+        mapSearchService = mock(MapSearchService.class);
         memberService = mock(MemberService.class);
         tokenService = mock(JwtTokenService.class);
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
         attractionService = mock(AttractionService.class);
         attractionStatsService = mock(AttractionStatsService.class);
         chargerService = mock(EvChargerService.class);
+
         weatherService = mock(WeatherService.class);
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         noteImageUploadService = mock(NoteImageUploadService.class);
@@ -147,9 +153,9 @@ class ControllerBehaviorTest {
                         new AttractionController(attractionService, attractionStatsService),
                         new AttractionTagController(attractionService),
                         new ChargerController(chargerService),
-                        new WeatherController(weatherService),
-                        new NeighborhoodBriefingController(neighborhoodBriefingService),
-                        new MapController(mapExploreService),
+
+                        new NeighborhoodBriefingController(neighborhoodBriefingService, weatherService),
+                        new MapController(mapExploreService, mapSearchService),
                         new NoteImageController(noteImageUploadService),
                         new HealthController(dbHealthService),
                         new FailingController()
@@ -159,31 +165,7 @@ class ControllerBehaviorTest {
                 .build();
     }
 
-    @Nested
-    class WeatherEndpoints {
-        @DisplayName("날씨 브리핑을 반환하고 서비스에 위임한다")
-        @Test
-        void returnsWeatherBriefingsAndDelegatesToService() throws Exception {
-            when(weatherService.findWeatherBriefings()).thenReturn(List.of(
-                    new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25),
-                    new WeatherSummary("부산", "구름 많음", 21, 20, "05:17", "19:22", 16, 24)
-            ));
 
-            mockMvc.perform(get("/api/weather/briefings"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.weather[0].region").value("서울"))
-                    .andExpect(jsonPath("$.data.weather[0].condition").value("맑음"))
-                    .andExpect(jsonPath("$.data.weather[0].temperature").value(22))
-                    .andExpect(jsonPath("$.data.weather[0].rainChance").value(10))
-                    .andExpect(jsonPath("$.data.weather[0].sunrise").value("05:23"))
-                    .andExpect(jsonPath("$.data.weather[0].sunset").value("19:33"))
-                    .andExpect(jsonPath("$.data.weather[0].tempMin").value(15))
-                    .andExpect(jsonPath("$.data.weather[0].tempMax").value(25));
-
-            verify(weatherService).findWeatherBriefings();
-        }
-    }
 
     @Nested
     class NeighborhoodBriefingEndpoints {
@@ -201,7 +183,10 @@ class ControllerBehaviorTest {
             );
             String generatedBriefing = "오늘 서울은 맑고 더운 편이라 "
                     + "한강 저녁 산책 코스 어떠세요?";
-            when(neighborhoodBriefingService.brief(eq("서울"), any(), any(), anyString()))
+            WeatherWithForecast weatherWithForecast = new WeatherWithForecast(weather, forecasts);
+            when(weatherService.findWeatherWithForecast(any(), any(), eq("서울"), anyString()))
+                    .thenReturn(weatherWithForecast);
+            when(neighborhoodBriefingService.brief(eq("서울"), any(WeatherWithForecast.class), anyString()))
                     .thenReturn(new NeighborhoodBriefing(
                             "서울",
                             generatedBriefing,
@@ -226,7 +211,7 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.forecasts[0].time").value("12:00"))
                     .andExpect(jsonPath("$.data.forecasts[5].time").value("17:00"));
 
-            verify(neighborhoodBriefingService).brief(eq("서울"), any(), any(), anyString());
+            verify(neighborhoodBriefingService).brief(eq("서울"), any(WeatherWithForecast.class), anyString());
         }
 
         @DisplayName("동네 브리핑은 지역 query DTO 검증을 적용한다")

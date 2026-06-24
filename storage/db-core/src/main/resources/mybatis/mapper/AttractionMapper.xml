@@ -371,4 +371,35 @@
             values (incoming.attraction_id, greatest(0, incoming.delta), current_timestamp)
     </insert>
     <select id="findByIds" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord">select <include refid="baseColumns"/> from attractions where id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></select>
+
+    <select id="searchMapPlaces" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
+        select <include refid="searchRowColumns"/>
+        from (
+            select <include refid="baseColumns"/>,
+                   case when lower(title) = lower(#{keyword}) then 0 else 1 end as matchTier,
+                   ST_Distance(
+                       location::geography,
+                       ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography
+                   ) as distanceMeters
+            from attractions
+            <where>
+                <include refid="publicAttractionPredicate"/>
+                and title ilike concat(&apos;%&apos;, #{escapedKeyword}, &apos;%&apos;) ESCAPE &apos;\&apos;
+                <if test="radiusMeters != null">
+                    and location is not null
+                    and ST_DWithin(
+                        location::geography,
+                        ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography,
+                        #{radiusMeters}
+                    )
+                </if>
+            </where>
+            order by matchTier asc, distanceMeters asc nulls last, title asc, id asc
+            <if test="limit != null">
+                limit #{limit}
+            </if>
+        ) a
+        <include refid="searchRowJoins"/>
+        order by a.matchTier asc, a.distanceMeters asc, a.title asc, a.id asc, t.name asc
+    </select>
 </mapper>

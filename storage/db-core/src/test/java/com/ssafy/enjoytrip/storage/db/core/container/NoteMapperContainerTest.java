@@ -132,4 +132,169 @@ class NoteMapperContainerTest extends StorageContainerTestSupport {
         assertThat(saved).extracting(NoteRecord::getId).containsExactly(selfPrivate.getId());
     }
 
+    @DisplayName("searchMapNotes는 키워드 검색을 수행하며 정확히 일치하는 결과가 먼저 나오도록 랭킹과 거리를 정렬하고 개인정보 마스킹을 수행한다")
+    @Test
+    void searchMapNotesFiltersAndRanksCorrectly() {
+        Long viewerMemberId = seedMember("viewer", uniqueId("viewer") + "@example.com");
+        Long authorMemberId = seedMember("author", uniqueId("author") + "@example.com");
+        Long friendMemberId = seedMember("friend", uniqueId("friend") + "@example.com");
+
+        // 친구 관계 맺기
+        jdbcTemplate.update("insert into friendships (requester_member_id, addressee_member_id, status) values (?, ?, 'ACCEPTED')",
+                viewerMemberId, friendMemberId);
+
+        // 쪽지 insert
+        // 1. EXACT match, PUBLIC, 먼 거리 (약 55m)
+        NoteRecord exactPublic = noteMapper.insert(new NoteRecord(
+                authorMemberId,
+                "EXACT PUBLIC",
+                "hello",
+                "TIP",
+                "PUBLIC",
+                new BigDecimal("37.56650"),
+                new BigDecimal("126.97850"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+
+        // 2. CONTAINS match, PUBLIC, 가까운 거리 (약 0m)
+        NoteRecord containsPublic = noteMapper.insert(new NoteRecord(
+                authorMemberId,
+                "CONTAINS PUBLIC",
+                "say hello world",
+                "TIP",
+                "PUBLIC",
+                new BigDecimal("37.56650"),
+                new BigDecimal("126.97800"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+
+        // 3. EXACT match, FRIENDS, 중간 거리, 친구 작성 (보여야 함)
+        NoteRecord friendFriends = noteMapper.insert(new NoteRecord(
+                friendMemberId,
+                "FRIEND FRIENDS",
+                "hello",
+                "TIP",
+                "FRIENDS",
+                new BigDecimal("37.56650"),
+                new BigDecimal("126.97830"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+
+        // 4. EXACT match, FRIENDS, 비친구 작성 (안 보여야 함)
+        NoteRecord nonFriendFriends = noteMapper.insert(new NoteRecord(
+                authorMemberId,
+                "NON-FRIEND FRIENDS",
+                "hello",
+                "TIP",
+                "FRIENDS",
+                new BigDecimal("37.56650"),
+                new BigDecimal("126.97840"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+
+        // 5. EXACT match, PRIVATE, 타인 작성 (안 보여야 함)
+        NoteRecord nonSelfPrivate = noteMapper.insert(new NoteRecord(
+                authorMemberId,
+                "OTHER PRIVATE",
+                "hello",
+                "TIP",
+                "PRIVATE",
+                new BigDecimal("37.56650"),
+                new BigDecimal("126.97860"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+
+        // 6. EXACT match, PRIVATE, 가까운 거리, 본인 작성 (보여야 함)
+        NoteRecord selfPrivate = noteMapper.insert(new NoteRecord(
+                viewerMemberId,
+                "SELF PRIVATE",
+                "hello",
+                "TIP",
+                "PRIVATE",
+                new BigDecimal("37.56650"),
+                new BigDecimal("126.97810"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+
+        // 7. 와일드카드 이스케이프 확인용
+        NoteRecord wildcardNote = noteMapper.insert(new NoteRecord(
+                viewerMemberId,
+                "WILDCARD",
+                "special %_ character",
+                "TIP",
+                "PUBLIC",
+                new BigDecimal("37.56650"),
+                new BigDecimal("126.97800"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+
+        // 일반 검색 검증 (radius는 null)
+        List<NoteMapPinRecord> results = noteMapper.searchMapNotes(
+                "hello",
+                "hello",
+                126.97800,
+                37.56650,
+                null,
+                null,
+                50,
+                viewerMemberId
+        );
+
+        // 결과 리스트의 ID 추출
+        // exactPublic, friendFriends, selfPrivate가 EXACT match
+        // containsPublic는 CONTAINS match
+        // 정렬 순서: EXACT match 중 거리가 가까운 순 -> selfPrivate -> friendFriends -> exactPublic -> containsPublic
+        // 비친구의 FRIENDS글(nonFriendFriends), 타인의 PRIVATE글(nonSelfPrivate)은 없어야 함.
+
+        assertThat(results).extracting(NoteMapPinRecord::id)
+                .containsExactly(selfPrivate.getId(), friendFriends.getId(), exactPublic.getId(), containsPublic.getId());
+
+        // 마스킹/관계(relationship) 검증
+        // 1. selfPrivate -> relationship = SELF
+        NoteMapPinRecord selfPin = results.stream().filter(r -> r.id().equals(selfPrivate.getId())).findFirst().orElseThrow();
+        assertThat(selfPin.relationship()).isEqualTo("SELF");
+
+        // 2. friendFriends -> relationship = FRIEND
+        NoteMapPinRecord friendPin = results.stream().filter(r -> r.id().equals(friendFriends.getId())).findFirst().orElseThrow();
+        assertThat(friendPin.relationship()).isEqualTo("FRIEND");
+
+        // 3. exactPublic -> relationship = NONE (타인)
+        NoteMapPinRecord publicPin = results.stream().filter(r -> r.id().equals(exactPublic.getId())).findFirst().orElseThrow();
+        assertThat(publicPin.relationship()).isEqualTo("NONE");
+
+        // 와일드카드 이스케이프 검증 (%, _ 와일드카드가 이스케이프되어 raw '%' 문자만 매칭)
+        List<NoteMapPinRecord> wildcardResults = noteMapper.searchMapNotes(
+                "%",
+                "\\%",
+                126.97800,
+                37.56650,
+                null,
+                null,
+                50,
+                viewerMemberId
+        );
+        assertThat(wildcardResults).extracting(NoteMapPinRecord::id)
+                .containsExactly(wildcardNote.getId());
+    }
 }

@@ -1,5 +1,6 @@
 # API Documents
 - [dongnepin-map](dongnepin-map.md)
+- [dongnepin-map-search](dongnepin-map-search.md)
 - [note-images](note-images.md)
 
 - [courses](courses.md)

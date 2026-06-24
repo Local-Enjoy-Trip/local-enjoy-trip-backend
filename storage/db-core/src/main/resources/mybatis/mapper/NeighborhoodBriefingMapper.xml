@@ -12,4 +12,24 @@
                  id asc
         limit #{limit}
     </select>
+
+    <!--
+        동네 장소 조회: addr1 텍스트에서 regionName이 포함된 식당(38)/카페·쇼핑(39) 장소를
+        인기순(read_count)으로 최대 limit개 반환한다.
+        관광지(12), 문화시설(14), 숙박(32) 등은 제외한다.
+    -->
+    <select id="findLocalPlaces" resultType="com.ssafy.enjoytrip.storage.db.core.model.LocalPlaceRecord">
+        select id,
+               title,
+               addr1,
+               content_type_id as contentTypeId
+        from attractions
+        where status = 'ACTIVE'
+          and deleted_at is null
+          and duplicate_of_attraction_id is null
+          and content_type_id in ('38', '39')
+          and addr1 ilike concat('%', #{regionName}, '%')
+        order by read_count desc nulls last, id asc
+        limit #{limit}
+    </select>
 </mapper>
