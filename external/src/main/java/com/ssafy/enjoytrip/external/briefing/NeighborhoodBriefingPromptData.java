@@ -6,9 +6,9 @@ import java.util.List;
 public record NeighborhoodBriefingPromptData(
         String region,
         WeatherBriefingResult weather,
-        List<CourseBriefingCandidateData> courseCandidates
+        List<LocalPlaceData> localPlaces
 ) {
     public NeighborhoodBriefingPromptData {
-        courseCandidates = courseCandidates == null ? List.of() : List.copyOf(courseCandidates);
+        localPlaces = localPlaces == null ? List.of() : List.copyOf(localPlaces);
     }
 }

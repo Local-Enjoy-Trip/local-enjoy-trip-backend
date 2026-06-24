@@ -20,7 +20,7 @@ class ExternalConfigurationResourceTest {
                 .contains("spring:\n  ai:")
                 .contains("https://gms.ssafy.io/gmsapi/api.openai.com/v1")
                 .contains("enjoytrip:\n  ai:")
-                .contains("open-weather-map:")
+                .contains("kma:")
                 .contains("minio:")
                 .doesNotContain("optional:file:")
                 .doesNotContain(".env");

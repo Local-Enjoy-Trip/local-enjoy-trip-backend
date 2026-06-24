@@ -32,7 +32,8 @@ class SpringAiNeighborhoodBriefingGeneratorTest {
         when(requestSpec.system(anyString())).thenReturn(requestSpec);
         when(requestSpec.user(anyString())).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(responseSpec);
-        when(responseSpec.content()).thenReturn("오늘 서울은 맑아요.\n한강 저녁 산책 코스 어떠세요?");
+        when(responseSpec.content()).thenReturn(
+                "오늘 장안동은 흐리고 25도예요.\n장안시장에서 간단히 먹고 중랑천 방향으로 걸어보세요.\n카페보다 산책 비중을 높이면 지금 날씨와 더 잘 맞아요.");
         GmsNeighborhoodBriefingProperties properties = liveProperties();
         SpringAiNeighborhoodBriefingGenerator generator = new SpringAiNeighborhoodBriefingGenerator(
                 provider(builder),
@@ -41,11 +42,11 @@ class SpringAiNeighborhoodBriefingGeneratorTest {
 
         String result = generator.generate(prompt());
 
-        assertThat(result).isEqualTo("오늘 서울은 맑아요.\n한강 저녁 산책 코스 어떠세요?");
+        assertThat(result).contains("장안동", "장안시장");
         ArgumentCaptor<String> userPromptCaptor = ArgumentCaptor.forClass(String.class);
         verify(requestSpec).user(userPromptCaptor.capture());
-        assertThat(userPromptCaptor.getValue()).contains("서울", "맑음", "한강 저녁 산책");
-        assertThat(userPromptCaptor.getValue()).doesNotContain("계절", "여름");
+        assertThat(userPromptCaptor.getValue()).contains("장안동", "흐림", "장안시장");
+        assertThat(userPromptCaptor.getValue()).doesNotContain("courseId");
     }
 
     @DisplayName("GMS_KEY가 비어 있으면 ChatClient를 호출하지 않고 fallback 가능한 예외를 던진다")
@@ -79,16 +80,16 @@ class SpringAiNeighborhoodBriefingGeneratorTest {
 
     private static NeighborhoodBriefingPromptData prompt() {
         return new NeighborhoodBriefingPromptData(
-                "서울",
-                new WeatherBriefingResult("서울", "맑음", 27, 10, "05:10", "19:50", 20, 30),
-                List.of(new CourseBriefingCandidateData("course-1", "한강 저녁 산책", "서울"))
+                "장안동",
+                new WeatherBriefingResult("장안동", "흐림", 25, 20, "05:20", "19:30", 20, 28),
+                List.of(new LocalPlaceData("장안시장", "서울특별시 동대문구 장한로 100", "38"))
         );
     }
 
     private static GmsNeighborhoodBriefingProperties liveProperties() {
         GmsNeighborhoodBriefingProperties properties = new GmsNeighborhoodBriefingProperties();
         properties.setApiKey("test-key");
-        properties.setMaxLength(160);
+        properties.setMaxLength(200);
         return properties;
     }
 
