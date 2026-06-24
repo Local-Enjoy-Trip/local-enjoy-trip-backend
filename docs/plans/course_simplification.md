@@ -11,6 +11,7 @@
 - DB에서는 `course_route_segments` 테이블을 제거하고, 기존 값을 `course_items.distance_to_next`,
   `course_items.duration_to_next`로 이관한다.
 - `travelMode`는 저장/API/도메인에서 제거한다.
+- `description`, `coverImageUrl`, `visibility`, `status`, `curationSection`, `curationOrder`는 코스 저장/API/도메인 모델에서 제거한다.
 - API 응답은 `segments` 노출을 중단하고, `routeSummary`는 별도 도메인 타입 없이 `Course`/`CourseStop`
   상태에서 파생한다.
 
@@ -34,6 +35,8 @@
 
 4. **API 계약 정리**
    - `CourseResponse.segments`를 제거한다.
+   - `CourseResponse.description`, `CourseResponse.coverImageUrl`, `CourseResponse.visibility`,
+     `CourseResponse.status`, `CourseResponse.curationSection`, `CourseResponse.curationOrder`도 제거한다.
    - `CourseResponse.routeSummary`는 유지하되 도메인 `RouteSummary` 타입 없이 응답 DTO에서 파생한다.
    - `CourseItemResponse`에 `distanceToNext`, `durationToNext`를 포함한다.
 
@@ -44,8 +47,8 @@
 
 ### 비목표
 
-- 코스 생성/수정 API의 요청 모양을 대규모로 바꾸지 않는다.
-- 관리자 큐레이션, 저장 수, 거리순 피드, 시작 좌표(`startLocation`) 기능을 제거하지 않는다.
+- 관리자 생성 코스 구분(`createdByAdmin`), 저장 수, 거리순 피드, 시작 좌표(`startLocation`) 기능은 유지한다.
+- 단, 코스 자체의 공개/상태/설명/커버이미지/큐레이션 섹션/큐레이션 순서 필드는 제거하므로 관련 필터와 관리자 입력도 함께 정리한다.
 - `core-api -> storage:db-core` 직접 MyBatis 사용 구조를 바꾸지 않는다.
 - `external` 모듈에 core/domain 타입을 의존시키지 않는다.
 
@@ -55,7 +58,7 @@
 
 ### 2.1 Course
 
-`Course`는 코스 aggregate root다. 현재 API/피드/관리자 기능이 사용하는 상태는 유지하고, route wrapper만 제거한다.
+`Course`는 코스 aggregate root다. 현재 API/피드/관리자 기능 중 코스 핵심 식별/정렬/경유지 상태만 유지하고, route wrapper와 표현용 메타데이터를 제거한다.
 
 #### 유지 상태
 
@@ -63,12 +66,6 @@
 - `ownerMemberId`
 - `title`
 - `regionName`
-- `visibility`
-- `status`
-- `description`
-- `coverImageUrl`
-- `curationSection`
-- `curationOrder`
 - `createdByAdmin`
 - `startLatitude`
 - `startLongitude`
@@ -96,11 +93,24 @@
 
 #### 제거
 
+- `visibility`
+- `status`
+- `description`
+- `coverImageUrl`
+- `curationSection`
+- `curationOrder`
 - `CourseRoute route`
 - `route()`
 - `withRoute(CourseRoute)`
 - `routeSummary()`
   - 도메인 `RouteSummary`를 반환하지 않는다. 필요한 값은 위 파생 행위로 제공한다.
+
+#### `createdByAdmin`과 MD 코스
+
+- 관리자가 만든 코스는 제품상 MD/관리자 추천 코스로 볼 수 있으므로 별도 `curationSection`이 같은 의미를 반복한다.
+- 따라서 MD 코스 여부는 `createdByAdmin` 하나로 판단한다.
+- `curationOrder`는 별도 노출 순서를 강제하는 필드인데, 이번 단순화에서는 제거한다.
+  - 필요한 정렬은 기본 피드 정렬(`createdAt`, `saveCount`, 거리 등) 또는 향후 별도 랭킹 정책으로 다룬다.
 
 ### 2.2 CourseStop
 
@@ -150,12 +160,18 @@
 
 #### 변경 전
 
+- `description`
+- `coverImageUrl`
+- `visibility`
+- `status`
 - `routeSummary`
 - `items`
 - `segments`
 
 #### 변경 후
 
+- `description`, `coverImageUrl`, `visibility`, `status`, `curationSection`, `curationOrder`
+  - 제거한다.
 - `routeSummary`
   - 유지한다.
   - `RouteSummaryResponse.from(Course)` 또는 `RouteSummaryResponse.of(...)`로 생성한다.
@@ -193,6 +209,8 @@ domain `RouteSummary` import를 제거하고 다음 값으로 구성한다.
 - `routeSummary`가 item의 next metric 합산 결과임을 명시
 - 추천 preview 응답도 동일한 `CourseResponse` 계약을 사용한다고 명시
 - 기존 “route segment rows” 표현을 “item next metrics”로 변경
+- 생성/수정 요청에서 `description`, `coverImageUrl`, `visibility`, `status`, `curationSection`, `curationOrder` 제거
+- 응답 예시에서 `description`, `coverImageUrl`, `visibility`, `status`, `curationSection`, `curationOrder` 제거
 
 ---
 
@@ -201,6 +219,7 @@ domain `RouteSummary` import를 제거하고 다음 값으로 구성한다.
 ### 4.1 최종 DB 결정
 
 `course_route_segments` 테이블은 제거한다. 이동 metric은 `course_items`에 흡수한다.
+`courses.description`, `courses.cover_image_url`, `courses.visibility`, `courses.status`, `courses.curation_section`, `courses.curation_order`도 제거한다.
 
 ### 4.2 Migration
 
@@ -220,10 +239,18 @@ domain `RouteSummary` import를 제거하고 다음 값으로 구성한다.
    - `duration_seconds -> course_items.duration_to_next`
    - 마지막 경유지는 next metric이 없으므로 null 유지
 
-4. 기존 segment 테이블 제거
+4. 코스 표현/상태 컬럼 제거
+   - `courses.description`
+   - `courses.cover_image_url`
+   - `courses.visibility`
+   - `courses.status`
+   - `courses.curation_section`
+   - `courses.curation_order`
+
+5. 기존 segment 테이블 제거
    - `drop table course_route_segments`
 
-5. 기존 migration 파일은 수정하지 않는다.
+6. 기존 migration 파일은 수정하지 않는다.
    - 이미 적용된 Flyway migration을 바꾸지 않고 새 migration으로 전진한다.
 
 ### 4.3 CourseItemRecord / CourseItemDetailRecord
@@ -234,6 +261,7 @@ domain `RouteSummary` import를 제거하고 다음 값으로 구성한다.
 - `durationToNext`
 
 Lombok 생성자/게터 사용부와 MyBatis result alias를 함께 갱신한다.
+`CourseRecord`에서도 `description`, `coverImageUrl`, `visibility`, `status`, `curationSection`, `curationOrder` 필드를 제거한다.
 
 ### 4.4 CourseRouteSegmentRecord
 
@@ -258,6 +286,7 @@ Lombok 생성자/게터 사용부와 MyBatis result alias를 함께 갱신한다
 - `findItemsByCourseId`
   - next metric column select 포함
 - `findPublicItemsByCourseId`
+  - `visibility/status` 필터는 제거된 컬럼에 의존하지 않도록 정리한다.
   - next metric column select 포함
 - `deleteItemsByCourseId`
 
@@ -275,6 +304,7 @@ Lombok 생성자/게터 사용부와 MyBatis result alias를 함께 갱신한다
 
 - `courseItemColumns`에 next metric 추가
 - `insertItem`, `insertItems`에 next metric 추가
+- `courseColumns`, `insert`, `update`에서 `description`, `cover_image_url`, `visibility`, `status`, `curation_section`, `curation_order` 제거
 - item select 쿼리는 기존 order 유지
 
 ### 4.7 H2 test schema/support
@@ -306,6 +336,7 @@ Lombok 생성자/게터 사용부와 MyBatis result alias를 함께 갱신한다
 
 - `CourseRoute.ofStops(...)` 생성 제거
 - `List<CourseStop>` 또는 `Course` 생성자에 직접 stops 전달
+- `description`, `coverImageUrl`, `visibility`, `status`, `curationSection`, `curationOrder` 요청 필드와 기본값/검증 로직 제거
 - 요청에서 next metric을 받을지 여부를 명확히 한다.
   - 1차 리팩토링에서는 클라이언트 요청으로 `distanceToNext`, `durationToNext`를 받지 않는다.
   - 생성/수정 시 서버가 좌표 기반으로 계산한다.
@@ -460,6 +491,7 @@ List<CourseStop> plan(List<CourseStopPoint> points);
    - `course_items` next metric 컬럼 추가
    - 기존 segment 데이터 이관
    - `course_route_segments` drop
+   - `courses.description`, `courses.cover_image_url`, `courses.visibility`, `courses.status`, `courses.curation_section`, `courses.curation_order` drop
 
 2. H2 schema 동기화
 
@@ -478,10 +510,11 @@ List<CourseStop> plan(List<CourseStopPoint> points);
 
 1. `CourseStop`에 next metric 추가
 2. `Course`를 `List<CourseStop>` 직접 보유 구조로 변경
-3. `CourseRoute`, `CourseRouteSegment`, `RouteSummary` 삭제
-4. `CourseRoutePlanner` 반환 타입 변경
-5. `DefaultCourseRoutePlanner`를 stop metric planner로 변경
-6. domain 테스트 갱신 및 실행
+3. `Course`에서 `description`, `coverImageUrl`, `visibility`, `status`, `curationSection`, `curationOrder` 제거
+4. `CourseRoute`, `CourseRouteSegment`, `RouteSummary` 삭제
+5. `CourseRoutePlanner` 반환 타입 변경
+6. `DefaultCourseRoutePlanner`를 stop metric planner로 변경
+7. domain 테스트 갱신 및 실행
    - `./gradlew :core:core-api:test --tests '*Course*' --tests '*RoutePlanner*'`
 
 ### Phase 3. Reader/Writer/Application 전환
@@ -495,12 +528,13 @@ List<CourseStop> plan(List<CourseStopPoint> points);
 
 ### Phase 4. API contract 정리
 
-1. `CourseResponse`에서 `segments` 제거
+1. `CourseResponse`에서 `description`, `coverImageUrl`, `visibility`, `status`, `curationSection`, `curationOrder`, `segments` 제거
 2. `CourseItemResponse`에 next metric 추가
 3. `RouteSummaryResponse`를 `Course` 파생값 기반으로 변경
 4. `CourseSegmentResponse` 삭제
-5. REST Docs/API 문서 갱신
-6. web/doc 테스트 갱신 및 실행
+5. `CourseCreateRequest`, `CourseUpdateRequest`, `AdminCourseForm` 요청 계약에서 제거 필드 정리
+6. REST Docs/API 문서 갱신
+7. web/doc 테스트 갱신 및 실행
    - `./gradlew :core:core-api:test --tests '*CourseControllerTest' --tests '*ApiDocumentationTest'`
 
 ### Phase 5. 통합 검증
@@ -556,6 +590,7 @@ List<CourseStop> plan(List<CourseStopPoint> points);
 - product source에 `CourseRoute`, `CourseRouteSegment`, `RouteSummary` 타입이 남아 있지 않다.
 - `storage:db-core` runtime mapper에 `course_route_segments` 접근이 남아 있지 않다.
 - `travelMode`가 코스 도메인/API/storage runtime 경로에서 제거되어 있다.
+- `description`, `coverImageUrl`, `visibility`, `status`, `curationSection`, `curationOrder`가 코스 도메인/API/storage runtime 경로에서 제거되어 있다.
 - `CourseResponse`는 `segments` 없이 `items`와 `routeSummary`로 이동 정보를 표현한다.
 - `:core:core-api:check`, `:storage:db-core:check`가 통과한다.
 - 완료 보고에는 사용한 규칙 계층을 명시한다.
