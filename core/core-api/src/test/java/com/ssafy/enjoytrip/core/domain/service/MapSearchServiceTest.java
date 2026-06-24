@@ -8,14 +8,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.ssafy.enjoytrip.core.api.web.dto.request.MapSearchRequest;
-import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.MapPin;
 import com.ssafy.enjoytrip.core.domain.MapSearchTarget;
-import com.ssafy.enjoytrip.core.domain.NearbyAttractionCandidate;
 import com.ssafy.enjoytrip.core.domain.NoteCategory;
-import com.ssafy.enjoytrip.core.domain.NoteMapPin;
-import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
-import com.ssafy.enjoytrip.core.domain.NoteVisibility;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -29,10 +29,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class MapSearchServiceTest {
 
     @Mock
-    private NoteService noteService;
+    private NoteMapper noteMapper;
 
     @Mock
-    private AttractionService attractionService;
+    private AttractionMapper attractionMapper;
 
     @InjectMocks
     private MapSearchService mapSearchService;
@@ -44,25 +44,24 @@ class MapSearchServiceTest {
         MapSearchRequest request = new MapSearchRequest("경복궁", 126.9780, 37.5665, 500.0, MapSearchTarget.ALL, NoteCategory.TIP, 10);
         Long viewerMemberId = 1L;
 
-        Attraction attraction = new Attraction(
+        AttractionSearchRecord attractionRecord = new AttractionSearchRecord(
                 101L, "아름다운 경복궁", "서울", "중구", "123", "02",
                 "image.png", null, 10, 1, 1, 37.5665, 126.9780,
-                "1", "12", "overview", 5, 4.5, 3,
-                List.of(), false, null
-        );
-        NearbyAttractionCandidate candidate = new NearbyAttractionCandidate(attraction, 100.0);
-
-        NoteMapPin notePin = new NoteMapPin(
-                1L, "서울 산책 메모", NoteCategory.TIP, NoteVisibility.PUBLIC,
-                37.5665, 126.9780, "서울 중구", 42.0, null,
-                "동네핀러", null, NoteViewerRelationship.NONE, LocalDateTime.now(), 1
+                "1", "12", "overview", 100.0, 1, 4.5, 3,
+                null, null, false, null
         );
 
-        when(attractionService.searchMapPlaces(eq("경복궁"), eq("경복궁"), eq(126.9780), eq(37.5665), eq(500.0), eq(10), eq(viewerMemberId)))
-                .thenReturn(List.of(candidate));
+        NoteMapPinRecord noteRecord = new NoteMapPinRecord(
+                1L, "서울 산책 메모", "TIP", "PUBLIC",
+                BigDecimal.valueOf(37.5665), BigDecimal.valueOf(126.9780), "서울 중구",
+                null, 10L, "동네핀러", null, "NONE", LocalDateTime.now(), 42.0
+        );
 
-        when(noteService.searchMapNotes(eq("경복궁"), eq("경복궁"), eq(126.9780), eq(37.5665), eq(500.0), eq(NoteCategory.TIP), eq(10), eq(viewerMemberId)))
-                .thenReturn(List.of(notePin));
+        when(attractionMapper.searchMapPlaces(eq("경복궁"), eq("경복궁"), eq(126.9780), eq(37.5665), eq(500.0), eq(10), eq(viewerMemberId)))
+                .thenReturn(List.of(attractionRecord));
+
+        when(noteMapper.searchMapNotes(eq("경복궁"), eq("경복궁"), eq(126.9780), eq(37.5665), eq(500.0), eq("TIP"), eq(10), eq(viewerMemberId)))
+                .thenReturn(List.of(noteRecord));
 
         // when
         List<MapPin> results = mapSearchService.search(
@@ -91,7 +90,7 @@ class MapSearchServiceTest {
         MapSearchRequest request = new MapSearchRequest("경복궁", 126.9780, 37.5665, 500.0, MapSearchTarget.PLACE, null, 10);
         Long viewerMemberId = 1L;
 
-        when(attractionService.searchMapPlaces(any(), any(), any(Double.class), any(Double.class), any(), any(), any()))
+        when(attractionMapper.searchMapPlaces(any(), any(), any(Double.class), any(Double.class), any(), any(), any()))
                 .thenReturn(List.of());
 
         // when
@@ -107,8 +106,8 @@ class MapSearchServiceTest {
         );
 
         // then
-        verify(attractionService).searchMapPlaces(eq("경복궁"), eq("경복궁"), eq(126.9780), eq(37.5665), eq(500.0), eq(10), eq(viewerMemberId));
-        verify(noteService, never()).searchMapNotes(any(), any(), any(Double.class), any(Double.class), any(), any(), any(), any());
+        verify(attractionMapper).searchMapPlaces(eq("경복궁"), eq("경복궁"), eq(126.9780), eq(37.5665), eq(500.0), eq(10), eq(viewerMemberId));
+        verify(noteMapper, never()).searchMapNotes(any(), any(), any(Double.class), any(Double.class), any(), any(), any(), any());
     }
 
     @DisplayName("MapSearchService는 target이 NOTE인 경우 장소 검색을 생략한다")
@@ -118,7 +117,7 @@ class MapSearchServiceTest {
         MapSearchRequest request = new MapSearchRequest("경복궁", 126.9780, 37.5665, 500.0, MapSearchTarget.NOTE, null, 10);
         Long viewerMemberId = 1L;
 
-        when(noteService.searchMapNotes(any(), any(), any(Double.class), any(Double.class), any(), any(), any(), any()))
+        when(noteMapper.searchMapNotes(any(), any(), any(Double.class), any(Double.class), any(), any(), any(), any()))
                 .thenReturn(List.of());
 
         // when
@@ -134,8 +133,8 @@ class MapSearchServiceTest {
         );
 
         // then
-        verify(noteService).searchMapNotes(eq("경복궁"), eq("경복궁"), eq(126.9780), eq(37.5665), eq(500.0), eq(null), eq(10), eq(viewerMemberId));
-        verify(attractionService, never()).searchMapPlaces(any(), any(), any(Double.class), any(Double.class), any(), any(), any());
+        verify(noteMapper).searchMapNotes(eq("경복궁"), eq("경복궁"), eq(126.9780), eq(37.5665), eq(500.0), eq(null), eq(10), eq(viewerMemberId));
+        verify(attractionMapper, never()).searchMapPlaces(any(), any(), any(Double.class), any(Double.class), any(), any(), any());
     }
 
     @DisplayName("MapSearchService는 와일드카드 문자가 있는 키워드를 이스케이프하여 전달한다")
@@ -145,7 +144,7 @@ class MapSearchServiceTest {
         MapSearchRequest request = new MapSearchRequest("100%_\\물", 126.9780, 37.5665, null, MapSearchTarget.PLACE, null, null);
         Long viewerMemberId = 1L;
 
-        when(attractionService.searchMapPlaces(any(), any(), any(Double.class), any(Double.class), any(), any(), any()))
+        when(attractionMapper.searchMapPlaces(any(), any(), any(Double.class), any(Double.class), any(), any(), any()))
                 .thenReturn(List.of());
 
         // when
@@ -161,7 +160,7 @@ class MapSearchServiceTest {
         );
 
         // then
-        verify(attractionService).searchMapPlaces(
+        verify(attractionMapper).searchMapPlaces(
                 eq("100%_\\물"),
                 eq("100\\%\\_\\\\물"),
                 eq(126.9780),

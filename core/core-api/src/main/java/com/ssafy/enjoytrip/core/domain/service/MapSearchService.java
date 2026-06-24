@@ -2,10 +2,15 @@ package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.MapPin;
 import com.ssafy.enjoytrip.core.domain.MapSearchTarget;
-import com.ssafy.enjoytrip.core.domain.NearbyAttractionCandidate;
 import com.ssafy.enjoytrip.core.domain.NoteCategory;
 import com.ssafy.enjoytrip.core.domain.NoteMapPin;
+import com.ssafy.enjoytrip.core.domain.NoteVisibility;
+import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
 import com.ssafy.enjoytrip.core.domain.PlaceMapPin;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -15,14 +20,13 @@ import org.springframework.stereotype.Service;
 /**
  * 지도 키워드 검색을 위한 오케스트레이션 서비스.
  * 장소(관광지) 정보 및 쪽지 정보를 키워드로 통합 검색하여 하나의 List<MapPin>으로 조합 및 정렬을 수행한다.
- * 서비스 간의 직접 참조를 피하는 규칙이 있으나, 이 서비스는 제품 노출용 통합 검색 Use Case를
- * 소유한 명시적 Orchestrator로써 NoteService와 AttractionService를 임포트하여 조합한다.
+ * 서비스 간의 직접 참조를 피하기 위해 AttractionMapper와 NoteMapper를 직접 참조하여 데이터를 조회하는 Read-Model(CQRS) 형태로 구현한다.
  */
 @Service
 @RequiredArgsConstructor
 public class MapSearchService {
-    private final NoteService noteService;
-    private final AttractionService attractionService;
+    private final NoteMapper noteMapper;
+    private final AttractionMapper attractionMapper;
 
     public List<MapPin> search(
             String keyword,
@@ -40,7 +44,7 @@ public class MapSearchService {
 
         // 1. 장소(PLACE) 검색
         if (target.includesPlaces()) {
-            List<NearbyAttractionCandidate> places = attractionService.searchMapPlaces(
+            List<AttractionSearchRecord> records = attractionMapper.searchMapPlaces(
                     keyword,
                     escapedKeyword,
                     longitude,
@@ -49,21 +53,21 @@ public class MapSearchService {
                     limit,
                     viewerMemberId
             );
-            for (NearbyAttractionCandidate candidate : places) {
-                int matchTier = candidate.attraction().title().equalsIgnoreCase(keyword) ? 0 : 1;
+            for (AttractionSearchRecord r : records) {
+                int matchTier = r.title().equalsIgnoreCase(keyword) ? 0 : 1;
                 merged.add(new PlaceMapPin(
-                        candidate.attraction().id(),
-                        candidate.attraction().title(),
-                        candidate.attraction().addr1(),
-                        candidate.attraction().latitude(),
-                        candidate.attraction().longitude(),
-                        candidate.attraction().firstImage(),
-                        candidate.attraction().contentTypeId(),
-                        candidate.distanceMeters(),
-                        candidate.attraction().saved(),
-                        candidate.attraction().saveCount(),
-                        candidate.attraction().ratingAverage(),
-                        candidate.attraction().ratingCount(),
+                        r.id(),
+                        r.title(),
+                        r.addr1(),
+                        r.latitude(),
+                        r.longitude(),
+                        r.firstImage(),
+                        r.contentTypeId(),
+                        r.distanceMeters(),
+                        r.saved(),
+                        r.saveCount(),
+                        r.ratingAverage(),
+                        r.ratingCount(),
                         matchTier
                 ));
             }
@@ -71,17 +75,36 @@ public class MapSearchService {
 
         // 2. 쪽지(NOTE) 검색
         if (target.includesNotes()) {
-            List<NoteMapPin> notes = noteService.searchMapNotes(
+            String categoryStr = noteCategory == null ? null : noteCategory.name();
+            List<NoteMapPinRecord> records = noteMapper.searchMapNotes(
                     keyword,
                     escapedKeyword,
                     longitude,
                     latitude,
                     radius,
-                    noteCategory,
+                    categoryStr,
                     limit,
                     viewerMemberId
             );
-            merged.addAll(notes);
+            for (NoteMapPinRecord r : records) {
+                int matchTier = r.title().equalsIgnoreCase(keyword) ? 0 : 1;
+                merged.add(new NoteMapPin(
+                        r.id(),
+                        r.title(),
+                        NoteCategory.valueOf(r.category()),
+                        NoteVisibility.valueOf(r.visibility()),
+                        r.latitude().doubleValue(),
+                        r.longitude().doubleValue(),
+                        r.regionName(),
+                        r.distanceMeters(),
+                        r.imageObjectKey(),
+                        r.authorNickname(),
+                        r.authorProfileImageUrl(),
+                        NoteViewerRelationship.valueOf(r.relationship()),
+                        r.createdAt(),
+                        matchTier
+                ));
+            }
         }
 
         // 3. 통합 정렬 (matchTier 오름차순, distanceMeters 오름차순)
