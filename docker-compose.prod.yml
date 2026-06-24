@@ -1,0 +1,104 @@
+services:
+  db:
+    build:
+      context: ./infra/postgres-vector
+    image: enjoytrip-postgis-pgvector:17-3.5
+    platform: linux/amd64
+    container_name: enjoytrip-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-enjoytrip}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Seoul
+    volumes:
+      - enjoytrip-postgres-prod-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME:-enjoytrip}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+
+  redis:
+    image: redis:7-alpine
+    container_name: enjoytrip-redis-prod
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+
+  api:
+    image: ${API_IMAGE:-enjoytrip-api:latest}
+    container_name: enjoytrip-api-prod
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      # JVM 메모리 제한 (컨테이너 제한 500M 내 작동 보장)
+      - JAVA_OPTS=-XX:+UseG1GC -Xms256m -Xmx384m
+      # DB 연결 설정
+      - ENJOYTRIP_DB_URL=${DB_URL}
+      - ENJOYTRIP_DB_USER=${DB_USER}
+      - ENJOYTRIP_DB_PASSWORD=${DB_PASSWORD}
+      # Redis 연결 설정
+      - REDIS_URL=redis://redis:6379/0
+      # [AWS S3 단일 연동 설정] - 불필요한 변수 고정하여 대폭 축소
+      - ENJOYTRIP_MINIO_ENDPOINT=https://s3.ap-northeast-2.amazonaws.com
+      - ENJOYTRIP_MINIO_REGION=ap-northeast-2
+      - ENJOYTRIP_MINIO_UPLOAD_EXPIRY=10m
+      # 실서버 배포 시 아래 3개 값만 주입받도록 구성
+      - ENJOYTRIP_MINIO_BUCKET=${AWS_S3_BUCKET}
+      - ENJOYTRIP_MINIO_ACCESS_KEY=${AWS_ACCESS_KEY_ID}
+      - ENJOYTRIP_MINIO_SECRET_KEY=${AWS_SECRET_ACCESS_KEY}
+      - ENJOYTRIP_MINIO_PUBLIC_BASE_URL=https://${AWS_S3_BUCKET}.s3.ap-northeast-2.amazonaws.com
+      # Google OAuth 설정
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - ENJOYTRIP_OAUTH2_REDIRECT_URI=${ENJOYTRIP_OAUTH2_REDIRECT_URI}
+      # 외부 API 키
+      - GMS_KEY=${GMS_KEY}
+      - KMA_API_KEY=${KMA_API_KEY}
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: enjoytrip-caddy-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - ACME_EMAIL=${ACME_EMAIL}
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - enjoytrip-caddy-data:/data
+      - enjoytrip-caddy-config:/config
+    depends_on:
+      - api
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+
+volumes:
+  enjoytrip-postgres-prod-data:
+  enjoytrip-caddy-data:
+  enjoytrip-caddy-config:
