@@ -17,11 +17,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-/**
- * 지도 키워드 검색을 위한 오케스트레이션 서비스.
- * 장소(관광지) 정보 및 쪽지 정보를 키워드로 통합 검색하여 하나의 List<MapPin>으로 조합 및 정렬을 수행한다.
- * 서비스 간의 직접 참조를 피하기 위해 AttractionMapper와 NoteMapper를 직접 참조하여 데이터를 조회하는 Read-Model(CQRS) 형태로 구현한다.
- */
 @Service
 @RequiredArgsConstructor
 public class MapSearchService {
