@@ -24,33 +24,7 @@ public class WeatherService {
     private static final ZoneId KOREA = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter HOUR_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
     private static final int HOURLY_FORECAST_LIMIT = 6;
-    private static final List<WeatherSummary> FALLBACK_BRIEFINGS = List.of(
-            new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25),
-            new WeatherSummary("부산", "구름 조금", 21, 20, "05:17", "19:22", 16, 24),
-            new WeatherSummary("제주", "바람 강함", 23, 30, "05:35", "19:25", 18, 26)
-    );
-
     private final OpenWeatherMapWeatherClient weatherClient;
-
-    public List<WeatherSummary> findWeatherBriefings() {
-        try {
-            return weatherClient.findWeatherBriefings().stream()
-                    .map(briefing -> new WeatherSummary(
-                            briefing.region(),
-                            briefing.condition(),
-                            briefing.temperature(),
-                            briefing.rainChance(),
-                            briefing.sunrise(),
-                            briefing.sunset(),
-                            briefing.tempMin(),
-                            briefing.tempMax()
-                    ))
-                    .toList();
-        } catch (Exception e) {
-            log.error("날씨 브리핑 호출 에러 발생 : ", e);
-            return FALLBACK_BRIEFINGS;
-        }
-    }
 
     public WeatherWithForecast findWeatherWithForecast(Double latitude,
                                                        Double longitude,

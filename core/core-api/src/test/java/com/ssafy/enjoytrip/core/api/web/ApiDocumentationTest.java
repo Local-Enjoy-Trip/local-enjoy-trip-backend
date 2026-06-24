@@ -86,7 +86,7 @@ class ApiDocumentationTest {
     private AttractionStatsService attractionStatsService;
     private EvChargerService chargerService;
     private NewsService newsService;
-    private WeatherService weatherService;
+
     private NeighborhoodBriefingService neighborhoodBriefingService;
     private BoardService boardService;
     private HotplaceService hotplaceService;
@@ -106,7 +106,7 @@ class ApiDocumentationTest {
         attractionStatsService = mock(AttractionStatsService.class);
         chargerService = mock(EvChargerService.class);
         newsService = mock(NewsService.class);
-        weatherService = mock(WeatherService.class);
+
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         boardService = mock(BoardService.class);
         hotplaceService = mock(HotplaceService.class);
@@ -126,7 +126,7 @@ class ApiDocumentationTest {
                         new AttractionController(attractionService, attractionStatsService),
                         new ChargerController(chargerService),
                         new NewsController(newsService),
-                        new WeatherController(weatherService),
+
                         new NeighborhoodBriefingController(neighborhoodBriefingService),
                         new BoardController(boardService),
                         new HotplaceController(hotplaceService),
@@ -251,20 +251,7 @@ class ApiDocumentationTest {
                         preprocessResponse(prettyPrint())));
     }
 
-    @DisplayName("날씨 브리핑 API 문서를 검증한다")
-    @Test
-    void weatherBriefings() throws Exception {
-        when(weatherService.findWeatherBriefings()).thenReturn(List.of(
-                new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25)
-        ));
 
-        mockMvc.perform(get("/api/weather/briefings"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.weather").isArray())
-                .andDo(document("weather-briefings",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint())));
-    }
 
     @DisplayName("동네 AI 브리핑 API 문서를 검증한다")
     @Test

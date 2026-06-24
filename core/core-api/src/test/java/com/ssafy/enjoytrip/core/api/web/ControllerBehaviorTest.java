@@ -112,7 +112,7 @@ class ControllerBehaviorTest {
     private AttractionService attractionService;
     private AttractionStatsService attractionStatsService;
     private EvChargerService chargerService;
-    private WeatherService weatherService;
+
     private NeighborhoodBriefingService neighborhoodBriefingService;
     private NoteImageUploadService noteImageUploadService;
     private MemberProfileImageService memberProfileImageService;
@@ -134,7 +134,7 @@ class ControllerBehaviorTest {
         attractionService = mock(AttractionService.class);
         attractionStatsService = mock(AttractionStatsService.class);
         chargerService = mock(EvChargerService.class);
-        weatherService = mock(WeatherService.class);
+
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         noteImageUploadService = mock(NoteImageUploadService.class);
         memberProfileImageService = mock(MemberProfileImageService.class);
@@ -150,7 +150,7 @@ class ControllerBehaviorTest {
                         new AttractionController(attractionService, attractionStatsService),
                         new AttractionTagController(attractionService),
                         new ChargerController(chargerService),
-                        new WeatherController(weatherService),
+
                         new NeighborhoodBriefingController(neighborhoodBriefingService),
                         new MapController(mapExploreService, mapSearchService),
                         new NoteImageController(noteImageUploadService),
@@ -162,31 +162,7 @@ class ControllerBehaviorTest {
                 .build();
     }
 
-    @Nested
-    class WeatherEndpoints {
-        @DisplayName("날씨 브리핑을 반환하고 서비스에 위임한다")
-        @Test
-        void returnsWeatherBriefingsAndDelegatesToService() throws Exception {
-            when(weatherService.findWeatherBriefings()).thenReturn(List.of(
-                    new WeatherSummary("서울", "맑음", 22, 10, "05:23", "19:33", 15, 25),
-                    new WeatherSummary("부산", "구름 많음", 21, 20, "05:17", "19:22", 16, 24)
-            ));
 
-            mockMvc.perform(get("/api/weather/briefings"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.weather[0].region").value("서울"))
-                    .andExpect(jsonPath("$.data.weather[0].condition").value("맑음"))
-                    .andExpect(jsonPath("$.data.weather[0].temperature").value(22))
-                    .andExpect(jsonPath("$.data.weather[0].rainChance").value(10))
-                    .andExpect(jsonPath("$.data.weather[0].sunrise").value("05:23"))
-                    .andExpect(jsonPath("$.data.weather[0].sunset").value("19:33"))
-                    .andExpect(jsonPath("$.data.weather[0].tempMin").value(15))
-                    .andExpect(jsonPath("$.data.weather[0].tempMax").value(25));
-
-            verify(weatherService).findWeatherBriefings();
-        }
-    }
 
     @Nested
     class NeighborhoodBriefingEndpoints {
