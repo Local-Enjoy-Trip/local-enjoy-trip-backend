@@ -14,13 +14,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 
 @Tag(name = "Plans", description = "여행 계획 API")
 public interface PlanApi {
 
     @Operation(
             summary = "여행 계획 목록 조회",
-            description = "`memberId`가 있으면 해당 사용자의 계획만, 없으면 전체 계획을 조회합니다.",
+            description = "`memberId`가 있으면 해당 회원의 계획만, 없으면 전체 계획을 조회합니다.",
             operationId = "findPlans"
     )
     @ApiResponses({
@@ -37,7 +40,6 @@ public interface PlanApi {
                                         "plans": [
                                           {
                                             "id": "p1",
-                                            "memberId": "ssafy",
                                             "title": "제주 여행",
                                             "startDate": "2026-05-20",
                                             "endDate": "2026-05-22",
@@ -53,7 +55,7 @@ public interface PlanApi {
                                     """))
             )
     })
-    ApiResponse<PlansResponse> find(@Parameter(description = "사용자 ID 필터", example = "ssafy") Long memberId);
+    ApiResponse<PlansResponse> find(@Parameter(description = "회원 식별자 필터", example = "11") Long memberId);
 
     @Operation(
             summary = "여행 계획 단건 조회",
@@ -72,12 +74,12 @@ public interface PlanApi {
             )
     })
     ApiResponse<PlanResponse> findOne(
-            @Parameter(description = "조회할 여행 계획 ID", example = "p1", required = true) String id
+            @Parameter(description = "조회할 여행 계획 ID", example = "p1", required = true) @NotBlank String id
     );
 
     @Operation(
             summary = "여행 계획 생성",
-            description = "JSON request body로 여행 계획과 코스 항목을 생성합니다. 사용자 ID는 JWT subject를 사용합니다.",
+            description = "JSON request body로 여행 계획과 코스 항목을 생성합니다. 소유자는 인증 회원으로 결정됩니다.",
             operationId = "createPlan",
             requestBody = @RequestBody(
                     required = true,
@@ -102,7 +104,7 @@ public interface PlanApi {
                     description = "필수 필드 또는 범위 validation 실패"
             )
     })
-    ApiResponse<Void> create(PlanCreateRequest request, @Parameter(hidden = true) Long memberId);
+    ApiResponse<Void> create(@Valid PlanCreateRequest request, @Parameter(hidden = true) Long memberId);
 
     @Operation(
             summary = "여행 계획 수정",
@@ -128,8 +130,8 @@ public interface PlanApi {
             )
     })
     ApiResponse<Void> update(
-            @Parameter(description = "수정할 여행 계획 ID", example = "p1", required = true) String id,
-            PlanUpdateRequest request,
+            @Parameter(description = "수정할 여행 계획 ID", example = "p1", required = true) @NotBlank String id,
+            @Valid PlanUpdateRequest request,
             @Parameter(hidden = true) Long memberId
     );
 
@@ -157,8 +159,8 @@ public interface PlanApi {
             )
     })
     ApiResponse<Void> replaceItems(
-            @Parameter(description = "코스를 교체할 여행 계획 ID", example = "p1", required = true) String id,
-            PlanReplaceItemsRequest request,
+            @Parameter(description = "코스를 교체할 여행 계획 ID", example = "p1", required = true) @NotBlank String id,
+            @Valid PlanReplaceItemsRequest request,
             @Parameter(hidden = true) Long memberId
     );
 
@@ -178,8 +180,8 @@ public interface PlanApi {
             )
     })
     ApiResponse<Void> deleteItem(
-            @Parameter(description = "여행 계획 ID", example = "p1", required = true) String id,
-            @Parameter(description = "삭제할 코스 항목 ID", example = "1", required = true) Long itemId,
+            @Parameter(description = "여행 계획 ID", example = "p1", required = true) @NotBlank String id,
+            @Parameter(description = "삭제할 코스 항목 ID", example = "1", required = true) @Positive Long itemId,
             @Parameter(hidden = true) Long memberId
     );
 
@@ -204,7 +206,7 @@ public interface PlanApi {
             )
     })
     ApiResponse<Void> delete(
-            @Parameter(description = "삭제할 여행 계획 ID", example = "p1", required = true) String id,
+            @Parameter(description = "삭제할 여행 계획 ID", example = "p1", required = true) @NotBlank String id,
             @Parameter(hidden = true) Long memberId
     );
 }

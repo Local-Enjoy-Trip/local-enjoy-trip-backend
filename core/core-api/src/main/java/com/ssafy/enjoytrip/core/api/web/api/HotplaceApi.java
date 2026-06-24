@@ -17,7 +17,7 @@ public interface HotplaceApi {
 
     @Operation(
             summary = "핫플레이스 목록 조회",
-            description = "`memberId`가 있으면 해당 사용자의 핫플레이스만, 없으면 전체 핫플레이스를 조회합니다.",
+            description = "`memberId`가 있으면 해당 회원의 핫플레이스만, 없으면 전체 핫플레이스를 조회합니다.",
             operationId = "findHotplaces"
     )
     @ApiResponses({
@@ -34,7 +34,6 @@ public interface HotplaceApi {
                                         "hotplaces": [
                                           {
                                             "id": "h1",
-                                            "memberId": "ssafy",
                                             "title": "성산일출봉",
                                             "type": "nature",
                                             "visitDate": "2026-05-20",
@@ -52,12 +51,12 @@ public interface HotplaceApi {
             )
     })
     ApiResponse<HotplacesResponse> find(
-            @Parameter(description = "사용자 ID 필터", example = "ssafy") Long memberId
+            @Parameter(description = "회원 식별자 필터", example = "11") Long memberId
     );
 
     @Operation(
             summary = "핫플레이스 생성",
-            description = "JSON 본문에 `id`, `memberId`, `title`, `type`, `visitDate`, 숫자형 `lat`, `lng`가 필요합니다.",
+            description = "JSON 본문에 `id`, `title`, `type`, `visitDate`, 숫자형 `lat`, `lng`가 필요합니다. 소유자는 인증 회원으로 결정됩니다.",
             operationId = "createHotplace",
             requestBody = @RequestBody(
                     required = true,

@@ -83,7 +83,7 @@ public class MemberController implements MemberApi {
         PendingOAuthSignup pending = oauthSignupTicketService.verify(request.oauthSignupTicket().trim());
         Member member = service.signupWithOAuth(
                 pending.provider(),
-                pending.providerUserId(),
+                pending.providerSubject(),
                 pending.email(),
                 request.name().trim(),
                 request.nickname().trim()

@@ -805,7 +805,7 @@ class ControllerBehaviorTest {
 
     @Nested
     class HotplaceEndpoints {
-        @DisplayName("사용자별 핫플레이스를 조회하고 좌표로 생성한다")
+        @DisplayName("회원 식별자별 핫플레이스를 조회하고 좌표로 생성한다")
         @Test
         void findsHotplacesByUserAndCreatesWithCoordinates() throws Exception {
             when(hotplaceService.findHotplacesByMemberId(11L)).thenReturn(List.of(

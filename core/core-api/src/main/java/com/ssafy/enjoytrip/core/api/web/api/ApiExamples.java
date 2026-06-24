@@ -201,10 +201,10 @@ final class ApiExamples {
             {
               "success": true,
               "data": {
-                "objectKey": "profiles/ssafy/123e4567-e89b-12d3-a456-426614174000.png",
-                "uploadUrl": "https://storage.example.com/profiles/ssafy/image.png?signature=...",
+                "objectKey": "profiles/11/123e4567-e89b-12d3-a456-426614174000.png",
+                "uploadUrl": "https://storage.example.com/profiles/11/image.png?signature=...",
                 "expiresAt": "2026-06-22T10:10:00Z",
-                "publicUrl": "https://cdn.example.com/profiles/ssafy/image.png"
+                "publicUrl": "https://cdn.example.com/profiles/11/image.png"
               },
               "error": null
             }
@@ -260,10 +260,10 @@ final class ApiExamples {
             {
               "success": true,
               "data": {
-                "objectKey": "notes/ssafy/123e4567-e89b-12d3-a456-426614174000.jpg",
-                "uploadUrl": "https://storage.example.com/notes/ssafy/image.jpg?signature=...",
+                "objectKey": "notes/11/123e4567-e89b-12d3-a456-426614174000.jpg",
+                "uploadUrl": "https://storage.example.com/notes/11/image.jpg?signature=...",
                 "expiresAt": "2026-06-22T10:10:00Z",
-                "publicUrl": "https://cdn.example.com/notes/ssafy/image.jpg"
+                "publicUrl": "https://cdn.example.com/notes/11/image.jpg"
               },
               "error": null
             }
@@ -423,7 +423,7 @@ final class ApiExamples {
 
     static final String PROFILE_IMAGE_UPDATE_REQUEST = """
             {
-              "objectKey": "profiles/ssafy/123e4567-e89b-12d3-a456-426614174000.png",
+              "objectKey": "profiles/11/123e4567-e89b-12d3-a456-426614174000.png",
               "contentType": "image/png"
             }
             """;

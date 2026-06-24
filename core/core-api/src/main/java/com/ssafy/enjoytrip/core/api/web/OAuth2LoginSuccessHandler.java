@@ -38,24 +38,24 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         OAuth2User principal = oauth.getPrincipal();
         String email = value(principal.getAttribute("email"));
         String name = value(principal.getAttribute("name"));
-        String providerUserId = value(principal.getAttribute("sub"));
+        String providerSubject = value(principal.getAttribute("sub"));
         if (email.isBlank()) {
             response.sendRedirect(redirectUri + "?error=" + encode("google_email_missing"));
             return;
         }
-        if (providerUserId.isBlank()) {
-            providerUserId = principal.getName();
+        if (providerSubject.isBlank()) {
+            providerSubject = principal.getName();
         }
 
         String provider = oauth.getAuthorizedClientRegistrationId();
         Member member = memberService.findByEmail(email);
         if (member == null) {
-            OAuthSignupTicket ticket = ticketService.issue(provider, providerUserId, email, name);
+            OAuthSignupTicket ticket = ticketService.issue(provider, providerSubject, email, name);
             response.sendRedirect(redirectUri + "#" + signupFragment(ticket));
             return;
         }
 
-        Member loggedIn = memberService.loginWithOAuth(provider, providerUserId, email, name);
+        Member loggedIn = memberService.loginWithOAuth(provider, providerSubject, email, name);
         IssuedToken token = tokenService.issue(loggedIn);
         response.sendRedirect(redirectUri + "#" + tokenFragment(token));
     }

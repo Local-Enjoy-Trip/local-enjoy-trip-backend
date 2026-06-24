@@ -68,25 +68,25 @@ public class MemberService {
     }
 
     @Transactional
-    public Member loginWithOAuth(String provider, String providerUserId, String email, String name) {
+    public Member loginWithOAuth(String provider, String providerSubject, String email, String name) {
         Member existing = findByEmail(email);
         if (existing != null) {
             authLogMapper.insert(new AuthLogRecord(existing.memberId(), "LOGIN"));
             return existing;
         }
 
-        Member member = saveMember(createOAuthMember(provider, providerUserId, email, name, name));
+        Member member = saveMember(createOAuthMember(provider, providerSubject, email, name, name));
         authLogMapper.insert(new AuthLogRecord(member.memberId(), "LOGIN"));
         return member;
     }
 
     @Transactional
     public Member signupWithOAuth(String provider,
-                                  String providerUserId,
+                                  String providerSubject,
                                   String email,
                                   String name,
                                   String nickname) {
-        Member member = createOAuthMember(provider, providerUserId, email, name, nickname);
+        Member member = createOAuthMember(provider, providerSubject, email, name, nickname);
         validateNewMember(member);
         Member saved = saveMember(member);
         authLogMapper.insert(new AuthLogRecord(saved.memberId(), "LOGIN"));
@@ -129,7 +129,7 @@ public class MemberService {
     }
 
     private Member createOAuthMember(String provider,
-                                     String providerUserId,
+                                     String providerSubject,
                                      String email,
                                      String name,
                                      String nickname) {
@@ -138,7 +138,7 @@ public class MemberService {
                 name,
                 nickname,
                 email,
-                passwordEncoder.encode(provider + ":" + providerUserId + ":" + UUID.randomUUID()),
+                passwordEncoder.encode(provider + ":" + providerSubject + ":" + UUID.randomUUID()),
                 null
         );
     }

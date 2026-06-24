@@ -21,14 +21,14 @@ public class OAuthSignupTicketService {
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
 
-    public OAuthSignupTicket issue(String provider, String providerUserId, String email, String suggestedName) {
+    public OAuthSignupTicket issue(String provider, String providerSubject, String email, String suggestedName) {
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plusSeconds(EXPIRATION_SECONDS);
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("enjoytrip")
                 .issuedAt(issuedAt)
                 .expiresAt(expiresAt)
-                .subject(providerUserId)
+                .subject(providerSubject)
                 .claim("purpose", PURPOSE)
                 .claim("provider", provider)
                 .claim("email", email)
@@ -55,7 +55,7 @@ public class OAuthSignupTicketService {
 
     public record PendingOAuthSignup(
             String provider,
-            String providerUserId,
+            String providerSubject,
             String email,
             String suggestedName
     ) {

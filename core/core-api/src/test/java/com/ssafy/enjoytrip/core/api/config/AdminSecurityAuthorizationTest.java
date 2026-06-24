@@ -1,6 +1,7 @@
 package com.ssafy.enjoytrip.core.api.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -25,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -79,6 +81,18 @@ class AdminSecurityAuthorizationTest {
         assertThat(authentication.getAuthorities())
                 .extracting(Object::toString)
                 .containsExactly("ROLE_ADMIN");
+    }
+
+    @DisplayName("JWT 권한 변환기는 숫자가 아닌 subject를 인증 실패로 처리한다")
+    @Test
+    void jwtConverterRejectsNonNumericSubject() {
+        Jwt jwt = Jwt.withTokenValue("token")
+                .header("alg", "none")
+                .subject("legacy-user")
+                .build();
+
+        assertThatThrownBy(() -> new DbBackedJwtAuthenticationConverter(memberMapper).convert(jwt))
+                .isInstanceOf(BadCredentialsException.class);
     }
 
     @DisplayName("관리자 이메일 로그인 계정은 내부 회원 role이 ADMIN일 때만 로드된다")
