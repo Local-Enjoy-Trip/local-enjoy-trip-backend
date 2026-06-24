@@ -37,4 +37,13 @@ public interface NoteMapper {
                                         @Param("viewerMemberId") Long viewerMemberId,
                                         @Param("category") String category,
                                         @Param("friendOnly") boolean friendOnly);
+
+    List<NoteMapPinRecord> searchMapNotes(@Param("keyword") String keyword,
+                                          @Param("escapedKeyword") String escapedKeyword,
+                                          @Param("longitude") double longitude,
+                                          @Param("latitude") double latitude,
+                                          @Param("radiusMeters") Double radiusMeters,
+                                          @Param("category") String category,
+                                          @Param("limit") Integer limit,
+                                          @Param("viewerMemberId") Long viewerMemberId);
 }

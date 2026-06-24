@@ -519,6 +519,48 @@ final class ApiExamples {
             }
             """;
 
+    static final String MAP_SEARCH_RESPONSE = """
+            {
+              "success": true,
+              "data": [
+                {
+                  "type": "PLACE",
+                  "id": 125405,
+                  "title": "경복궁",
+                  "address": "서울 중구",
+                  "latitude": 37.579617,
+                  "longitude": 126.977041,
+                  "imageUrl": "https://cdn.example.com/place.png",
+                  "contentTypeId": "12",
+                  "distanceMeters": 1450.2,
+                  "saved": true,
+                  "saveCount": 12,
+                  "ratingAverage": 4.5,
+                  "ratingCount": 8,
+                  "matchTier": 0
+                },
+                {
+                  "type": "NOTE",
+                  "id": 1,
+                  "title": "서울 산책 메모",
+                  "category": "DAILY",
+                  "visibility": "PUBLIC",
+                  "latitude": 37.5665,
+                  "longitude": 126.9780,
+                  "regionName": "서울 중구",
+                  "distanceMeters": 42.0,
+                  "imageObjectKey": null,
+                  "authorNickname": "동네핀러",
+                  "authorProfileImageUrl": null,
+                  "relationshipToViewer": "NONE",
+                  "createdAt": "2026-06-22T10:00:00",
+                  "matchTier": 1
+                }
+              ],
+              "error": null
+            }
+            """;
+
     private ApiExamples() {
     }
 }

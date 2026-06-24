@@ -597,3 +597,8 @@ List<CourseStop> plan(List<CourseStopPoint> points);
   - `CONSTITUTION.md`
   - `RULES.md`
   - `docs/code-review.md`
+
+---
+
+## 10. 후속 계획
+- 코스 도메인 단순화 이후, 태그 도메인 재설계 및 공통 Value Object(VO) 도입을 위한 계획은 [태그 도메인 재설계 및 공통 VO 도입 계획](tag_and_vo_redesign.md)에서 다룬다.

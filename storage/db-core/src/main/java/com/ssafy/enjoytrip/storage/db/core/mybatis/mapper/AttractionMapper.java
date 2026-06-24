@@ -29,6 +29,14 @@ public interface AttractionMapper {
                                             @Param("savedOnly") boolean savedOnly,
                                             @Param("viewerMemberId") Long viewerMemberId);
 
+    List<AttractionSearchRecord> searchMapPlaces(@Param("keyword") String keyword,
+                                                 @Param("escapedKeyword") String escapedKeyword,
+                                                 @Param("longitude") double longitude,
+                                                 @Param("latitude") double latitude,
+                                                 @Param("radiusMeters") Double radiusMeters,
+                                                 @Param("limit") Integer limit,
+                                                 @Param("viewerMemberId") Long viewerMemberId);
+
     List<AttractionSearchRecord> findDetailRowsById(@Param("attractionId") Long attractionId,
                                                     @Param("viewerMemberId") Long viewerMemberId);
 

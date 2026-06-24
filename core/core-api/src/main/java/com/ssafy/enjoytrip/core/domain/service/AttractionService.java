@@ -20,9 +20,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AttractionService {
@@ -300,4 +302,20 @@ public class AttractionService {
                 .toList();
     }
 
+    public List<NearbyAttractionCandidate> searchMapPlaces(String keyword, String escapedKeyword, double longitude, double latitude, Double radiusMeters, Integer limit, Long viewerMemberId) {
+        long t0 = System.nanoTime();
+        List<AttractionSearchRecord> records = attractionMapper.searchMapPlaces(
+                keyword,
+                escapedKeyword,
+                longitude,
+                latitude,
+                radiusMeters,
+                limit,
+                viewerMemberId
+        );
+        int rows = records.size();
+        log.info("map-search places keyword={} radius={} rows={} tookMs={}", keyword, radiusMeters, rows, (System.nanoTime() - t0) / 1_000_000.0);
+
+        return toNearbyCandidates(records);
+    }
 }

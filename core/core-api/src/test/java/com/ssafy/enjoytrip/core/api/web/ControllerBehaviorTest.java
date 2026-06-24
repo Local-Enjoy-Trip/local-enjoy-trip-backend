@@ -38,6 +38,7 @@ import com.ssafy.enjoytrip.core.domain.service.EvChargerService;
 import com.ssafy.enjoytrip.core.domain.service.HotplaceService;
 import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MapExploreService;
+import com.ssafy.enjoytrip.core.domain.service.MapSearchService;
 import com.ssafy.enjoytrip.core.domain.service.MemberService;
 import com.ssafy.enjoytrip.core.domain.service.NoteImageUploadService;
 import com.ssafy.enjoytrip.core.domain.service.MemberProfileImageService;
@@ -104,6 +105,7 @@ class ControllerBehaviorTest {
     private NoticeService noticeService;
     private NoteService noteService;
     private MapExploreService mapExploreService;
+    private MapSearchService mapSearchService;
     private MemberService memberService;
     private JwtTokenService tokenService;
     private OAuthSignupTicketService oauthSignupTicketService;
@@ -125,6 +127,7 @@ class ControllerBehaviorTest {
         noticeService = mock(NoticeService.class);
         noteService = mock(NoteService.class);
         mapExploreService = mock(MapExploreService.class);
+        mapSearchService = mock(MapSearchService.class);
         memberService = mock(MemberService.class);
         tokenService = mock(JwtTokenService.class);
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
@@ -149,7 +152,7 @@ class ControllerBehaviorTest {
                         new ChargerController(chargerService),
                         new WeatherController(weatherService),
                         new NeighborhoodBriefingController(neighborhoodBriefingService),
-                        new MapController(mapExploreService),
+                        new MapController(mapExploreService, mapSearchService),
                         new NoteImageController(noteImageUploadService),
                         new HealthController(dbHealthService),
                         new FailingController()
