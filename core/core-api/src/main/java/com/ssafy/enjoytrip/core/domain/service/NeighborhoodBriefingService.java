@@ -3,7 +3,7 @@ package com.ssafy.enjoytrip.core.domain.service;
 import com.ssafy.enjoytrip.core.domain.CourseBriefingCandidate;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
-import com.ssafy.enjoytrip.core.domain.WeatherBriefingWithForecastDomain;
+import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import com.ssafy.enjoytrip.external.WeatherBriefingResult;
 import com.ssafy.enjoytrip.external.briefing.CourseBriefingCandidateData;
@@ -25,7 +25,7 @@ public class NeighborhoodBriefingService {
 
     @Cacheable(cacheNames = "neighborhoodBriefings", key = "#regionName + ':' + #currentHour")
     public NeighborhoodBriefing brief(String regionName, Double latitude, Double longitude, String currentHour) {
-        WeatherBriefingWithForecastDomain weatherWithForecast = weatherService.findWeatherWithForecast(latitude, longitude, regionName);
+        WeatherWithForecast weatherWithForecast = weatherService.findWeatherWithForecast(latitude, longitude, regionName);
         WeatherSummary weather = weatherWithForecast.current();
         List<WeatherForecast> forecasts = weatherWithForecast.forecasts();
 

@@ -1,7 +1,7 @@
 package com.ssafy.enjoytrip.core.domain.service;
 
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
-import com.ssafy.enjoytrip.core.domain.WeatherBriefingWithForecastDomain;
+import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
 import com.ssafy.enjoytrip.external.OpenWeatherMapWeatherClient;
 import com.ssafy.enjoytrip.external.WeatherBriefingWithForecast;
@@ -52,9 +52,9 @@ public class WeatherService {
         }
     }
 
-    public WeatherBriefingWithForecastDomain findWeatherWithForecast(Double latitude,
-                                                                     Double longitude,
-                                                                     String regionName) {
+    public WeatherWithForecast findWeatherWithForecast(Double latitude,
+                                                       Double longitude,
+                                                       String regionName) {
         try {
             double lat = latitude != null ? latitude : 37.5665;
             double lon = longitude != null ? longitude : 126.9780;
@@ -95,7 +95,7 @@ public class WeatherService {
                     ))
                     .toList();
 
-            return new WeatherBriefingWithForecastDomain(weather, forecasts);
+            return new WeatherWithForecast(weather, forecasts);
         } catch (Exception e) {
             log.error("날씨 호출 에러 발생 : " , e);
             WeatherSummary fallbackWeather = new WeatherSummary(
@@ -108,7 +108,7 @@ public class WeatherService {
                     15,
                     25
             );
-            return new WeatherBriefingWithForecastDomain(fallbackWeather, fallbackForecasts());
+            return new WeatherWithForecast(fallbackWeather, fallbackForecasts());
         }
     }
 
