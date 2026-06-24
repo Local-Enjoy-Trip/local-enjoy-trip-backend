@@ -71,12 +71,12 @@ public class AttractionService {
     }
 
     public Attraction findAttractionDetail(Long attractionId, Long memberId) {
-        List<AttractionSearchRecord> rows = attractionMapper.findDetailRowsById(attractionId, memberId);
-        if (rows.isEmpty()) {
+        AttractionSearchRecord record = attractionMapper.findDetailById(attractionId, memberId);
+        if (record == null) {
             throw new CoreException(ATTRACTION_NOT_FOUND);
         }
 
-        return toAttraction(rows.get(0));
+        return toAttraction(record);
     }
 
     public List<NearbyAttractionCandidate> findNearbyCandidates(

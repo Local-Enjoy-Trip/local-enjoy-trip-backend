@@ -138,7 +138,7 @@
         <include refid="searchRowJoins"/>
         order by a.distanceMeters asc, a.title asc, a.id asc
     </select>
-    <select id="findDetailRowsById" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
+    <select id="findDetailById" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
         select <include refid="searchRowColumns"/>
         from (
             select <include refid="baseColumns"/>,

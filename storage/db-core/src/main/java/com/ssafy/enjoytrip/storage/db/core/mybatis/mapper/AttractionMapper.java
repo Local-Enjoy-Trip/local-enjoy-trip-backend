@@ -36,8 +36,8 @@ public interface AttractionMapper {
                                                  @Param("limit") Integer limit,
                                                  @Param("viewerMemberId") Long viewerMemberId);
 
-    List<AttractionSearchRecord> findDetailRowsById(@Param("attractionId") Long attractionId,
-                                                    @Param("viewerMemberId") Long viewerMemberId);
+    AttractionSearchRecord findDetailById(@Param("attractionId") Long attractionId,
+                                         @Param("viewerMemberId") Long viewerMemberId);
 
     int existsById(Long attractionId);
 

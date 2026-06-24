@@ -117,9 +117,9 @@ class DbBackedTravelDataServicesTest {
                     attractionMapper,
                     mock(AttractionPopularityDeltaCache.class)
             );
-            when(attractionMapper.findDetailRowsById(1L, 11L)).thenReturn(List.of(
+            when(attractionMapper.findDetailById(1L, 11L)).thenReturn(
                     attractionRow(1L)
-            ));
+            );
 
             Attraction attraction = service.findAttractionDetail(1L, 11L);
 
@@ -137,7 +137,7 @@ class DbBackedTravelDataServicesTest {
                     attractionMapper,
                     mock(AttractionPopularityDeltaCache.class)
             );
-            when(attractionMapper.findDetailRowsById(999L, null)).thenReturn(List.of());
+            when(attractionMapper.findDetailById(999L, null)).thenReturn(null);
 
             assertThatThrownBy(() -> service.findAttractionDetail(999L, null))
                     .isInstanceOf(CoreException.class)
