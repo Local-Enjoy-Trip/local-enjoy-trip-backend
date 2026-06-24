@@ -3,7 +3,8 @@ package com.ssafy.enjoytrip.core.domain.service;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
-import com.ssafy.enjoytrip.external.OpenWeatherMapWeatherClient;
+import com.ssafy.enjoytrip.core.support.error.CoreException;
+import com.ssafy.enjoytrip.external.KmaWeatherClient;
 import com.ssafy.enjoytrip.external.WeatherBriefingWithForecast;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -24,24 +26,16 @@ public class WeatherService {
     private static final ZoneId KOREA = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter HOUR_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
     private static final int HOURLY_FORECAST_LIMIT = 6;
-    private final OpenWeatherMapWeatherClient weatherClient;
+    private final KmaWeatherClient weatherClient;
 
+    @Cacheable(cacheNames = "weatherForecasts", key = "#regionName + ':' + #currentHour", unless = "#result == null || #result.isFallback()")
     public WeatherWithForecast findWeatherWithForecast(Double latitude,
                                                        Double longitude,
-                                                       String regionName) {
+                                                       String regionName,
+                                                       String currentHour) {
         try {
             double lat = latitude != null ? latitude : 37.5665;
             double lon = longitude != null ? longitude : 126.9780;
-
-            if (latitude == null || longitude == null) {
-                if (regionName.contains("부산")) {
-                    lat = 35.1796;
-                    lon = 129.0756;
-                } else if (regionName.contains("제주")) {
-                    lat = 33.4996;
-                    lon = 126.5312;
-                }
-            }
 
             WeatherBriefingWithForecast clientResult = weatherClient.findWeatherWithForecast(
                     lat,
@@ -82,7 +76,7 @@ public class WeatherService {
                     15,
                     25
             );
-            return new WeatherWithForecast(fallbackWeather, fallbackForecasts());
+            return new WeatherWithForecast(fallbackWeather, fallbackForecasts(), true);
         }
     }
 

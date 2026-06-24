@@ -15,6 +15,7 @@ import com.ssafy.enjoytrip.core.domain.NewsResult;
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
+import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.domain.service.DbHealthService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
@@ -87,6 +88,7 @@ class ApiDocumentationTest {
     private EvChargerService chargerService;
     private NewsService newsService;
 
+    private WeatherService weatherService;
     private NeighborhoodBriefingService neighborhoodBriefingService;
     private BoardService boardService;
     private HotplaceService hotplaceService;
@@ -107,6 +109,7 @@ class ApiDocumentationTest {
         chargerService = mock(EvChargerService.class);
         newsService = mock(NewsService.class);
 
+        weatherService = mock(WeatherService.class);
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         boardService = mock(BoardService.class);
         hotplaceService = mock(HotplaceService.class);
@@ -127,7 +130,7 @@ class ApiDocumentationTest {
                         new ChargerController(chargerService),
                         new NewsController(newsService),
 
-                        new NeighborhoodBriefingController(neighborhoodBriefingService),
+                        new NeighborhoodBriefingController(neighborhoodBriefingService, weatherService),
                         new BoardController(boardService),
                         new HotplaceController(hotplaceService),
                         new PlanController(planService),
@@ -265,7 +268,10 @@ class ApiDocumentationTest {
                 new WeatherForecast("16:00", 24, "구름 많음", 20),
                 new WeatherForecast("17:00", 23, "맑음", 10)
         );
-        when(neighborhoodBriefingService.brief(eq("서울"), any(), any(), anyString()))
+        WeatherWithForecast weatherWithForecast = new WeatherWithForecast(weather, forecasts);
+        when(weatherService.findWeatherWithForecast(any(), any(), eq("서울"), anyString()))
+                .thenReturn(weatherWithForecast);
+        when(neighborhoodBriefingService.brief(eq("서울"), any(WeatherWithForecast.class), anyString()))
                 .thenReturn(new NeighborhoodBriefing(
                         "서울",
                         "오늘 서울은 맑고 더운 편이라 한강 저녁 산책 코스 어떠세요?",

@@ -43,7 +43,7 @@ class StorageMyBatisConfigurationTest {
                 .doesNotContain("enjoytrip:\n  ai:")
                 .doesNotContain("minio:");
         assertThat(externalContent)
-                .contains("open-weather-map")
+                .contains("kma")
                 .contains("spring:\n  ai:")
                 .contains("minio:");
     }

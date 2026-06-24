@@ -3,7 +3,9 @@ package com.ssafy.enjoytrip.core.api.web.controller;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.domain.NeighborhoodBriefing;
+import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.domain.service.NeighborhoodBriefingService;
+import com.ssafy.enjoytrip.core.domain.service.WeatherService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.NeighborhoodBriefingApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NeighborhoodBriefingRequest;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class NeighborhoodBriefingController implements NeighborhoodBriefingApi {
     private final NeighborhoodBriefingService service;
+    private final WeatherService weatherService;
 
     @GetMapping("/briefing")
     @Override
@@ -32,14 +35,19 @@ public class NeighborhoodBriefingController implements NeighborhoodBriefingApi {
         String currentHour = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
                 .format(DateTimeFormatter.ofPattern("yyyyMMddHH"));
 
-        NeighborhoodBriefing briefing = service.brief(
-                request.toRegionName(),
+        WeatherWithForecast weatherWithForecast = weatherService.findWeatherWithForecast(
                 request.latitude(),
                 request.longitude(),
+                request.toRegionName(),
+                currentHour
+        );
+
+        NeighborhoodBriefing briefing = service.brief(
+                request.toRegionName(),
+                weatherWithForecast,
                 currentHour
         );
 
         return success(new NeighborhoodBriefingResponse(briefing));
     }
 }
-

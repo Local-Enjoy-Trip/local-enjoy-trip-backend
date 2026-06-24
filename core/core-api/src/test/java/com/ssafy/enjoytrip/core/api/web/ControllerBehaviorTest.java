@@ -28,6 +28,7 @@ import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
+import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.support.error.exception.ExternalServiceException;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.domain.service.DbHealthService;
@@ -113,6 +114,7 @@ class ControllerBehaviorTest {
     private AttractionStatsService attractionStatsService;
     private EvChargerService chargerService;
 
+    private WeatherService weatherService;
     private NeighborhoodBriefingService neighborhoodBriefingService;
     private NoteImageUploadService noteImageUploadService;
     private MemberProfileImageService memberProfileImageService;
@@ -135,6 +137,7 @@ class ControllerBehaviorTest {
         attractionStatsService = mock(AttractionStatsService.class);
         chargerService = mock(EvChargerService.class);
 
+        weatherService = mock(WeatherService.class);
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         noteImageUploadService = mock(NoteImageUploadService.class);
         memberProfileImageService = mock(MemberProfileImageService.class);
@@ -151,7 +154,7 @@ class ControllerBehaviorTest {
                         new AttractionTagController(attractionService),
                         new ChargerController(chargerService),
 
-                        new NeighborhoodBriefingController(neighborhoodBriefingService),
+                        new NeighborhoodBriefingController(neighborhoodBriefingService, weatherService),
                         new MapController(mapExploreService, mapSearchService),
                         new NoteImageController(noteImageUploadService),
                         new HealthController(dbHealthService),
@@ -180,7 +183,10 @@ class ControllerBehaviorTest {
             );
             String generatedBriefing = "오늘 서울은 맑고 더운 편이라 "
                     + "한강 저녁 산책 코스 어떠세요?";
-            when(neighborhoodBriefingService.brief(eq("서울"), any(), any(), anyString()))
+            WeatherWithForecast weatherWithForecast = new WeatherWithForecast(weather, forecasts);
+            when(weatherService.findWeatherWithForecast(any(), any(), eq("서울"), anyString()))
+                    .thenReturn(weatherWithForecast);
+            when(neighborhoodBriefingService.brief(eq("서울"), any(WeatherWithForecast.class), anyString()))
                     .thenReturn(new NeighborhoodBriefing(
                             "서울",
                             generatedBriefing,
@@ -205,7 +211,7 @@ class ControllerBehaviorTest {
                     .andExpect(jsonPath("$.data.forecasts[0].time").value("12:00"))
                     .andExpect(jsonPath("$.data.forecasts[5].time").value("17:00"));
 
-            verify(neighborhoodBriefingService).brief(eq("서울"), any(), any(), anyString());
+            verify(neighborhoodBriefingService).brief(eq("서울"), any(WeatherWithForecast.class), anyString());
         }
 
         @DisplayName("동네 브리핑은 지역 query DTO 검증을 적용한다")
