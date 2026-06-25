@@ -421,7 +421,7 @@
         JOIN attraction_embeddings ae ON ae.attraction_id = a.id
         WHERE ae.status = 'EMBEDDED'
           AND a.sido_code = #{sidoCode}
-          <if test="gugunCode != null">AND a.gugun_code = #{gugunCode}</if>
+          <if test="gugunCode != null and gugunCode != 0">AND a.gugun_code = #{gugunCode}</if>
         ORDER BY ae.embedding &lt;=&gt; #{preferenceEmbeddingLiteral}::vector
         LIMIT #{limit}
     </select>

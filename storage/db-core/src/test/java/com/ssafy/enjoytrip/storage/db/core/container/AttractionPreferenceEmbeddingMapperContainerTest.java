@@ -123,7 +123,7 @@ class AttractionPreferenceEmbeddingMapperContainerTest extends StorageContainerT
                 insert into attraction_embeddings
                     (attraction_id, embedding, source_version, source_text_hash,
                      embedding_dimension, embedding_input, provider, model, status)
-                values (?, ?::vector, 'v1', 'hash', 1536, '설명', 'openai', 'text-embedding-3-small', ?)
+                values (?, ?::vector, 'v1', '0000000000000000000000000000000000000000000000000000000000000000', 1536, '설명', 'openai', 'text-embedding-3-small', ?)
                 on conflict (attraction_id) do update
                     set embedding = excluded.embedding, status = excluded.status
                 """, attractionId, vectorLiteral, status);

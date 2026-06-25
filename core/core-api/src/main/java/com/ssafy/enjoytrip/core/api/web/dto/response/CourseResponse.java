@@ -6,6 +6,8 @@ import java.util.List;
 
 public record CourseResponse(
         String id,
+        Long ownerMemberId,
+        Long ownedUserId,
         String title,
         String regionName,
         String date,
@@ -21,6 +23,8 @@ public record CourseResponse(
     public static CourseResponse from(Course course) {
         return new CourseResponse(
                 course.id(),
+                course.ownerMemberId(),
+                course.ownerMemberId(),
                 course.title(),
                 course.regionName(),
                 course.date(),

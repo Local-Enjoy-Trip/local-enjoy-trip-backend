@@ -145,6 +145,14 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
                 "GMS_ERROR",
                 "embedding failed"
         );
+        List<TargetRegionRecord> regions = List.of(new TargetRegionRecord(1, 0));
+        
+        // Before embedding, targetAttractionId should be found as target
+        List<AttractionEmbeddingSourceRecord> targetsBefore = attractionEmbeddingMapper.findTargets(regions, 10);
+        assertThat(targetsBefore)
+                .extracting(AttractionEmbeddingSourceRecord::attractionId)
+                .contains(targetAttractionId);
+
         attractionEmbeddingMapper.upsertEmbedded(
                 targetAttractionId,
                 vectorLiteral(1536),
@@ -156,12 +164,12 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
                 "text-embedding-3-small"
         );
 
-        List<TargetRegionRecord> regions = List.of(new TargetRegionRecord(1, 0));
-        List<AttractionEmbeddingSourceRecord> targets = attractionEmbeddingMapper.findTargets(regions, 10);
-
-        assertThat(targets)
+        // After embedding, targetAttractionId should no longer be found as target
+        List<AttractionEmbeddingSourceRecord> targetsAfter = attractionEmbeddingMapper.findTargets(regions, 10);
+        assertThat(targetsAfter)
                 .extracting(AttractionEmbeddingSourceRecord::attractionId)
-                .contains(targetAttractionId);
+                .doesNotContain(targetAttractionId);
+
         assertThat(attractionEmbeddingMapper.existsEmbeddedWithSameSource(targetAttractionId, "v1", hash))
                 .isEqualTo(1);
         assertThat(attractionEmbeddingMapper.countOutsideTargetRegions(regions)).isGreaterThanOrEqualTo(1);
