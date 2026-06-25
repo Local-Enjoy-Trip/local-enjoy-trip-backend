@@ -1,5 +1,6 @@
 package com.ssafy.enjoytrip.core.domain;
 
 public enum NotificationType {
-    FRIEND_REQUEST_RECEIVED
+    FRIEND_REQUEST_RECEIVED,
+    COURSE_INVITATION_RECEIVED
 }

@@ -1,5 +1,6 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
+import com.ssafy.enjoytrip.core.domain.CourseInvitationStatus;
 import com.ssafy.enjoytrip.core.domain.FriendshipStatus;
 import com.ssafy.enjoytrip.core.domain.NotificationReferenceType;
 import com.ssafy.enjoytrip.core.domain.NotificationType;
@@ -28,6 +29,23 @@ public interface NotificationMapper {
     );
 
     int upsertFriendRequest(NotificationRecord record);
+
+    int existsUnreadCourseInvitation(
+            @Param("recipientMemberId") Long recipientMemberId,
+            @Param("type") NotificationType type,
+            @Param("referenceType") NotificationReferenceType referenceType,
+            @Param("status") CourseInvitationStatus status
+    );
+
+    List<NotificationRecord> findUnreadCourseInvitations(
+            @Param("recipientMemberId") Long recipientMemberId,
+            @Param("type") NotificationType type,
+            @Param("referenceType") NotificationReferenceType referenceType,
+            @Param("status") CourseInvitationStatus status,
+            @Param("limit") int limit
+    );
+
+    int upsertCourseInvitation(NotificationRecord record);
 
     int updateReadAt(NotificationRecord record);
 

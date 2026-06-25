@@ -11,6 +11,7 @@ import com.ssafy.enjoytrip.core.domain.Notification;
 import com.ssafy.enjoytrip.core.domain.service.NotificationService;
 import com.ssafy.enjoytrip.storage.db.core.model.MemberRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NotificationRecord;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseInvitationMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.FriendshipMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NotificationMapper;
@@ -25,7 +26,13 @@ class NotificationServiceTest {
         NotificationMapper notificationMapper = mock(NotificationMapper.class);
         FriendshipMapper friendshipMapper = mock(FriendshipMapper.class);
         MemberMapper memberMapper = mock(MemberMapper.class);
-        NotificationService service = new NotificationService(notificationMapper, friendshipMapper, memberMapper);
+        CourseInvitationMapper courseInvitationMapper = mock(CourseInvitationMapper.class);
+        NotificationService service = new NotificationService(
+                notificationMapper,
+                friendshipMapper,
+                memberMapper,
+                courseInvitationMapper
+        );
         MemberRecord requester = new MemberRecord("Alice", "alice", "alice@example.com", "password", null);
         when(memberMapper.findById(11L)).thenReturn(requester);
         NotificationRecord saved = new NotificationRecord(

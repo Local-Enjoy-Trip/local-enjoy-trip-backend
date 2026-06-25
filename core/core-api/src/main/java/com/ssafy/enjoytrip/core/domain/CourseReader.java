@@ -11,8 +11,10 @@ import com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecommendationCandidateRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseTagRecord;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseInvitationMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,11 +27,22 @@ public class CourseReader {
     private static final String TYPE_ATTRACTION = CourseStopTargetType.ATTRACTION.name();
     private static final String TYPE_NOTE = CourseStopTargetType.NOTE.name();
     private final CourseMapper courseMapper;
+    private final CourseInvitationMapper courseInvitationMapper;
 
-    public List<Course> findMyCourses(Long ownerMemberId) {
-        return courseMapper.findByOwnerMemberId(ownerMemberId).stream()
+    public List<Course> findMyCourses(Long memberId) {
+        List<Course> owned = courseMapper.findByOwnerMemberId(memberId).stream()
                 .map(record -> findCourse(record, true))
                 .toList();
+
+        List<Course> invited = courseInvitationMapper.findAcceptedCourseIdsByInvitee(memberId).stream()
+                .map(courseMapper::findById)
+                .filter(record -> record != null && record.getDeletedAt() == null)
+                .map(record -> findCourse(record, false))
+                .toList();
+
+        List<Course> result = new ArrayList<>(owned);
+        result.addAll(invited);
+        return result;
     }
 
     public Course findRequired(String id) {

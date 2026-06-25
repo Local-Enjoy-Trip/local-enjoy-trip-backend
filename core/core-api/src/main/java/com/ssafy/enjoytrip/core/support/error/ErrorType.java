@@ -65,7 +65,17 @@ public enum ErrorType {
             HttpStatus.FORBIDDEN,
             "다른 사용자의 알림에 접근할 수 없습니다.",
             WARN
-    );
+    ),
+
+    COURSE_INVITATION_NOT_FOUND(ErrorCode.P006, HttpStatus.NOT_FOUND, "코스 초대를 찾을 수 없습니다.", WARN),
+    COURSE_INVITATION_ACCESS_DENIED(
+            ErrorCode.P007,
+            HttpStatus.FORBIDDEN,
+            "다른 사용자의 코스 초대에 접근할 수 없습니다.",
+            WARN
+    ),
+    COURSE_INVITATION_ALREADY_EXISTS(ErrorCode.P008, HttpStatus.CONFLICT, "이미 초대가 존재합니다.", WARN),
+    NOT_FRIENDS(ErrorCode.F006, HttpStatus.BAD_REQUEST, "친구 관계가 아닌 사용자는 초대할 수 없습니다.", WARN);
 
     private final ErrorCode code;
     private final HttpStatus status;
