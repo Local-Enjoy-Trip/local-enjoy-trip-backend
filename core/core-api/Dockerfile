@@ -8,7 +8,7 @@ RUN apk add --no-cache tzdata && \
 
 # CI 단계에서 빌드된 core-api 모듈의 JAR 파일을 이미지 내부로 복사
 # (plain.jar를 제외한 실행 가능한 executable jar를 가져옵니다.)
-COPY core/core-api/build/libs/core-api-*.jar app.jar
+COPY core/core-api/core-api-*.jar app.jar
 
 # 외부 노출용 API 포트
 EXPOSE 8080
