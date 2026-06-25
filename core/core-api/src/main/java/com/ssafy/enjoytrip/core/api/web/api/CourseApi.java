@@ -101,7 +101,10 @@ public interface CourseApi {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "코스 없음")
     })
-    ApiResponse<CourseResponse> detail(@Parameter(description = "코스 ID", example = "c1") String id);
+    ApiResponse<CourseResponse> detail(
+            @Parameter(description = "코스 ID", example = "c1") String id,
+            @Parameter(hidden = true) Long authenticatedMemberId
+    );
 
     @Operation(
             summary = "내 코스 목록 조회",

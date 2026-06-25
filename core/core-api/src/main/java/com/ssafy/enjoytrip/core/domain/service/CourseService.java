@@ -3,11 +3,20 @@ package com.ssafy.enjoytrip.core.domain.service;
 import com.ssafy.enjoytrip.core.domain.Course;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizer;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
+import com.ssafy.enjoytrip.core.domain.CourseRecommendationCandidate;
+import com.ssafy.enjoytrip.core.domain.CourseRecommendationRanker;
 import com.ssafy.enjoytrip.core.domain.CourseReader;
 import com.ssafy.enjoytrip.core.domain.CourseWriter;
+import com.ssafy.enjoytrip.core.domain.NoteTagReader;
+import com.ssafy.enjoytrip.core.domain.RerankingContext;
+import com.ssafy.enjoytrip.core.domain.event.CourseViewedEvent;
 import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,6 +25,9 @@ public class CourseService {
     private final CourseReader courseReader;
     private final CourseWriter courseWriter;
     private final CourseOrderOptimizer courseOrderOptimizer;
+    private final ApplicationEventPublisher eventPublisher;
+    private final CourseRecommendationRanker ranker;
+    private final NoteTagReader noteTagReader;
 
     public List<Course> findMyCourses(Long ownerMemberId) {
         return courseReader.findMyCourses(ownerMemberId);
@@ -27,6 +39,14 @@ public class CourseService {
 
     public Course findPublicRequired(String id) {
         return courseReader.findPublicRequired(id);
+    }
+
+    public Course view(String id, Long memberId) {
+        Course course = courseReader.findPublicRequired(id);
+        if (memberId != null) {
+            eventPublisher.publishEvent(new CourseViewedEvent(course.id(), memberId));
+        }
+        return course;
     }
 
     public Course createCourse(Course course) {
@@ -71,11 +91,26 @@ public class CourseService {
     }
 
     public List<Course> findRecommendations(Long memberId, String regionName, int limit) {
-        long favoriteCount = courseReader.countMemberFavorites(memberId);
-        if (favoriteCount == 0) {
+        if (!courseReader.hasMemberProfileEmbedding(memberId)) {
             return courseReader.findPopularByRegion(regionName, limit);
         }
-        return courseReader.findRecommended(memberId, limit);
+
+        List<CourseRecommendationCandidate> candidates =
+                courseReader.findCandidatesByMemberProfile(memberId, limit * 3);
+        RerankingContext context = buildRerankingContext(memberId);
+
+        return ranker.rerank(candidates, context, limit);
+    }
+
+    private RerankingContext buildRerankingContext(Long memberId) {
+        Set<String> viewedWithin7Days = new HashSet<>(
+                courseReader.findRecentlyViewedCourseIds(memberId, 7)
+        );
+        Set<String> viewedWithin30Days = new HashSet<>(
+                courseReader.findRecentlyViewedCourseIds(memberId, 30)
+        );
+        Map<Long, Long> tagFrequency = noteTagReader.findMemberTagFrequency(memberId);
+        return new RerankingContext(viewedWithin7Days, viewedWithin30Days, tagFrequency);
     }
 
     public void saveCourse(Long memberId, String courseId) {

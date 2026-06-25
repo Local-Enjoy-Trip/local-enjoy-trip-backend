@@ -32,9 +32,14 @@ abstract class H2MapperTestSupport {
     @BeforeEach
     void clearStorageRows() {
         jdbcTemplate.update("delete from notifications");
+        jdbcTemplate.update("delete from course_views");
+        jdbcTemplate.update("delete from member_profile_embeddings");
+        jdbcTemplate.update("delete from course_embeddings");
         jdbcTemplate.update("delete from attraction_popularity_stats");
         jdbcTemplate.update("delete from attraction_saves");
         jdbcTemplate.update("delete from attraction_ratings");
+        jdbcTemplate.update("delete from note_saves");
+        jdbcTemplate.update("delete from note_tags");
         jdbcTemplate.update("delete from course_tags");
         jdbcTemplate.update("delete from tags");
         jdbcTemplate.update("delete from attractions");

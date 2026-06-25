@@ -2,6 +2,7 @@ package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.CourseRecommendationCandidateRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseTagRecord;
 import java.util.List;
@@ -34,6 +35,14 @@ public interface CourseMapper {
 
     List<CourseItemDetailRecord> findPublicItemsByCourseId(String courseId);
 
+    List<CourseItemDetailRecord> findPublicItemsByCourseIds(
+            @Param("courseIds") List<String> courseIds
+    );
+
+    List<CourseTagRecord> findTagsByCourseIds(
+            @Param("courseIds") List<String> courseIds
+    );
+
     List<CourseRecord> findDistanceOrderedPublicFeed(@Param("longitude") double longitude,
                                                       @Param("latitude") double latitude,
                                                       @Param("limit") int limit,
@@ -44,10 +53,19 @@ public interface CourseMapper {
 
     List<CourseRecord> findAllBySaveCount(@Param("limit") int limit);
 
-    long countMemberFavorites(@Param("memberId") Long memberId);
+    List<CourseRecommendationCandidateRecord> findCandidatesByMemberProfile(
+            @Param("memberId") Long memberId,
+            @Param("candidateLimit") int candidateLimit
+    );
 
-    List<CourseRecord> findRecommendedCourses(@Param("memberId") Long memberId,
-                                              @Param("limit") int limit);
+    boolean hasMemberProfileEmbedding(@Param("memberId") Long memberId);
+
+    List<String> findRecentlyViewedCourseIds(
+            @Param("memberId") Long memberId,
+            @Param("days") int days
+    );
+
+    int insertView(@Param("courseId") String courseId, @Param("memberId") Long memberId);
 
     int insertSave(@Param("courseId") String courseId, @Param("memberId") Long memberId);
 

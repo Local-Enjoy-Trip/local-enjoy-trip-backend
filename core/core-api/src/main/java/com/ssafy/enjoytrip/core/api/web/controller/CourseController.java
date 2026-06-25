@@ -1,5 +1,6 @@
 package com.ssafy.enjoytrip.core.api.web.controller;
 
+import static com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId.Unauthenticated.NULL;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
@@ -66,8 +67,12 @@ public class CourseController implements CourseApi {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<CourseResponse> detail(@PathVariable @NotBlank String id) {
-        return success(CourseResponse.from(courseService.findPublicRequired(id.strip())));
+    public ApiResponse<CourseResponse> detail(
+            @PathVariable @NotBlank String id,
+            @AuthenticatedMemberId(unauthenticated = NULL) Long authenticatedMemberId
+    ) {
+        Course course = courseService.view(id.strip(), authenticatedMemberId);
+        return success(CourseResponse.from(course));
     }
 
     @GetMapping("/me")
