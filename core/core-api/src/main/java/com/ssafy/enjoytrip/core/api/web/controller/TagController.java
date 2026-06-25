@@ -40,7 +40,7 @@ public class TagController implements TagApi {
     @Override
     public ApiResponse<TagsResponse> create(@Valid @RequestBody TagRequest request) {
         String name = request.normalizedName();
-        Tag tag = tagService.createOrThrow(name);
+        Tag tag = tagService.create(name);
         return success(new TagsResponse(List.of(tag)));
     }
 

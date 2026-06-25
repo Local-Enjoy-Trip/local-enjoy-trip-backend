@@ -5,7 +5,9 @@
         select id, name from tags order by name asc
     </select>
     <select id="insert" resultType="com.ssafy.enjoytrip.storage.db.core.model.TagRecord">
-        insert into tags (name) values (#{name}) returning id, name
+        insert into tags (name) values (#{name})
+        on conflict (name) do update set name = excluded.name
+        returning id, name
     </select>
     <update id="update">
         update tags set name = #{name} where id = #{id}

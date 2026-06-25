@@ -3,6 +3,7 @@ package com.ssafy.enjoytrip.core.domain;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_INVALID_ITEM;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_NOT_FOUND;
 
+import com.ssafy.enjoytrip.core.domain.event.CourseEmbeddingRequestedEvent;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
@@ -10,6 +11,7 @@ import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ public class CourseWriter {
     private final CourseMapper courseMapper;
     private final CourseStopPointResolver courseStopPointResolver;
     private final CourseRoutePlanner courseRoutePlanner;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Course create(Course course) {
@@ -30,8 +33,10 @@ public class CourseWriter {
         updateStartLocation(course.id(), startPoint);
         saveCourseTags(course.id(), course.tags());
 
-        return course.withStartLocation(startPoint)
+        Course created = course.withStartLocation(startPoint)
                 .withStops(saveStops(course.id(), plannedStops));
+        eventPublisher.publishEvent(new CourseEmbeddingRequestedEvent(course.id()));
+        return created;
     }
 
     @Transactional
@@ -48,8 +53,10 @@ public class CourseWriter {
         saveCourseTags(course.id(), course.tags());
 
         courseMapper.deleteItemsByCourseId(course.id());
-        return course.withStartLocation(startPoint)
+        Course updated = course.withStartLocation(startPoint)
                 .withStops(saveStops(course.id(), plannedStops));
+        eventPublisher.publishEvent(new CourseEmbeddingRequestedEvent(course.id()));
+        return updated;
     }
 
     @Transactional

@@ -5,6 +5,7 @@ import com.ssafy.enjoytrip.core.domain.NoteCategory;
 import com.ssafy.enjoytrip.core.domain.NoteStatus;
 import com.ssafy.enjoytrip.core.domain.NoteVisibility;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record NoteResponse(
         Long id,
@@ -18,8 +19,11 @@ public record NoteResponse(
         String imageObjectKey,
         NoteStatus status,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        List<TagInfo> tags
 ) {
+    public record TagInfo(Long id, String name) {}
+
     public NoteResponse(Note note) {
         this(
                 note.id(),
@@ -33,7 +37,8 @@ public record NoteResponse(
                 note.imageObjectKey(),
                 note.status(),
                 note.createdAt(),
-                note.updatedAt()
+                note.updatedAt(),
+                List.of()
         );
     }
 }

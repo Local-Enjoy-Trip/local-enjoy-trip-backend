@@ -38,7 +38,9 @@ class CourseControllerTest {
     @BeforeEach
     void setUp() {
         courseService = mock(CourseService.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new CourseController(courseService))
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                        new CourseController(courseService)
+                )
                 .setCustomArgumentResolvers(new TestAuthenticationPrincipalResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -111,7 +113,7 @@ class CourseControllerTest {
     @DisplayName("공개 코스 상세는 경로 요약과 items를 반환한다")
     @Test
     void returnsPublicCourseDetail() throws Exception {
-        when(courseService.findPublicRequired("course-1")).thenReturn(
+        when(courseService.view(eq("course-1"), any())).thenReturn(
                 course("course-1", null, 0)
         );
 

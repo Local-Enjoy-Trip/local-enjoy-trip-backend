@@ -15,6 +15,8 @@ import com.ssafy.enjoytrip.external.minio.MinioNoteImageUploadUrlGenerator;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteTagMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.TagMapper;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,7 +34,8 @@ class DbBackedTravelDataServicesTest {
             AttractionMapper attractionMapper = mock(AttractionMapper.class);
             AttractionService service = new AttractionService(
                     attractionMapper,
-                    mock(AttractionPopularityDeltaCache.class)
+                    mock(AttractionPopularityDeltaCache.class),
+                    mock(org.springframework.context.ApplicationEventPublisher.class)
             );
 
             assertThat(service).isNotNull();
@@ -174,7 +177,8 @@ class DbBackedTravelDataServicesTest {
                                                        AttractionPopularityDeltaCache deltaCache) {
             return new AttractionService(
                     attractionMapper,
-                    deltaCache
+                    deltaCache,
+                    mock(org.springframework.context.ApplicationEventPublisher.class)
             );
         }
     }
@@ -185,8 +189,13 @@ class DbBackedTravelDataServicesTest {
         @Test
         void savesOnlyAccessibleActiveNotes() {
             NoteMapper noteMapper = mock(NoteMapper.class);
-            NoteService service = new NoteService(noteMapper, mock(MinioNoteImageUploadUrlGenerator.class),
-                            mock(org.springframework.context.ApplicationEventPublisher.class));
+            NoteService service = new NoteService(
+                    noteMapper,
+                    mock(NoteTagMapper.class),
+                    mock(TagMapper.class),
+                    mock(MinioNoteImageUploadUrlGenerator.class),
+                    mock(org.springframework.context.ApplicationEventPublisher.class)
+            );
             when(noteMapper.existsAccessibleActive(1L, 11L)).thenReturn(1);
 
             service.addSave(1L, 11L);
@@ -198,8 +207,13 @@ class DbBackedTravelDataServicesTest {
         @Test
         void rejectsInaccessibleNoteSave() {
             NoteMapper noteMapper = mock(NoteMapper.class);
-            NoteService service = new NoteService(noteMapper, mock(MinioNoteImageUploadUrlGenerator.class),
-                            mock(org.springframework.context.ApplicationEventPublisher.class));
+            NoteService service = new NoteService(
+                    noteMapper,
+                    mock(NoteTagMapper.class),
+                    mock(TagMapper.class),
+                    mock(MinioNoteImageUploadUrlGenerator.class),
+                    mock(org.springframework.context.ApplicationEventPublisher.class)
+            );
             when(noteMapper.existsAccessibleActive(1L, 11L)).thenReturn(0);
 
             assertThatThrownBy(() -> service.addSave(1L, 11L))

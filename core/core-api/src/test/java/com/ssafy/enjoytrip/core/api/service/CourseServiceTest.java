@@ -32,9 +32,12 @@ import com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
+import com.ssafy.enjoytrip.core.domain.CourseRecommendationRanker;
+import com.ssafy.enjoytrip.core.domain.NoteTagReader;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteTagMapper;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,15 +68,20 @@ class CourseServiceTest {
         when(courseMapper.updateStartLocation(any(), any(), any())).thenReturn(1);
         CourseStopPointResolver stopPointResolver = new CourseStopPointResolver(attractionMapper, noteMapper);
         DefaultCourseRoutePlanner routePlanner = new DefaultCourseRoutePlanner();
+        org.springframework.context.ApplicationEventPublisher eventPublisher =
+                Mockito.mock(org.springframework.context.ApplicationEventPublisher.class);
         service = new CourseService(
                 new CourseReader(courseMapper),
-                new CourseWriter(courseMapper, stopPointResolver, routePlanner),
+                new CourseWriter(courseMapper, stopPointResolver, routePlanner, eventPublisher),
                 new AiCourseOrderOptimizer(
                         new CourseOrderPreviewReader(attractionMapper, noteMapper),
                         routePlanner,
                         new CoordinateRouteOrderOptimizer(),
                         courseOrderRecommendationClient
-                )
+                ),
+                eventPublisher,
+                new CourseRecommendationRanker(),
+                new NoteTagReader(Mockito.mock(NoteTagMapper.class))
         );
     }
 

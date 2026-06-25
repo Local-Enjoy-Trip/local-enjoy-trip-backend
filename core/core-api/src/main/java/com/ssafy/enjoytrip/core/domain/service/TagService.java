@@ -23,13 +23,9 @@ public class TagService {
                 .toList();
     }
 
-    public Tag createOrThrow(String name) {
-        try {
-            TagRecord record = tagMapper.insert(name);
-            return new Tag(record.id(), record.name());
-        } catch (DuplicateKeyException e) {
-            throw new CoreException(TAG_ALREADY_EXISTS);
-        }
+    public Tag create(String name) {
+        TagRecord record = tagMapper.insert(name);
+        return new Tag(record.id(), record.name());
     }
 
     public void updateOrThrow(Long id, String name) {
@@ -48,13 +44,4 @@ public class TagService {
         }
     }
 
-    public void validateTagIds(List<Long> tagIds) {
-        if (tagIds.isEmpty()) {
-            return;
-        }
-        List<Long> distinct = tagIds.stream().distinct().toList();
-        if (tagMapper.countByIds(distinct) != distinct.size()) {
-            throw new CoreException(TAG_NOT_FOUND);
-        }
-    }
 }

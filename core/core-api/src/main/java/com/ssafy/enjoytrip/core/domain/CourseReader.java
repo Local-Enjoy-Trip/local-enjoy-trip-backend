@@ -8,11 +8,14 @@ import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.CourseRecommendationCandidateRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseTagRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -75,14 +78,74 @@ public class CourseReader {
                 .toList();
     }
 
-    public long countMemberFavorites(Long memberId) {
-        return courseMapper.countMemberFavorites(memberId);
+    public boolean hasMemberProfileEmbedding(Long memberId) {
+        return courseMapper.hasMemberProfileEmbedding(memberId);
     }
 
-    public List<Course> findRecommended(Long memberId, int limit) {
-        return courseMapper.findRecommendedCourses(memberId, limit).stream()
-                .map(record -> findCourse(record, false))
+    public List<CourseRecommendationCandidate> findCandidatesByMemberProfile(
+            Long memberId,
+            int candidateLimit
+    ) {
+        List<CourseRecommendationCandidateRecord> candidates =
+                courseMapper.findCandidatesByMemberProfile(memberId, candidateLimit);
+
+        if (candidates.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> courseIds = candidates.stream()
+                .map(CourseRecommendationCandidateRecord::getId)
                 .toList();
+
+        Map<String, List<CourseItemDetailRecord>> itemsByCourseId =
+                courseMapper.findPublicItemsByCourseIds(courseIds).stream()
+                        .collect(Collectors.groupingBy(CourseItemDetailRecord::courseId));
+
+        Map<String, List<CourseTagRecord>> tagsByCourseId =
+                courseMapper.findTagsByCourseIds(courseIds).stream()
+                        .collect(Collectors.groupingBy(CourseTagRecord::courseId));
+
+        return candidates.stream()
+                .map(r -> {
+                    List<CourseItemDetailRecord> items =
+                            itemsByCourseId.getOrDefault(r.getId(), List.of());
+                    List<CourseTagRecord> tags =
+                            tagsByCourseId.getOrDefault(r.getId(), List.of());
+                    return new CourseRecommendationCandidate(
+                            toCourseFromCandidate(r, items, tags),
+                            r.getDominantCategory(),
+                            r.getSimilarityDistance() != null ? r.getSimilarityDistance() : 1.0
+                    );
+                })
+                .toList();
+    }
+
+    public List<String> findRecentlyViewedCourseIds(Long memberId, int days) {
+        return courseMapper.findRecentlyViewedCourseIds(memberId, days);
+    }
+
+    private Course toCourseFromCandidate(
+            CourseRecommendationCandidateRecord r,
+            List<CourseItemDetailRecord> items,
+            List<CourseTagRecord> tagRecords
+    ) {
+        List<CourseTag> tags = tagRecords.stream()
+                .map(t -> new CourseTag(t.tagId(), t.tagName()))
+                .toList();
+        return new Course(
+                r.getId(),
+                r.getOwnerMemberId(),
+                r.getTitle(),
+                r.getRegionName(),
+                r.getDate(),
+                null,
+                null,
+                r.getSaveCount() != null ? r.getSaveCount() : 0,
+                stringValue(r.getCreatedAt()),
+                stringValue(r.getUpdatedAt()),
+                items.stream().map(CourseReader::toStop).toList(),
+                tags
+        );
     }
 
     private Course findCourse(CourseRecord record, boolean includePrivateItems) {

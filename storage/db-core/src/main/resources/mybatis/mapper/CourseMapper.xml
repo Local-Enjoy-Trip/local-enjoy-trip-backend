@@ -224,6 +224,38 @@
         order by i.position asc, i.id asc
     </select>
 
+    <select id="findPublicItemsByCourseIds"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseItemDetailRecord">
+        select <include refid="courseItemColumns"/>
+        from course_items i
+        left join attractions a on a.id = i.attraction_id
+        left join notes n on n.id = i.note_id
+        where i.course_id in
+        <foreach collection="courseIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+          and (
+              (i.item_type = &apos;ATTRACTION&apos; and <include refid="publicAttractionPredicate"/>)
+              or
+              (i.item_type = &apos;NOTE&apos; and <include refid="publicNotePredicate"/>)
+          )
+        order by i.course_id asc, i.position asc, i.id asc
+    </select>
+
+    <select id="findTagsByCourseIds"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseTagRecord">
+        select ct.course_id as courseId,
+               ct.tag_id    as tagId,
+               t.name       as tagName
+        from course_tags ct
+        join tags t on t.id = ct.tag_id
+        where ct.course_id in
+        <foreach collection="courseIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        order by ct.course_id asc, t.name asc
+    </select>
+
     <select id="findDistanceOrderedPublicFeed" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
         select <include refid="feedDistanceColumns"/>
         from courses c
@@ -285,55 +317,48 @@
         limit #{limit}
     </select>
 
-    <select id="countMemberFavorites" resultType="long">
-        select count(*)
-        from (
-            select attraction_id from attraction_saves where member_id = #{memberId}
-            union all
-            select note_id from note_saves where member_id = #{memberId}
-        ) t
+    <select id="findCandidatesByMemberProfile"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecommendationCandidateRecord">
+        with member_vec as (
+            select embedding
+            from member_profile_embeddings
+            where member_id = #{memberId}
+              and status = 'EMBEDDED'
+              and embedding is not null
+        )
+        select <include refid="courseColumns"/>,
+               ce.dominant_category as dominantCategory,
+               ce.embedding &lt;=&gt; mv.embedding as similarityDistance
+        from courses c
+        join course_embeddings ce on ce.course_id = c.id
+        cross join member_vec mv
+        where c.deleted_at is null
+          and ce.status = 'EMBEDDED'
+          and ce.embedding is not null
+        order by similarityDistance asc
+        limit #{candidateLimit}
     </select>
 
-    <select id="findRecommendedCourses" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
-        with member_embedding_sources as (
-            select ae.embedding
-            from attraction_saves s
-            join attraction_embeddings ae on ae.attraction_id = s.attraction_id
-            where s.member_id = #{memberId}
-              and ae.status = &apos;EMBEDDED&apos;
-              and ae.embedding is not null
-            union all
-            select ne.embedding
-            from note_saves s
-            join note_embeddings ne on ne.note_id = s.note_id
-            where s.member_id = #{memberId}
-              and ne.status = &apos;EMBEDDED&apos;
-              and ne.embedding is not null
-        ),
-        user_preference as (
-            select avg(embedding) as pref_vector
-            from member_embedding_sources
-        ),
-        course_item_avg as (
-            select ci.course_id,
-                   avg(coalesce(ae.embedding, ne.embedding)) as avg_embedding
-            from course_items ci
-            left join attraction_embeddings ae
-                      on ci.attraction_id = ae.attraction_id
-                      and ae.status = &apos;EMBEDDED&apos;
-            left join note_embeddings ne
-                      on ci.note_id = ne.note_id
-                      and ne.status = &apos;EMBEDDED&apos;
-            where coalesce(ae.embedding, ne.embedding) is not null
-            group by ci.course_id
+    <select id="hasMemberProfileEmbedding" resultType="boolean">
+        select exists(
+            select 1
+            from member_profile_embeddings
+            where member_id = #{memberId}
+              and status = 'EMBEDDED'
+              and embedding is not null
         )
-        select <include refid="courseColumns"/>
-        from courses c
-        join course_item_avg cia on cia.course_id = c.id
-        cross join user_preference up
-        where c.deleted_at is null
-          and up.pref_vector is not null
-        order by cia.avg_embedding &lt;=&gt; up.pref_vector asc, c.id asc
-        limit #{limit}
     </select>
+
+    <select id="findRecentlyViewedCourseIds" resultType="string">
+        select distinct course_id
+        from course_views
+        where member_id = #{memberId}
+          and viewed_at &gt;= current_timestamp - (#{days} || ' days')::interval
+    </select>
+
+    <insert id="insertView">
+        insert into course_views (course_id, member_id, viewed_at)
+        values (#{courseId}, #{memberId}, current_timestamp)
+    </insert>
+
 </mapper>

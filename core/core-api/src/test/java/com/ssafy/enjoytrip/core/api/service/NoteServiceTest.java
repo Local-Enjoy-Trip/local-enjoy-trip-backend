@@ -15,6 +15,8 @@ import com.ssafy.enjoytrip.core.support.error.exception.ClientInputException;
 import com.ssafy.enjoytrip.external.minio.MinioNoteImageUploadUrlGenerator;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteTagMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.TagMapper;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,8 +37,13 @@ class NoteServiceTest {
     void setUp() {
         noteMapper = mock(NoteMapper.class);
         uploadUrlGenerator = mock(MinioNoteImageUploadUrlGenerator.class);
-        service = new NoteService(noteMapper, uploadUrlGenerator,
-                mock(org.springframework.context.ApplicationEventPublisher.class));
+        service = new NoteService(
+                noteMapper,
+                mock(NoteTagMapper.class),
+                mock(TagMapper.class),
+                uploadUrlGenerator,
+                mock(org.springframework.context.ApplicationEventPublisher.class)
+        );
     }
 
     @DisplayName("쪽지 생성은 인증 회원의 note image objectKey만 저장하고 public URL은 서버에서 계산한다")

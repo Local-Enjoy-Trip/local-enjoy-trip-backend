@@ -6,6 +6,7 @@ import com.ssafy.enjoytrip.core.domain.Attraction;
 import com.ssafy.enjoytrip.core.domain.AttractionPopularityDeltaCache;
 import com.ssafy.enjoytrip.core.domain.NearbyAttractionCandidate;
 import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
+import com.ssafy.enjoytrip.core.domain.event.MemberProfileEmbeddingRefreshRequestedEvent;
 import com.ssafy.enjoytrip.core.domain.query.AttractionSearchCondition;
 import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.domain.vo.Address;
@@ -18,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AttractionService {
     private final AttractionMapper attractionMapper;
     private final AttractionPopularityDeltaCache popularityDeltaCache;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<PopularAttractionResult> findPopularNearbyAttractions(
             DistanceSearchCondition condition,
@@ -87,16 +90,24 @@ public class AttractionService {
         return findNearbyAttractionCandidates(condition, memberId, savedOnly);
     }
 
+    @Transactional
     public void addSave(Long attractionId, Long memberId) {
         if (attractionMapper.insertSave(attractionId, memberId) > 0) {
             popularityDeltaCache.recordSaveDelta(attractionId, 1L);
+            eventPublisher.publishEvent(
+                    new MemberProfileEmbeddingRefreshRequestedEvent(memberId)
+            );
         }
     }
 
+    @Transactional
     public boolean removeSave(Long attractionId, Long memberId) {
         boolean deleted = attractionMapper.deleteSave(attractionId, memberId) > 0;
         if (deleted) {
             popularityDeltaCache.recordSaveDelta(attractionId, -1L);
+            eventPublisher.publishEvent(
+                    new MemberProfileEmbeddingRefreshRequestedEvent(memberId)
+            );
         }
         return deleted;
     }

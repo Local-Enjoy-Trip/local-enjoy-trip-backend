@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteTagMapper">
+
+    <select id="findByNoteId" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteTagRecord">
+        select nt.id,
+               nt.note_id as noteId,
+               nt.tag_id  as tagId,
+               t.name     as tagName
+        from note_tags nt
+        join tags t on t.id = nt.tag_id
+        where nt.note_id = #{noteId}
+        order by t.name asc
+    </select>
+
+    <insert id="insertAll">
+        <if test="!tagIds.isEmpty()">
+            insert into note_tags (note_id, tag_id)
+            values
+            <foreach collection="tagIds" item="tagId" separator=",">
+                (#{noteId}, #{tagId})
+            </foreach>
+            on conflict (note_id, tag_id) do nothing
+        </if>
+    </insert>
+
+    <delete id="deleteByNoteId">
+        delete from note_tags
+        where note_id = #{noteId}
+    </delete>
+
+    <select id="findTagFrequencyByMemberId"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.TagFrequencyRecord">
+        select nt.tag_id as tagId,
+               count(*)  as count
+        from note_saves ns
+        join note_tags nt on nt.note_id = ns.note_id
+        where ns.member_id = #{memberId}
+        group by nt.tag_id
+    </select>
+
+</mapper>

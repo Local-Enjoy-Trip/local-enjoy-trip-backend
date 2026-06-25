@@ -3,11 +3,13 @@ package com.ssafy.enjoytrip.core.domain.service;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.NOTE_NOT_FOUND;
 
 import com.ssafy.enjoytrip.core.domain.Note;
+import com.ssafy.enjoytrip.core.domain.Tag;
 import com.ssafy.enjoytrip.core.domain.NoteCategory;
 import com.ssafy.enjoytrip.core.domain.NoteMapPin;
 import com.ssafy.enjoytrip.core.domain.NoteStatus;
 import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
 import com.ssafy.enjoytrip.core.domain.NoteVisibility;
+import com.ssafy.enjoytrip.core.domain.event.MemberProfileEmbeddingRefreshRequestedEvent;
 import com.ssafy.enjoytrip.core.domain.event.NoteEmbeddingRequestedEvent;
 import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.domain.query.MapNotesCondition;
@@ -16,6 +18,8 @@ import com.ssafy.enjoytrip.core.support.error.exception.ClientInputException;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteTagMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.TagMapper;
 import com.ssafy.enjoytrip.external.minio.MinioNoteImageUploadUrlGenerator;
 import java.math.BigDecimal;
 import java.util.List;
@@ -38,6 +42,8 @@ public class NoteService {
     );
 
     private final NoteMapper noteMapper;
+    private final NoteTagMapper noteTagMapper;
+    private final TagMapper tagMapper;
     private final MinioNoteImageUploadUrlGenerator noteImageUploadUrlGenerator;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -161,10 +167,43 @@ public class NoteService {
     public void addSave(Long noteId, Long memberId) {
         requireAccessibleActiveNote(noteId, memberId);
         noteMapper.insertSave(noteId, memberId);
+        eventPublisher.publishEvent(new MemberProfileEmbeddingRefreshRequestedEvent(memberId));
     }
 
+    @Transactional
     public boolean removeSave(Long noteId, Long memberId) {
-        return noteMapper.deleteSave(noteId, memberId) > 0;
+        boolean removed = noteMapper.deleteSave(noteId, memberId) > 0;
+        if (removed) {
+            eventPublisher.publishEvent(new MemberProfileEmbeddingRefreshRequestedEvent(memberId));
+        }
+        return removed;
+    }
+
+    @Transactional
+    public void updateNoteTags(Long noteId, Long memberId, List<Tag> tags) {
+        Note note = findNoteById(noteId)
+                .orElseThrow(() -> new CoreException(NOTE_NOT_FOUND));
+        note.requireEditableBy(memberId);
+
+        List<Long> resolvedIds = tags.stream()
+                .map(this::resolveTagId)
+                .distinct()
+                .toList();
+
+        noteTagMapper.deleteByNoteId(noteId);
+        if (!resolvedIds.isEmpty()) {
+            noteTagMapper.insertAll(noteId, resolvedIds);
+        }
+    }
+
+    private Long resolveTagId(Tag input) {
+        if (input.id() != null) {
+            return input.id();
+        }
+        if (input.name() != null && !input.name().isBlank()) {
+            return tagMapper.insert(input.name().strip()).id();
+        }
+        throw new ClientInputException("태그는 id 또는 name 중 하나를 반드시 입력해야 합니다.");
     }
 
     public List<Note> findSavedNotes(Long memberId, int limit) {

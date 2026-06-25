@@ -10,6 +10,7 @@ import com.ssafy.enjoytrip.core.api.web.api.NoteApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NearbySectionRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateTagsRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.SavedNotesRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NoteResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NotesResponse;
@@ -73,6 +74,16 @@ public class NoteController implements NoteApi {
     public ApiResponse<Void> unsave(@PathVariable Long id, @AuthenticatedMemberId Long memberId) {
         service.removeSave(id, memberId);
 
+        return success();
+    }
+
+    @PutMapping("/{id}/tags")
+    public ApiResponse<Void> updateTags(
+            @PathVariable Long id,
+            @Valid @RequestBody NoteUpdateTagsRequest request,
+            @AuthenticatedMemberId Long memberId
+    ) {
+        service.updateNoteTags(id, memberId, request.toTags());
         return success();
     }
 

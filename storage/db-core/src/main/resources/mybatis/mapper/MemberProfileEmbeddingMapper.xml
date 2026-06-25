@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberProfileEmbeddingMapper">
+
+    <select id="findSavedAttractionInputsByMemberId"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.SavedAttractionInputRecord">
+        select a.title         as title,
+               a.addr1         as addr1,
+               a.content_type_id as contentTypeId
+        from attraction_saves as2
+        join attractions a on a.id = as2.attraction_id
+        where as2.member_id = #{memberId}
+          and a.status = 'ACTIVE'
+          and a.deleted_at is null
+        order by as2.created_at desc
+    </select>
+
+    <select id="findSavedNoteInputsByMemberId"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.SavedNoteInputRecord">
+        select n.title                        as title,
+               n.category                    as category,
+               string_agg(t.name, ',')        as tagNames
+        from note_saves ns
+        join notes n on n.id = ns.note_id
+        left join note_tags nt on nt.note_id = n.id
+        left join tags t on t.id = nt.tag_id
+        where ns.member_id = #{memberId}
+          and n.status = 'ACTIVE'
+          and n.deleted_at is null
+        group by n.id, n.title, n.category, ns.created_at
+        order by ns.created_at desc
+    </select>
+
+    <insert id="upsertEmbedded">
+        insert into member_profile_embeddings (
+            member_id,
+            profile_description,
+            embedding,
+            source_version,
+            source_hash,
+            embedding_dimension,
+            provider,
+            model,
+            status,
+            failure_code,
+            failure_message,
+            attempt_count,
+            last_attempted_at,
+            embedded_at,
+            updated_at
+        )
+        values (
+            #{memberId},
+            #{profileDescription},
+            #{vectorLiteral}::vector,
+            #{sourceVersion},
+            #{sourceHash},
+            #{dimension},
+            #{provider},
+            #{model},
+            'EMBEDDED',
+            null,
+            null,
+            1,
+            current_timestamp,
+            current_timestamp,
+            current_timestamp
+        )
+        on conflict (member_id) do update set
+            profile_description = excluded.profile_description,
+            embedding           = excluded.embedding,
+            source_version      = excluded.source_version,
+            source_hash         = excluded.source_hash,
+            embedding_dimension = excluded.embedding_dimension,
+            provider            = excluded.provider,
+            model               = excluded.model,
+            status              = 'EMBEDDED',
+            failure_code        = null,
+            failure_message     = null,
+            attempt_count       = member_profile_embeddings.attempt_count + 1,
+            last_attempted_at   = current_timestamp,
+            embedded_at         = current_timestamp,
+            updated_at          = current_timestamp
+    </insert>
+
+    <insert id="upsertFailed">
+        insert into member_profile_embeddings (
+            member_id,
+            source_version,
+            source_hash,
+            embedding_dimension,
+            provider,
+            model,
+            status,
+            failure_code,
+            failure_message,
+            attempt_count,
+            last_attempted_at,
+            updated_at
+        )
+        values (
+            #{memberId},
+            #{sourceVersion},
+            #{sourceHash},
+            1536,
+            #{provider},
+            #{model},
+            'FAILED',
+            #{failureCode},
+            #{failureMessage},
+            1,
+            current_timestamp,
+            current_timestamp
+        )
+        on conflict (member_id) do update set
+            source_version      = excluded.source_version,
+            source_hash         = excluded.source_hash,
+            embedding_dimension = 1536,
+            provider            = excluded.provider,
+            model               = excluded.model,
+            status              = 'FAILED',
+            embedding           = null,
+            failure_code        = excluded.failure_code,
+            failure_message     = excluded.failure_message,
+            attempt_count       = member_profile_embeddings.attempt_count + 1,
+            last_attempted_at   = current_timestamp,
+            embedded_at         = null,
+            updated_at          = current_timestamp
+    </insert>
+
+    <select id="findSourceHashByMemberId" resultType="string">
+        select source_hash
+        from member_profile_embeddings
+        where member_id = #{memberId}
+          and status = 'EMBEDDED'
+    </select>
+
+</mapper>
