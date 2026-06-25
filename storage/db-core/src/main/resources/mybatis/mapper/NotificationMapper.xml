@@ -50,6 +50,59 @@
         order by n.created_at desc, n.id desc
         limit #{limit}
     </select>
+    <select id="existsUnreadCourseInvitation" resultType="int">
+        SELECT COUNT(*)
+        FROM notifications n
+        WHERE n.recipient_member_id = #{recipientMemberId}
+          AND n.read_at IS NULL
+          AND n.type = #{type}
+          AND n.reference_type = #{referenceType}
+          AND EXISTS (
+              SELECT 1
+              FROM course_invitations ci
+              WHERE ci.id = n.reference_id
+                AND ci.status = #{status}
+          )
+    </select>
+    <select id="findUnreadCourseInvitations" resultType="com.ssafy.enjoytrip.storage.db.core.model.NotificationRecord">
+        SELECT <include refid="columns"/>
+        FROM notifications n
+        WHERE n.recipient_member_id = #{recipientMemberId}
+          AND n.read_at IS NULL
+          AND n.type = #{type}
+          AND n.reference_type = #{referenceType}
+          AND EXISTS (
+              SELECT 1
+              FROM course_invitations ci
+              WHERE ci.id = n.reference_id
+                AND ci.status = #{status}
+          )
+        ORDER BY n.created_at DESC, n.id DESC
+        LIMIT #{limit}
+    </select>
+    <insert id="upsertCourseInvitation">
+        INSERT INTO notifications (
+            recipient_member_id,
+            type,
+            reference_type,
+            reference_id,
+            payload,
+            read_at,
+            created_at
+        ) VALUES (
+            #{recipientMemberId},
+            #{type},
+            #{referenceType},
+            #{referenceId},
+            #{payload},
+            #{readAt},
+            current_timestamp
+        )
+        ON CONFLICT (recipient_member_id, type, reference_type, reference_id)
+        DO UPDATE SET payload    = excluded.payload,
+                      read_at    = excluded.read_at,
+                      updated_at = current_timestamp
+    </insert>
     <insert id="upsertFriendRequest">
         insert into notifications (
             recipient_member_id,
