@@ -27,7 +27,7 @@
           and deleted_at is null
           and duplicate_of_attraction_id is null
           and content_type_id in ('38', '39')
-          and (addr1 ilike concat('%', #{regionName}, '%') or addr2 = #{regionName})
+          and (addr1 ilike concat('%', SUBSTRING(#{regionName}, 1, 2), '%') or addr2 like concat(SUBSTRING(#{regionName}, 1, 2), '%'))
         order by read_count desc nulls last, id asc
         limit #{limit}
     </select>

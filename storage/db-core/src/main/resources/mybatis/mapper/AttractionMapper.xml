@@ -425,7 +425,7 @@
         WHERE ae.status = 'EMBEDDED'
           <if test="sidoCode != null">AND a.sido_code = #{sidoCode}</if>
           <if test="gugunCode != null and gugunCode != 0">AND a.gugun_code = #{gugunCode}</if>
-          <if test="regionName != null and regionName != ''">AND (a.addr2 LIKE CONCAT(#{regionName}, '%') OR a.addr1 LIKE CONCAT('%', #{regionName}, '%'))</if>
+          <if test="regionName != null and regionName != ''">AND (a.addr2 LIKE CONCAT(SUBSTRING(#{regionName}, 1, 2), '%') OR a.addr1 LIKE CONCAT('%', SUBSTRING(#{regionName}, 1, 2), '%'))</if>
         ORDER BY ae.embedding &lt;=&gt; #{preferenceEmbeddingLiteral}::vector
         LIMIT #{limit}
     </select>
