@@ -26,6 +26,12 @@ public enum ErrorCode {
     N005,
     N006,
 
+    P006,
+    P007,
+    P008,
+
+    F006,
+
     C400,
     C405,
     C410,
