@@ -25,12 +25,12 @@
 
 ### 데이터 흐름도
 
-![img.png](img.png)
+
 
 ### 프롬프트 엔지니어링 전략
 구현: `NeighborhoodBriefingPromptTemplate` (System/User 분리), `SpringAiNeighborhoodBriefingGenerator` (호출), `NeighborhoodBriefingService` (폴백)
 
-*   **Role Prompting (역할 부여)**: System prompt에서 '동네핀' 홈 카피라이터 persona를 고정해 톤·책임 범위를 먼저 정의
+*   **Role Prompting (역할 부여)**: System prompt에서 '곳곳' 홈 카피라이터 persona를 고정해 톤·책임 범위를 먼저 정의
 *   **Inline Few-shot (줄별 인라인 예시)**: 네 줄 규칙마다 `(예: "...")` 형태의 good example을 System prompt에 포함 — 줄별 one-shot으로 출력 형식·말투를 유도
 *   **Negative Prompting (금지 패턴 명시)**: 기계적 단답형, JSON/Markdown/bullet, 특수기호, 목록에 없는 장소 생성 등 **하지 말아야 할 출력**을 명시적으로 차단
 *   **Dual Prompt Pattern (System/User 분리)**: System = 불변 규칙·예시, User = 지역·날씨·DB 장소 목록 등 **요청마다 바뀌는 컨텍스트**만 주입
@@ -46,9 +46,41 @@
 ### 개요
 사용자의 개인화된 여행 취향(Saved Attractions 및 Saved Notes 기록)을 텍스트 요약 후 임베딩 처리하여 데이터베이스에 저장한 뒤, **관광지(Attractions), 쪽지(Notes), 코스(Courses)와 사용자의 취향 벡터 간 코사인 거리를 계산하여 실시간 취향 저격 추천**을 해주는 기능입니다.
 
+### 클래스 매핑
+*   **이벤트 리스너**: [MemberProfileEmbeddingEventListener.java](file:///Users/hj.park/projects/local-enjoy-trip-backend/core/core-api/src/main/java/com/ssafy/enjoytrip/core/domain/event/listener/MemberProfileEmbeddingEventListener.java)
+*   **임베딩 클라이언트**: [MemberProfileEmbeddingClient.java](file:///Users/hj.park/projects/local-enjoy-trip-backend/external/src/main/java/com/ssafy/enjoytrip/external/profile/MemberProfileEmbeddingClient.java)
+*   **각 도메인 서비스**:
+    *   관광지: [AttractionService.java](file:///Users/hj.park/projects/local-enjoy-trip-backend/core/core-api/src/main/java/com/ssafy/enjoytrip/core/domain/service/AttractionService.java)
+    *   쪽지: [NoteService.java](file:///Users/hj.park/projects/local-enjoy-trip-backend/core/core-api/src/main/java/com/ssafy/enjoytrip/core/domain/service/NoteService.java)
+    *   코스: [CourseService.java](file:///Users/hj.park/projects/local-enjoy-trip-backend/core/core-api/src/main/java/com/ssafy/enjoytrip/core/domain/service/CourseService.java)
+*   **벡터 매퍼 XML**:
+    *   [AttractionMapper.xml](file:///Users/hj.park/projects/local-enjoy-trip-backend/storage/db-core/src/main/resources/mybatis/mapper/AttractionMapper.xml) (`findCandidatesByMemberProfile`)
+    *   [NoteMapper.xml](file:///Users/hj.park/projects/local-enjoy-trip-backend/storage/db-core/src/main/resources/mybatis/mapper/NoteMapper.xml) (`findCandidatesByMemberProfile`)
+    *   [CourseMapper.xml](file:///Users/hj.park/projects/local-enjoy-trip-backend/storage/db-core/src/main/resources/mybatis/mapper/CourseMapper.xml) (`findCandidatesByMemberProfile`)
+
 ### 전체 벡터 파이프라인 흐름도
 
-![img_1.png](img_1.png)
+```mermaid
+flowchart TD
+    %% 1단계: 프로필 벡터 빌드 (비동기 이벤트)
+    subgraph Profile_Vector_Build [1단계: 사용자 프로필 벡터 생성 (비동기)]
+        A[관광지 저장/취소 OR 쪽지 작성/삭제] -->|이벤트 발행| B(MemberProfileEmbeddingRefreshRequestedEvent)
+        B -->|Async Listen| C[MemberProfileEmbeddingEventListener]
+        C -->|사용자의 저장 목록 조회| D[(PostgreSQL)]
+        C -->|사용자 취향 텍스트 요약 생성| E[MemberProfileEmbeddingClient - ChatClient]
+        E -->|임베딩 변환| F[MemberProfileEmbeddingClient - EmbeddingModel]
+        F -->|1536차원 벡터 저장| G[(member_profile_embeddings)]
+    end
+
+    %% 2단계: 추천 쿼리 수행
+    subgraph Recommendation_Query [2단계: 벡터 검색 추천 쿼리]
+        H[추천 요청 API 인입] --> I{사용자 취향 벡터 존재 여부?}
+        I -->|있음| J[MyBatis Vector Similarity Query]
+        I -->|없음| K[인기순/최신순 기본 데이터 조회]
+        J -->|pg_vector 계산| L[(관광지/쪽지/코스 임베딩 테이블)]
+        L -->|ae.embedding <=> mv.embedding ASC| M[취향 유사성 기반 리스트 반환]
+    end
+```
 
 ### 도메인별 벡터 저장 흐름 (비동기 및 배치)
 1.  **사용자 프로필**: 저장 활동(Save/Unsave) 및 쪽지 작성이 일어날 때 이벤트를 비동기로 수신(`@Async AFTER_COMMIT`), `ChatClient`로 취향 요약 후 `EmbeddingModel`로 벡터화하여 `member_profile_embeddings` 테이블에 누적합니다.
@@ -68,7 +100,40 @@
 
 #### 상세 처리 흐름
 
-![img_2.png](img_2.png)
+```mermaid
+sequenceDiagram
+    autonumber
+    Actor User as 사용자
+    participant Service as AiCourseGenerationService
+    participant Embedding as EmbeddingModel
+    participant DB as MyBatis Mapper (PostgreSQL)
+    participant Client as AiCourseGenerationClient
+    participant LLM as Spring AI (ChatClient)
+
+    User->>Service: 코스 추천 조건 전송<br/>(동네, 동행자, 테마, 여행속도, 관광지갯수)
+    Note over Service: 선호 텍스트 조립:<br/>"{동행자} 함께 {테마} 위주로 {속도} {갯수}곳"
+    Service->>Embedding: embedToVectorLiteral(선호텍스트)
+    Embedding-->>Service: 선호도 임베딩 벡터 리턴
+    
+    Service->>DB: findCandidatesByPreferenceEmbedding(동네필터, 선호벡터, 1)
+    DB-->>Service: 첫 번째 경유지 (First Stop) 후보 반환
+    
+    Note over Service: 여행속도 조건에 근거해 탐색 반경 계산<br/>(여유롭게: 1.5km, 알맞게: 3.0km, 알차게: 5.0km)
+    
+    Service->>DB: findCandidatesWithinRadius(FirstStop좌표, 반경, 선호벡터, limit=20)
+    DB-->>Service: 반경 내 유사도 기반 추천 후보 관광지 20곳 리턴
+    
+    Service->>DB: 사용자 기존 작성 코스 및 프로필 설명 조회
+    DB-->>Service: 유저 취향 설명 & 참고 코스 정보 리턴
+    
+    Service->>Client: generate(기획조건, 20개 후보군, 유저정보, 참고코스)
+    Note over Client: 시스템 지시사항 및 프롬프트 조립
+    Client->>LLM: ChatClient.call() (JSON 구조 응답 요청)
+    LLM-->>Client: {"title": "...", "attractionIds": [...], "reason": "..."}
+    Client-->>Service: JSON 파싱 결과 반환
+    Note over Service: 강제 규칙 적용: 첫번째 경유지는 1번 후보 관광지로 고정
+    Service-->>User: 최종 구성된 AI 코스 프리뷰 객체 전달
+```
 
 #### 프롬프트 엔지니어링 전략
 구현: `AiCourseGenerationClient` (프롬프트·파싱), `AiCourseGenerationService` (후보 검색·첫 경유지 강제)

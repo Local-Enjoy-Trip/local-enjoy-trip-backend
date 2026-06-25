@@ -1,0 +1,74 @@
+@startuml 03-course
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Apple SD Gothic Neo"
+skinparam defaultFontSize 12
+skinparam usecase {
+  BackgroundColor #EFF6FF
+  BorderColor #3B82F6
+  FontColor #1E3A5F
+  FontSize 12
+}
+skinparam actor {
+  BackgroundColor #DBEAFE
+  BorderColor #2563EB
+  FontColor #1E3A5F
+  FontSize 13
+}
+skinparam rectangle {
+  BackgroundColor #F8FAFF
+  BorderColor #93C5FD
+  BorderThickness 1.5
+  FontColor #1D4ED8
+  FontSize 13
+  FontStyle bold
+}
+skinparam ArrowColor #6B7280
+
+left to right direction
+
+actor "회원\n(Member)" as Member
+
+rectangle "코스" {
+  usecase "공개 코스 피드 조회" as F1
+  usecase "지역별 인기 코스 조회" as F2
+  usecase "코스 상세 조회" as F3
+  usecase "코스 추천" as F4
+  usecase "내 코스 목록 조회" as F5
+  usecase "코스 생성" as F6
+  usecase "코스 수정" as F7
+  usecase "코스 삭제" as F8
+  usecase "코스 저장" as F9
+  usecase "코스 저장 취소" as F10
+  usecase "코스 순서 최적화 추천" as F11
+  usecase "AI 코스 자동 생성" as F12
+}
+
+rectangle "코스 초대" {
+  usecase "친구에게 코스 초대" as G1
+  usecase "초대 수락" as G2
+  usecase "초대 거절" as G3
+  usecase "코스 초대 목록 조회" as G4
+}
+
+Member --> F1
+Member --> F2
+Member --> F3
+Member --> F4
+Member --> F5
+Member --> F6
+Member --> F7
+Member --> F8
+Member --> F9
+Member --> F10
+Member --> F11
+Member --> F12
+Member --> G1
+Member --> G2
+Member --> G3
+Member --> G4
+
+F12 ..> F6 : <<extend>>
+F11 ..> F3 : <<include>>
+G1 ..> F3 : <<include>>
+@enduml

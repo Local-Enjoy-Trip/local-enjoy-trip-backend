@@ -1,0 +1,65 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#EFF6FF",
+    "primaryBorderColor": "#93C5FD",
+    "primaryTextColor": "#1E3A5F",
+    "secondaryColor": "#DBEAFE",
+    "tertiaryColor": "#F0F7FF",
+    "lineColor": "#93C5FD",
+    "fontSize": "15px"
+  }
+}}%%
+flowchart LR
+  Member(["👤 회원 (Member)"])
+
+  subgraph ATT["관광지"]
+    direction TB
+    B1["관광지 검색"]
+    B2["관광지 상세 조회"]
+    B3["근처 인기 관광지 조회"]
+    B4["관광지 통계 조회"]
+    B5["관광지 추천"]
+    B6["저장한 관광지 목록 조회"]
+    B7["관광지 저장"]
+    B8["관광지 저장 취소"]
+    B9["별점 등록 / 수정"]
+    B10["별점 삭제"]
+  end
+
+  subgraph NOTE["노트 (여행 일지)"]
+    direction TB
+    C1["노트 작성"]
+    C2["노트 수정"]
+    C3["노트 삭제"]
+    C4["노트 저장"]
+    C5["노트 저장 취소"]
+    C6["노트 태그 수정"]
+    C7["저장한 노트 목록 조회"]
+    C8["내 노트 목록 조회"]
+    C9["노트 추천"]
+    C10["근처 노트 조회"]
+    C11["노트 이미지 업로드 URL 발급"]
+  end
+
+  subgraph MAP["지도 탐색"]
+    direction TB
+    D1["반경 내 관광지 / 노트 탐색"]
+    D2["키워드 기반 지도 검색"]
+  end
+
+  subgraph BRIEF["동네 브리핑"]
+    E1["날씨 + AI 브리핑 조회"]
+  end
+
+  Member --> ATT
+  Member --> NOTE
+  Member --> MAP
+  Member --> BRIEF
+
+  classDef actor fill:#2563EB,stroke:#1D4ED8,color:#fff,font-weight:bold
+  classDef uc fill:#EFF6FF,stroke:#93C5FD,color:#1E3A5F
+  class Member actor
+  class B1,B2,B3,B4,B5,B6,B7,B8,B9,B10 uc
+  class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11 uc
+  class D1,D2,E1 uc

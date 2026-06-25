@@ -1,0 +1,94 @@
+@startuml 02-attraction-note
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Apple SD Gothic Neo"
+skinparam defaultFontSize 12
+skinparam usecase {
+  BackgroundColor #EFF6FF
+  BorderColor #3B82F6
+  FontColor #1E3A5F
+  FontSize 12
+}
+skinparam actor {
+  BackgroundColor #DBEAFE
+  BorderColor #2563EB
+  FontColor #1E3A5F
+  FontSize 13
+}
+skinparam rectangle {
+  BackgroundColor #F8FAFF
+  BorderColor #93C5FD
+  BorderThickness 1.5
+  FontColor #1D4ED8
+  FontSize 13
+  FontStyle bold
+}
+skinparam ArrowColor #6B7280
+
+left to right direction
+
+actor "회원\n(Member)" as Member
+
+rectangle "관광지" {
+  usecase "관광지 검색" as B1
+  usecase "관광지 상세 조회" as B2
+  usecase "근처 인기 관광지 조회" as B3
+  usecase "관광지 통계 조회" as B4
+  usecase "관광지 추천" as B5
+  usecase "저장한 관광지 목록 조회" as B6
+  usecase "관광지 저장" as B7
+  usecase "관광지 저장 취소" as B8
+  usecase "별점 등록 / 수정" as B9
+  usecase "별점 삭제" as B10
+}
+
+rectangle "노트 (여행 일지)" {
+  usecase "노트 작성" as C1
+  usecase "노트 수정" as C2
+  usecase "노트 삭제" as C3
+  usecase "노트 저장" as C4
+  usecase "노트 저장 취소" as C5
+  usecase "노트 태그 수정" as C6
+  usecase "저장한 노트 목록 조회" as C7
+  usecase "내 노트 목록 조회" as C8
+  usecase "노트 추천" as C9
+  usecase "근처 노트 조회" as C10
+  usecase "노트 이미지 업로드 URL 발급" as C11
+}
+
+rectangle "지도 탐색" {
+  usecase "반경 내 관광지 / 노트 탐색" as D1
+  usecase "키워드 기반 지도 검색" as D2
+}
+
+rectangle "동네 브리핑" {
+  usecase "날씨 + AI 브리핑 조회" as E1
+}
+
+Member --> B1
+Member --> B2
+Member --> B3
+Member --> B4
+Member --> B5
+Member --> B6
+Member --> B7
+Member --> B8
+Member --> B9
+Member --> B10
+
+Member --> C1
+Member --> C2
+Member --> C3
+Member --> C4
+Member --> C5
+Member --> C6
+Member --> C7
+Member --> C8
+Member --> C9
+Member --> C10
+Member --> C11
+
+Member --> D1
+Member --> D2
+Member --> E1
+@enduml

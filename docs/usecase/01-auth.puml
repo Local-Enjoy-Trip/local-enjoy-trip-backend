@@ -1,0 +1,59 @@
+@startuml 01-auth
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Apple SD Gothic Neo"
+skinparam defaultFontSize 12
+skinparam usecase {
+  BackgroundColor #EFF6FF
+  BorderColor #3B82F6
+  FontColor #1E3A5F
+  FontSize 12
+}
+skinparam actor {
+  BackgroundColor #DBEAFE
+  BorderColor #2563EB
+  FontColor #1E3A5F
+  FontSize 13
+}
+skinparam rectangle {
+  BackgroundColor #F8FAFF
+  BorderColor #93C5FD
+  BorderThickness 1.5
+  FontColor #1D4ED8
+  FontSize 13
+  FontStyle bold
+}
+skinparam ArrowColor #6B7280
+
+left to right direction
+
+actor "회원\n(Member)" as Member
+
+rectangle "인증 / 회원 관리" {
+  usecase "이메일 중복 확인" as UC1
+  usecase "일반 회원가입" as UC2
+  usecase "OAuth 회원가입" as UC3
+  usecase "로그인" as UC4
+  usecase "OAuth 로그인" as UC5
+  usecase "로그아웃" as UC6
+  usecase "내 정보 조회" as UC7
+  usecase "내 정보 수정" as UC8
+  usecase "회원 탈퇴" as UC9
+  usecase "프로필 이미지 업로드 URL 발급" as UC10
+  usecase "프로필 이미지 변경" as UC11
+}
+
+Member --> UC1
+Member --> UC2
+Member --> UC3
+Member --> UC4
+Member --> UC5
+Member --> UC6
+Member --> UC7
+Member --> UC8
+Member --> UC9
+Member --> UC10
+Member --> UC11
+
+UC3 ..> UC5 : <<include>>
+@enduml

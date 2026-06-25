@@ -1,0 +1,63 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#EFF6FF",
+    "primaryBorderColor": "#93C5FD",
+    "primaryTextColor": "#1E3A5F",
+    "secondaryColor": "#DBEAFE",
+    "tertiaryColor": "#F0F7FF",
+    "lineColor": "#93C5FD",
+    "fontSize": "15px"
+  }
+}}%%
+flowchart LR
+  Member(["👤 회원 (Member)"])
+  Admin(["🔑 관리자 (Admin)"])
+
+  subgraph FRIEND["친구"]
+    direction TB
+    H1["친구 요청 보내기"]
+    H2["받은 친구 요청 수락"]
+    H3["받은 친구 요청 거절"]
+    H4["보낸 친구 요청 취소"]
+    H5["친구 삭제"]
+    H6["친구 목록 조회"]
+    H7["받은 요청 목록 조회"]
+    H8["보낸 요청 목록 조회"]
+  end
+
+  subgraph NOTI["알림"]
+    direction TB
+    I1["알림 목록 조회"]
+    I2["읽지 않은 알림 여부 확인"]
+  end
+
+  subgraph TAG["태그 관리"]
+    direction TB
+    J1["태그 목록 조회"]
+    J2["태그 생성"]
+    J3["태그 수정"]
+    J4["태그 삭제"]
+  end
+
+  subgraph ADMINP["관리자 패널"]
+    direction TB
+    K1["관리자 로그인"]
+    K2["장소 관리"]
+  end
+
+  Member --> FRIEND
+  Member --> NOTI
+  Member --> TAG
+
+  Admin --> TAG
+  Admin --> ADMINP
+
+  classDef actor fill:#2563EB,stroke:#1D4ED8,color:#fff,font-weight:bold
+  classDef adminActor fill:#7C3AED,stroke:#6D28D9,color:#fff,font-weight:bold
+  classDef uc fill:#EFF6FF,stroke:#93C5FD,color:#1E3A5F
+  classDef adminUc fill:#F5F3FF,stroke:#C4B5FD,color:#4C1D95
+  class Member actor
+  class Admin adminActor
+  class H1,H2,H3,H4,H5,H6,H7,H8,I1,I2,J1 uc
+  class J2,J3,J4,K1,K2 adminUc

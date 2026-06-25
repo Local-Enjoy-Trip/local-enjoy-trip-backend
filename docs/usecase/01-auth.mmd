@@ -1,0 +1,36 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#EFF6FF",
+    "primaryBorderColor": "#93C5FD",
+    "primaryTextColor": "#1E3A5F",
+    "secondaryColor": "#DBEAFE",
+    "tertiaryColor": "#F0F7FF",
+    "lineColor": "#93C5FD",
+    "fontSize": "15px"
+  }
+}}%%
+flowchart LR
+  Member(["👤 회원 (Member)"])
+
+  subgraph AUTH["인증 / 회원 관리"]
+    direction TB
+    A1["이메일 중복 확인"]
+    A2["일반 회원가입"]
+    A3["OAuth 회원가입"]
+    A4["로그인"]
+    A5["OAuth 로그인"]
+    A6["로그아웃"]
+    A7["내 정보 조회"]
+    A8["내 정보 수정"]
+    A9["회원 탈퇴"]
+    A10["프로필 이미지 업로드 URL 발급"]
+    A11["프로필 이미지 변경"]
+  end
+
+  Member --> AUTH
+
+  classDef actor fill:#2563EB,stroke:#1D4ED8,color:#fff,font-weight:bold
+  classDef uc fill:#EFF6FF,stroke:#93C5FD,color:#1E3A5F
+  class Member actor
+  class A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11 uc

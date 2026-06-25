@@ -665,7 +665,7 @@ final class ApiExamples {
                   "noteId": null
                 }
               ],
-              "tagIds": [1]
+              "tags": ["역사", "궁궐"]
             }
             """;
 
@@ -684,7 +684,7 @@ final class ApiExamples {
                   "noteId": null
                 }
               ],
-              "tagIds": [1, 2]
+              "tags": ["역사", "궁궐"]
             }
             """;
 

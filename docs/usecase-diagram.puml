@@ -1,194 +1,154 @@
 @startuml
 !theme plain
-skinparam backgroundColor #FAFAFA
-skinparam packageStyle rectangle
-skinparam usecase {
-  BackgroundColor #EEF2FF
-  BorderColor #3563E9
-  FontSize 12
-}
+
+skinparam backgroundColor #FAFBFF
+skinparam defaultFontSize 11
+
 skinparam actor {
-  BackgroundColor #DBEAFE
+  BackgroundColor #2563EB
   BorderColor #1D4ED8
+  FontColor #FFFFFF
+  FontSize 13
+  FontStyle bold
 }
-skinparam ArrowColor #374151
-skinparam packageBorderColor #9CA3AF
-skinparam packageBackgroundColor #F9FAFB
-skinparam noteFontSize 10
+
+skinparam usecase {
+  BackgroundColor #EFF6FF
+  BorderColor #93C5FD
+  FontColor #1E3A5F
+  FontSize 10
+  RoundCorner 5
+}
+
+skinparam rectangle {
+  BackgroundColor #F0F7FF
+  BorderColor #BFDBFE
+  BorderThickness 1.5
+  FontColor #1E40AF
+  FontSize 12
+  FontStyle bold
+  RoundCorner 4
+}
+
+skinparam ArrowColor #6B7280
+skinparam ArrowThickness 1
 
 left to right direction
 
-' ─────────────── Actors ───────────────
-actor "비회원\n(Guest)" as Guest
+' ─── Actors ───
 actor "회원\n(Member)" as Member
 actor "관리자\n(Admin)" as Admin
 
-Member -[hidden]-> Admin
+' ─── 컬럼 1: 인증·관광지·지도·브리핑 ───
+rectangle " " <<col>> as C1 {
+  rectangle "인증 / 회원 관리" as AUTH {
+    usecase "이메일 중복 확인" as UC_CHECK_EMAIL
+    usecase "일반 회원가입" as UC_SIGNUP
+    usecase "OAuth 회원가입" as UC_OAUTH_SIGNUP
+    usecase "로그인" as UC_LOGIN
+    usecase "OAuth 로그인" as UC_OAUTH_LOGIN
+    usecase "로그아웃" as UC_LOGOUT
+    usecase "내 정보 조회" as UC_ME
+    usecase "내 정보 수정" as UC_UPDATE_ME
+    usecase "회원 탈퇴" as UC_DELETE_ME
+    usecase "프로필 이미지 업로드" as UC_PROFILE_PRESIGN
+    usecase "프로필 이미지 변경" as UC_PROFILE_UPDATE
+  }
 
-' ─────────────────────────────────────────────
-' 1. 인증 / 회원 관리
-' ─────────────────────────────────────────────
-rectangle "인증 / 회원 관리" as AUTH {
-  usecase "이메일 중복 확인" as UC_CHECK_EMAIL
-  usecase "일반 회원가입" as UC_SIGNUP
-  usecase "OAuth 회원가입 완료" as UC_OAUTH_SIGNUP
-  usecase "로그인" as UC_LOGIN
-  usecase "OAuth 로그인" as UC_OAUTH_LOGIN
-  usecase "로그아웃" as UC_LOGOUT
-  usecase "내 정보 조회" as UC_ME
-  usecase "내 정보 수정" as UC_UPDATE_ME
-  usecase "회원 탈퇴" as UC_DELETE_ME
-  usecase "프로필 이미지 업로드 URL 발급" as UC_PROFILE_PRESIGN
-  usecase "프로필 이미지 변경" as UC_PROFILE_UPDATE
+  rectangle "관광지" as ATT {
+    usecase "관광지 검색" as UC_ATT_SEARCH
+    usecase "관광지 상세 조회" as UC_ATT_DETAIL
+    usecase "근처 인기 관광지 조회" as UC_ATT_POPULAR
+    usecase "관광지 통계 조회" as UC_ATT_STATS
+    usecase "관광지 추천" as UC_ATT_RECOMMEND
+    usecase "저장한 관광지 목록" as UC_ATT_SAVED
+    usecase "관광지 저장 / 취소" as UC_ATT_SAVE
+    usecase "별점 등록 / 수정 / 삭제" as UC_ATT_RATE
+  }
+
+  rectangle "지도 탐색" as MAP {
+    usecase "반경 내 탐색" as UC_MAP_EXPLORE
+    usecase "키워드 지도 검색" as UC_MAP_SEARCH
+  }
+
+  rectangle "동네 브리핑" as BRIEF {
+    usecase "날씨 + AI 브리핑 조회" as UC_BRIEF
+  }
 }
 
-' ─────────────────────────────────────────────
-' 2. 관광지
-' ─────────────────────────────────────────────
-rectangle "관광지" as ATTRACTION {
-  usecase "관광지 검색\n(지역/키워드/카테고리)" as UC_ATT_SEARCH
-  usecase "관광지 상세 조회" as UC_ATT_DETAIL
-  usecase "근처 인기 관광지 조회" as UC_ATT_POPULAR_NEARBY
-  usecase "관광지 통계 조회" as UC_ATT_STATS
-  usecase "관광지 추천" as UC_ATT_RECOMMEND
-  usecase "저장한 관광지 목록 조회" as UC_ATT_SAVED_LIST
-  usecase "관광지 저장" as UC_ATT_SAVE
-  usecase "관광지 저장 취소" as UC_ATT_UNSAVE
-  usecase "별점 등록/수정" as UC_ATT_RATE
-  usecase "별점 삭제" as UC_ATT_RATE_DELETE
+' ─── 컬럼 2: 코스·코스 초대 ───
+rectangle " " <<col>> as C2 {
+  rectangle "코스" as COURSE {
+    usecase "코스 피드 조회" as UC_COURSE_FEED
+    usecase "인기 코스 조회" as UC_COURSE_POPULAR
+    usecase "코스 상세 조회" as UC_COURSE_DETAIL
+    usecase "코스 추천" as UC_COURSE_RECOMMEND
+    usecase "내 코스 목록" as UC_COURSE_MINE
+    usecase "코스 생성 / 수정 / 삭제" as UC_COURSE_CUD
+    usecase "코스 저장 / 취소" as UC_COURSE_SAVE
+    usecase "AI 코스 자동 생성" as UC_COURSE_AI
+    usecase "코스 순서 최적화" as UC_COURSE_ORDER_OPT
+  }
+
+  rectangle "코스 초대" as INV {
+    usecase "코스 초대 보내기" as UC_INV_SEND
+    usecase "초대 수락 / 거절" as UC_INV_RESPOND
+    usecase "초대 목록 조회" as UC_INV_LIST
+  }
 }
 
-' ─────────────────────────────────────────────
-' 3. 코스
-' ─────────────────────────────────────────────
-rectangle "코스" as COURSE {
-  usecase "공개 코스 피드 조회" as UC_COURSE_FEED
-  usecase "지역별 인기 코스 조회" as UC_COURSE_POPULAR
-  usecase "코스 상세 조회" as UC_COURSE_DETAIL
-  usecase "코스 추천" as UC_COURSE_RECOMMEND
-  usecase "내 코스 목록 조회" as UC_COURSE_MINE
-  usecase "코스 생성" as UC_COURSE_CREATE
-  usecase "코스 수정" as UC_COURSE_UPDATE
-  usecase "코스 삭제" as UC_COURSE_DELETE
-  usecase "코스 순서 최적화 추천" as UC_COURSE_ORDER_OPT
-  usecase "AI 코스 자동 생성" as UC_COURSE_AI
-  usecase "코스 저장" as UC_COURSE_SAVE
-  usecase "코스 저장 취소" as UC_COURSE_UNSAVE
+' ─── 컬럼 3: 노트·친구·알림·태그·관리자 ───
+rectangle " " <<col>> as C3 {
+  rectangle "노트 (여행 일지)" as NOTE {
+    usecase "노트 작성 / 수정 / 삭제" as UC_NOTE_CUD
+    usecase "노트 저장 / 취소" as UC_NOTE_SAVE
+    usecase "노트 태그 수정" as UC_NOTE_TAGS
+    usecase "내 노트 목록" as UC_NOTE_MINE
+    usecase "저장한 노트 목록" as UC_NOTE_SAVED
+    usecase "노트 추천" as UC_NOTE_RECOMMEND
+    usecase "근처 노트 조회" as UC_NOTE_NEARBY
+    usecase "노트 이미지 업로드" as UC_NOTE_IMG
+  }
+
+  rectangle "친구" as FRIEND {
+    usecase "친구 요청 보내기" as UC_FR_SEND
+    usecase "친구 요청 수락 / 거절" as UC_FR_RESPOND
+    usecase "보낸 요청 취소" as UC_FR_CANCEL
+    usecase "친구 삭제" as UC_FR_DELETE
+    usecase "친구 목록 조회" as UC_FR_LIST
+    usecase "받은 / 보낸 요청 조회" as UC_FR_REQUESTS
+  }
+
+  rectangle "알림" as NOTI {
+    usecase "알림 목록 조회" as UC_NOTI_LIST
+    usecase "읽지 않은 알림 확인" as UC_NOTI_UNREAD
+  }
+
+  rectangle "태그 관리" as TAG {
+    usecase "태그 목록 조회" as UC_TAG_LIST
+    usecase "태그 생성" as UC_TAG_CREATE
+    usecase "태그 수정" as UC_TAG_UPDATE
+    usecase "태그 삭제" as UC_TAG_DELETE
+  }
+
+  rectangle "관리자 패널" as ADMIN_PANEL {
+    usecase "관리자 로그인" as UC_ADMIN_LOGIN
+    usecase "장소 관리" as UC_ADMIN_PLACE
+  }
 }
 
-' ─────────────────────────────────────────────
-' 4. 코스 초대
-' ─────────────────────────────────────────────
-rectangle "코스 초대" as INVITE {
-  usecase "친구에게 코스 초대" as UC_INV_SEND
-  usecase "초대 수락" as UC_INV_ACCEPT
-  usecase "초대 거절" as UC_INV_REJECT
-  usecase "코스 초대 목록 조회" as UC_INV_LIST
+skinparam rectangle<<col>> {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
 }
 
-' ─────────────────────────────────────────────
-' 5. 노트 (여행 일지)
-' ─────────────────────────────────────────────
-rectangle "노트 (여행 일지)" as NOTE {
-  usecase "노트 작성" as UC_NOTE_CREATE
-  usecase "노트 수정" as UC_NOTE_UPDATE
-  usecase "노트 삭제" as UC_NOTE_DELETE
-  usecase "노트 저장" as UC_NOTE_SAVE
-  usecase "노트 저장 취소" as UC_NOTE_UNSAVE
-  usecase "노트 태그 수정" as UC_NOTE_TAGS
-  usecase "저장한 노트 목록 조회" as UC_NOTE_SAVED
-  usecase "내 노트 목록 조회" as UC_NOTE_MINE
-  usecase "노트 추천" as UC_NOTE_RECOMMEND
-  usecase "근처 노트 조회" as UC_NOTE_NEARBY
-  usecase "노트 이미지 업로드 URL 발급" as UC_NOTE_IMG_PRESIGN
-}
-
-' ─────────────────────────────────────────────
-' 6. 친구
-' ─────────────────────────────────────────────
-rectangle "친구" as FRIEND {
-  usecase "친구 요청 보내기" as UC_FR_SEND
-  usecase "받은 친구 요청 수락" as UC_FR_ACCEPT
-  usecase "받은 친구 요청 거절" as UC_FR_REJECT
-  usecase "보낸 친구 요청 취소" as UC_FR_CANCEL
-  usecase "친구 삭제" as UC_FR_DELETE
-  usecase "친구 목록 조회" as UC_FR_LIST
-  usecase "받은 요청 목록 조회" as UC_FR_RECEIVED
-  usecase "보낸 요청 목록 조회" as UC_FR_SENT
-}
-
-' ─────────────────────────────────────────────
-' 7. 알림
-' ─────────────────────────────────────────────
-rectangle "알림" as NOTI {
-  usecase "알림 목록 조회" as UC_NOTI_LIST
-  usecase "읽지 않은 알림 여부 확인" as UC_NOTI_UNREAD
-}
-
-' ─────────────────────────────────────────────
-' 8. 지도 탐색
-' ─────────────────────────────────────────────
-rectangle "지도 탐색" as MAP {
-  usecase "반경 내 관광지/노트 탐색" as UC_MAP_EXPLORE
-  usecase "키워드 기반 지도 검색" as UC_MAP_SEARCH
-}
-
-' ─────────────────────────────────────────────
-' 9. 동네 브리핑
-' ─────────────────────────────────────────────
-rectangle "동네 브리핑" as BRIEF {
-  usecase "날씨 + AI 브리핑 조회" as UC_BRIEF
-}
-
-' ─────────────────────────────────────────────
-' 10. 태그 (Admin)
-' ─────────────────────────────────────────────
-rectangle "태그 관리" as TAG {
-  usecase "태그 목록 조회" as UC_TAG_LIST
-  usecase "태그 생성" as UC_TAG_CREATE
-  usecase "태그 수정" as UC_TAG_UPDATE
-  usecase "태그 삭제" as UC_TAG_DELETE
-}
-
-' ─────────────────────────────────────────────
-' 11. 관리자
-' ─────────────────────────────────────────────
-rectangle "관리자 페이지" as ADMIN_PANEL {
-  usecase "관리자 로그인" as UC_ADMIN_LOGIN
-  usecase "장소 관리" as UC_ADMIN_PLACE
-}
-
-' ─────────────────────────────────────────────
-' Guest 관계
-' ─────────────────────────────────────────────
-Guest --> UC_CHECK_EMAIL
-Guest --> UC_SIGNUP
-Guest --> UC_OAUTH_SIGNUP
-Guest --> UC_LOGIN
-Guest --> UC_OAUTH_LOGIN
-
-Guest --> UC_ATT_SEARCH
-Guest --> UC_ATT_DETAIL
-Guest --> UC_ATT_POPULAR_NEARBY
-Guest --> UC_ATT_STATS
-
-Guest --> UC_COURSE_FEED
-Guest --> UC_COURSE_POPULAR
-Guest --> UC_COURSE_DETAIL
-Guest --> UC_COURSE_RECOMMEND
-
-Guest --> UC_NOTE_NEARBY
-
-Guest --> UC_MAP_EXPLORE
-Guest --> UC_MAP_SEARCH
-
-Guest --> UC_BRIEF
-
-Guest --> UC_TAG_LIST
-
-' ─────────────────────────────────────────────
-' Member 관계
-' ─────────────────────────────────────────────
+' ─── Member 관계 ───
+Member --> UC_CHECK_EMAIL
+Member --> UC_SIGNUP
+Member --> UC_OAUTH_SIGNUP
+Member --> UC_LOGIN
+Member --> UC_OAUTH_LOGIN
 Member --> UC_LOGOUT
 Member --> UC_ME
 Member --> UC_UPDATE_ME
@@ -198,53 +158,42 @@ Member --> UC_PROFILE_UPDATE
 
 Member --> UC_ATT_SEARCH
 Member --> UC_ATT_DETAIL
-Member --> UC_ATT_POPULAR_NEARBY
+Member --> UC_ATT_POPULAR
 Member --> UC_ATT_STATS
 Member --> UC_ATT_RECOMMEND
-Member --> UC_ATT_SAVED_LIST
+Member --> UC_ATT_SAVED
 Member --> UC_ATT_SAVE
-Member --> UC_ATT_UNSAVE
 Member --> UC_ATT_RATE
-Member --> UC_ATT_RATE_DELETE
 
 Member --> UC_COURSE_FEED
 Member --> UC_COURSE_POPULAR
 Member --> UC_COURSE_DETAIL
 Member --> UC_COURSE_RECOMMEND
 Member --> UC_COURSE_MINE
-Member --> UC_COURSE_CREATE
-Member --> UC_COURSE_UPDATE
-Member --> UC_COURSE_DELETE
-Member --> UC_COURSE_ORDER_OPT
-Member --> UC_COURSE_AI
+Member --> UC_COURSE_CUD
 Member --> UC_COURSE_SAVE
-Member --> UC_COURSE_UNSAVE
+Member --> UC_COURSE_AI
+Member --> UC_COURSE_ORDER_OPT
 
 Member --> UC_INV_SEND
-Member --> UC_INV_ACCEPT
-Member --> UC_INV_REJECT
+Member --> UC_INV_RESPOND
 Member --> UC_INV_LIST
 
-Member --> UC_NOTE_CREATE
-Member --> UC_NOTE_UPDATE
-Member --> UC_NOTE_DELETE
+Member --> UC_NOTE_CUD
 Member --> UC_NOTE_SAVE
-Member --> UC_NOTE_UNSAVE
 Member --> UC_NOTE_TAGS
-Member --> UC_NOTE_SAVED
 Member --> UC_NOTE_MINE
+Member --> UC_NOTE_SAVED
 Member --> UC_NOTE_RECOMMEND
 Member --> UC_NOTE_NEARBY
-Member --> UC_NOTE_IMG_PRESIGN
+Member --> UC_NOTE_IMG
 
 Member --> UC_FR_SEND
-Member --> UC_FR_ACCEPT
-Member --> UC_FR_REJECT
+Member --> UC_FR_RESPOND
 Member --> UC_FR_CANCEL
 Member --> UC_FR_DELETE
 Member --> UC_FR_LIST
-Member --> UC_FR_RECEIVED
-Member --> UC_FR_SENT
+Member --> UC_FR_REQUESTS
 
 Member --> UC_NOTI_LIST
 Member --> UC_NOTI_UNREAD
@@ -255,28 +204,20 @@ Member --> UC_MAP_SEARCH
 Member --> UC_BRIEF
 Member --> UC_TAG_LIST
 
-' ─────────────────────────────────────────────
-' Admin 관계
-' ─────────────────────────────────────────────
+' ─── Admin 관계 ───
 Admin --> UC_ADMIN_LOGIN
 Admin --> UC_ADMIN_PLACE
 Admin --> UC_TAG_CREATE
 Admin --> UC_TAG_UPDATE
 Admin --> UC_TAG_DELETE
 
-' ─────────────────────────────────────────────
-' include / extend 관계
-' ─────────────────────────────────────────────
-UC_OAUTH_SIGNUP ..> UC_OAUTH_LOGIN : <<include>>
+' ─── include / extend ───
+UC_OAUTH_SIGNUP ..> UC_OAUTH_LOGIN      : <<include>>
+UC_COURSE_AI ..> UC_COURSE_CUD          : <<extend>>
 UC_COURSE_ORDER_OPT ..> UC_COURSE_DETAIL : <<include>>
-UC_COURSE_AI ..> UC_COURSE_CREATE : <<extend>>
-UC_INV_SEND ..> UC_FR_LIST : <<include>>
-UC_PROFILE_PRESIGN ..> UC_PROFILE_UPDATE : <<extend>>
-UC_NOTE_IMG_PRESIGN ..> UC_NOTE_CREATE : <<extend>>
+UC_INV_SEND ..> UC_FR_LIST              : <<include>>
+UC_NOTE_IMG ..> UC_NOTE_CUD             : <<extend>>
 
-' ─────────────────────────────────────────────
-' 시스템 발생 알림 트리거 (note)
-' ─────────────────────────────────────────────
 note bottom of UC_NOTI_LIST
   친구 요청/수락/거절,
   코스 초대/수락/거절 시

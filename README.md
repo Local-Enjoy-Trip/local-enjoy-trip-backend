@@ -1,111 +1,145 @@
 # Local Enjoy Trip Backend
 
-## 구조
+Spring Boot 기반 국내 여행 플랫폼 백엔드.
 
-- `core/core-api`: Spring Boot 주 실행 모듈. 단일 API entrypoint에서 HTTP/API와 scheduled/background job을 함께 실행한다.
-  - API main: `com.ssafy.enjoytrip.EnjoyTripApplication`
-  - Web/API 코드는 `com.ssafy.enjoytrip.core.api.web.*`에 둔다.
-  - Scheduled/background job 코드는 별도 runtime profile이나 별도 main 없이 일반 API runtime context에서 실행한다.
-- `core/core-enum`: `core-api`와 `storage/db-core`가 공유하는 enum 전용 모듈.
-- `storage/db-core`: MyBatis mapper/XML, storage Record, Flyway migration 인프라.
-- `core`: Gradle namespace parent for `core-api` and `core-enum`; no source-bearing legacy core module.
-- `storage`: Gradle namespace parent for `db-core`; no source-bearing legacy storage module.
-- `external`: active outbound integration module for third-party API, AI, and MinIO implementations.
-- `batch`: 수동/offline Spring Batch runtime.
-- `support/logging`, `support/monitoring`: runtime support resources used by active runtimes. Auth support is absorbed into `core-api`; `support/auth` is removed.
+## 서비스 화면
 
-`backend/` 래퍼 디렉터리는 제거했다. 새 코드는 프로젝트 루트의 위 모듈 아래에 둔다. Web package는 background-only Scheduled 코드를 소유하지 않고, background job package는 controller/OpenAPI/REST Docs/DTO/response envelope를 소유하지 않는다.
+| 홈 | 지도 | 코스 탐색 |
+|:---:|:---:|:---:|
+| ![홈](docs/screenshots/home.png) | ![지도](docs/screenshots/map.png) | ![코스](docs/screenshots/course.png) |
 
-## API
+| 마이페이지 | 친구 관리 |
+|:---:|:---:|
+| ![마이](docs/screenshots/my.png) | ![친구](docs/screenshots/friends.png) |
 
-컨트롤러 요청/응답 계약은 반드시 명명된 객체 DTO를 사용한다. `@RequestParam Map`, `@RequestBody Map`, `ApiResponse<Map<...>>`, `Map.of(...)`로 만든 임시 응답 객체는 사용하지 않는다.
+## 유스케이스 다이어그램
 
-- `GET /health`
-- `GET /api/db/health`
-- `GET /api/route/optimize?points=lat,lng|lat,lng|...`
-- `GET /api/route/split-by-day?points=lat,lng|lat,lng|...&days=3`
-- `GET /api/members`
-- `POST /api/members?action=signup|login|logout|find-password|update|delete`
-- `GET /api/notices`
-- `POST /api/notices?action=create|update|delete`
-- `GET /api/news`
-- `GET /api/attractions`
-- `GET /api/chargers`
-- `GET /api/hotplaces?memberId={memberId}`
-- `POST /api/hotplaces?action=create|delete`
-- `GET /api/plans?memberId={memberId}`
-- `GET /api/boards`
-- `POST /api/boards?action=create|update|delete`
+| 인증 | 관광지·노트 |
+|:---:|:---:|
+| ![인증](docs/usecase/01-auth.png) | ![관광지·노트](docs/usecase/02-attraction-note.png) |
 
-Mutation 경로:
+| 코스 | 소셜·관리 |
+|:---:|:---:|
+| ![코스](docs/usecase/03-course.png) | ![소셜·관리](docs/usecase/04-social-admin.png) |
 
-- `POST /api/members/signup`, `POST /api/members/login`, `PUT /api/members/me`, `DELETE /api/members/me`
-- `POST /api/notices/items`, `PUT /api/notices/{id}`, `DELETE /api/notices/{id}`
-- `POST /api/boards/posts`, `PUT /api/boards/{id}`, `DELETE /api/boards/{id}`
-- `POST /api/hotplaces/items`, `DELETE /api/hotplaces/{id}`
-- `POST /api/plans/items` (JSON), `PUT /api/plans/{id}` (JSON), `PUT /api/plans/{id}/items` (JSON), `DELETE /api/plans/{id}`
+## ERD
 
-### Plans canonical JSON 예시
+![ERD](docs/ERD.png)
 
-여행 계획 mutation은 JSON request body만 사용한다. `memberId`는 요청 body에서 받지 않고 인증된 JWT subject를 사용한다.
+## 클래스 다이어그램
 
-```http
-POST /api/plans/items
-Authorization: Bearer <token>
-Content-Type: application/json
+![클래스 다이어그램](docs/project/class_diagram.png)
 
-{
-  "id": "p1",
-  "title": "서울 여행",
-  "startDate": "2026-05-14",
-  "endDate": "2026-05-15",
-  "budget": 100000,
-  "routeItems": [
-    {"attractionId": 1, "day": 1, "stayMinutes": 120}
-  ]
-}
+## WBS
+
+![WBS.png](docs/WBS.png)
+
+## 요구사항 명세서
+
+- [요구사항 명세서](docs/project/gotgot-requirements.md)
+
+## 기술 스택
+
+- **Framework**: Spring Boot 4.0.6, Spring MVC
+- **Persistence**: MyBatis, PostgreSQL/PostGIS, pg_vector
+- **Cache/Storage**: Redis, MinIO
+- **Verification**: Testcontainers
+- **Ops/Monitoring**: Prometheus, Grafana, OpenTelemetry, Caddy
+
+## 프로젝트 구조
+
+```text
+.
+├── core
+│   ├── core-api       # Spring Boot 메인 실행 모듈 (API, Scheduled Job)
+│   └── core-enum      # 공통 Enum 모듈
+├── storage
+│   └── db-core        # MyBatis Mapper, Record, DB 설정, Migration
+├── external           # 외부 API 클라이언트 (MinIO, GMS 등)
+├── batch              # Spring Batch 실행 모듈
+├── support
+│   ├── logging        # 로깅 설정 지원
+│   └── monitoring     # 모니터링 설정 지원
+├── infra              # 인프라 설정 (Docker Compose, Prometheus, Grafana 등)
+└── docs               # 설계 및 문서화 자료
 ```
 
-## 실행
+## 모듈 구조
 
-API 실행:
+| 모듈 | 설명 |
+|---|---|
+| `core/core-api` | Spring Boot 메인 실행 모듈. HTTP API와 scheduled job을 단일 런타임에서 실행 |
+| `core/core-enum` | `core-api`와 `storage/db-core`가 공유하는 enum 전용 모듈 |
+| `storage/db-core` | MyBatis mapper/XML, storage Record, Flyway migration |
+| `external` | 외부 API, AI, MinIO 연동 구현 |
+| `batch` | 수동/offline Spring Batch 런타임 |
+| `support/logging` | 로깅 런타임 지원 리소스 |
+| `support/monitoring` | 모니터링 런타임 지원 리소스 |
 
-```powershell
-.\gradlew :core:core-api:bootRun
+메인 클래스: `com.ssafy.enjoytrip.EnjoyTripApplication`
+
+## 로컬 실행
+
+### 사전 준비
+
+- Java 25
+- Docker & Docker Compose
+
+### 의존 서비스 구동
+
+```bash
+docker compose up -d
 ```
 
-OpenTelemetry Java agent로 로컬 관측 실행:
+PostgreSQL, Redis, MinIO, Grafana 스택을 포함한다.
 
-```powershell
-.\gradlew :core:core-api:bootRunOtel
+### API 서버 실행
+
+```bash
+./gradlew :core:core-api:bootRun
 ```
 
-위 태스크는 `infra/agent/opentelemetry-javaagent.jar`를 자동으로 준비하고 기본 OTLP endpoint를
-`http://localhost:4318`로 사용한다. IntelliJ에서는 `.run/Core API OTel.run.xml` 실행 구성을 선택한다.
+OpenTelemetry Java agent와 함께 실행:
 
-빌드/검증:
-
-```powershell
-.\gradlew :core:core-api:check
-.\gradlew :storage:db-core:check
-.\gradlew :core:core-api:bootJar
+```bash
+./gradlew :core:core-api:bootRunOtel
 ```
 
-생성 결과:
+`infra/agent/opentelemetry-javaagent.jar`를 자동으로 준비하며 기본 OTLP endpoint는 `http://localhost:4318`이다.
+IntelliJ에서는 `.run/Core API OTel.run.xml` 실행 구성을 사용한다.
 
+### 프론트엔드 실행
+
+```bash
+# 프론트엔드 저장소로 이동 후
+npm install
+npm run dev
+```
+
+### 빌드 및 검증
+
+```bash
+./gradlew :core:core-api:check
+./gradlew :storage:db-core:check
+./gradlew :core:core-api:bootJar
+```
+
+빌드 산출물:
 - `core/core-api/build/libs/core-api-1.0.0-SNAPSHOT.jar`
 - `core/core-api/build/docs/asciidoc/index.html`
 
-## DB/API Key
+## 환경변수
 
-DB 접속 정보와 외부 API key는 환경변수로만 주입한다. 실제 값은 README나 커밋된 문서에 적지 않는다.
+`.env.example`을 `.env`로 복사한 뒤 값을 채워 사용한다.
 
-필수 환경변수:
-
-- `ENJOYTRIP_DB_URL`
-- `ENJOYTRIP_DB_USER`
-- `ENJOYTRIP_DB_PASSWORD`
-- `ENJOYTRIP_TOUR_API_KEY` 또는 `TOUR_API_KEY`
-- `EV_CHARGER_API_KEY` 또는 `ENJOYTRIP_EV_API_KEY`
-
-로컬 개발용 샘플은 `.env.example`을 복사한 뒤 개인 환경에 맞게 값을 채워 사용한다.
+| 변수 | 설명 |
+|---|---|
+| `ENJOYTRIP_DB_URL` | JDBC 연결 URL |
+| `ENJOYTRIP_DB_USER` | DB 사용자 |
+| `ENJOYTRIP_DB_PASSWORD` | DB 비밀번호 |
+| `ENJOYTRIP_MINIO_ENDPOINT` | MinIO 엔드포인트 |
+| `ENJOYTRIP_MINIO_ACCESS_KEY` | MinIO 액세스 키 |
+| `ENJOYTRIP_MINIO_SECRET_KEY` | MinIO 시크릿 키 |
+| `GMS_KEY` | AI 브리핑용 GMS API 키 |
+| `ENJOYTRIP_OAUTH2_GOOGLE_CLIENT_ID` | Google OAuth 클라이언트 ID |
+| `ENJOYTRIP_OAUTH2_GOOGLE_CLIENT_SECRET` | Google OAuth 클라이언트 시크릿 |
