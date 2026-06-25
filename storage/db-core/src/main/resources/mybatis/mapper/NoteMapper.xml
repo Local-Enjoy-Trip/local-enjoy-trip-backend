@@ -130,6 +130,37 @@
         </if>
     </select>
 
+    <select id="findCandidatesByMemberProfile"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
+        WITH member_vec AS (
+            SELECT embedding
+            FROM member_profile_embeddings
+            WHERE member_id = #{memberId}
+              AND status = 'EMBEDDED'
+              AND embedding IS NOT NULL
+        )
+        SELECT <include refid="noteColumnsWithAlias"/>
+        FROM notes n
+        JOIN note_embeddings ne ON ne.note_id = n.id
+        CROSS JOIN member_vec mv
+        WHERE n.deleted_at IS NULL
+          AND n.visibility = 'PUBLIC'
+          AND ne.status = 'EMBEDDED'
+        ORDER BY ne.embedding &lt;=&gt; mv.embedding ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findRecentPublic"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
+        SELECT <include refid="noteColumnsWithAlias"/>
+        FROM notes n
+        WHERE n.visibility = 'PUBLIC'
+          AND n.deleted_at IS NULL
+          AND n.status = 'ACTIVE'
+        ORDER BY n.created_at DESC
+        LIMIT #{limit}
+    </select>
+
     <select id="searchMapNotes" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord">
         select <include refid="mapPinColumns"/>
         from notes n join members m on m.id = n.author_member_id

@@ -92,4 +92,15 @@ public interface AttractionMapper {
             @Param("preferenceEmbeddingLiteral") String preferenceEmbeddingLiteral,
             @Param("limit") int limit
     );
+
+    List<AttractionSearchRecord> findCandidatesByMemberProfile(
+            @Param("memberId") Long memberId,
+            @Param("limit") int limit,
+            @Param("viewerMemberId") Long viewerMemberId
+    );
+
+    List<AttractionSearchRecord> findTopBySaveCount(
+            @Param("limit") int limit,
+            @Param("viewerMemberId") Long viewerMemberId
+    );
 }

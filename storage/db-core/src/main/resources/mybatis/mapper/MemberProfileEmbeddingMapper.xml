@@ -143,4 +143,14 @@
           and profile_description is not null
     </select>
 
+    <select id="hasMemberProfileEmbedding" resultType="boolean">
+        select exists(
+            select 1
+            from member_profile_embeddings
+            where member_id = #{memberId}
+              and status = 'EMBEDDED'
+              and embedding is not null
+        )
+    </select>
+
 </mapper>
