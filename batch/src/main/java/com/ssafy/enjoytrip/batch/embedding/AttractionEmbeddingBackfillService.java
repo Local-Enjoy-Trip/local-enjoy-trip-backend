@@ -36,8 +36,29 @@ public class AttractionEmbeddingBackfillService {
         List<AttractionEmbeddingSource> targets = findEmbeddingTargets(targetRegions, limit);
         BackfillCounter counter = new BackfillCounter(dryRun);
 
-        for (AttractionEmbeddingSource source : targets) {
-            backfillTarget(source, sourceVersion, dryRun, counter);
+        if (dryRun) {
+            for (AttractionEmbeddingSource source : targets) {
+                counter.skip();
+            }
+            return counter.toReport(targets.size());
+        }
+
+        int concurrency = 8;
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(concurrency);
+        try {
+            List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+            for (AttractionEmbeddingSource source : targets) {
+                futures.add(executor.submit(() -> backfillTarget(source, sourceVersion, dryRun, counter)));
+            }
+            for (java.util.concurrent.Future<?> future : futures) {
+                try {
+                    future.get();
+                } catch (Exception e) {
+                    log.error("배치 개별 작업 처리 중 에러 발생", e);
+                }
+            }
+        } finally {
+            executor.shutdown();
         }
 
         return counter.toReport(targets.size());
@@ -194,28 +215,28 @@ public class AttractionEmbeddingBackfillService {
 
     private static final class BackfillCounter {
         private final boolean dryRun;
-        private int embedded;
-        private int skipped;
-        private int failed;
+        private final java.util.concurrent.atomic.AtomicInteger embedded = new java.util.concurrent.atomic.AtomicInteger();
+        private final java.util.concurrent.atomic.AtomicInteger skipped = new java.util.concurrent.atomic.AtomicInteger();
+        private final java.util.concurrent.atomic.AtomicInteger failed = new java.util.concurrent.atomic.AtomicInteger();
 
         private BackfillCounter(boolean dryRun) {
             this.dryRun = dryRun;
         }
 
         private void embed() {
-            embedded++;
+            embedded.incrementAndGet();
         }
 
         private void skip() {
-            skipped++;
+            skipped.incrementAndGet();
         }
 
         private void fail() {
-            failed++;
+            failed.incrementAndGet();
         }
 
         private AttractionEmbeddingBackfillReport toReport(int totalTargets) {
-            return new AttractionEmbeddingBackfillReport(totalTargets, embedded, skipped, failed, dryRun);
+            return new AttractionEmbeddingBackfillReport(totalTargets, embedded.get(), skipped.get(), failed.get(), dryRun);
         }
     }
 
