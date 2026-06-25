@@ -185,7 +185,8 @@ class DbBackedTravelDataServicesTest {
         @Test
         void savesOnlyAccessibleActiveNotes() {
             NoteMapper noteMapper = mock(NoteMapper.class);
-            NoteService service = new NoteService(noteMapper, mock(MinioNoteImageUploadUrlGenerator.class));
+            NoteService service = new NoteService(noteMapper, mock(MinioNoteImageUploadUrlGenerator.class),
+                            mock(org.springframework.context.ApplicationEventPublisher.class));
             when(noteMapper.existsAccessibleActive(1L, 11L)).thenReturn(1);
 
             service.addSave(1L, 11L);
@@ -197,7 +198,8 @@ class DbBackedTravelDataServicesTest {
         @Test
         void rejectsInaccessibleNoteSave() {
             NoteMapper noteMapper = mock(NoteMapper.class);
-            NoteService service = new NoteService(noteMapper, mock(MinioNoteImageUploadUrlGenerator.class));
+            NoteService service = new NoteService(noteMapper, mock(MinioNoteImageUploadUrlGenerator.class),
+                            mock(org.springframework.context.ApplicationEventPublisher.class));
             when(noteMapper.existsAccessibleActive(1L, 11L)).thenReturn(0);
 
             assertThatThrownBy(() -> service.addSave(1L, 11L))

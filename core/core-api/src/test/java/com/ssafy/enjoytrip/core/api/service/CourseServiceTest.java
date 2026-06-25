@@ -510,7 +510,6 @@ class CourseServiceTest {
                 .containsExactly(37.5665, 37.5666);
         assertThat(feed).extracting(c -> c.startLocation() != null ? c.startLocation().longitude() : null)
                 .containsExactly(126.9780, 126.9781);
-        assertThat(feed).extracting(Course::createdByAdmin).containsExactly(true, false);
     }
 
     private void verifyNoCourseWrites() {
@@ -582,7 +581,6 @@ class CourseServiceTest {
                 id,
                 "서울",
                 null,
-                false,
                 null,
                 null,
                 0,
@@ -635,7 +633,6 @@ class CourseServiceTest {
     private static CourseRecord courseRecord(String id, Long ownerMemberId, Integer saveCount) {
         CourseRecord record = new CourseRecord(id, ownerMemberId, id, "서울", null);
         record.setSaveCount(saveCount);
-        record.setCreatedByAdmin(Long.valueOf(1L).equals(ownerMemberId));
         return record;
     }
 }

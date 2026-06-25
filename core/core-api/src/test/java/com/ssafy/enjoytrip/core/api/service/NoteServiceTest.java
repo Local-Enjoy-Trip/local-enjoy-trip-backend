@@ -35,7 +35,8 @@ class NoteServiceTest {
     void setUp() {
         noteMapper = mock(NoteMapper.class);
         uploadUrlGenerator = mock(MinioNoteImageUploadUrlGenerator.class);
-        service = new NoteService(noteMapper, uploadUrlGenerator);
+        service = new NoteService(noteMapper, uploadUrlGenerator,
+                mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     @DisplayName("쪽지 생성은 인증 회원의 note image objectKey만 저장하고 public URL은 서버에서 계산한다")

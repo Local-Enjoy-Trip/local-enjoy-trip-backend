@@ -20,8 +20,6 @@ public class CourseRecord {
 
     private String date;
 
-    private Boolean createdByAdmin;
-
     private Double startLatitude;
 
     private Double startLongitude;

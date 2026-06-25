@@ -14,8 +14,6 @@ public interface CourseMapper {
 
     List<CourseRecord> findByOwnerMemberId(Long ownerMemberId);
 
-    List<CourseRecord> findAdminOwned();
-
     int updateOwned(CourseRecord record);
 
     int updateStartLocation(@Param("id") String id,
@@ -41,12 +39,15 @@ public interface CourseMapper {
                                                       @Param("limit") int limit,
                                                       @Param("radiusMeters") Double radiusMeters);
 
-    List<CourseRecord> findAdminOwnedByDistance(@Param("longitude") double longitude,
-                                                @Param("latitude") double latitude,
-                                                @Param("limit") int limit);
-
     List<CourseRecord> findByRegionOrderedBySaveCount(@Param("regionName") String regionName,
                                                       @Param("limit") int limit);
+
+    List<CourseRecord> findAllBySaveCount(@Param("limit") int limit);
+
+    long countMemberFavorites(@Param("memberId") Long memberId);
+
+    List<CourseRecord> findRecommendedCourses(@Param("memberId") Long memberId,
+                                              @Param("limit") int limit);
 
     int insertSave(@Param("courseId") String courseId, @Param("memberId") Long memberId);
 

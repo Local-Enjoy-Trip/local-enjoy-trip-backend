@@ -1,6 +1,5 @@
 package com.ssafy.enjoytrip.core.api.web.view;
 
-import com.ssafy.enjoytrip.core.api.web.view.controller.AdminCourseController;
 import com.ssafy.enjoytrip.core.api.web.view.controller.AdminPlaceController;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ControllerAdvice(assignableTypes = {
-        AdminCourseController.class,
         AdminPlaceController.class
 })
 @Order(Ordered.HIGHEST_PRECEDENCE)
