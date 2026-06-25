@@ -117,6 +117,7 @@
                   ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography,
                   #{radiusMeters}
               )
+              and a.addr1 like '서울%'
               <choose>
                   <when test="savedOnly and viewerMemberId != null">
                       and exists (
@@ -386,6 +387,7 @@
             <where>
                 <include refid="publicAttractionPredicate"/>
                 and title ilike concat(&apos;%&apos;, #{escapedKeyword}, &apos;%&apos;) ESCAPE &apos;\&apos;
+                and addr1 like '서울%'
                 <if test="radiusMeters != null">
                     and location is not null
                     and ST_DWithin(
