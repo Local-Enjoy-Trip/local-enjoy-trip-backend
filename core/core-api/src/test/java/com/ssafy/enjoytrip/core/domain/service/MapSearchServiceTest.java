@@ -45,15 +45,15 @@ class MapSearchServiceTest {
         Long viewerMemberId = 1L;
 
         AttractionSearchRecord attractionRecord = new AttractionSearchRecord(
-                101L, "아름다운 경복궁", "서울", "중구", "123", "02",
+                101L, "아름다운 경복궁", "망원동", "중구", "123", "02",
                 "image.png", null, 10, 1, 1, 37.5665, 126.9780,
                 "1", "12", "overview", 100.0, 1, 4.5, 3,
                 false, null
         );
 
         NoteMapPinRecord noteRecord = new NoteMapPinRecord(
-                1L, "서울 산책 메모", "TIP", "PUBLIC",
-                BigDecimal.valueOf(37.5665), BigDecimal.valueOf(126.9780), "서울 중구",
+                1L, "망원 산책 메모", "TIP", "PUBLIC",
+                BigDecimal.valueOf(37.5665), BigDecimal.valueOf(126.9780), "마포구 망원동",
                 null, 10L, "동네핀러", null, "NONE", LocalDateTime.now(), 42.0
         );
 

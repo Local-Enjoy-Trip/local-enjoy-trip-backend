@@ -56,17 +56,16 @@ class CourseControllerTest {
                 .build();
     }
 
-    @DisplayName("공개 코스 피드는 단일 목록과 시작 지점 거리로 반환한다")
+    @DisplayName("공개 코스 피드는 동네 이름과 한도로 조회하여 반환한다")
     @Test
     void returnsPublicCourseFeedCourses() throws Exception {
-        when(courseService.findPublicFeed(any())).thenReturn(List.of(
+        when(courseService.findPublicFeed(anyString(), anyInt())).thenReturn(List.of(
                 feedCourse("md-1", null, 42.5),
                 feedCourse("course-1", 11L, 128.3)
         ));
 
         mockMvc.perform(get("/api/courses/feed")
-                        .param("mapX", "126.9780")
-                        .param("mapY", "37.5665")
+                        .param("regionName", "망원동")
                         .param("limit", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -81,43 +80,30 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.data.courses[0].encodedPolyline").doesNotExist())
                 .andExpect(jsonPath("$.data.courses[1].id").value("course-1"));
 
-        ArgumentCaptor<DistanceSearchCondition> conditionCaptor = ArgumentCaptor.forClass(DistanceSearchCondition.class);
-        verify(courseService).findPublicFeed(conditionCaptor.capture());
-        assertThat(conditionCaptor.getValue().longitude()).isEqualTo(126.9780);
-        assertThat(conditionCaptor.getValue().latitude()).isEqualTo(37.5665);
-        assertThat(conditionCaptor.getValue().limit()).isEqualTo(20);
-        assertThat(conditionCaptor.getValue().radiusMeters()).isNull();
+        verify(courseService).findPublicFeed("망원동", 20);
     }
 
-    @DisplayName("공개 코스 피드는 좌표를 필수로 검증한다")
+    @DisplayName("공개 코스 피드는 동네 이름을 필수로 검증한다")
     @Test
-    void rejectsPublicCourseFeedWithoutCoordinates() throws Exception {
+    void rejectsPublicCourseFeedWithoutRegionName() throws Exception {
         mockMvc.perform(get("/api/courses/feed")
                         .param("limit", "20"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
 
-        verify(courseService, never()).findPublicFeed(any());
+        verify(courseService, never()).findPublicFeed(anyString(), anyInt());
     }
 
-    @DisplayName("공개 코스 피드는 limit과 radius 범위를 검증한다")
+    @DisplayName("공개 코스 피드는 limit 범위를 검증한다")
     @Test
-    void rejectsPublicCourseFeedInvalidLimitAndRadius() throws Exception {
+    void rejectsPublicCourseFeedInvalidLimit() throws Exception {
         mockMvc.perform(get("/api/courses/feed")
-                        .param("mapX", "126.9780")
-                        .param("mapY", "37.5665")
+                        .param("regionName", "망원동")
                         .param("limit", "51"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
 
-        mockMvc.perform(get("/api/courses/feed")
-                        .param("mapX", "126.9780")
-                        .param("mapY", "37.5665")
-                        .param("radius", "20000.1"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
-
-        verify(courseService, never()).findPublicFeed(any());
+        verify(courseService, never()).findPublicFeed(anyString(), anyInt());
     }
 
     @DisplayName("공개 코스 상세는 경로 요약과 items를 반환한다")
@@ -167,7 +153,7 @@ class CourseControllerTest {
                         .content("""
                                 {
                                   "id":"course-1",
-                                  "title":"서울 산책",
+                                  "title":"망원 산책",
                                   "items":[
                                     {"itemType":"ATTRACTION","attractionId":1,"position":1},
                                     {"itemType":"ATTRACTION","attractionId":2,"position":2}
@@ -199,7 +185,7 @@ class CourseControllerTest {
                         .content("""
                                 {
                                   "id":"course-array-order",
-                                  "title":"서울 산책",
+                                  "title":"망원 산책",
                                   "items":[
                                     {"itemType":"ATTRACTION","attractionId":2,"position":99},
                                     {"itemType":"ATTRACTION","attractionId":1,"position":-10}
@@ -229,7 +215,7 @@ class CourseControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "title":"서울 산책 수정",
+                                  "title":"망원 산책 수정",
                                   "items":[
                                     {"itemType":"ATTRACTION","attractionId":1,"position":1},
                                     {"itemType":"ATTRACTION","attractionId":2,"position":2}
@@ -257,7 +243,7 @@ class CourseControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "title":"서울 산책 수정",
+                                  "title":"망원 산책 수정",
                                   "items":[
                                     {"itemType":"ATTRACTION","attractionId":2,"position":99},
                                     {"itemType":"ATTRACTION","attractionId":1,"position":-10}
@@ -314,7 +300,7 @@ class CourseControllerTest {
                 id,
                 ownerMemberId,
                 id,
-                "서울",
+                "망원동",
                 null,
                 new Coordinate(37.5665, 126.9780),
                 null,
@@ -335,7 +321,7 @@ class CourseControllerTest {
                 id,
                 ownerMemberId,
                 id,
-                "서울",
+                "망원동",
                 null,
                 new Coordinate(37.5665, 126.9780),
                 distanceMeters,
@@ -359,7 +345,7 @@ class CourseControllerTest {
                 id,
                 ownerMemberId,
                 id,
-                "서울",
+                "망원동",
                 null,
                 null,
                 null,

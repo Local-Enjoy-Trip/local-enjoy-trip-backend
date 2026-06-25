@@ -8,7 +8,6 @@ import com.ssafy.enjoytrip.core.api.web.api.CourseApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseOrderRecommendationRequest;
-import com.ssafy.enjoytrip.core.api.web.dto.request.CoursePopularFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseRecommendationRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseUpdateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.aicourse.AiCourseGenerateRequest;
@@ -45,14 +44,16 @@ public class CourseController implements CourseApi {
 
     @GetMapping("/feed")
     @Override
-    public ApiResponse<CourseFeedResponse> feed(@ModelAttribute CourseFeedRequest request) {
-        return success(CourseFeedResponse.from(courseService.findPublicFeed(request.toCondition())));
+    public ApiResponse<CourseFeedResponse> feed(@ModelAttribute @Valid CourseFeedRequest request) {
+        return success(CourseFeedResponse.from(
+                courseService.findPublicFeed(request.normalizedRegionName(), request.resolvedLimit())
+        ));
     }
 
     @GetMapping("/recommendations")
     @Override
     public ApiResponse<CourseFeedResponse> recommendations(
-            @ModelAttribute CourseRecommendationRequest request,
+            @ModelAttribute @Valid CourseRecommendationRequest request,
             @AuthenticatedMemberId Long authenticatedMemberId) {
         return success(CourseFeedResponse.from(
                 courseService.findRecommendations(
@@ -60,14 +61,6 @@ public class CourseController implements CourseApi {
                         request.normalizedRegionName(),
                         request.resolvedLimit()
                 )
-        ));
-    }
-
-    @GetMapping("/feed/popular")
-    @Override
-    public ApiResponse<CourseFeedResponse> popularFeed(@ModelAttribute CoursePopularFeedRequest request) {
-        return success(CourseFeedResponse.from(
-                courseService.findPopularByRegion(request.normalizedRegionName(), request.resolvedLimit())
         ));
     }
 

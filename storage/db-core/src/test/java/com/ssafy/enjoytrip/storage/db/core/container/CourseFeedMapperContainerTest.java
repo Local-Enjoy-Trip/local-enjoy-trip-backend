@@ -53,8 +53,32 @@ class CourseFeedMapperContainerTest extends StorageContainerTestSupport {
                 .containsExactly("user-near");
     }
 
+    @DisplayName("코스 피드는 동네 이름 앞 2글자 매칭 및 저장수 정렬 기준으로 필터링된다")
+    @Test
+    void regionPrefixFeedAndOrderedBySaveCount() {
+        Long userMemberId = seedMember("user", "user@example.com");
+        Long otherUserMemberId = seedMember("other", "other@example.com");
+
+        courseMapper.insert(new CourseRecord("c1", userMemberId, "망원 1", "망원동", null));
+        courseMapper.insert(new CourseRecord("c2", userMemberId, "망원 2", "망원동", null));
+        courseMapper.insert(new CourseRecord("c3", userMemberId, "부산 1", "부산 해운대구", null));
+        courseMapper.insert(new CourseRecord("c4", userMemberId, "망원 3", "망원동", null));
+
+        courseMapper.insertSave("c1", userMemberId);
+        courseMapper.insertSave("c1", otherUserMemberId);
+
+        courseMapper.insertSave("c2", userMemberId);
+
+        courseMapper.insertSave("c3", userMemberId);
+
+        List<CourseRecord> feed = courseMapper.findByRegionPrefixOrderedBySaveCount("망원", 5);
+
+        assertThat(feed).extracting(CourseRecord::getId)
+                .containsExactly("c1", "c2", "c4");
+    }
+
     private void seedPublicCourse(String id, Long ownerMemberId, double longitude) {
-        courseMapper.insert(new CourseRecord(id, ownerMemberId, id, "서울", null));
+        courseMapper.insert(new CourseRecord(id, ownerMemberId, id, "망원동", null));
         assertThat(courseMapper.updateStartLocation(id, longitude, ORIGIN_LATITUDE)).isEqualTo(1);
     }
 }

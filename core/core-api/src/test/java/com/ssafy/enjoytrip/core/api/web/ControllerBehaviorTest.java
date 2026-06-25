@@ -200,7 +200,7 @@ class ControllerBehaviorTest {
         @DisplayName("인증 사용자는 JSON 본문으로 쪽지를 생성한다")
         @Test
         void createsNoteWithJsonBodyAndAuthenticatedAuthor() throws Exception {
-            Note note = note(1L, 11L, "서울 산책 메모", NoteVisibility.PUBLIC);
+            Note note = note(1L, 11L, "망원 산책 메모", NoteVisibility.PUBLIC);
             when(noteService.createNote(any())).thenReturn(note);
 
             mockMvc.perform(post("/api/notes")
@@ -208,26 +208,26 @@ class ControllerBehaviorTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
-                                      "title":" 서울 산책 메모 ",
+                                      "title":" 망원 산책 메모 ",
                                       "content":" 오늘 날씨 좋음 ",
                                       "category":"TIP",
                                       "visibility":"PUBLIC",
                                       "latitude":37.5665,
                                       "longitude":126.9780,
-                                      "regionName":" 서울 "
+                                      "regionName":" 망원동 "
                                     }
                                     """))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.id").value(1))
-                    .andExpect(jsonPath("$.data.title").value("서울 산책 메모"))
+                    .andExpect(jsonPath("$.data.title").value("망원 산책 메모"))
                     .andExpect(jsonPath("$.data.visibility").value("PUBLIC"));
 
             ArgumentCaptor<Note> captor = ArgumentCaptor.forClass(Note.class);
             verify(noteService).createNote(captor.capture());
             assertThat(captor.getValue().authorMemberId()).isEqualTo(11L);
-            assertThat(captor.getValue().title()).isEqualTo("서울 산책 메모");
-            assertThat(captor.getValue().regionName()).isEqualTo("서울");
+            assertThat(captor.getValue().title()).isEqualTo("망원 산책 메모");
+            assertThat(captor.getValue().regionName()).isEqualTo("망원동");
         }
 
         @DisplayName("인증 사용자는 본인 쪽지를 수정하고 삭제한다")
@@ -979,7 +979,7 @@ class ControllerBehaviorTest {
                 visibility,
                 37.5665,
                 126.9780,
-                "서울",
+                "망원동",
                 null,
                 null,
                 null,

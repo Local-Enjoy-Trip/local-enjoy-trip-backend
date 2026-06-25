@@ -51,6 +51,9 @@ public interface CourseMapper {
     List<CourseRecord> findByRegionOrderedBySaveCount(@Param("regionName") String regionName,
                                                       @Param("limit") int limit);
 
+    List<CourseRecord> findByRegionPrefixOrderedBySaveCount(@Param("prefix") String prefix,
+                                                            @Param("limit") int limit);
+
     List<CourseRecord> findAllBySaveCount(@Param("limit") int limit);
 
     List<CourseRecommendationCandidateRecord> findCandidatesByMemberProfile(

@@ -10,7 +10,6 @@ import com.ssafy.enjoytrip.core.domain.CourseWriter;
 import com.ssafy.enjoytrip.core.domain.NoteTagReader;
 import com.ssafy.enjoytrip.core.domain.RerankingContext;
 import com.ssafy.enjoytrip.core.domain.event.CourseViewedEvent;
-import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -78,8 +77,11 @@ public class CourseService {
         courseWriter.deleteOwned(courseId, ownerMemberId);
     }
 
-    public List<Course> findPublicFeed(DistanceSearchCondition condition) {
-        return courseReader.findPublicFeed(condition);
+    public List<Course> findPublicFeed(String regionName, int limit) {
+        String prefix = regionName != null && regionName.length() >= 2
+                ? regionName.substring(0, 2)
+                : regionName;
+        return courseReader.findPopularByRegionPrefix(prefix, limit);
     }
 
     public List<Course> findPopularByRegion(String regionName, int limit) {
@@ -97,9 +99,14 @@ public class CourseService {
 
         List<CourseRecommendationCandidate> candidates =
                 courseReader.findCandidatesByMemberProfile(memberId, limit * 3);
+
+        List<CourseRecommendationCandidate> filtered = candidates.stream()
+                .filter(c -> c.similarityDistance() <= 0.8)
+                .toList();
+
         RerankingContext context = buildRerankingContext(memberId);
 
-        return ranker.rerank(candidates, context, limit);
+        return ranker.rerank(filtered, context, limit);
     }
 
     private RerankingContext buildRerankingContext(Long memberId) {

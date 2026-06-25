@@ -84,7 +84,7 @@ class NoteServiceTest {
                 NoteVisibility.PUBLIC,
                 37.5665,
                 126.9780,
-                "서울",
+                "망원동",
                 imageObjectKey,
                 imageUrl,
                 "image/jpeg",

@@ -85,6 +85,12 @@ public class CourseReader {
                 .toList();
     }
 
+    public List<Course> findPopularByRegionPrefix(String prefix, int limit) {
+        return courseMapper.findByRegionPrefixOrderedBySaveCount(prefix, limit).stream()
+                .map(record -> findCourse(record, false))
+                .toList();
+    }
+
     public List<Course> findAllBySaveCount(int limit) {
         return courseMapper.findAllBySaveCount(limit).stream()
                 .map(record -> findCourse(record, false))

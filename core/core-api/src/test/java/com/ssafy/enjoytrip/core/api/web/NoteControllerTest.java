@@ -42,7 +42,7 @@ class NoteControllerTest {
     @Test
     void authenticatedUserGetsNoteRecommendations() throws Exception {
         when(noteService.findRecommendations(11L, 10)).thenReturn(List.of(
-                note(1L, "서울 산책 메모"),
+                note(1L, "망원 산책 메모"),
                 note(2L, "한강 일기")
         ));
 
@@ -51,7 +51,7 @@ class NoteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.notes[0].id").value(1))
-                .andExpect(jsonPath("$.data.notes[0].title").value("서울 산책 메모"))
+                .andExpect(jsonPath("$.data.notes[0].title").value("망원 산책 메모"))
                 .andExpect(jsonPath("$.data.notes[1].id").value(2))
                 .andExpect(jsonPath("$.data.notes[1].title").value("한강 일기"));
 
@@ -62,7 +62,7 @@ class NoteControllerTest {
     @Test
     void noteRecommendationsRespectsLimitParameter() throws Exception {
         when(noteService.findRecommendations(11L, 5)).thenReturn(List.of(
-                note(1L, "서울 산책 메모")
+                note(1L, "망원 산책 메모")
         ));
 
         mockMvc.perform(get("/api/notes/recommendations")
@@ -93,7 +93,7 @@ class NoteControllerTest {
                 NoteVisibility.PUBLIC,
                 37.5665,
                 126.9780,
-                "서울",
+                "망원동",
                 null,
                 null,
                 null,

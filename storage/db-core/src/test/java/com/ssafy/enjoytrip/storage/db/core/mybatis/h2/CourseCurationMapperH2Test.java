@@ -26,7 +26,7 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
         Long memberAId = seedMember("memberA", "a@example.com");
         Long memberBId = seedMember("memberB", "b@example.com");
 
-        courseMapper.insert(new CourseRecord("course-A", memberAId, "서울 산책", "서울", null));
+        courseMapper.insert(new CourseRecord("course-A", memberAId, "망원 산책", "망원동", null));
 
         jdbcTemplate.update("insert into course_saves (course_id, member_id) values (?, ?)",
                 "course-A", memberBId);
@@ -74,7 +74,7 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
                 )
                 values (2, ?, '비공개 노트', '내용', 'PRIVATE', 37.5, 127.0, 'ACTIVE')
                 """, adminMemberId);
-        courseMapper.insert(new CourseRecord("course-public", adminMemberId, "공개 코스", "서울", null));
+        courseMapper.insert(new CourseRecord("course-public", adminMemberId, "공개 코스", "망원동", null));
         insertCourseItem("course-public", "ATTRACTION", 1L, null, 1);
         insertCourseItem("course-public", "ATTRACTION", 2L, null, 2);
         insertCourseItem("course-public", "NOTE", null, 1L, 3);
@@ -91,7 +91,7 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
         Long adminMemberId = seedMember("admin", "admin@example.com");
         seedAttraction(1L, "첫 장소");
         seedAttraction(2L, "두 번째 장소");
-        courseMapper.insert(new CourseRecord("course-batch", adminMemberId, "배치 코스", "서울", null));
+        courseMapper.insert(new CourseRecord("course-batch", adminMemberId, "배치 코스", "망원동", null));
 
         CourseItemRecord first = new CourseItemRecord(
                 "course-batch", "ATTRACTION", 1L, null, 1, 420, 300
@@ -120,7 +120,7 @@ class CourseCurationMapperH2Test extends H2MapperTestSupport {
     void schemaConstraintRejectsNegativeNextMetrics() {
         Long adminMemberId = seedMember("admin", "admin@example.com");
         seedAttraction(1L, "장소");
-        courseMapper.insert(new CourseRecord("course-constraint", adminMemberId, "제약 테스트", "서울", null));
+        courseMapper.insert(new CourseRecord("course-constraint", adminMemberId, "제약 테스트", "망원동", null));
 
         assertThatThrownBy(() -> courseMapper.insertItem(new CourseItemRecord(
                 "course-constraint", "ATTRACTION", 1L, null, 1, -1, 300

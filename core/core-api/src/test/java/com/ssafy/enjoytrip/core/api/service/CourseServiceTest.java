@@ -21,7 +21,6 @@ import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.CourseStopPointResolver;
 import com.ssafy.enjoytrip.core.domain.CourseWriter;
 import com.ssafy.enjoytrip.core.domain.DefaultCourseRoutePlanner;
-import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.external.courseorder.CourseOrderRecommendationException;
 import com.ssafy.enjoytrip.external.courseorder.CourseOrderRecommendationRequest;
@@ -497,32 +496,24 @@ class CourseServiceTest {
                 );
     }
 
-    @DisplayName("공개 피드는 저장소 거리순 단일 목록을 반환한다")
+    @DisplayName("공개 피드는 입력받은 동네의 앞 2글자로 필터링된 목록을 반환한다")
     @Test
-    void publicFeedReturnsDistanceOrderedCourses() {
+    void publicFeedReturnsRegionPrefixFilteredCourses() {
         CourseRecord mdCourse = courseRecord("md-1", 1L, 0);
-        mdCourse.setStartLatitude(37.5665);
-        mdCourse.setStartLongitude(126.9780);
-        mdCourse.setDistanceMeters(42.5);
+        mdCourse.setRegionName("망원동");
         CourseRecord publicCourse = courseRecord("course-1", 11L, 3);
-        publicCourse.setStartLatitude(37.5666);
-        publicCourse.setStartLongitude(126.9781);
-        publicCourse.setDistanceMeters(128.3);
-        when(courseMapper.findDistanceOrderedPublicFeed(126.9780, 37.5665, 20, null)).thenReturn(List.of(
+        publicCourse.setRegionName("망원동");
+        when(courseMapper.findByRegionPrefixOrderedBySaveCount("망원", 20)).thenReturn(List.of(
                 mdCourse,
                 publicCourse
         ));
         when(courseMapper.findPublicItemsByCourseId(eq("md-1"))).thenReturn(List.of());
         when(courseMapper.findPublicItemsByCourseId(eq("course-1"))).thenReturn(List.of());
 
-        List<Course> feed = service.findPublicFeed(new DistanceSearchCondition(126.9780, 37.5665, 20, null));
+        List<Course> feed = service.findPublicFeed("망원동", 20);
 
         assertThat(feed).extracting(Course::id).containsExactly("md-1", "course-1");
-        assertThat(feed).extracting(Course::distanceMeters).containsExactly(42.5, 128.3);
-        assertThat(feed).extracting(c -> c.startLocation() != null ? c.startLocation().latitude() : null)
-                .containsExactly(37.5665, 37.5666);
-        assertThat(feed).extracting(c -> c.startLocation() != null ? c.startLocation().longitude() : null)
-                .containsExactly(126.9780, 126.9781);
+        verify(courseMapper).findByRegionPrefixOrderedBySaveCount("망원", 20);
     }
 
     private void verifyNoCourseWrites() {
@@ -592,7 +583,7 @@ class CourseServiceTest {
                 id,
                 ownerMemberId,
                 id,
-                "서울",
+                "망원동",
                 null,
                 null,
                 null,
@@ -625,7 +616,7 @@ class CourseServiceTest {
     private static NoteRecord note(Long id, Double latitude, Double longitude) {
         return new NoteRecord(
                 id, 11L, "쪽지 " + id, "내용", "TIP", "PUBLIC",
-                bigDecimal(latitude), bigDecimal(longitude), "서울", null, null, null
+                bigDecimal(latitude), bigDecimal(longitude), "망원동", null, null, null
         );
     }
 
@@ -645,7 +636,7 @@ class CourseServiceTest {
     }
 
     private static CourseRecord courseRecord(String id, Long ownerMemberId, Integer saveCount) {
-        CourseRecord record = new CourseRecord(id, ownerMemberId, id, "서울", null);
+        CourseRecord record = new CourseRecord(id, ownerMemberId, id, "망원동", null);
         record.setSaveCount(saveCount);
         return record;
     }

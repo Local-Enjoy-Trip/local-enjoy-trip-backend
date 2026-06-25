@@ -277,6 +277,17 @@
         limit #{limit}
     </select>
 
+    <select id="findByRegionPrefixOrderedBySaveCount" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseRecord">
+        select <include refid="courseColumns"/>
+        from courses c
+        where c.region_name like concat(#{prefix}, '%')
+          and c.deleted_at is null
+        order by (
+            select count(*) from course_saves s where s.course_id = c.id
+        ) desc, c.created_at desc, c.id asc
+        limit #{limit}
+    </select>
+
     <insert id="insertSave">
         insert into course_saves (course_id, member_id)
         values (#{courseId}, #{memberId})

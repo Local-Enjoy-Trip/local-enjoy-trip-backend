@@ -84,7 +84,7 @@ class AiCourseGenerationServiceTest {
                 new AiCourseGenerationResult("감성 카페 투어", List.of(attractionId), "좋은 카페들", List.of("감성카페"))
         );
         when(attractionMapper.findByIds(List.of(attractionId))).thenReturn(
-                List.of(attractionRecord(attractionId, "카페 어니언", "서울 강남구", "http://img.jpg"))
+                List.of(attractionRecord(attractionId, "카페 어니언", "망원동 카페거리", "http://img.jpg"))
         );
 
         AiCoursePreview preview = service.generatePreview(
@@ -164,7 +164,7 @@ class AiCourseGenerationServiceTest {
             AttractionEmbeddingCandidateRecord record = ctor.newInstance();
             org.springframework.test.util.ReflectionTestUtils.setField(record, "id", id);
             org.springframework.test.util.ReflectionTestUtils.setField(record, "title", title);
-            org.springframework.test.util.ReflectionTestUtils.setField(record, "addr1", "서울");
+            org.springframework.test.util.ReflectionTestUtils.setField(record, "addr1", "망원동");
             org.springframework.test.util.ReflectionTestUtils.setField(record, "addr2", "역삼동");
             org.springframework.test.util.ReflectionTestUtils.setField(record, "latitude", 37.5);
             org.springframework.test.util.ReflectionTestUtils.setField(record, "longitude", 126.9);

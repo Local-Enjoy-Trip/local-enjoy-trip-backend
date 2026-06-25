@@ -3,7 +3,6 @@ package com.ssafy.enjoytrip.core.api.web.api;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseOrderRecommendationRequest;
-import com.ssafy.enjoytrip.core.api.web.dto.request.CoursePopularFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseRecommendationRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseUpdateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.aicourse.AiCourseGenerateRequest;
@@ -31,7 +30,7 @@ public interface CourseApi {
 
     @Operation(
             summary = "코스 피드 조회",
-            description = "현재 위치 기준 공개 코스를 거리순으로 조회합니다.",
+            description = "동네 이름(regionName)의 앞 2글자 필터링 기반 공개 코스를 인기순으로 조회합니다.",
             operationId = "courseFeed"
     )
     @ApiResponses({
@@ -44,7 +43,7 @@ public interface CourseApi {
                             examples = @ExampleObject(value = ApiExamples.COURSE_FEED_RESPONSE)
                     )
             ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 좌표 또는 파라미터")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 파라미터")
     })
     ApiResponse<CourseFeedResponse> feed(@Valid CourseFeedRequest request);
 
@@ -71,24 +70,7 @@ public interface CourseApi {
             @Parameter(hidden = true) Long authenticatedMemberId
     );
 
-    @Operation(
-            summary = "인기 코스 피드 조회",
-            description = "특정 동네의 저장 수 기준 인기 코스를 조회합니다.",
-            operationId = "coursePopularFeed"
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "인기 코스 조회 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = CourseFeedResponse.class),
-                            examples = @ExampleObject(value = ApiExamples.COURSE_FEED_RESPONSE)
-                    )
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 파라미터")
-    })
-    ApiResponse<CourseFeedResponse> popularFeed(@Valid CoursePopularFeedRequest request);
+
 
     @Operation(
             summary = "코스 상세 조회",
