@@ -126,7 +126,7 @@ jobs:
 
       # docker-compose.prod.yml 및 infra 디렉토리를 원격 서버로 복사
       - name: Copy Docker Compose and Infra files
-        uses: appleboy/scp-action@v0.1.8
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
