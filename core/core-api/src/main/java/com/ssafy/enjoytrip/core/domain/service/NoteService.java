@@ -212,6 +212,12 @@ public class NoteService {
                 .toList();
     }
 
+    public List<Note> findWrittenNotes(Long memberId, int limit) {
+        return noteMapper.findWritten(memberId, limit).stream()
+                .map(this::toNote)
+                .toList();
+    }
+
     public List<Note> findNearbyNotes(DistanceSearchCondition condition, Long viewerMemberId) {
         return noteMapper.findNearbyAccessible(
                         condition.longitude(),

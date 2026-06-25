@@ -296,6 +296,21 @@ class ControllerBehaviorTest {
             verify(noteService).findSavedNotes(11L, 30);
         }
 
+        @DisplayName("내가 작성한 쪽지 목록은 인증 사용자 기준으로 위임한다")
+        @Test
+        void noteMeEndpointsDelegateWithAuthenticatedUser() throws Exception {
+            Note note = note(1L, 11L, "내가 작성한 쪽지", NoteVisibility.PUBLIC);
+            when(noteService.findWrittenNotes(11L, 30)).thenReturn(List.of(note));
+
+            mockMvc.perform(get("/api/notes/me")
+                            .principal(jwtPrincipal(11L))
+                            .param("limit", "30"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.notes[0].id").value(1))
+                    .andExpect(jsonPath("$.data.notes[0].title").value("내가 작성한 쪽지"));
+            verify(noteService).findWrittenNotes(11L, 30);
+        }
+
         @DisplayName("주변 쪽지는 서울과 500m 기본값으로 조회하고 목록을 반환한다")
         @Test
         void nearbyNotesUseDefaultSeoulAndRadius() throws Exception {

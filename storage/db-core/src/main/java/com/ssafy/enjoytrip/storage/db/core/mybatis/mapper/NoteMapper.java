@@ -24,6 +24,8 @@ public interface NoteMapper {
 
     List<NoteRecord> findSavedAccessible(@Param("viewerMemberId") Long memberId, @Param("limit") int limit);
 
+    List<NoteRecord> findWritten(@Param("authorMemberId") Long memberId, @Param("limit") int limit);
+
     List<NoteRecord> findNearbyAccessible(@Param("longitude") double longitude,
                                           @Param("latitude") double latitude,
                                           @Param("radiusMeters") double radiusMeters,

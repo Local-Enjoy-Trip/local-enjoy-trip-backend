@@ -61,6 +61,14 @@
         order by s.created_at desc, s.id desc
         limit #{limit}
     </select>
+    <select id="findWritten" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
+        select <include refid="noteColumnsWithAlias"/>
+        from notes n
+        where n.author_member_id = #{authorMemberId}
+          and n.status = &apos;ACTIVE&apos;
+        order by n.created_at desc, n.id desc
+        limit #{limit}
+    </select>
     <select id="findNearbyAccessible" resultType="com.ssafy.enjoytrip.storage.db.core.model.NoteRecord">
         select <include refid="noteColumnsWithAlias"/> from notes n
         where ST_DWithin(n.location::geography, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography, #{radiusMeters})

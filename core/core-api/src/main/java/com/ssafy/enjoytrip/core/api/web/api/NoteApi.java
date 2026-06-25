@@ -6,6 +6,7 @@ import com.ssafy.enjoytrip.core.api.web.dto.request.NoteCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateTagsRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.SavedNotesRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.WrittenNotesRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NoteResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NotesResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -163,6 +164,27 @@ public interface NoteApi {
     })
     ApiResponse<NotesResponse> saved(
             @ParameterObject @Valid SavedNotesRequest request,
+            @Parameter(hidden = true) Long memberId
+    );
+
+    @Operation(
+            summary = "내가 작성한 쪽지 조회",
+            description = "내가 작성한 쪽지 중 ACTIVE 상태인 쪽지만 반환합니다.",
+            operationId = "getWrittenNotes"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "작성 쪽지 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = NotesResponse.class),
+                            examples = @ExampleObject(value = ApiExamples.NOTES_RESPONSE)
+                    )
+            )
+    })
+    ApiResponse<NotesResponse> me(
+            @ParameterObject @Valid WrittenNotesRequest request,
             @Parameter(hidden = true) Long memberId
     );
 

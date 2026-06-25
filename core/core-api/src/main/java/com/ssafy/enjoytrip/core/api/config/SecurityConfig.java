@@ -141,7 +141,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/map/search").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/notes").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/note-images/presigned-upload").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/notes/saved").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/notes/saved", "/api/notes/me").authenticated()
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/notes/{id}",

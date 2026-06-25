@@ -132,6 +132,59 @@ class NoteMapperContainerTest extends StorageContainerTestSupport {
         assertThat(saved).extracting(NoteRecord::getId).containsExactly(selfPrivate.getId());
     }
 
+    @DisplayName("NoteMapper는 자신이 작성한 active 쪽지만 반환한다")
+    @Test
+    void noteMapperFindsOnlyWrittenActiveNotes() {
+        Long authorMemberId = seedMember("note-written-author", uniqueId("note-author") + "@example.com");
+        Long otherMemberId = seedMember("note-written-other", uniqueId("note-other") + "@example.com");
+
+        NoteRecord myActive = noteMapper.insert(new NoteRecord(
+                authorMemberId,
+                "내 active 쪽지",
+                "내 active 쪽지",
+                "TIP",
+                "PUBLIC",
+                new BigDecimal("37.5665000"),
+                new BigDecimal("126.9780000"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+        NoteRecord myDeleted = noteMapper.insert(new NoteRecord(
+                authorMemberId,
+                "내 deleted 쪽지",
+                "내 deleted 쪽지",
+                "TIP",
+                "PUBLIC",
+                new BigDecimal("37.5665000"),
+                new BigDecimal("126.9780000"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+        NoteRecord otherActive = noteMapper.insert(new NoteRecord(
+                otherMemberId,
+                "타인 active 쪽지",
+                "타인 active 쪽지",
+                "TIP",
+                "PUBLIC",
+                new BigDecimal("37.5665000"),
+                new BigDecimal("126.9780000"),
+                "서울 중구",
+                null,
+                null,
+                null
+        ));
+
+        noteMapper.softDeleteOwned(myDeleted.getId(), authorMemberId);
+
+        List<NoteRecord> written = noteMapper.findWritten(authorMemberId, 10);
+
+        assertThat(written).extracting(NoteRecord::getId).containsExactly(myActive.getId());
+    }
+
     @DisplayName("searchMapNotes는 키워드 검색을 수행하며 정확히 일치하는 결과가 먼저 나오도록 랭킹과 거리를 정렬하고 개인정보 마스킹을 수행한다")
     @Test
     void searchMapNotesFiltersAndRanksCorrectly() {

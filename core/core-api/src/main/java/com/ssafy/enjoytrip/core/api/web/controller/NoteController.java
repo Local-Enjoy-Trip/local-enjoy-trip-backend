@@ -12,6 +12,7 @@ import com.ssafy.enjoytrip.core.api.web.dto.request.NoteCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateTagsRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.SavedNotesRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.WrittenNotesRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NoteResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NotesResponse;
 import java.util.List;
@@ -94,6 +95,17 @@ public class NoteController implements NoteApi {
             @AuthenticatedMemberId Long memberId
     ) {
         List<Note> notes = service.findSavedNotes(memberId, request.normalizedLimit());
+
+        return success(NotesResponse.from(notes));
+    }
+
+    @GetMapping("/me")
+    @Override
+    public ApiResponse<NotesResponse> me(
+            @ModelAttribute WrittenNotesRequest request,
+            @AuthenticatedMemberId Long memberId
+    ) {
+        List<Note> notes = service.findWrittenNotes(memberId, request.normalizedLimit());
 
         return success(NotesResponse.from(notes));
     }
