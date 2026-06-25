@@ -24,7 +24,6 @@ public record CourseUpdateRequest(
                 title.strip(),
                 blankToNull(regionName),
                 blankToNull(date),
-                false,
                 null,
                 null,
                 0,
