@@ -150,5 +150,30 @@
         </div>
     </main>
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.querySelector(".admin-search");
+    if (!searchInput) return;
+    
+    const courseRows = document.querySelectorAll(".admin-table tbody tr");
+    const userItems = document.querySelectorAll(".admin-list .admin-list-item");
+    
+    searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        
+        courseRows.forEach(row => {
+            if (row.cells.length === 1 && row.cells[0].colSpan > 1) return; // Skip empty row
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? "" : "none";
+        });
+        
+        userItems.forEach(item => {
+            if (item.textContent.includes("아직 가입 유저가 없습니다")) return;
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(query) ? "" : "none";
+        });
+    });
+});
+</script>
 </body>
 </html>

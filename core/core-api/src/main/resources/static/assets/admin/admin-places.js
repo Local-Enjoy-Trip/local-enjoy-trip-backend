@@ -5,6 +5,49 @@
         return;
     }
 
+    // Toggle detail row on row click
+    table.addEventListener("click", (event) => {
+        const row = event.target.closest(".place-row-clickable");
+        if (!row) {
+            return;
+        }
+
+        // Ignore clicks inside form actions column
+        if (event.target.closest("[data-place-actions]")) {
+            return;
+        }
+
+        const id = row.getAttribute("data-place-row");
+        const detailRow = table.querySelector(`[data-detail-row="${id}"]`);
+        if (detailRow) {
+            detailRow.classList.toggle("is-hidden");
+        }
+    });
+
+    // Real-time client-side search filtering
+    const searchInput = document.querySelector(".admin-search");
+    if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const rows = table.querySelectorAll(".place-row-clickable");
+            rows.forEach(row => {
+                const id = row.getAttribute("data-place-row");
+                const detailRow = table.querySelector(`[data-detail-row="${id}"]`);
+                const text = row.textContent.toLowerCase();
+                const detailText = detailRow ? detailRow.textContent.toLowerCase() : "";
+
+                if (text.includes(query) || detailText.includes(query)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                    if (detailRow) {
+                        detailRow.classList.add("is-hidden");
+                    }
+                }
+            });
+        });
+    }
+
     table.addEventListener("submit", async (event) => {
         const form = event.target.closest("[data-place-action-form]");
 

@@ -74,5 +74,24 @@
         </div>
     </main>
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.querySelector(".admin-search");
+    if (!searchInput) return;
+    const tableRows = document.querySelectorAll(".admin-table tbody tr");
+    searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        tableRows.forEach(row => {
+            if (row.cells.length === 1 && row.cells[0].colSpan > 1) return; // Skip empty message row
+            const text = row.textContent.toLowerCase();
+            if (text.includes(query)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>

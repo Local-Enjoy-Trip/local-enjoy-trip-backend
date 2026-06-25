@@ -105,8 +105,8 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="place : ${places}"
-                        th:attr="data-place-row=${place.id()},data-place-status=${place.status()}">
+                    <th:block th:each="place : ${places}">
+                    <tr th:attr="data-place-row=${place.id()},data-place-status=${place.status()}" class="place-row-clickable">
                         <td th:text="${place.id()}">1</td>
                         <td>
                             <strong th:text="${place.title()}">장소명</strong>
@@ -139,6 +139,43 @@
                             </form>
                         </td>
                     </tr>
+                    <tr th:attr="data-detail-row=${place.id()}" class="place-detail-row is-hidden">
+                        <td colspan="5">
+                            <div class="place-detail-content">
+                                <div class="place-detail-grid">
+                                    <div class="place-detail-image" th:if="${place.firstImage() != null}">
+                                        <img th:src="${place.firstImage()}" alt="장소 이미지">
+                                    </div>
+                                    <div class="place-detail-info">
+                                        <div class="info-group">
+                                            <strong>상세 주소</strong>
+                                            <p th:text="|${place.addr1()} ${place.addr2() ?: ''}|">주소</p>
+                                        </div>
+                                        <div class="info-group">
+                                            <strong>콘텐츠 타입 / 지역 코드</strong>
+                                            <p th:text="|Type: ${place.contentTypeId() ?: '-'} · Sido: ${place.sidoCode() ?: '-'} · Gugun: ${place.gugunCode() ?: '-'}|">타입 및 코드</p>
+                                        </div>
+                                        <div class="info-group" th:if="${place.latitude() != null && place.longitude() != null}">
+                                            <strong>위치 좌표</strong>
+                                            <p>
+                                                <span th:text="|위도: ${place.latitude()} · 경도: ${place.longitude()}|">좌표</span>
+                                                <a th:href="|https://map.kakao.com/?q=${place.latitude()},${place.longitude()}|" target="_blank" class="map-link">Kakao 지도 보기 ↗</a>
+                                            </p>
+                                        </div>
+                                        <div class="info-group" th:if="${place.duplicateReason() != null}">
+                                            <strong>중복 사유</strong>
+                                            <p th:text="${place.duplicateReason()}">중복 사유</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="place-detail-overview" th:if="${place.overview() != null}">
+                                    <strong>장소 설명</strong>
+                                    <p th:text="${place.overview()}">설명</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    </th:block>
                     <tr th:if="${#lists.isEmpty(places)}">
                         <td colspan="5">등록된 장소가 없습니다.</td>
                     </tr>
