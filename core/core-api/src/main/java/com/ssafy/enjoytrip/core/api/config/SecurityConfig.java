@@ -161,6 +161,8 @@ public class SecurityConfig {
                         ).authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/courses/{id}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/courses/{id}").authenticated()
+                        .requestMatchers("/api/courses/{courseId}/invitations/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/courses/{courseId}/invitations").authenticated()
 
                         .anyRequest().permitAll()
                 )
