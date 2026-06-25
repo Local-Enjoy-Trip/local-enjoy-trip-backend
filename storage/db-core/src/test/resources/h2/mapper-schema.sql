@@ -118,6 +118,7 @@ create table courses (
     title varchar(120) not null,
     region_name varchar(100),
     date varchar(32),
+    thumbnail_url varchar(1024),
     deleted_at timestamp,
     created_at timestamp not null default current_timestamp,
     updated_at timestamp
@@ -133,6 +134,7 @@ create table notes (
     latitude double precision not null,
     longitude double precision not null,
     region_name varchar(100),
+    image_url varchar(1024),
     status varchar(20) not null default 'ACTIVE',
     created_at timestamp not null default current_timestamp,
     updated_at timestamp,

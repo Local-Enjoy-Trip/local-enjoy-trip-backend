@@ -1,11 +1,16 @@
 package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
 import com.ssafy.enjoytrip.storage.db.core.model.CourseEmbeddingInputRecord;
+import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 public interface CourseEmbeddingMapper {
 
     CourseEmbeddingInputRecord findCourseEmbeddingInputById(@Param("courseId") String courseId);
+
+    int markPending(@Param("courseId") String courseId);
+
+    List<String> claimPendingBatch(@Param("limit") int limit);
 
     int upsertEmbedded(
             @Param("courseId") String courseId,

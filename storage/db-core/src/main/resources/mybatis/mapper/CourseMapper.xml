@@ -361,4 +361,28 @@
         values (#{courseId}, #{memberId}, current_timestamp)
     </insert>
 
+    <update id="updateThumbnailUrl">
+        update courses
+        set thumbnail_url = (
+            select case ci.item_type
+                       when 'ATTRACTION' then a.first_image
+                       when 'NOTE'       then n.image_url
+                   end
+            from course_items ci
+            left join attractions a on a.id = ci.attraction_id
+            left join notes n       on n.id = ci.note_id
+            where ci.course_id = #{courseId}
+              and (
+                  (ci.item_type = 'ATTRACTION' and a.first_image  is not null and a.first_image  &lt;&gt; '')
+                  or
+                  (ci.item_type = 'NOTE'       and n.image_url    is not null and n.image_url    &lt;&gt; '')
+              )
+            order by ci.position asc, ci.id asc
+            limit 1
+        ),
+        updated_at = current_timestamp
+        where id = #{courseId}
+          and deleted_at is null
+    </update>
+
 </mapper>

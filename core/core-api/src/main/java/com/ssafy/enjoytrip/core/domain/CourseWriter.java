@@ -3,15 +3,14 @@ package com.ssafy.enjoytrip.core.domain;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_INVALID_ITEM;
 import static com.ssafy.enjoytrip.core.support.error.ErrorType.COURSE_NOT_FOUND;
 
-import com.ssafy.enjoytrip.core.domain.event.CourseEmbeddingRequestedEvent;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseItemRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseEmbeddingMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,9 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CourseWriter {
     private final CourseMapper courseMapper;
+    private final CourseEmbeddingMapper courseEmbeddingMapper;
     private final CourseStopPointResolver courseStopPointResolver;
     private final CourseRoutePlanner courseRoutePlanner;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Course create(Course course) {
@@ -35,7 +34,10 @@ public class CourseWriter {
 
         Course created = course.withStartLocation(startPoint)
                 .withStops(saveStops(course.id(), plannedStops));
-        eventPublisher.publishEvent(new CourseEmbeddingRequestedEvent(course.id()));
+        courseMapper.updateThumbnailUrl(course.id());
+        if (plannedStops.size() >= 2) {
+            courseEmbeddingMapper.markPending(course.id());
+        }
         return created;
     }
 
@@ -55,7 +57,10 @@ public class CourseWriter {
         courseMapper.deleteItemsByCourseId(course.id());
         Course updated = course.withStartLocation(startPoint)
                 .withStops(saveStops(course.id(), plannedStops));
-        eventPublisher.publishEvent(new CourseEmbeddingRequestedEvent(course.id()));
+        courseMapper.updateThumbnailUrl(course.id());
+        if (plannedStops.size() >= 2) {
+            courseEmbeddingMapper.markPending(course.id());
+        }
         return updated;
     }
 

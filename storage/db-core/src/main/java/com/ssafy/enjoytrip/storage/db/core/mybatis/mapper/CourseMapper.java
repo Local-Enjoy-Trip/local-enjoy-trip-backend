@@ -76,4 +76,6 @@ public interface CourseMapper {
     int insertCourseTag(@Param("courseId") String courseId, @Param("tagId") Long tagId);
 
     int deleteTagsByCourseId(@Param("courseId") String courseId);
+
+    int updateThumbnailUrl(@Param("courseId") String courseId);
 }

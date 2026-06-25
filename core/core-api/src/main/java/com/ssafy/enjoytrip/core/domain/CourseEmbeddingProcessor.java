@@ -1,6 +1,5 @@
-package com.ssafy.enjoytrip.core.domain.event.listener;
+package com.ssafy.enjoytrip.core.domain;
 
-import com.ssafy.enjoytrip.core.domain.event.CourseEmbeddingRequestedEvent;
 import com.ssafy.enjoytrip.external.courseembedding.CourseEmbeddingClient;
 import com.ssafy.enjoytrip.external.courseembedding.CourseEmbeddingException;
 import com.ssafy.enjoytrip.external.courseembedding.CourseEmbeddingInput;
@@ -16,86 +15,90 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CourseEmbeddingEventListener {
+public class CourseEmbeddingProcessor {
+
     private static final String SOURCE_VERSION = "v1";
     private static final int FAILURE_MESSAGE_LIMIT = 1_000;
 
-    private final CourseEmbeddingClient courseEmbeddingClient;
     private final CourseEmbeddingMapper courseEmbeddingMapper;
+    private final CourseEmbeddingClient courseEmbeddingClient;
 
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleCourseEmbeddingRequested(CourseEmbeddingRequestedEvent event) {
-        String courseId = event.courseId();
+    public List<String> claimPendingBatch(int limit) {
+        return courseEmbeddingMapper.claimPendingBatch(limit);
+    }
 
+    public void processOne(String courseId) {
         CourseEmbeddingInputRecord record =
                 courseEmbeddingMapper.findCourseEmbeddingInputById(courseId);
         if (record == null) {
-            log.debug("코스 임베딩 건너뜀 - 코스를 찾을 수 없음, courseId: {}", courseId);
+            log.debug("코스 임베딩 건너뜀 - 코스 없음, courseId={}", courseId);
+            return;
+        }
+        if (record.getStopTitles() == null || record.getStopTitles().isBlank()) {
+            log.debug("코스 임베딩 건너뜀 - 경유지 없음, courseId={}", courseId);
             return;
         }
 
-        CourseEmbeddingInput input = new CourseEmbeddingInput(
+        CourseEmbeddingInput input = toInput(record);
+        String sourceHash = computeSourceHash(input);
+
+        if (hashUnchanged(courseId, sourceHash)) {
+            log.debug("코스 임베딩 건너뜀 - 변경 없음, courseId={}", courseId);
+            saveUnchanged(courseId, record.getDominantCategory(), sourceHash);
+            return;
+        }
+
+        callAndSave(courseId, record.getDominantCategory(), input, sourceHash);
+    }
+
+    private static CourseEmbeddingInput toInput(CourseEmbeddingInputRecord record) {
+        return new CourseEmbeddingInput(
                 record.getCourseId(),
                 record.getTitle(),
                 record.getRegionName(),
                 record.getTagNames(),
                 record.getStopTitles()
         );
-        String sourceHash = computeSourceHash(input);
+    }
 
-        String existingHash = courseEmbeddingMapper.findSourceHashByCourseId(courseId);
-        if (Objects.equals(existingHash, sourceHash)) {
-            log.debug("코스 임베딩 건너뜀 - 변경 없음, courseId: {}", courseId);
-            return;
-        }
+    private boolean hashUnchanged(String courseId, String sourceHash) {
+        return Objects.equals(courseEmbeddingMapper.findSourceHashByCourseId(courseId), sourceHash);
+    }
 
+    private void saveUnchanged(String courseId, String dominantCategory, String sourceHash) {
+        courseEmbeddingMapper.upsertEmbedded(
+                courseId, null, null,
+                dominantCategory, SOURCE_VERSION, sourceHash,
+                1536, "openai", "unknown"
+        );
+    }
+
+    private void callAndSave(String courseId, String dominantCategory,
+                             CourseEmbeddingInput input, String sourceHash) {
         try {
             CourseEmbeddingResult result = courseEmbeddingClient.embed(input);
             courseEmbeddingMapper.upsertEmbedded(
-                    courseId,
-                    result.description(),
-                    toVectorLiteral(result.embedding()),
-                    record.getDominantCategory(),
-                    SOURCE_VERSION,
-                    sourceHash,
-                    result.dimension(),
-                    result.provider(),
-                    result.model()
+                    courseId, result.description(), toVectorLiteral(result.embedding()),
+                    dominantCategory, SOURCE_VERSION, sourceHash,
+                    result.dimension(), result.provider(), result.model()
             );
-            log.info("코스 임베딩 저장 완료 - courseId: {}", courseId);
+            log.info("코스 임베딩 완료 - courseId={}", courseId);
         } catch (CourseEmbeddingException ex) {
-            log.error(
-                    "코스 임베딩 실패 - courseId: {}, code: {}, message: {}",
-                    courseId, ex.failureCode(), ex.getMessage()
-            );
+            log.error("코스 임베딩 실패 - courseId={}, code={}", courseId, ex.failureCode(), ex);
             courseEmbeddingMapper.upsertFailed(
-                    courseId,
-                    SOURCE_VERSION,
-                    sourceHash,
-                    "openai",
-                    "unknown",
-                    ex.failureCode(),
-                    limitMessage(ex.getMessage())
+                    courseId, SOURCE_VERSION, sourceHash,
+                    "openai", "unknown", ex.failureCode(), limitMessage(ex.getMessage())
             );
         } catch (RuntimeException ex) {
-            log.error("코스 임베딩 예기치 않은 실패 - courseId: {}", courseId, ex);
+            log.error("코스 임베딩 예기치 않은 실패 - courseId={}", courseId, ex);
             courseEmbeddingMapper.upsertFailed(
-                    courseId,
-                    SOURCE_VERSION,
-                    sourceHash,
-                    "openai",
-                    "unknown",
-                    "COURSE_EMBEDDING_ERROR",
-                    limitMessage(ex.getMessage())
+                    courseId, SOURCE_VERSION, sourceHash,
+                    "openai", "unknown", "COURSE_EMBEDDING_ERROR", limitMessage(ex.getMessage())
             );
         }
     }

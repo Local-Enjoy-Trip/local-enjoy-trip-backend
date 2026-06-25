@@ -18,6 +18,10 @@ enjoytrip:
     popularity:
       flush-delay-ms: ${ATTRACTION_POPULARITY_FLUSH_DELAY_MS:1000}
       flush-batch-size: ${ATTRACTION_POPULARITY_FLUSH_BATCH_SIZE:500}
+  course:
+    embedding:
+      flush-delay-ms: ${COURSE_EMBEDDING_FLUSH_DELAY_MS:300000}
+      batch-limit: ${COURSE_EMBEDDING_BATCH_LIMIT:20}
   jwt:
     secret: ${ENJOYTRIP_JWT_SECRET:dev-only-enjoytrip-jwt-secret-change-me-please-32b}
     expiration-seconds: ${ENJOYTRIP_JWT_EXPIRATION_SECONDS:7200}

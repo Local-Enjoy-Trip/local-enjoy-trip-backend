@@ -2,6 +2,46 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseEmbeddingMapper">
 
+    <insert id="markPending">
+        insert into course_embeddings (
+            course_id, source_version, source_hash,
+            embedding_dimension, provider, model,
+            status, attempt_count, updated_at
+        )
+        values (
+            #{courseId}, 'v1', '',
+            1536, 'openai', 'unknown',
+            'PENDING', 0, current_timestamp
+        )
+        on conflict (course_id) do update set
+            status     = case when course_embeddings.status = 'PROCESSING'
+                             then 'PROCESSING'
+                             else 'PENDING' end,
+            updated_at = current_timestamp
+    </insert>
+
+    <select id="claimPendingBatch" resultType="string">
+        with claimed as (
+            select ce.course_id
+            from course_embeddings ce
+            join courses c on c.id = ce.course_id and c.deleted_at is null
+            where ce.status = 'PENDING'
+              and (
+                  select count(*)
+                  from course_items
+                  where course_id = ce.course_id
+              ) >= 2
+            order by ce.updated_at asc
+            limit #{limit}
+            for update skip locked
+        )
+        update course_embeddings
+        set status     = 'PROCESSING',
+            updated_at = current_timestamp
+        where course_id in (select course_id from claimed)
+        returning course_id
+    </select>
+
     <select id="findCourseEmbeddingInputById"
             resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseEmbeddingInputRecord">
         select c.id                              as courseId,
@@ -72,8 +112,8 @@
             current_timestamp
         )
         on conflict (course_id) do update set
-            description         = excluded.description,
-            embedding           = excluded.embedding,
+            description         = coalesce(excluded.description, course_embeddings.description),
+            embedding           = coalesce(excluded.embedding::vector, course_embeddings.embedding),
             dominant_category   = excluded.dominant_category,
             source_version      = excluded.source_version,
             source_hash         = excluded.source_hash,
