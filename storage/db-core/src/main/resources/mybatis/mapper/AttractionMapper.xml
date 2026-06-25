@@ -275,6 +275,24 @@
             updated_at = current_timestamp
         where id = #{attractionId}
     </update>
+    <select id="findSavedByMemberId" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
+        select <include refid="searchRowColumns"/>
+        from (
+            select <include refid="baseColumns"/>,
+                   null as distanceMeters,
+                   sv.created_at as savedAt
+            from attractions
+            inner join attraction_saves sv
+                   on sv.attraction_id = attractions.id
+                  and sv.member_id = #{viewerMemberId}
+            where status = &apos;ACTIVE&apos;
+              and deleted_at is null
+              and duplicate_of_attraction_id is null
+            order by sv.created_at desc, title asc, id asc
+        ) a
+        <include refid="searchRowJoins"/>
+        order by a.savedAt desc, a.title asc, a.id asc
+    </select>
     <insert id="insertSave">insert into attraction_saves (attraction_id, member_id) values (#{attractionId}, #{memberId}) on conflict (attraction_id, member_id) do nothing</insert>
     <delete id="deleteSave">delete from attraction_saves where attraction_id = #{attractionId} and member_id = #{memberId}</delete>
     <insert id="upsertRating">insert into attraction_ratings (attraction_id, member_id, rating) values (#{attractionId}, #{memberId}, #{rating}) on conflict (attraction_id, member_id) do update set rating = excluded.rating, updated_at = current_timestamp</insert>

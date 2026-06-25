@@ -70,6 +70,53 @@ public interface AttractionApi {
     );
 
     @Operation(
+            summary = "내가 저장한 관광지 목록 조회",
+            description = """
+                    인증 사용자가 저장한 관광지 목록을 반환합니다.
+
+                    - 저장 시각 내림차순으로 정렬합니다.
+                    - `saved=true`가 항상 반환됩니다.
+                    - 삭제되거나 숨김 처리된 관광지는 제외됩니다.
+                    """,
+            operationId = "getSavedAttractions"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "저장한 관광지 목록 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AttractionsResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "success": true,
+                                      "data": {
+                                        "attractions": [
+                                          {
+                                            "id": 125405,
+                                            "title": "경복궁",
+                                            "addr1": "서울 종로구 사직로 161",
+                                            "latitude": 37.579617,
+                                            "longitude": 126.977041,
+                                            "contentTypeId": "12",
+                                            "saveCount": 12,
+                                            "saved": true
+                                          }
+                                        ]
+                                      },
+                                      "error": null
+                                    }
+                                    """)
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 필요"
+            )
+    })
+    ApiResponse<AttractionsResponse> saved(@Parameter(hidden = true) Long memberId);
+
+    @Operation(
             summary = "홈 인기 주변 관광지 조회",
             description = """
                     동네핀 홈의 주변 인기 관광지 섹션을 조회합니다.
