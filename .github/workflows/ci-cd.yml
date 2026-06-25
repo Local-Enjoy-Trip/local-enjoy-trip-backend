@@ -131,8 +131,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.prod.yml,infra/**"
-          target: "/home/${{ secrets.EC2_USER }}/enjoytrip"
+          source: "docker-compose.prod.yml,infra"
+          target: "/home/${{ secrets.EC2_USER }}/deploy-temp"
           strip_components: 0
 
       # SSH를 통해 서버에 접속하여 배포 수행
@@ -143,6 +143,14 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # 1. 배포 경로 디렉토리 생성 및 소유권 보장
+            sudo mkdir -p /home/${{ secrets.EC2_USER }}/enjoytrip
+            sudo chown -R ${{ secrets.EC2_USER }}:${{ secrets.EC2_USER }} /home/${{ secrets.EC2_USER }}/enjoytrip
+            
+            # 2. 임시 폴더에서 배포 폴더로 복사 및 임시 폴더 삭제
+            cp -r /home/${{ secrets.EC2_USER }}/deploy-temp/* /home/${{ secrets.EC2_USER }}/enjoytrip/
+            rm -rf /home/${{ secrets.EC2_USER }}/deploy-temp
+            
             cd /home/${{ secrets.EC2_USER }}/enjoytrip
             
             # .env 파일 생성
