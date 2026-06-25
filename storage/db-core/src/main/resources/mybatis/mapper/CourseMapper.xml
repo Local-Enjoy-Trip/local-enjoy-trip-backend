@@ -12,6 +12,7 @@
             from course_saves s
             where s.course_id = c.id
         ) as saveCount,
+        c.thumbnail_url as thumbnailUrl,
         c.created_at as createdAt,
         c.updated_at as updatedAt,
         c.deleted_at as deletedAt

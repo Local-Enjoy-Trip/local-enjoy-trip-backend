@@ -375,6 +375,7 @@ class ApiDocumentationTest {
                 null,
                 null,
                 0,
+                null,
                 "2026-06-23T00:00:00",
                 "2026-06-23T00:00:00",
                 List.of(

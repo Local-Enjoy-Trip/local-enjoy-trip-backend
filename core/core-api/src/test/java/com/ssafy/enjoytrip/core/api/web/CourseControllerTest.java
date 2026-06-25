@@ -319,6 +319,7 @@ class CourseControllerTest {
                 new Coordinate(37.5665, 126.9780),
                 null,
                 saveCount,
+                null,
                 "",
                 "",
                 List.of(
@@ -339,6 +340,7 @@ class CourseControllerTest {
                 new Coordinate(37.5665, 126.9780),
                 distanceMeters,
                 0,
+                null,
                 "",
                 "",
                 List.of(
@@ -362,6 +364,7 @@ class CourseControllerTest {
                 null,
                 null,
                 0,
+                null,
                 "",
                 "",
                 List.of(

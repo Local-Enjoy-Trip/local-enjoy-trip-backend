@@ -26,6 +26,7 @@ public record CourseCreateRequest(
                 null,
                 null,
                 0,
+                null,
                 "",
                 "",
                 normalizedStops(),

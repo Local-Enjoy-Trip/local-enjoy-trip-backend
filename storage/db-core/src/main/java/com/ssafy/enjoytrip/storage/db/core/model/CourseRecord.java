@@ -28,6 +28,8 @@ public class CourseRecord {
 
     private Integer saveCount;
 
+    private String thumbnailUrl;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

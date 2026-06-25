@@ -154,6 +154,7 @@ public class CourseReader {
                 null,
                 null,
                 r.getSaveCount() != null ? r.getSaveCount() : 0,
+                r.getThumbnailUrl(),
                 stringValue(r.getCreatedAt()),
                 stringValue(r.getUpdatedAt()),
                 items.stream().map(CourseReader::toStop).toList(),
@@ -198,6 +199,7 @@ public class CourseReader {
                 startLocation,
                 record.getDistanceMeters(),
                 countValue(record.getSaveCount()),
+                record.getThumbnailUrl(),
                 stringValue(record.getCreatedAt()),
                 stringValue(record.getUpdatedAt()),
                 items.stream()

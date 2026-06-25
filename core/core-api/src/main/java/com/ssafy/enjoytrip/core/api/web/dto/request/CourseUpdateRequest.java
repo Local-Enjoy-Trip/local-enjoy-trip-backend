@@ -25,6 +25,7 @@ public record CourseUpdateRequest(
                 null,
                 null,
                 0,
+                null,
                 "",
                 "",
                 normalizedStops(),

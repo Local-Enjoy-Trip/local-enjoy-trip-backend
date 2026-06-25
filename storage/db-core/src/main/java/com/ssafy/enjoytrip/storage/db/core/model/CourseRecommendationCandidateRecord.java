@@ -14,6 +14,7 @@ public class CourseRecommendationCandidateRecord {
     private String regionName;
     private String date;
     private Integer saveCount;
+    private String thumbnailUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;

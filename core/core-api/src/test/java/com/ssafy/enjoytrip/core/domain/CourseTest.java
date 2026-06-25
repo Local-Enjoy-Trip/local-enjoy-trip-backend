@@ -83,11 +83,11 @@ class CourseTest {
         List<CourseStop> stops = IntStream.rangeClosed(1, stopCount)
                 .mapToObj(i -> stopNoMetrics(i))
                 .toList();
-        return new Course("c1", 1L, "테스트 코스", "서울", null, null, null, 0, "", "",stops, List.of());
+        return new Course("c1", 1L, "테스트 코스", "서울", null, null, null, 0, null, "", "", stops, List.of());
     }
 
     private static Course courseWithStops(CourseStop... stops) {
-        return new Course("c1", 1L, "테스트 코스", "서울", null, null, null, 0, "", "",List.of(stops), List.of());
+        return new Course("c1", 1L, "테스트 코스", "서울", null, null, null, 0, null, "", "", List.of(stops), List.of());
     }
 
     private static CourseStop stopWithMetrics(int position, int distanceToNext, int durationToNext) {

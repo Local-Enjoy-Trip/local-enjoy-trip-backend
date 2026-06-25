@@ -597,6 +597,7 @@ class CourseServiceTest {
                 null,
                 null,
                 0,
+                null,
                 "",
                 "",
                 List.of(stops),
