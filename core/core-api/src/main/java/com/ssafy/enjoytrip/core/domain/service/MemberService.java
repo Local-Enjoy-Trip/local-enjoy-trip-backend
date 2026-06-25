@@ -30,6 +30,12 @@ public class MemberService {
                 .toList();
     }
 
+    public List<Member> searchByEmail(String emailKeyword) {
+        return memberMapper.findByEmailKeyword(emailKeyword).stream()
+                .map(MemberService::toMember)
+                .toList();
+    }
+
     public Member findById(Long memberId) {
         MemberRecord record = memberMapper.findById(memberId);
         if (record == null) {

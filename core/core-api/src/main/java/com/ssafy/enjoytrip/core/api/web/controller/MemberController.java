@@ -43,6 +43,18 @@ public class MemberController implements MemberApi {
     private final JwtTokenService tokenService;
     private final OAuthSignupTicketService oauthSignupTicketService;
 
+    @GetMapping("/search")
+    @Override
+    public ApiResponse<UsersResponse> searchByEmail(
+            @RequestParam @NotBlank @Email String email
+    ) {
+        List<UserResponse> users = service.searchByEmail(email)
+                .stream()
+                .map(MemberController::toUserResponse)
+                .toList();
+        return success(new UsersResponse(users));
+    }
+
     @GetMapping
     @Override
     public ApiResponse<UsersResponse> findAll() {

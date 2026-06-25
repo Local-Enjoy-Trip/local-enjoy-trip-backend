@@ -26,6 +26,30 @@ import jakarta.validation.constraints.NotBlank;
 public interface MemberApi {
 
     @Operation(
+            summary = "이메일 키워드 회원 검색",
+            description = "이메일 앞부분이 일치하는 회원을 검색합니다. 인덱스를 사용하는 prefix LIKE 검색입니다.",
+            operationId = "searchMembersByEmail"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "이메일 키워드 검색 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UsersResponse.class),
+                            examples = @ExampleObject(value = ApiExamples.USERS_RESPONSE))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "이메일 형식 오류 또는 빈 값"
+            )
+    })
+    ApiResponse<UsersResponse> searchByEmail(
+            @Parameter(description = "검색할 이메일 키워드 (앞부분 일치)", required = true)
+            @NotBlank @Email String email
+    );
+
+    @Operation(
             summary = "회원 목록 조회",
             description = "등록된 회원 목록을 조회합니다. 비밀번호와 내부 회원 ID는 응답하지 않습니다.",
             operationId = "findMembers"

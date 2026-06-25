@@ -7,6 +7,8 @@ import org.apache.ibatis.annotations.Param;
 public interface MemberMapper {
     List<MemberRecord> findAllOrderByCreatedAtDesc();
 
+    List<MemberRecord> findByEmailKeyword(String emailKeyword);
+
     MemberRecord findById(Long memberId);
 
     MemberRecord findByEmail(String email);

@@ -82,6 +82,25 @@ class MemberAuthMapperH2Test extends H2MapperTestSupport {
         assertThat(memberMapper.findById(memberId)).isNull();
     }
 
+    @DisplayName("MemberMapper는 이메일 prefix LIKE 키워드로 회원을 검색한다")
+    @Test
+    void findByEmailKeywordReturnsPrefixMatchedMembers() {
+        String prefix = uniqueId("search");
+        String emailA = prefix + "_alice@example.com";
+        String emailB = prefix + "_bob@example.com";
+        String emailOther = uniqueId("other") + "@example.com";
+        seedMember("Alice", emailA);
+        seedMember("Bob", emailB);
+        seedMember("Other", emailOther);
+
+        var results = memberMapper.findByEmailKeyword(prefix);
+
+        assertThat(results)
+                .extracting(MemberRecord::getEmail)
+                .containsExactlyInAnyOrder(emailA, emailB)
+                .doesNotContain(emailOther);
+    }
+
     @DisplayName("AuthLogMapper는 H2 인메모리 DB에서 memberId와 logged_at을 채운다")
     @Test
     void authLogMapperPersistsLoginEvent() {
