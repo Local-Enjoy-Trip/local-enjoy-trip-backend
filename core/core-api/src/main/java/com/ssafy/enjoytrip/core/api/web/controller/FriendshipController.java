@@ -11,7 +11,6 @@ import com.ssafy.enjoytrip.core.api.web.dto.response.FriendshipRequestsResponse;
 import com.ssafy.enjoytrip.core.domain.Friendship;
 import com.ssafy.enjoytrip.core.domain.service.FriendshipService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
-import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,7 +30,7 @@ public class FriendshipController implements FriendshipApi {
     @PostMapping("/requests")
     @Override
     public ApiResponse<FriendshipMutationResponse> request(
-            @Valid @RequestBody FriendRequestCreateRequest request,
+            @RequestBody FriendRequestCreateRequest request,
             @AuthenticatedMemberId Long memberId
     ) {
         Friendship friendship = friendshipService.requestFriendship(

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 
 @Tag(name = "Neighborhood", description = "동네핀 홈 AI 브리핑 API")
@@ -45,5 +46,5 @@ public interface NeighborhoodBriefingApi {
                     )
             )
     })
-    ApiResponse<NeighborhoodBriefingResponse> brief(@ParameterObject NeighborhoodBriefingRequest request);
+    ApiResponse<NeighborhoodBriefingResponse> brief(@ParameterObject @Valid NeighborhoodBriefingRequest request);
 }

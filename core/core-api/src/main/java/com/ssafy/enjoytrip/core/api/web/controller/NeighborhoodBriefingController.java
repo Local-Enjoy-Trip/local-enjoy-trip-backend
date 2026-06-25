@@ -10,7 +10,6 @@ import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.NeighborhoodBriefingApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NeighborhoodBriefingRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NeighborhoodBriefingResponse;
-import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -30,7 +29,7 @@ public class NeighborhoodBriefingController implements NeighborhoodBriefingApi {
     @GetMapping("/briefing")
     @Override
     public ApiResponse<NeighborhoodBriefingResponse> brief(
-            @Valid @ModelAttribute NeighborhoodBriefingRequest request
+            @ModelAttribute NeighborhoodBriefingRequest request
     ) {
         String currentHour = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
                 .format(DateTimeFormatter.ofPattern("yyyyMMddHH"));

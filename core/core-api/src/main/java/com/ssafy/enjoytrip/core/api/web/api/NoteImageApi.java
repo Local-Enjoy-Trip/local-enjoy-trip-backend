@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @Tag(name = "Note Images", description = "동네핀 쪽지 이미지 업로드 API")
 public interface NoteImageApi {
@@ -39,7 +40,7 @@ public interface NoteImageApi {
             )
     })
     ApiResponse<NoteImagePresignedUploadResponse> createPresignedUpload(
-            NoteImagePresignedUploadRequest request,
+            @Valid NoteImagePresignedUploadRequest request,
             @Parameter(hidden = true) Long memberId
     );
 }

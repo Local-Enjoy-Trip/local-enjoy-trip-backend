@@ -9,7 +9,6 @@ import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.TagApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.TagRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.TagsResponse;
-import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -38,7 +37,7 @@ public class TagController implements TagApi {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Override
-    public ApiResponse<TagsResponse> create(@Valid @RequestBody TagRequest request) {
+    public ApiResponse<TagsResponse> create(@RequestBody TagRequest request) {
         String name = request.normalizedName();
         Tag tag = tagService.create(name);
         return success(new TagsResponse(List.of(tag)));
@@ -46,7 +45,7 @@ public class TagController implements TagApi {
 
     @PutMapping("/{id}")
     @Override
-    public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody TagRequest request) {
+    public ApiResponse<Void> update(@PathVariable Long id, @RequestBody TagRequest request) {
         requireId(id);
         tagService.updateOrThrow(id, request.normalizedName());
         return success();

@@ -17,7 +17,6 @@ import com.ssafy.enjoytrip.core.api.web.dto.response.AttractionDetailResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.AttractionStatsResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.AttractionsResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.PopularAttractionsResponse;
-import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -66,7 +65,7 @@ public class AttractionController implements AttractionApi {
     @GetMapping("/popular-nearby")
     @Override
     public ApiResponse<PopularAttractionsResponse> popularNearby(
-            @Valid @ModelAttribute NearbySectionRequest request,
+            @ModelAttribute NearbySectionRequest request,
             @AuthenticatedMemberId(unauthenticated = NULL) Long memberId
     ) {
         List<PopularAttractionResult> attractions = service.findPopularNearbyAttractions(
@@ -120,7 +119,7 @@ public class AttractionController implements AttractionApi {
     @PutMapping("/{id}/rating")
     @Override
     public ApiResponse<Void> rate(@PathVariable Long id,
-                                  @Valid @RequestBody RatingRequest request,
+                                  @RequestBody RatingRequest request,
                                   @AuthenticatedMemberId Long memberId) {
         service.upsertRating(id, memberId, request.rating());
 

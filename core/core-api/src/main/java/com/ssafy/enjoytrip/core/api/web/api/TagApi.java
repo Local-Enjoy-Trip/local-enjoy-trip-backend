@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @Tag(name = "Tags", description = "태그 관리 API")
 public interface TagApi {
@@ -52,7 +53,7 @@ public interface TagApi {
                     )
             )
     })
-    ApiResponse<TagsResponse> create(TagRequest request);
+    ApiResponse<TagsResponse> create(@Valid TagRequest request);
 
     @Operation(
             summary = "태그 수정",
@@ -79,7 +80,7 @@ public interface TagApi {
     })
     ApiResponse<Void> update(
             @Parameter(description = "수정할 태그 ID", example = "1", required = true) Long id,
-            TagRequest request
+            @Valid TagRequest request
     );
 
     @Operation(summary = "태그 삭제", description = "태그를 삭제합니다.", operationId = "deleteTag")

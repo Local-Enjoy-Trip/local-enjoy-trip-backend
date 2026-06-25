@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springdoc.core.annotations.ParameterObject;
+import jakarta.validation.Valid;
 
 @Tag(name = "Map", description = "동네핀 지도 탐색 API")
 public interface MapApi {
@@ -34,7 +35,7 @@ public interface MapApi {
             )
     })
     ApiResponse<MapExploreResponse> explore(
-            @ParameterObject MapExploreRequest request,
+            @ParameterObject @Valid MapExploreRequest request,
             @Parameter(hidden = true) Long memberId
     );
 
@@ -55,7 +56,7 @@ public interface MapApi {
             )
     })
     ApiResponse<List<MapPin>> search(
-            @ParameterObject MapSearchRequest request,
+            @ParameterObject @Valid MapSearchRequest request,
             @Parameter(hidden = true) Long memberId
     );
 }

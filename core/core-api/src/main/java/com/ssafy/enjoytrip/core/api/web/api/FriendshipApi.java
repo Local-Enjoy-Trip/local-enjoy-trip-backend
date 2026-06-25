@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @Tag(name = "Friendships", description = "동네핀 친구 요청/수락 API")
 public interface FriendshipApi {
@@ -40,7 +41,7 @@ public interface FriendshipApi {
             )
     })
     ApiResponse<FriendshipMutationResponse> request(
-            FriendRequestCreateRequest request,
+            @Valid FriendRequestCreateRequest request,
             @Parameter(hidden = true) Long memberId
     );
 

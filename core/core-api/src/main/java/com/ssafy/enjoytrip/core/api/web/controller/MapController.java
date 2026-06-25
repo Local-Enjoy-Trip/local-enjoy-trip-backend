@@ -12,7 +12,6 @@ import com.ssafy.enjoytrip.core.domain.MapPin;
 import com.ssafy.enjoytrip.core.domain.service.MapExploreService;
 import com.ssafy.enjoytrip.core.domain.service.MapSearchService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
-import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +28,7 @@ public class MapController implements MapApi {
 
     @GetMapping("/explore")
     @Override
-    public ApiResponse<MapExploreResponse> explore(@Valid @ModelAttribute MapExploreRequest request,
+    public ApiResponse<MapExploreResponse> explore(@ModelAttribute MapExploreRequest request,
                                                    @AuthenticatedMemberId Long memberId) {
         MapExploreResult result = service.explore(
                 memberId,
@@ -45,7 +44,7 @@ public class MapController implements MapApi {
 
     @GetMapping("/search")
     @Override
-    public ApiResponse<List<MapPin>> search(@Valid @ModelAttribute MapSearchRequest request,
+    public ApiResponse<List<MapPin>> search(@ModelAttribute MapSearchRequest request,
                                             @AuthenticatedMemberId Long memberId) {
         List<MapPin> resultList = mapSearchService.search(
                 request.requiredKeyword(),

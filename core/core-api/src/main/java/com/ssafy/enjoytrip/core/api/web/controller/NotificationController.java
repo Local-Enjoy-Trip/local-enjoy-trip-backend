@@ -9,10 +9,8 @@ import com.ssafy.enjoytrip.core.api.web.dto.response.NotificationsResponse;
 import com.ssafy.enjoytrip.core.domain.Notification;
 import com.ssafy.enjoytrip.core.domain.service.NotificationService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
-import jakarta.validation.constraints.Min;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
-@Validated
 public class NotificationController implements NotificationApi {
     private static final int MAX_LIMIT = 100;
 
@@ -30,7 +27,7 @@ public class NotificationController implements NotificationApi {
     @GetMapping
     @Override
     public ApiResponse<NotificationsResponse> notifications(
-            @RequestParam(defaultValue = "50") @Min(1) int limit,
+            @RequestParam(defaultValue = "50") int limit,
             @AuthenticatedMemberId Long memberId
     ) {
         List<Notification> notifications = notificationService.findNotifications(

@@ -9,7 +9,6 @@ import com.ssafy.enjoytrip.core.api.web.dto.response.NoteImagePresignedUploadRes
 import com.ssafy.enjoytrip.core.domain.NoteImageUploadUrl;
 import com.ssafy.enjoytrip.core.domain.service.NoteImageUploadService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +24,7 @@ public class NoteImageController implements NoteImageApi {
     @PostMapping("/presigned-upload")
     @Override
     public ApiResponse<NoteImagePresignedUploadResponse> createPresignedUpload(
-            @Valid @RequestBody NoteImagePresignedUploadRequest request,
+            @RequestBody NoteImagePresignedUploadRequest request,
             @AuthenticatedMemberId Long memberId
     ) {
         NoteImageUploadUrl upload = service.createPresignedUpload(

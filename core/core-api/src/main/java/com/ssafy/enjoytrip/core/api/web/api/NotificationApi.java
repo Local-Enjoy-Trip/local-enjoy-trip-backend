@@ -10,8 +10,11 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 
 @Tag(name = "Notifications", description = "동네핀 저장형 인앱 알림 API")
+@Validated
 public interface NotificationApi {
     @Operation(
             summary = "내 미읽음 알림 조회",
@@ -34,7 +37,7 @@ public interface NotificationApi {
             )
     })
     ApiResponse<NotificationsResponse> notifications(
-            @Parameter(description = "조회 개수", example = "20") int limit,
+            @Parameter(description = "조회 개수", example = "20") @Min(1) int limit,
             @Parameter(hidden = true) Long memberId
     );
 

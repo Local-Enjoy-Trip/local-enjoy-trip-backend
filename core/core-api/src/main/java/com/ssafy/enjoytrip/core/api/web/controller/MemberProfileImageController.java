@@ -10,7 +10,6 @@ import com.ssafy.enjoytrip.core.api.web.dto.response.ProfileImagePresignedUpload
 import com.ssafy.enjoytrip.core.domain.ProfileImageUploadUrl;
 import com.ssafy.enjoytrip.core.domain.service.MemberProfileImageService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,7 +26,7 @@ public class MemberProfileImageController implements MemberProfileImageApi {
     @PostMapping("/presigned-upload")
     @Override
     public ApiResponse<ProfileImagePresignedUploadResponse> createPresignedUpload(
-            @Valid @RequestBody ProfileImagePresignedUploadRequest request,
+            @RequestBody ProfileImagePresignedUploadRequest request,
             @AuthenticatedMemberId Long memberId
     ) {
         ProfileImageUploadUrl upload = service.createPresignedUpload(
@@ -42,7 +41,7 @@ public class MemberProfileImageController implements MemberProfileImageApi {
     @PutMapping
     @Override
     public ApiResponse<Void> updateProfileImage(
-            @Valid @RequestBody ProfileImageUpdateRequest request,
+            @RequestBody ProfileImageUpdateRequest request,
             @AuthenticatedMemberId Long memberId
     ) {
         service.updateProfileImage(

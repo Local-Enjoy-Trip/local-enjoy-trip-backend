@@ -19,7 +19,6 @@ import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService.PendingOAuthSignup;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
-import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -50,7 +49,7 @@ public class MemberController implements MemberApi {
 
     @PostMapping
     @Override
-    public ApiResponse<Void> signup(@Valid @RequestBody MemberSignupRequest request) {
+    public ApiResponse<Void> signup(@RequestBody MemberSignupRequest request) {
         service.signup(new Member(
                 null,
                 request.name().trim(),
@@ -64,7 +63,7 @@ public class MemberController implements MemberApi {
 
     @PostMapping("/login")
     @Override
-    public ApiResponse<LoginResponse> login(@Valid @RequestBody MemberLoginRequest request) {
+    public ApiResponse<LoginResponse> login(@RequestBody MemberLoginRequest request) {
         Member member = service.login(request.email(), request.password());
         IssuedToken token = tokenService.issue(member);
         return success(new LoginResponse(
@@ -78,7 +77,7 @@ public class MemberController implements MemberApi {
     @PostMapping("/oauth")
     @Override
     public ApiResponse<LoginResponse> completeOAuthSignup(
-            @Valid @RequestBody MemberOAuthSignupRequest request
+            @RequestBody MemberOAuthSignupRequest request
     ) {
         PendingOAuthSignup pending = oauthSignupTicketService.verify(request.oauthSignupTicket().trim());
         Member member = service.signupWithOAuth(
@@ -114,7 +113,7 @@ public class MemberController implements MemberApi {
     @PutMapping("/me")
     @Override
     public ApiResponse<Void> updateMe(
-            @Valid @RequestBody MemberUpdateRequest request,
+            @RequestBody MemberUpdateRequest request,
             @AuthenticatedMemberId Long memberId
     ) {
         service.update(new Member(

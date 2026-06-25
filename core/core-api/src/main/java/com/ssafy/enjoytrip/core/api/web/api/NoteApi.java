@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 
 @Tag(name = "Notes", description = "동네핀 쪽지 API")
@@ -58,7 +59,7 @@ public interface NoteApi {
             )
     })
     ApiResponse<NoteResponse> create(
-            NoteCreateRequest request,
+            @Valid NoteCreateRequest request,
             @Parameter(hidden = true) Long memberId
     );
 
@@ -88,7 +89,7 @@ public interface NoteApi {
     })
     ApiResponse<NoteResponse> update(
             @Parameter(description = "수정할 쪽지 ID", example = "1", required = true) Long id,
-            NoteUpdateRequest request,
+            @Valid NoteUpdateRequest request,
             @Parameter(hidden = true) Long memberId
     );
 
@@ -161,7 +162,7 @@ public interface NoteApi {
             )
     })
     ApiResponse<NotesResponse> saved(
-            @ParameterObject SavedNotesRequest request,
+            @ParameterObject @Valid SavedNotesRequest request,
             @Parameter(hidden = true) Long memberId
     );
 
@@ -190,7 +191,7 @@ public interface NoteApi {
             )
     })
     ApiResponse<NotesResponse> nearby(
-            @ParameterObject NearbySectionRequest request,
+            @ParameterObject @Valid NearbySectionRequest request,
             @Parameter(hidden = true) Long memberId
     );
 
@@ -215,7 +216,7 @@ public interface NoteApi {
     })
     ApiResponse<Void> updateTags(
             @Parameter(description = "쪽지 ID", example = "1", required = true) Long id,
-            NoteUpdateTagsRequest request,
+            @Valid NoteUpdateTagsRequest request,
             @Parameter(hidden = true) Long memberId
     );
 }

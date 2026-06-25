@@ -20,8 +20,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 
 @Tag(name = "Courses", description = "코스 피드, 추천, 생성, 수정, 삭제 API")
+@Validated
 public interface CourseApi {
 
     @Operation(
@@ -41,7 +44,7 @@ public interface CourseApi {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 좌표 또는 파라미터")
     })
-    ApiResponse<CourseFeedResponse> feed(CourseFeedRequest request);
+    ApiResponse<CourseFeedResponse> feed(@Valid CourseFeedRequest request);
 
     @Operation(
             summary = "코스 추천 조회",
@@ -62,7 +65,7 @@ public interface CourseApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 파라미터")
     })
     ApiResponse<CourseFeedResponse> recommendations(
-            CourseRecommendationRequest request,
+            @Valid CourseRecommendationRequest request,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
 
@@ -83,7 +86,7 @@ public interface CourseApi {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 파라미터")
     })
-    ApiResponse<CourseFeedResponse> popularFeed(CoursePopularFeedRequest request);
+    ApiResponse<CourseFeedResponse> popularFeed(@Valid CoursePopularFeedRequest request);
 
     @Operation(
             summary = "코스 상세 조회",
@@ -155,7 +158,7 @@ public interface CourseApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
     })
     ApiResponse<CourseResponse> create(
-            CourseCreateRequest request,
+            @Valid CourseCreateRequest request,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
 
@@ -190,7 +193,7 @@ public interface CourseApi {
     })
     ApiResponse<CourseResponse> update(
             @Parameter(description = "코스 ID", example = "c1") @NotBlank String id,
-            CourseUpdateRequest request,
+            @Valid CourseUpdateRequest request,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
 
@@ -224,7 +227,7 @@ public interface CourseApi {
     })
     ApiResponse<CourseResponse> recommendOrder(
             @Parameter(description = "코스 ID", example = "c1") @NotBlank String id,
-            CourseOrderRecommendationRequest request,
+            @Valid CourseOrderRecommendationRequest request,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
 

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @Tag(name = "Member Profile Images", description = "회원 프로필 이미지 업로드 API")
 public interface MemberProfileImageApi {
@@ -42,7 +43,7 @@ public interface MemberProfileImageApi {
             )
     })
     ApiResponse<ProfileImagePresignedUploadResponse> createPresignedUpload(
-            ProfileImagePresignedUploadRequest request,
+            @Valid ProfileImagePresignedUploadRequest request,
             @Parameter(hidden = true) Long memberId
     );
 
@@ -71,7 +72,7 @@ public interface MemberProfileImageApi {
             )
     })
     ApiResponse<Void> updateProfileImage(
-            ProfileImageUpdateRequest request,
+            @Valid ProfileImageUpdateRequest request,
             @Parameter(hidden = true) Long memberId
     );
 }

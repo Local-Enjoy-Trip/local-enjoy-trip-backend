@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.annotations.ParameterObject;
+import jakarta.validation.Valid;
 
 @Tag(name = "Attractions", description = "관광지 검색 API")
 public interface AttractionApi {
@@ -161,7 +162,7 @@ public interface AttractionApi {
             )
     })
     ApiResponse<PopularAttractionsResponse> popularNearby(
-            @ParameterObject NearbySectionRequest request,
+            @ParameterObject @Valid NearbySectionRequest request,
             @Parameter(hidden = true) Long memberId
     );
 
@@ -314,7 +315,7 @@ public interface AttractionApi {
     })
     ApiResponse<Void> rate(
             @Parameter(description = "평점을 등록할 관광지 ID", example = "125405", required = true) Long id,
-            RatingRequest request,
+            @Valid RatingRequest request,
             @Parameter(hidden = true) Long memberId
     );
 

@@ -18,12 +18,9 @@ import com.ssafy.enjoytrip.core.domain.Course;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
 import com.ssafy.enjoytrip.core.domain.service.CourseService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -37,20 +34,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/courses")
 @RequiredArgsConstructor
-@Validated
 public class CourseController implements CourseApi {
     private final CourseService courseService;
 
     @GetMapping("/feed")
     @Override
-    public ApiResponse<CourseFeedResponse> feed(@Valid @ModelAttribute CourseFeedRequest request) {
+    public ApiResponse<CourseFeedResponse> feed(@ModelAttribute CourseFeedRequest request) {
         return success(CourseFeedResponse.from(courseService.findPublicFeed(request.toCondition())));
     }
 
     @GetMapping("/recommendations")
     @Override
     public ApiResponse<CourseFeedResponse> recommendations(
-            @Valid @ModelAttribute CourseRecommendationRequest request,
+            @ModelAttribute CourseRecommendationRequest request,
             @AuthenticatedMemberId Long authenticatedMemberId) {
         return success(CourseFeedResponse.from(
                 courseService.findRecommendations(
@@ -63,7 +59,7 @@ public class CourseController implements CourseApi {
 
     @GetMapping("/feed/popular")
     @Override
-    public ApiResponse<CourseFeedResponse> popularFeed(@Valid @ModelAttribute CoursePopularFeedRequest request) {
+    public ApiResponse<CourseFeedResponse> popularFeed(@ModelAttribute CoursePopularFeedRequest request) {
         return success(CourseFeedResponse.from(
                 courseService.findPopularByRegion(request.normalizedRegionName(), request.resolvedLimit())
         ));
@@ -90,7 +86,7 @@ public class CourseController implements CourseApi {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Override
-    public ApiResponse<CourseResponse> create(@Valid @RequestBody CourseCreateRequest request,
+    public ApiResponse<CourseResponse> create(@RequestBody CourseCreateRequest request,
                                               @AuthenticatedMemberId Long authenticatedMemberId) {
         Course created = courseService.createCourse(request.toCourse(authenticatedMemberId));
         return success(CourseResponse.from(created));
@@ -99,7 +95,7 @@ public class CourseController implements CourseApi {
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ApiResponse<CourseResponse> update(@PathVariable String id,
-                                              @Valid @RequestBody CourseUpdateRequest request,
+                                              @RequestBody CourseUpdateRequest request,
                                               @AuthenticatedMemberId Long authenticatedMemberId) {
         Course updated = courseService.updateCourse(
                 authenticatedMemberId,
@@ -111,7 +107,7 @@ public class CourseController implements CourseApi {
     @PostMapping("/{id}/order-recommendation")
     @Override
     public ApiResponse<CourseResponse> recommendOrder(@PathVariable String id,
-                                                      @Valid @RequestBody(required = false)
+                                                      @RequestBody(required = false)
                                                       CourseOrderRecommendationRequest request,
                                                       @AuthenticatedMemberId Long authenticatedMemberId) {
         Course recommended = courseService.recommendCourseOrder(

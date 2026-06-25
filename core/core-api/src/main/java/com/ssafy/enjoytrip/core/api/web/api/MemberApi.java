@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @Tag(name = "Members", description = "회원 가입, 로그인, 내 정보, 회원 관리 API")
 public interface MemberApi {
@@ -69,7 +70,7 @@ public interface MemberApi {
                     description = "이미 존재하는 회원"
             )
     })
-    ApiResponse<Void> signup(MemberSignupRequest request);
+    ApiResponse<Void> signup(@Valid MemberSignupRequest request);
 
     @Operation(
             summary = "로그인",
@@ -99,7 +100,7 @@ public interface MemberApi {
                     description = "이메일 또는 비밀번호 불일치"
             )
     })
-    ApiResponse<LoginResponse> login(MemberLoginRequest request);
+    ApiResponse<LoginResponse> login(@Valid MemberLoginRequest request);
 
     @Operation(
             summary = "OAuth 회원가입 완료",
@@ -129,7 +130,7 @@ public interface MemberApi {
                     description = "필수 필드 누락 또는 유효하지 않은 가입 티켓"
             )
     })
-    ApiResponse<LoginResponse> completeOAuthSignup(MemberOAuthSignupRequest request);
+    ApiResponse<LoginResponse> completeOAuthSignup(@Valid MemberOAuthSignupRequest request);
 
     @Operation(
             summary = "로그아웃",
@@ -198,7 +199,7 @@ public interface MemberApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 없음")
     })
     ApiResponse<Void> updateMe(
-            MemberUpdateRequest request,
+            @Valid MemberUpdateRequest request,
             @Parameter(hidden = true) Long memberId
     );
 

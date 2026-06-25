@@ -14,7 +14,6 @@ import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateTagsRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.SavedNotesRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NoteResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NotesResponse;
-import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
@@ -36,7 +35,7 @@ public class NoteController implements NoteApi {
 
     @PostMapping
     @Override
-    public ApiResponse<NoteResponse> create(@Valid @RequestBody NoteCreateRequest request,
+    public ApiResponse<NoteResponse> create(@RequestBody NoteCreateRequest request,
                                             @AuthenticatedMemberId Long memberId) {
         Note note = service.createNote(request.toNote(memberId));
 
@@ -46,7 +45,7 @@ public class NoteController implements NoteApi {
     @PutMapping("/{id}")
     @Override
     public ApiResponse<NoteResponse> update(@PathVariable Long id,
-                                            @Valid @RequestBody NoteUpdateRequest request,
+                                            @RequestBody NoteUpdateRequest request,
                                             @AuthenticatedMemberId Long memberId) {
         Note note = service.updateNote(request.toNote(id, memberId));
 
@@ -81,7 +80,7 @@ public class NoteController implements NoteApi {
     @Override
     public ApiResponse<Void> updateTags(
             @PathVariable Long id,
-            @Valid @RequestBody NoteUpdateTagsRequest request,
+            @RequestBody NoteUpdateTagsRequest request,
             @AuthenticatedMemberId Long memberId
     ) {
         service.updateNoteTags(id, memberId, request.toTags());
@@ -91,7 +90,7 @@ public class NoteController implements NoteApi {
     @GetMapping("/saved")
     @Override
     public ApiResponse<NotesResponse> saved(
-            @Valid @ModelAttribute SavedNotesRequest request,
+            @ModelAttribute SavedNotesRequest request,
             @AuthenticatedMemberId Long memberId
     ) {
         List<Note> notes = service.findSavedNotes(memberId, request.normalizedLimit());
@@ -102,7 +101,7 @@ public class NoteController implements NoteApi {
     @GetMapping("/nearby")
     @Override
     public ApiResponse<NotesResponse> nearby(
-            @Valid @ModelAttribute NearbySectionRequest request,
+            @ModelAttribute NearbySectionRequest request,
             @AuthenticatedMemberId(unauthenticated = NULL) Long memberId
     ) {
         List<Note> notes = service.findNearbyNotes(
