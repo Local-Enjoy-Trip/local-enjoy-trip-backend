@@ -274,6 +274,10 @@ public class NoteService {
     }
 
     private Note toNote(NoteRecord record) {
+        String imageUrl = record.getImageUrl();
+        if (imageUrl == null && record.getImageObjectKey() != null) {
+            imageUrl = noteImageUploadUrlGenerator.publicUrl(record.getImageObjectKey());
+        }
         return new Note(
                 record.getId(),
                 record.getAuthorMemberId(),
@@ -285,7 +289,7 @@ public class NoteService {
                 record.getLongitude().doubleValue(),
                 record.getRegionName(),
                 record.getImageObjectKey(),
-                record.getImageUrl(),
+                imageUrl,
                 record.getImageContentType(),
                 NoteStatus.valueOf(record.getStatus()),
                 record.getCreatedAt(),

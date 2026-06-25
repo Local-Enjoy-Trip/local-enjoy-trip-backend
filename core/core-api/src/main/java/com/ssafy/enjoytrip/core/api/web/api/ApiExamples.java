@@ -253,6 +253,7 @@ final class ApiExamples {
                     "longitude": 126.9780,
                     "regionName": "서울 중구",
                     "imageObjectKey": null,
+                    "imageUrl": null,
                     "status": "ACTIVE",
                     "createdAt": "2026-06-22T10:00:00",
                     "updatedAt": "2026-06-22T10:00:00"
