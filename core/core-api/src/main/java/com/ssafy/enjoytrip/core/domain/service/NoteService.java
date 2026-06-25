@@ -17,6 +17,7 @@ import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.core.support.error.exception.ClientInputException;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberProfileEmbeddingMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteTagMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.TagMapper;
@@ -44,6 +45,7 @@ public class NoteService {
     private final NoteMapper noteMapper;
     private final NoteTagMapper noteTagMapper;
     private final TagMapper tagMapper;
+    private final MemberProfileEmbeddingMapper memberProfileEmbeddingMapper;
     private final MinioNoteImageUploadUrlGenerator noteImageUploadUrlGenerator;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -204,6 +206,16 @@ public class NoteService {
             return tagMapper.insert(input.name().strip()).id();
         }
         throw new ClientInputException("태그는 id 또는 name 중 하나를 반드시 입력해야 합니다.");
+    }
+
+    public List<Note> findRecommendations(Long memberId, int limit) {
+        if (!memberProfileEmbeddingMapper.hasMemberProfileEmbedding(memberId)) {
+            return noteMapper.findRecentPublic(limit)
+                    .stream().map(this::toNote).toList();
+        }
+
+        return noteMapper.findCandidatesByMemberProfile(memberId, limit)
+                .stream().map(this::toNote).toList();
     }
 
     public List<Note> findSavedNotes(Long memberId, int limit) {

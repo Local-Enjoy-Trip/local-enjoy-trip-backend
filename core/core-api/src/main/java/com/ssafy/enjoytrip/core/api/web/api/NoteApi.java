@@ -3,6 +3,7 @@ package com.ssafy.enjoytrip.core.api.web.api;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NearbySectionRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteCreateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.NoteRecommendationRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateTagsRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.SavedNotesRequest;
@@ -239,6 +240,36 @@ public interface NoteApi {
     ApiResponse<Void> updateTags(
             @Parameter(description = "쪽지 ID", example = "1", required = true) Long id,
             @Valid NoteUpdateTagsRequest request,
+            @Parameter(hidden = true) Long memberId
+    );
+
+    @Operation(
+            summary = "선호도 기반 쪽지 추천",
+            description = """
+                    인증 사용자의 선호도 임베딩을 기반으로 PUBLIC 쪽지를 추천합니다.
+
+                    - 프로필 임베딩이 있으면 코사인 유사도 기준으로 추천합니다.
+                    - 임베딩이 없으면 최근 PUBLIC 쪽지를 반환합니다.
+                    - `limit` 기본값은 10, 최대 50입니다.
+                    """,
+            operationId = "getNoteRecommendations"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "쪽지 추천 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = NotesResponse.class)
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 필요"
+            )
+    })
+    ApiResponse<NotesResponse> recommendations(
+            @ParameterObject NoteRecommendationRequest request,
             @Parameter(hidden = true) Long memberId
     );
 }

@@ -10,6 +10,7 @@ import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
 import com.ssafy.enjoytrip.core.support.error.ErrorCode;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.api.AttractionApi;
+import com.ssafy.enjoytrip.core.api.web.dto.request.AttractionRecommendationRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.AttractionSearchRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NearbySectionRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.RatingRequest;
@@ -48,6 +49,20 @@ public class AttractionController implements AttractionApi {
         List<Attraction> attractions = service.searchAttractions(
                 request.toCondition(),
                 memberId
+        );
+
+        return success(new AttractionsResponse(attractions));
+    }
+
+    @GetMapping("/recommendations")
+    @Override
+    public ApiResponse<AttractionsResponse> recommendations(
+            @ModelAttribute AttractionRecommendationRequest request,
+            @AuthenticatedMemberId Long memberId
+    ) {
+        List<Attraction> attractions = service.findRecommendations(
+                memberId,
+                request.resolvedLimit()
         );
 
         return success(new AttractionsResponse(attractions));

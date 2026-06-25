@@ -15,6 +15,7 @@ import com.ssafy.enjoytrip.core.domain.vo.RatingStats;
 import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberProfileEmbeddingMapper;
 import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AttractionService {
     private final AttractionMapper attractionMapper;
+    private final MemberProfileEmbeddingMapper memberProfileEmbeddingMapper;
     private final AttractionPopularityDeltaCache popularityDeltaCache;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -196,6 +198,16 @@ public class AttractionService {
                 record.saved(),
                 record.myRating()
         );
+    }
+
+    public List<Attraction> findRecommendations(Long memberId, int limit) {
+        if (!memberProfileEmbeddingMapper.hasMemberProfileEmbedding(memberId)) {
+            return attractionMapper.findTopBySaveCount(limit, memberId)
+                    .stream().map(this::toAttraction).toList();
+        }
+
+        return attractionMapper.findCandidatesByMemberProfile(memberId, limit, memberId)
+                .stream().map(this::toAttraction).toList();
     }
 
     public List<NearbyAttractionCandidate> searchMapPlaces(
