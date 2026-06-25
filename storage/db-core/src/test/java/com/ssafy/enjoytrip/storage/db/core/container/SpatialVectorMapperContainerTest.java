@@ -33,6 +33,35 @@ class SpatialVectorMapperContainerTest extends StorageContainerTestSupport {
 
 
 
+    @DisplayName("findSavedByMemberId는 회원이 저장한 활성 관광지만 저장 시각 내림차순으로 반환한다")
+    @Test
+    void findSavedByMemberIdReturnsSavedActiveAttractionsSortedByCreatedAtDesc() {
+        Long memberId = seedMember("saved-member", uniqueId("saved") + "@example.com");
+        Long otherMemberId = seedMember("other-member", uniqueId("other") + "@example.com");
+
+        long idFirst = 9100001L;
+        long idSecond = 9100002L;
+        long idHidden = 9100003L;
+        long idOther = 9100004L;
+
+        seedAttraction(idFirst, "먼저 저장한 관광지", 1, 1);
+        seedAttraction(idSecond, "나중에 저장한 관광지", 1, 1);
+        seedAttraction(idHidden, "숨김 관광지", 1, 1);
+        jdbcTemplate.update("update attractions set status = 'HIDDEN', deleted_at = current_timestamp where id = ?", idHidden);
+        seedAttraction(idOther, "다른 유저 저장 관광지", 1, 1);
+
+        jdbcTemplate.update("insert into attraction_saves (attraction_id, member_id, created_at) values (?, ?, current_timestamp - interval '10 minutes')", idFirst, memberId);
+        jdbcTemplate.update("insert into attraction_saves (attraction_id, member_id, created_at) values (?, ?, current_timestamp)", idSecond, memberId);
+        jdbcTemplate.update("insert into attraction_saves (attraction_id, member_id) values (?, ?)", idHidden, memberId);
+        jdbcTemplate.update("insert into attraction_saves (attraction_id, member_id) values (?, ?)", idOther, otherMemberId);
+
+        List<AttractionSearchRecord> results = attractionMapper.findSavedByMemberId(memberId);
+
+        assertThat(results).extracting(AttractionSearchRecord::id)
+                .containsExactly(idSecond, idFirst);
+        assertThat(results).allMatch(AttractionSearchRecord::saved);
+    }
+
     @DisplayName("AttractionMapper는 검색, 주변 검색, 저장, 평점 SQL을 실행한다")
     @Test
     void attractionMapperRunsSearchAndUserInteractionQueries() {

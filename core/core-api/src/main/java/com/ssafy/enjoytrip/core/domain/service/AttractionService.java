@@ -82,6 +82,12 @@ public class AttractionService {
         return toAttraction(record);
     }
 
+    public List<Attraction> findSavedAttractions(Long memberId) {
+        return attractionMapper.findSavedByMemberId(memberId).stream()
+                .map(this::toAttraction)
+                .toList();
+    }
+
     public List<NearbyAttractionCandidate> findNearbyCandidates(
             DistanceSearchCondition condition,
             Long memberId,

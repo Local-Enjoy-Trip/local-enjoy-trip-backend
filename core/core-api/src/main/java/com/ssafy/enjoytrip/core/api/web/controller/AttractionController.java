@@ -54,6 +54,15 @@ public class AttractionController implements AttractionApi {
         return success(new AttractionsResponse(attractions));
     }
 
+    @GetMapping("/saved")
+    @Override
+    public ApiResponse<AttractionsResponse> saved(
+            @AuthenticatedMemberId Long memberId
+    ) {
+        List<Attraction> attractions = service.findSavedAttractions(memberId);
+        return success(new AttractionsResponse(attractions));
+    }
+
     @GetMapping("/popular-nearby")
     @Override
     public ApiResponse<PopularAttractionsResponse> popularNearby(

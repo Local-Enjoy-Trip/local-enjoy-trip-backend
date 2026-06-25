@@ -59,6 +59,8 @@ public interface AttractionMapper {
 
     int restoreForAdmin(@Param("attractionId") Long attractionId);
 
+    List<AttractionSearchRecord> findSavedByMemberId(@Param("viewerMemberId") Long memberId);
+
     int insertSave(@Param("attractionId") Long attractionId, @Param("memberId") Long memberId);
 
     int deleteSave(@Param("attractionId") Long attractionId, @Param("memberId") Long memberId);
