@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseInvitationMapper">
+
+    <sql id="columns">
+        id,
+        course_id         as courseId,
+        inviter_member_id as inviterMemberId,
+        invitee_member_id as inviteeMemberId,
+        status,
+        created_at        as createdAt,
+        updated_at        as updatedAt
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO course_invitations (
+            course_id,
+            inviter_member_id,
+            invitee_member_id,
+            status,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{courseId},
+            #{inviterMemberId},
+            #{inviteeMemberId},
+            #{status},
+            current_timestamp,
+            current_timestamp
+        )
+    </insert>
+
+    <select id="findById" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseInvitationRecord">
+        SELECT <include refid="columns"/>
+        FROM course_invitations
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByCourseId" resultType="com.ssafy.enjoytrip.storage.db.core.model.CourseInvitationRecord">
+        SELECT <include refid="columns"/>
+        FROM course_invitations
+        WHERE course_id = #{courseId}
+        ORDER BY created_at DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE course_invitations
+        SET status     = #{status},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <select id="existsByCourseAndInvitee" resultType="int">
+        SELECT COUNT(*)
+        FROM course_invitations
+        WHERE course_id         = #{courseId}
+          AND invitee_member_id = #{inviteeMemberId}
+          AND status != 'REJECTED'
+    </select>
+
+    <select id="findAcceptedCourseIdsByInvitee" resultType="string">
+        SELECT course_id
+        FROM course_invitations
+        WHERE invitee_member_id = #{inviteeMemberId}
+          AND status = 'ACCEPTED'
+        ORDER BY updated_at DESC
+    </select>
+
+</mapper>
