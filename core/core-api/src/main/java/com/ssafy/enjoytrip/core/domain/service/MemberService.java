@@ -54,6 +54,10 @@ public class MemberService {
         return member;
     }
 
+    public boolean isEmailAvailable(String email) {
+        return memberMapper.existsByEmail(email) == 0;
+    }
+
     @Transactional
     public void signup(Member member) {
         validateNewMember(member);

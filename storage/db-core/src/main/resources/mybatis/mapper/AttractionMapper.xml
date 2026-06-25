@@ -425,4 +425,54 @@
         ORDER BY ae.embedding &lt;=&gt; #{preferenceEmbeddingLiteral}::vector
         LIMIT #{limit}
     </select>
+
+    <select id="findCandidatesByMemberProfile"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
+        WITH member_vec AS (
+            SELECT embedding
+            FROM member_profile_embeddings
+            WHERE member_id = #{memberId}
+              AND status = 'EMBEDDED'
+              AND embedding IS NOT NULL
+        )
+        SELECT <include refid="searchRowColumns"/>
+        FROM (
+            SELECT <include refid="baseColumns"/>,
+                   NULL AS distanceMeters
+            FROM attractions
+            WHERE <include refid="publicAttractionPredicate"/>
+        ) a
+        JOIN attraction_embeddings ae ON ae.attraction_id = a.id
+        CROSS JOIN member_vec mv
+        LEFT JOIN attraction_popularity_stats stats ON stats.attraction_id = a.id
+        LEFT JOIN attraction_saves s
+               ON s.attraction_id = a.id
+              AND s.member_id = #{viewerMemberId}
+        LEFT JOIN attraction_ratings my_rating
+               ON my_rating.attraction_id = a.id
+              AND my_rating.member_id = #{viewerMemberId}
+        WHERE ae.status = 'EMBEDDED'
+        ORDER BY ae.embedding &lt;=&gt; mv.embedding ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findTopBySaveCount"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
+        SELECT <include refid="searchRowColumns"/>
+        FROM (
+            SELECT <include refid="baseColumns"/>,
+                   NULL AS distanceMeters
+            FROM attractions
+            WHERE <include refid="publicAttractionPredicate"/>
+        ) a
+        LEFT JOIN attraction_popularity_stats stats ON stats.attraction_id = a.id
+        LEFT JOIN attraction_saves s
+               ON s.attraction_id = a.id
+              AND s.member_id = #{viewerMemberId}
+        LEFT JOIN attraction_ratings my_rating
+               ON my_rating.attraction_id = a.id
+              AND my_rating.member_id = #{viewerMemberId}
+        ORDER BY coalesce(stats.save_count, 0) DESC, a.id ASC
+        LIMIT #{limit}
+    </select>
 </mapper>

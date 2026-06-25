@@ -48,4 +48,11 @@ public interface NoteMapper {
                                           @Param("category") String category,
                                           @Param("limit") Integer limit,
                                           @Param("viewerMemberId") Long viewerMemberId);
+
+    List<NoteRecord> findCandidatesByMemberProfile(
+            @Param("memberId") Long memberId,
+            @Param("limit") int limit
+    );
+
+    List<NoteRecord> findRecentPublic(@Param("limit") int limit);
 }

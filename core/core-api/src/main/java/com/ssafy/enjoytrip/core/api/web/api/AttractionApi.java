@@ -1,6 +1,7 @@
 package com.ssafy.enjoytrip.core.api.web.api;
 
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
+import com.ssafy.enjoytrip.core.api.web.dto.request.AttractionRecommendationRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.AttractionSearchRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NearbySectionRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.RatingRequest;
@@ -333,6 +334,36 @@ public interface AttractionApi {
     })
     ApiResponse<Void> deleteRating(
             @Parameter(description = "평점을 삭제할 관광지 ID", example = "125405", required = true) Long id,
+            @Parameter(hidden = true) Long memberId
+    );
+
+    @Operation(
+            summary = "선호도 기반 관광지 추천",
+            description = """
+                    인증 사용자의 선호도 임베딩을 기반으로 관광지를 추천합니다.
+
+                    - 프로필 임베딩이 있으면 코사인 유사도 기준으로 추천합니다.
+                    - 임베딩이 없으면 저장 수 기준 인기 관광지를 반환합니다.
+                    - `limit` 기본값은 10, 최대 50입니다.
+                    """,
+            operationId = "getAttractionRecommendations"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "관광지 추천 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AttractionsResponse.class)
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 필요"
+            )
+    })
+    ApiResponse<AttractionsResponse> recommendations(
+            @ParameterObject AttractionRecommendationRequest request,
             @Parameter(hidden = true) Long memberId
     );
 

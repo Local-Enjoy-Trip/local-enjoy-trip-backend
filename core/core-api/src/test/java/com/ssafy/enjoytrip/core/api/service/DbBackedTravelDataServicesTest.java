@@ -14,6 +14,7 @@ import com.ssafy.enjoytrip.core.support.error.CoreException;
 import com.ssafy.enjoytrip.external.minio.MinioNoteImageUploadUrlGenerator;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberProfileEmbeddingMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteTagMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.TagMapper;
@@ -34,6 +35,7 @@ class DbBackedTravelDataServicesTest {
             AttractionMapper attractionMapper = mock(AttractionMapper.class);
             AttractionService service = new AttractionService(
                     attractionMapper,
+                    mock(MemberProfileEmbeddingMapper.class),
                     mock(AttractionPopularityDeltaCache.class),
                     mock(org.springframework.context.ApplicationEventPublisher.class)
             );
@@ -177,6 +179,7 @@ class DbBackedTravelDataServicesTest {
                                                        AttractionPopularityDeltaCache deltaCache) {
             return new AttractionService(
                     attractionMapper,
+                    mock(MemberProfileEmbeddingMapper.class),
                     deltaCache,
                     mock(org.springframework.context.ApplicationEventPublisher.class)
             );
@@ -193,6 +196,7 @@ class DbBackedTravelDataServicesTest {
                     noteMapper,
                     mock(NoteTagMapper.class),
                     mock(TagMapper.class),
+                    mock(MemberProfileEmbeddingMapper.class),
                     mock(MinioNoteImageUploadUrlGenerator.class),
                     mock(org.springframework.context.ApplicationEventPublisher.class)
             );
@@ -211,6 +215,7 @@ class DbBackedTravelDataServicesTest {
                     noteMapper,
                     mock(NoteTagMapper.class),
                     mock(TagMapper.class),
+                    mock(MemberProfileEmbeddingMapper.class),
                     mock(MinioNoteImageUploadUrlGenerator.class),
                     mock(org.springframework.context.ApplicationEventPublisher.class)
             );

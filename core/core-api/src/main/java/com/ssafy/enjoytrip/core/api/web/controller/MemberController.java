@@ -8,6 +8,7 @@ import com.ssafy.enjoytrip.core.api.web.dto.request.MemberLoginRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberOAuthSignupRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberSignupRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberUpdateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.response.EmailAvailabilityResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.LoginResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.UserEnvelopeResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.UserResponse;
@@ -19,16 +20,21 @@ import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService;
 import com.ssafy.enjoytrip.core.support.auth.OAuthSignupTicketService.PendingOAuthSignup;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Validated
 @RestController
 @RequestMapping("/api/members")
 @RequiredArgsConstructor
@@ -45,6 +51,15 @@ public class MemberController implements MemberApi {
                 .map(MemberController::toUserResponse)
                 .toList();
         return success(new UsersResponse(users));
+    }
+
+    @GetMapping("/check-email")
+    @Override
+    public ApiResponse<EmailAvailabilityResponse> checkEmailAvailability(
+            @RequestParam @NotBlank @Email String email
+    ) {
+        boolean available = service.isEmailAvailable(email);
+        return success(new EmailAvailabilityResponse(available));
     }
 
     @PostMapping
