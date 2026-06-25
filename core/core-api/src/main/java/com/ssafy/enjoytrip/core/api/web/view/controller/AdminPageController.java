@@ -48,6 +48,14 @@ public class AdminPageController {
         return "admin/users";
     }
 
+    @GetMapping("/admin/courses")
+    public String courses(Model model) {
+        List<Course> courses = courseService.findAllBySaveCount(100);
+        model.addAttribute("courses", courses);
+        model.addAttribute("totalCourseCount", courses.size());
+        return "admin/courses";
+    }
+
     @GetMapping("/admin/login")
     public String login() {
         return "admin/login";

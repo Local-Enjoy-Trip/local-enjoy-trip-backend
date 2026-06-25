@@ -106,7 +106,7 @@
                     </div>
                     <table class="admin-table">
                         <thead>
-                        <tr><th>코스</th><th>상태</th><th>저장</th><th>큐레이션</th></tr>
+                        <tr><th>코스</th><th>저장수</th><th>생성일</th></tr>
                         </thead>
                         <tbody>
                         <tr th:each="course : ${courses}">
@@ -114,12 +114,11 @@
                                 <strong th:text="${course.title()}">코스명</strong>
                                 <small th:text="|${course.regionName()} · ${#lists.size(course.items())}개 장소|">지역</small>
                             </td>
-                            <td><span class="admin-status is-ready" th:text="${course.status()}">READY</span></td>
                             <td th:text="${course.saveCount()}">0</td>
-                            <td th:text="|${course.curationSection()}:${course.curationOrder()}|">-</td>
+                            <td th:text="${course.createdAt()}">-</td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(courses)}">
-                            <td colspan="4">아직 등록된 관리자 코스가 없습니다.</td>
+                            <td colspan="3">아직 등록된 코스가 없습니다.</td>
                         </tr>
                         </tbody>
                     </table>

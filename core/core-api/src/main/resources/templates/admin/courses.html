@@ -44,56 +44,6 @@
         <div class="admin-content">
             <p class="admin-notice" th:if="${message}" th:text="${message}"></p>
 
-            <section class="admin-card admin-card-padded">
-                <p class="admin-eyebrow">Create Course</p>
-                <h2 class="admin-title" style="font-size:26px">관리자 코스 생성</h2>
-                <p class="admin-form-help">
-                    아이템은 줄 단위로 <strong>ATTRACTION:1</strong> 또는 <strong>NOTE:2</strong> 형식으로 입력합니다.
-                </p>
-                <form class="admin-form-grid" method="post" action="/admin/courses" th:object="${courseForm}">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <label class="admin-field">ID <input name="id" th:value="*{id}" placeholder="course-mangwon"></label>
-                    <label class="admin-field is-wide">제목 <input name="title" th:value="*{title}" placeholder="망원시장 간식에서 한강까지"></label>
-                    <label class="admin-field">지역 <input name="regionName" th:value="*{regionName}" placeholder="망원"></label>
-                    <label class="admin-field">
-                        공개범위
-                        <select name="visibility">
-                            <option value="PUBLIC" th:selected="*{visibility == 'PUBLIC'}">PUBLIC</option>
-                            <option value="PRIVATE" th:selected="*{visibility == 'PRIVATE'}">PRIVATE</option>
-                        </select>
-                    </label>
-                    <label class="admin-field">
-                        상태
-                        <select name="status">
-                            <option value="READY" th:selected="*{status == 'READY'}">READY</option>
-                            <option value="IN_PROGRESS" th:selected="*{status == 'IN_PROGRESS'}">IN_PROGRESS</option>
-                            <option value="COMPLETED" th:selected="*{status == 'COMPLETED'}">COMPLETED</option>
-                            <option value="ARCHIVED" th:selected="*{status == 'ARCHIVED'}">ARCHIVED</option>
-                        </select>
-                    </label>
-                    <label class="admin-field">큐레이션 섹션 <input name="curationSection" th:value="*{curationSection}"></label>
-                    <label class="admin-field">
-                        큐레이션 순서
-                        <input type="number" name="curationOrder" th:value="*{curationOrder}">
-                    </label>
-                    <label class="admin-field is-wide">
-                        커버 이미지
-                        <input name="coverImageUrl" th:value="*{coverImageUrl}" placeholder="https://...">
-                    </label>
-                    <label class="admin-field is-wide">
-                        설명
-                        <textarea name="description" th:text="*{description}"></textarea>
-                    </label>
-                    <label class="admin-field is-wide">
-                        아이템
-                        <textarea name="itemsText" th:text="*{itemsText}"></textarea>
-                    </label>
-                    <div class="admin-form-actions">
-                        <button class="admin-button" type="submit">코스 생성</button>
-                    </div>
-                </form>
-            </section>
-
             <section class="admin-card" style="margin-top:24px">
                 <div class="admin-card-title">
                     <div><p class="admin-eyebrow">Courses</p><h2>코스 목록</h2></div>
@@ -102,32 +52,21 @@
                     <thead>
                     <tr>
                         <th>코스</th>
-                        <th>상태</th>
-                        <th>공개범위</th>
-                        <th>큐레이션</th>
                         <th>저장수</th>
-                        <th>관리</th>
+                        <th>생성일</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:each="course : ${courses}">
                         <td>
                             <strong th:text="${course.title()}">코스명</strong>
-                            <small th:text="|${course.id()} · ${course.regionName()}|">ID · 지역</small>
+                            <small th:text="|${course.id()} · ${course.regionName()} · ${#lists.size(course.items())}개 장소|">ID · 지역</small>
                         </td>
-                        <td><span class="admin-status is-ready" th:text="${course.status()}">READY</span></td>
-                        <td><span class="admin-status" th:text="${course.visibility()}">PUBLIC</span></td>
-                        <td th:text="|${course.curationSection()}:${course.curationOrder()}|">-</td>
                         <td th:text="${course.saveCount()}">0</td>
-                        <td>
-                            <form th:action="@{'/admin/courses/' + ${course.id()} + '/delete'}" method="post">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                                <button class="admin-danger-button" type="submit">삭제</button>
-                            </form>
-                        </td>
+                        <td th:text="${course.createdAt()}">-</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(courses)}">
-                        <td colspan="6">아직 등록된 관리자 코스가 없습니다.</td>
+                        <td colspan="3">등록된 코스가 없습니다.</td>
                     </tr>
                     </tbody>
                 </table>
