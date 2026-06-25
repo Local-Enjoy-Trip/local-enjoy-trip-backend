@@ -561,6 +561,132 @@ final class ApiExamples {
             }
             """;
 
+    static final String COURSE_RESPONSE = """
+            {
+              "success": true,
+              "data": {
+                "id": "c1",
+                "title": "서울 고궁 투어",
+                "regionName": "서울 종로구",
+                "date": "2026-07-01",
+                "distanceMeters": 3200.0,
+                "startLocation": {"longitude": 126.977041, "latitude": 37.579617},
+                "saveCount": 5,
+                "createdAt": "2026-06-25T10:00:00",
+                "updatedAt": "2026-06-25T10:00:00",
+                "routeSummary": null,
+                "items": [
+                  {
+                    "id": 1,
+                    "itemType": "ATTRACTION",
+                    "attractionId": 125405,
+                    "noteId": null,
+                    "position": 1,
+                    "title": "경복궁",
+                    "distanceToNext": 800,
+                    "durationToNext": 10
+                  }
+                ],
+                "tags": [
+                  {"id": 1, "name": "역사"}
+                ]
+              },
+              "error": null
+            }
+            """;
+
+    static final String COURSES_RESPONSE = """
+            {
+              "success": true,
+              "data": {
+                "courses": [
+                  {
+                    "id": "c1",
+                    "title": "서울 고궁 투어",
+                    "regionName": "서울 종로구",
+                    "date": "2026-07-01",
+                    "distanceMeters": 3200.0,
+                    "startLocation": {"longitude": 126.977041, "latitude": 37.579617},
+                    "saveCount": 5,
+                    "createdAt": "2026-06-25T10:00:00",
+                    "updatedAt": "2026-06-25T10:00:00",
+                    "routeSummary": null,
+                    "items": [],
+                    "tags": []
+                  }
+                ]
+              },
+              "error": null
+            }
+            """;
+
+    static final String COURSE_FEED_RESPONSE = """
+            {
+              "success": true,
+              "data": {
+                "courses": [
+                  {
+                    "id": "c1",
+                    "title": "서울 고궁 투어",
+                    "regionName": "서울 종로구",
+                    "date": "2026-07-01",
+                    "distanceMeters": 3200.0,
+                    "startLocation": {"longitude": 126.977041, "latitude": 37.579617},
+                    "saveCount": 5,
+                    "createdAt": "2026-06-25T10:00:00",
+                    "updatedAt": "2026-06-25T10:00:00",
+                    "routeSummary": null,
+                    "items": [],
+                    "tags": []
+                  }
+                ]
+              },
+              "error": null
+            }
+            """;
+
+    static final String COURSE_CREATE_REQUEST = """
+            {
+              "id": "c1",
+              "title": "서울 고궁 투어",
+              "regionName": "서울 종로구",
+              "date": "2026-07-01",
+              "items": [
+                {
+                  "attractionId": 125405,
+                  "noteId": null
+                }
+              ],
+              "tagIds": [1]
+            }
+            """;
+
+    static final String COURSE_UPDATE_REQUEST = """
+            {
+              "title": "서울 고궁 투어 (수정)",
+              "regionName": "서울 종로구",
+              "date": "2026-07-02",
+              "items": [
+                {
+                  "attractionId": 125405,
+                  "noteId": null
+                },
+                {
+                  "attractionId": 126508,
+                  "noteId": null
+                }
+              ],
+              "tagIds": [1, 2]
+            }
+            """;
+
+    static final String COURSE_ORDER_RECOMMENDATION_REQUEST = """
+            {
+              "currentLatitude": 37.5665,
+              "currentLongitude": 126.9780
+            }
+            """;
+
     private ApiExamples() {
     }
 }

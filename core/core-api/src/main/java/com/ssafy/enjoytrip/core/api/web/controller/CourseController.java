@@ -3,6 +3,7 @@ package com.ssafy.enjoytrip.core.api.web.controller;
 import static com.ssafy.enjoytrip.core.support.response.ApiResponse.success;
 
 import com.ssafy.enjoytrip.core.api.security.AuthenticatedMemberId;
+import com.ssafy.enjoytrip.core.api.web.api.CourseApi;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseMdFeedRequest;
@@ -36,7 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/courses")
 @RequiredArgsConstructor
 @Validated
-public class CourseController {
+public class CourseController implements CourseApi {
     private final CourseService courseService;
 
     @GetMapping("/feed")
