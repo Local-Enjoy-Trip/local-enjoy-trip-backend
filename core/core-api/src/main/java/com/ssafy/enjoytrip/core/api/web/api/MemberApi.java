@@ -4,6 +4,7 @@ import com.ssafy.enjoytrip.core.api.web.dto.request.MemberLoginRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberOAuthSignupRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberSignupRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.MemberUpdateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.response.EmailAvailabilityResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.LoginResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.UserEnvelopeResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.UsersResponse;
@@ -18,6 +19,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 @Tag(name = "Members", description = "회원 가입, 로그인, 내 정보, 회원 관리 API")
 public interface MemberApi {
@@ -38,6 +41,31 @@ public interface MemberApi {
             )
     })
     ApiResponse<UsersResponse> findAll();
+
+    @Operation(
+            summary = "이메일 중복 확인",
+            description = "이메일 주소가 이미 사용 중인지 확인합니다. `available: true`면 사용 가능한 이메일입니다.",
+            operationId = "checkEmailAvailability"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "이메일 중복 확인 결과",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = EmailAvailabilityResponse.class),
+                            examples = @ExampleObject(value = ApiExamples.EMAIL_AVAILABILITY_RESPONSE)
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "이메일 형식 오류"
+            )
+    })
+    ApiResponse<EmailAvailabilityResponse> checkEmailAvailability(
+            @Parameter(description = "중복 확인할 이메일 주소", required = true)
+            @NotBlank @Email String email
+    );
 
     @Operation(
             summary = "회원 가입",

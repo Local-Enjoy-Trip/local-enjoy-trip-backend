@@ -9,6 +9,16 @@ final class ApiExamples {
             }
             """;
 
+    static final String EMAIL_AVAILABILITY_RESPONSE = """
+            {
+              "success": true,
+              "data": {
+                "available": true
+              },
+              "error": null
+            }
+            """;
+
     static final String ATTRACTION_STATS_RESPONSE = """
             {
               "success": true,
