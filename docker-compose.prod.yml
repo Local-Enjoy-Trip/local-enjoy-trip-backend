@@ -1,8 +1,6 @@
 services:
   db:
-    build:
-      context: ./infra/postgres-vector
-    image: enjoytrip-postgis-pgvector:17-3.5
+    image: ${DB_IMAGE:-enjoytrip-postgis-pgvector:17-3.5}
     platform: linux/amd64
     container_name: enjoytrip-postgres-prod
     restart: unless-stopped

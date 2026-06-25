@@ -124,6 +124,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Build and Push DB Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infra/postgres-vector/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/enjoytrip-postgis-pgvector:17-3.5
+            ${{ secrets.DOCKERHUB_USERNAME }}/enjoytrip-postgis-pgvector:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       # docker-compose.prod.yml 및 infra 디렉토리를 원격 서버로 복사
       - name: Copy Docker Compose and Infra files
         uses: appleboy/scp-action@v0.1.7
@@ -171,6 +183,7 @@ jobs:
             DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
             ACME_EMAIL=${{ secrets.ACME_EMAIL }}
             API_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/enjoytrip-api:${{ github.sha }}
+            DB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/enjoytrip-postgis-pgvector:17-3.5
             EOF
             
             # Docker Hub 로그인
@@ -178,10 +191,10 @@ jobs:
             
             # docker-compose 버전 확인 후 pull 및 컨테이너 갱신 실행
             if docker compose version >/dev/null 2>&1; then
-              docker compose -f docker-compose.prod.yml pull api
+              docker compose -f docker-compose.prod.yml pull api db
               docker compose -f docker-compose.prod.yml up -d
             else
-              docker-compose -f docker-compose.prod.yml pull api
+              docker-compose -f docker-compose.prod.yml pull api db
               docker-compose -f docker-compose.prod.yml up -d
             fi
             
