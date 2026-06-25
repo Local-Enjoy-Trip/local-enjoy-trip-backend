@@ -133,14 +133,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/members/me/profile-image").authenticated()
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/attractions/{id}/save",
-                                "/api/attractions/{id}/rating",
-                                "/api/attractions/{id}/tags").authenticated()
+                                "/api/attractions/{id}/rating").authenticated()
                         .requestMatchers(HttpMethod.DELETE,
                                 "/api/attractions/{id}/save",
                                 "/api/attractions/{id}/rating").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/attraction-tags").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/attraction-tags/{id}").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/attraction-tags/{id}").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/map/explore").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/map/search").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/notes").authenticated()

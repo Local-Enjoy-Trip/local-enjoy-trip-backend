@@ -1,4 +1,4 @@
-﻿# Attractions API
+# Attractions API
 
 > Source: `core/core-api/src/docs/asciidoc/index.adoc`
 
@@ -38,10 +38,6 @@ Content-Length: 640
       "saveCount" : 12,
       "ratingAverage" : 4.6,
       "ratingCount" : 5,
-      "tags" : [ {
-        "id" : 1,
-        "name" : "가족여행"
-      } ],
       "saved" : true,
       "myRating" : 5
     } ]
@@ -93,7 +89,6 @@ Host: localhost:8080
       "saveCount": 12,
       "ratingAverage": 4.5,
       "ratingCount": 8,
-      "tags": [{ "id": 1, "name": "역사" }],
       "saved": false,
       "myRating": null
     }
@@ -148,48 +143,10 @@ Authorization: Bearer <token>
       "saveCount": 12,
       "ratingAverage": 4.6,
       "ratingCount": 5,
-      "tags": [{ "id": 1, "name": "가족여행" }],
       "saved": true,
       "myRating": 5
     }
   },
   "error": null
 }
-```
-
-### Tag Endpoints
-
-태그 조회는 공개 API이고, 생성/수정/삭제 및 관광지 연결은 인증이 필요합니다.
-
-```http
-GET /api/attraction-tags HTTP/1.1
-```
-
-```http
-POST /api/attraction-tags HTTP/1.1
-Authorization: Bearer <token>
-Content-Type: application/x-www-form-urlencoded
-
-name=가족여행
-```
-
-```http
-PUT /api/attraction-tags/1 HTTP/1.1
-Authorization: Bearer <token>
-Content-Type: application/x-www-form-urlencoded
-
-name=우정여행
-```
-
-```http
-DELETE /api/attraction-tags/1 HTTP/1.1
-Authorization: Bearer <token>
-```
-
-```http
-PUT /api/attractions/1/tags HTTP/1.1
-Authorization: Bearer <token>
-Content-Type: application/x-www-form-urlencoded
-
-tagIds=1,2,3
 ```

@@ -19,10 +19,7 @@ final class ApiExamples {
                   "ratingAverage": 4.5,
                   "ratingCount": 8,
                   "saved": true,
-                  "myRating": 5,
-                  "tags": [
-                    {"id": 1, "name": "야경"}
-                  ]
+                  "myRating": 5
                 }
               },
               "error": null

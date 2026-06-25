@@ -171,7 +171,7 @@ public interface AttractionApi {
             description = """
                     공개 활성 관광지의 상세 정보를 조회합니다.
 
-                    - `overview`, 이미지, 좌표, 저장 수, 평점, 태그를 함께 반환합니다.
+                    - `overview`, 이미지, 좌표, 저장 수, 평점을 함께 반환합니다.
                     - 로그인 사용자는 `saved`, `myRating`에 본인 상태가 반영됩니다.
                     - 비로그인 응답에서는 `saved=false`, `myRating=null`입니다.
                     """,
@@ -203,9 +203,6 @@ public interface AttractionApi {
                                         "saveCount": 12,
                                         "ratingAverage": 4.5,
                                         "ratingCount": 8,
-                                        "tags": [
-                                          {"id": 1, "name": "역사"}
-                                        ],
                                         "saved": true,
                                         "myRating": 5
                                       },
