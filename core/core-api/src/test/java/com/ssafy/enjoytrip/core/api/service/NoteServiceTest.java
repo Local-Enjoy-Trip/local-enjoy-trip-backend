@@ -14,6 +14,7 @@ import com.ssafy.enjoytrip.core.domain.NoteVisibility;
 import com.ssafy.enjoytrip.core.support.error.exception.ClientInputException;
 import com.ssafy.enjoytrip.external.minio.MinioNoteImageUploadUrlGenerator;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteRecord;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.MemberProfileEmbeddingMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteTagMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.TagMapper;
@@ -41,6 +42,7 @@ class NoteServiceTest {
                 noteMapper,
                 mock(NoteTagMapper.class),
                 mock(TagMapper.class),
+                mock(MemberProfileEmbeddingMapper.class),
                 uploadUrlGenerator,
                 mock(org.springframework.context.ApplicationEventPublisher.class)
         );
