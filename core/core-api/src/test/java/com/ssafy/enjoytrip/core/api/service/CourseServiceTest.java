@@ -36,6 +36,7 @@ import com.ssafy.enjoytrip.core.domain.CourseRecommendationRanker;
 import com.ssafy.enjoytrip.core.domain.NoteTagReader;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseEmbeddingMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseInvitationMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteTagMapper;
@@ -72,8 +73,9 @@ class CourseServiceTest {
         org.springframework.context.ApplicationEventPublisher eventPublisher =
                 Mockito.mock(org.springframework.context.ApplicationEventPublisher.class);
         CourseEmbeddingMapper courseEmbeddingMapper = Mockito.mock(CourseEmbeddingMapper.class);
+        CourseInvitationMapper courseInvitationMapper = Mockito.mock(CourseInvitationMapper.class);
         service = new CourseService(
-                new CourseReader(courseMapper),
+                new CourseReader(courseMapper, courseInvitationMapper),
                 new CourseWriter(courseMapper, courseEmbeddingMapper, stopPointResolver, routePlanner),
                 new AiCourseOrderOptimizer(
                         new CourseOrderPreviewReader(attractionMapper, noteMapper),
