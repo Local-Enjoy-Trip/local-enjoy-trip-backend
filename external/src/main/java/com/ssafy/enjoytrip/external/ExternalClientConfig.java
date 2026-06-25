@@ -2,6 +2,8 @@ package com.ssafy.enjoytrip.external;
 
 import com.ssafy.enjoytrip.external.minio.MinioProperties;
 import io.minio.MinioClient;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
@@ -31,5 +33,11 @@ public class ExternalClientConfig {
                 .credentials(properties.getAccessKey(), properties.getSecretKey())
                 .region(properties.getRegion())
                 .build();
+    }
+
+    @Bean
+    ChatClient chatClient(ObjectProvider<ChatClient.Builder> builderProvider) {
+        ChatClient.Builder builder = builderProvider.getIfAvailable();
+        return builder != null ? builder.build() : null;
     }
 }

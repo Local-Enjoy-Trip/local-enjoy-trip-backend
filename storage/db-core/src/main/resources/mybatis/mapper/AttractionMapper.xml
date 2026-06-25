@@ -279,17 +279,21 @@
     <select id="findSavedByMemberId" resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord">
         select <include refid="searchRowColumns"/>
         from (
-            select <include refid="baseColumns"/>,
+            select attractions.id, attractions.title, attractions.addr1, attractions.addr2, attractions.zipcode, attractions.tel,
+                   attractions.first_image as firstImage, attractions.first_image2 as firstImage2,
+                   attractions.read_count as readCount, attractions.sido_code as sidoCode, attractions.gugun_code as gugunCode,
+                   ST_Y(attractions.location) as latitude, ST_X(attractions.location) as longitude,
+                   attractions.mlevel, attractions.content_type_id as contentTypeId, attractions.overview,
                    null as distanceMeters,
                    sv.created_at as savedAt
             from attractions
             inner join attraction_saves sv
                    on sv.attraction_id = attractions.id
                   and sv.member_id = #{viewerMemberId}
-            where status = &apos;ACTIVE&apos;
-              and deleted_at is null
-              and duplicate_of_attraction_id is null
-            order by sv.created_at desc, title asc, id asc
+            where attractions.status = &apos;ACTIVE&apos;
+              and attractions.deleted_at is null
+              and attractions.duplicate_of_attraction_id is null
+            order by sv.created_at desc, attractions.title asc, attractions.id asc
         ) a
         <include refid="searchRowJoins"/>
         order by a.savedAt desc, a.title asc, a.id asc
