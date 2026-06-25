@@ -102,11 +102,14 @@ public class MemberProfileEmbeddingEventListener {
             List<SavedNoteInputRecord> noteRecords
     ) {
         List<MemberProfileInput.SavedAttractionItem> attractions = attractionRecords.stream()
-                .map(r -> new MemberProfileInput.SavedAttractionItem(
-                        r.getTitle(),
-                        r.getAddr1(),
-                        r.getContentTypeId()
-                ))
+                .map(r -> {
+                    String address = r.getAddr2() != null && !r.getAddr2().isBlank() ? r.getAddr2() : r.getAddr1();
+                    return new MemberProfileInput.SavedAttractionItem(
+                            r.getTitle(),
+                            address,
+                            r.getContentTypeId()
+                    );
+                })
                 .toList();
 
         List<MemberProfileInput.SavedNoteItem> notes = noteRecords.stream()

@@ -20,13 +20,14 @@
         select id,
                title,
                addr1,
+               addr2,
                content_type_id as contentTypeId
         from attractions
         where status = 'ACTIVE'
           and deleted_at is null
           and duplicate_of_attraction_id is null
           and content_type_id in ('38', '39')
-          and addr1 ilike concat('%', #{regionName}, '%')
+          and (addr1 ilike concat('%', #{regionName}, '%') or addr2 = #{regionName})
         order by read_count desc nulls last, id asc
         limit #{limit}
     </select>

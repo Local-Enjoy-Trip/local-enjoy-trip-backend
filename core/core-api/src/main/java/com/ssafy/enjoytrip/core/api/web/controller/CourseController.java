@@ -164,8 +164,7 @@ public class CourseController implements CourseApi {
 
         AiCoursePreview preview = aiCourseGenerationService.generatePreview(
                 authenticatedMemberId,
-                request.sidoCode(),
-                request.gugunCode(),
+                request.regionName(),
                 request.companion().getLabel(),
                 themeLabels,
                 request.pace().getLabel(),

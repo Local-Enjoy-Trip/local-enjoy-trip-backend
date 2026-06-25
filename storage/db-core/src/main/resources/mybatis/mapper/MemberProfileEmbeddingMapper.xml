@@ -6,6 +6,7 @@
             resultType="com.ssafy.enjoytrip.storage.db.core.model.SavedAttractionInputRecord">
         select a.title         as title,
                a.addr1         as addr1,
+               a.addr2         as addr2,
                a.content_type_id as contentTypeId
         from attraction_saves as2
         join attractions a on a.id = as2.attraction_id

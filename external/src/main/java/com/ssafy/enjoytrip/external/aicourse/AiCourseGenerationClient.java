@@ -111,6 +111,7 @@ public class AiCourseGenerationClient {
         StringBuilder sb = new StringBuilder();
 
         sb.append("[요청 조건]\n");
+        sb.append("- 지역: ").append(nullSafe(input.neighborhood())).append('\n');
         sb.append("- 동행: ").append(nullSafe(input.companionLabel())).append('\n');
         sb.append("- 원하는 하루: ").append(String.join(", ", input.themeLabels())).append('\n');
         sb.append("- 속도: ").append(nullSafe(input.paceLabel()))
@@ -118,9 +119,10 @@ public class AiCourseGenerationClient {
 
         sb.append("[후보 관광지 목록]\n");
         for (AiCourseGenerationInput.AttractionItem item : input.attractionCandidates()) {
+            String address = item.addr2() != null && !item.addr2().isBlank() ? item.addr2() : item.addr1();
             sb.append("ID: ").append(item.id())
                     .append(" | ").append(nullSafe(item.title()))
-                    .append(" | ").append(nullSafe(item.addr1()))
+                    .append(" | ").append(nullSafe(address))
                     .append(" | ").append(nullSafe(item.contentTypeId()))
                     .append(" | ").append(summarize(item.overview()))
                     .append('\n');
@@ -139,6 +141,13 @@ public class AiCourseGenerationClient {
         if (input.userProfileDescription() != null && !input.userProfileDescription().isBlank()) {
             sb.append("\n[유저 취향 설명]\n");
             sb.append(input.userProfileDescription()).append('\n');
+        }
+
+        if (!input.attractionCandidates().isEmpty()) {
+            sb.append("\n[특별 지시사항]\n");
+            sb.append("- 생성할 코스의 첫 번째 장소는 반드시 후보 목록의 첫 번째 장소인 '")
+                    .append(input.attractionCandidates().get(0).title())
+                    .append("' (ID: ").append(input.attractionCandidates().get(0).id()).append(")여야 합니다.\n");
         }
 
         return sb.toString();
