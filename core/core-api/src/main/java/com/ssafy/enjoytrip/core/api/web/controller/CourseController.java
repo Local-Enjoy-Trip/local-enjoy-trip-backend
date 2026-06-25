@@ -11,13 +11,18 @@ import com.ssafy.enjoytrip.core.api.web.dto.request.CourseOrderRecommendationReq
 import com.ssafy.enjoytrip.core.api.web.dto.request.CoursePopularFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseRecommendationRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseUpdateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.aicourse.AiCourseGenerateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.response.AiCoursePreviewResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseFeedResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CoursesResponse;
+import com.ssafy.enjoytrip.core.domain.AiCoursePreview;
 import com.ssafy.enjoytrip.core.domain.Course;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
+import com.ssafy.enjoytrip.core.domain.service.AiCourseGenerationService;
 import com.ssafy.enjoytrip.core.domain.service.CourseService;
 import com.ssafy.enjoytrip.core.support.response.ApiResponse;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -36,6 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class CourseController implements CourseApi {
     private final CourseService courseService;
+    private final AiCourseGenerationService aiCourseGenerationService;
 
     @GetMapping("/feed")
     @Override
@@ -144,5 +150,28 @@ public class CourseController implements CourseApi {
                                     @AuthenticatedMemberId Long authenticatedMemberId) {
         courseService.deleteCourse(authenticatedMemberId, id.strip());
         return success();
+    }
+
+    @PostMapping(value = "/ai-generate", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Override
+    public ApiResponse<AiCoursePreviewResponse> generateAiCourse(
+            @RequestBody @Valid AiCourseGenerateRequest request,
+            @AuthenticatedMemberId Long authenticatedMemberId
+    ) {
+        List<String> themeLabels = request.themes().stream()
+                .map(theme -> theme.getLabel())
+                .toList();
+
+        AiCoursePreview preview = aiCourseGenerationService.generatePreview(
+                authenticatedMemberId,
+                request.sidoCode(),
+                request.gugunCode(),
+                request.companion().getLabel(),
+                themeLabels,
+                request.pace().getLabel(),
+                request.pace().getPlaceCount()
+        );
+
+        return success(AiCoursePreviewResponse.from(preview));
     }
 }

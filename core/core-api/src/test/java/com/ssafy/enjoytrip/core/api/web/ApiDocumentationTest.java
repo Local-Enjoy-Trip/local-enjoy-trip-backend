@@ -20,6 +20,7 @@ import com.ssafy.enjoytrip.core.domain.WeatherWithForecast;
 import com.ssafy.enjoytrip.core.domain.service.DbHealthService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionService;
 import com.ssafy.enjoytrip.core.domain.service.AttractionStatsService;
+import com.ssafy.enjoytrip.core.domain.service.AiCourseGenerationService;
 import com.ssafy.enjoytrip.core.domain.service.CourseService;
 import com.ssafy.enjoytrip.core.support.auth.JwtTokenService;
 import com.ssafy.enjoytrip.core.domain.service.MemberProfileImageService;
@@ -79,6 +80,7 @@ class ApiDocumentationTest {
     private WeatherService weatherService;
     private NeighborhoodBriefingService neighborhoodBriefingService;
     private CourseService courseService;
+    private AiCourseGenerationService aiCourseGenerationService;
     private MemberService memberService;
     private JwtTokenService tokenService;
     private OAuthSignupTicketService oauthSignupTicketService;
@@ -93,6 +95,7 @@ class ApiDocumentationTest {
         weatherService = mock(WeatherService.class);
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         courseService = mock(CourseService.class);
+        aiCourseGenerationService = mock(AiCourseGenerationService.class);
         memberService = mock(MemberService.class);
         tokenService = mock(JwtTokenService.class);
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
@@ -105,7 +108,7 @@ class ApiDocumentationTest {
                         new HealthController(mock(DbHealthService.class)),
                         new AttractionController(attractionService, attractionStatsService),
                         new NeighborhoodBriefingController(neighborhoodBriefingService, weatherService),
-                        new CourseController(courseService),
+                        new CourseController(courseService, aiCourseGenerationService),
                         new MemberController(memberService, tokenService, oauthSignupTicketService),
                         new MemberProfileImageController(memberProfileImageService),
                         new MapController(mapExploreService, mapSearchService)

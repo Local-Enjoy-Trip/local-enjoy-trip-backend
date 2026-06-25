@@ -37,4 +37,6 @@ public interface MemberProfileEmbeddingMapper {
     );
 
     String findSourceHashByMemberId(@Param("memberId") Long memberId);
+
+    String findProfileDescriptionByMemberId(@Param("memberId") Long memberId);
 }

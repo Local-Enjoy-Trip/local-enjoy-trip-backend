@@ -17,6 +17,12 @@
         select a.id as attractionId, a.title, a.addr1, a.addr2, a.overview, a.sido_code as sidoCode, a.gugun_code as gugunCode
         from attractions a
         where <include refid="regionCondition"/>
+          and not exists (
+              select 1
+              from attraction_embeddings e
+              where e.attraction_id = a.id
+                and e.status = 'EMBEDDED'
+          )
         order by a.id asc
         <if test="limit &gt; 0">limit #{limit}</if>
     </select>

@@ -409,4 +409,20 @@
         <include refid="searchRowJoins"/>
         order by a.matchTier asc, a.distanceMeters asc, a.title asc, a.id asc
     </select>
+
+    <select id="findCandidatesByPreferenceEmbedding"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingCandidateRecord">
+        SELECT a.id,
+               a.title,
+               a.addr1,
+               a.content_type_id AS contentTypeId,
+               a.overview
+        FROM attractions a
+        JOIN attraction_embeddings ae ON ae.attraction_id = a.id
+        WHERE ae.status = 'EMBEDDED'
+          AND a.sido_code = #{sidoCode}
+          <if test="gugunCode != null">AND a.gugun_code = #{gugunCode}</if>
+        ORDER BY ae.embedding &lt;=&gt; #{preferenceEmbeddingLiteral}::vector
+        LIMIT #{limit}
+    </select>
 </mapper>

@@ -2,6 +2,7 @@ package com.ssafy.enjoytrip.storage.db.core.mybatis.mapper;
 
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionCountRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionAdminRecord;
+import com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingCandidateRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionPopularityDeltaRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
@@ -84,4 +85,11 @@ public interface AttractionMapper {
     int applyPopularitySaveDeltas(@Param("deltas") List<AttractionPopularityDeltaRecord> deltas);
 
     List<AttractionRecord> findByIds(@Param("ids") List<Long> ids);
+
+    List<AttractionEmbeddingCandidateRecord> findCandidatesByPreferenceEmbedding(
+            @Param("sidoCode") int sidoCode,
+            @Param("gugunCode") Integer gugunCode,
+            @Param("preferenceEmbeddingLiteral") String preferenceEmbeddingLiteral,
+            @Param("limit") int limit
+    );
 }

@@ -2,12 +2,18 @@ spring:
   ai:
     model:
       chat: openai
+      embedding: openai
     openai:
       api-key: ${GMS_KEY:local-fallback-disabled}
       chat:
         base-url: ${GMS_CHAT_BASE_URL:https://gms.ssafy.io/gmsapi/api.openai.com/v1}
         api-key: ${GMS_KEY:local-fallback-disabled}
         model: ${GMS_CHAT_MODEL:gpt-5.4-nano}
+      embedding:
+        base-url: ${GMS_CHAT_BASE_URL:https://gms.ssafy.io/gmsapi/api.openai.com/v1}
+        api-key: ${GMS_KEY:local-fallback-disabled}
+        options:
+          model: text-embedding-3-small
 
 enjoytrip:
   ai:

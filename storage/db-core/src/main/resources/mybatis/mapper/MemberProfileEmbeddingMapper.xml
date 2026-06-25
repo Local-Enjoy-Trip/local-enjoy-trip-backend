@@ -135,4 +135,12 @@
           and status = 'EMBEDDED'
     </select>
 
+    <select id="findProfileDescriptionByMemberId" resultType="string">
+        select profile_description
+        from member_profile_embeddings
+        where member_id = #{memberId}
+          and status = 'EMBEDDED'
+          and profile_description is not null
+    </select>
+
 </mapper>

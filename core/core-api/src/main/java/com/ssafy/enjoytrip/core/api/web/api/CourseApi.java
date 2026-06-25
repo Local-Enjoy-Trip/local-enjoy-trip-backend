@@ -6,6 +6,8 @@ import com.ssafy.enjoytrip.core.api.web.dto.request.CourseOrderRecommendationReq
 import com.ssafy.enjoytrip.core.api.web.dto.request.CoursePopularFeedRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseRecommendationRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.CourseUpdateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.aicourse.AiCourseGenerateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.response.AiCoursePreviewResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseFeedResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CourseResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.CoursesResponse;
@@ -274,6 +276,29 @@ public interface CourseApi {
     })
     ApiResponse<Void> unsave(
             @Parameter(description = "코스 ID", example = "c1") @NotBlank String id,
+            @Parameter(hidden = true) Long authenticatedMemberId
+    );
+
+    @Operation(
+            summary = "AI 코스 생성 (미리보기)",
+            description = "취향 입력을 기반으로 AI가 관광지로 구성된 코스를 생성합니다. 저장 전 미리보기 형태로 반환합니다.",
+            operationId = "generateAiCourse",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "AI 코스 생성 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AiCoursePreviewResponse.class)
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "필수 필드 누락"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
+    })
+    ApiResponse<AiCoursePreviewResponse> generateAiCourse(
+            @Valid AiCourseGenerateRequest request,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
 

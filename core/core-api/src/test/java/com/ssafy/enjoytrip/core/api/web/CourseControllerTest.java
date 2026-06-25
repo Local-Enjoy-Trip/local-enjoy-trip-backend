@@ -2,6 +2,10 @@ package com.ssafy.enjoytrip.core.api.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -14,11 +18,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ssafy.enjoytrip.core.api.web.controller.CourseController;
+import com.ssafy.enjoytrip.core.domain.AiCoursePreview;
 import com.ssafy.enjoytrip.core.domain.Course;
 import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseStopTarget;
 import com.ssafy.enjoytrip.core.domain.CourseOrderOptimizationContext;
 import com.ssafy.enjoytrip.core.domain.query.DistanceSearchCondition;
+import com.ssafy.enjoytrip.core.domain.service.AiCourseGenerationService;
 import com.ssafy.enjoytrip.core.domain.service.CourseService;
 import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
 import java.security.Principal;
@@ -33,13 +39,15 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 class CourseControllerTest {
     private CourseService courseService;
+    private AiCourseGenerationService aiCourseGenerationService;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         courseService = mock(CourseService.class);
+        aiCourseGenerationService = mock(AiCourseGenerationService.class);
         mockMvc = MockMvcBuilders.standaloneSetup(
-                        new CourseController(courseService)
+                        new CourseController(courseService, aiCourseGenerationService)
                 )
                 .setCustomArgumentResolvers(new TestAuthenticationPrincipalResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -375,5 +383,83 @@ class CourseControllerTest {
 
     private static Principal jwtPrincipal(long memberId) {
         return () -> String.valueOf(memberId);
+    }
+
+    @DisplayName("POST /api/courses/ai-generate는 AI 코스 미리보기를 반환한다")
+    @Test
+    void generateAiCourseReturnsPreview() throws Exception {
+        AiCoursePreview preview = new AiCoursePreview(
+                "연인과 강남 감성 카페 투어",
+                "감성적인 공간을 중심으로 구성했습니다.",
+                List.of(
+                        new AiCoursePreview.Stop(101L, "카페 어니언", "서울 강남구", "http://img.jpg"),
+                        new AiCoursePreview.Stop(102L, "루프탑 카페", "서울 강남구", null)
+                )
+        );
+        when(aiCourseGenerationService.generatePreview(
+                anyLong(), anyInt(), anyInt(), anyString(), anyList(), anyString(), anyInt()
+        )).thenReturn(preview);
+
+        mockMvc.perform(post("/api/courses/ai-generate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "sidoCode": 1,
+                                  "gugunCode": 0,
+                                  "companion": "WITH_PARTNER",
+                                  "themes": ["CAFE", "PHOTO"],
+                                  "pace": "RELAXED"
+                                }
+                                """)
+                        .principal(jwtPrincipal(42L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.title").value("연인과 강남 감성 카페 투어"))
+                .andExpect(jsonPath("$.data.reason").value("감성적인 공간을 중심으로 구성했습니다."))
+                .andExpect(jsonPath("$.data.stops[0].attractionId").value(101))
+                .andExpect(jsonPath("$.data.stops[1].attractionId").value(102));
+    }
+
+    @DisplayName("POST /api/courses/ai-generate는 companion 레이블로 서비스를 호출한다")
+    @Test
+    void generateAiCoursePassesCompanionLabel() throws Exception {
+        when(aiCourseGenerationService.generatePreview(
+                anyLong(), anyInt(), anyInt(), anyString(), anyList(), anyString(), anyInt()
+        )).thenReturn(new AiCoursePreview("타이틀", "이유", List.of()));
+
+        mockMvc.perform(post("/api/courses/ai-generate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "sidoCode": 1,
+                                  "gugunCode": 0,
+                                  "companion": "ALONE",
+                                  "themes": ["WALK"],
+                                  "pace": "MODERATE"
+                                }
+                                """)
+                        .principal(jwtPrincipal(10L)))
+                .andExpect(status().isOk());
+
+        verify(aiCourseGenerationService).generatePreview(
+                eq(10L), eq(1), eq(0), eq("혼자"), anyList(), eq("알맞게"), eq(4)
+        );
+    }
+
+    @DisplayName("POST /api/courses/ai-generate는 sidoCode가 없으면 400을 반환한다")
+    @Test
+    void generateAiCourseReturnsBadRequestWhenSidoCodeMissing() throws Exception {
+        mockMvc.perform(post("/api/courses/ai-generate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "gugunCode": 0,
+                                  "companion": "ALONE",
+                                  "themes": ["WALK"],
+                                  "pace": "MODERATE"
+                                }
+                                """)
+                        .principal(jwtPrincipal(10L)))
+                .andExpect(status().isBadRequest());
     }
 }
