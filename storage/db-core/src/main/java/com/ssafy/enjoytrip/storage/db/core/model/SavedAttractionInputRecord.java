@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 public class SavedAttractionInputRecord {
     private String title;
     private String addr1;
+    private String addr2;
     private String contentTypeId;
 }

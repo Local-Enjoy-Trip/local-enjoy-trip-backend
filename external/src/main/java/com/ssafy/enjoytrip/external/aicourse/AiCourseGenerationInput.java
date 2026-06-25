@@ -22,6 +22,7 @@ public record AiCourseGenerationInput(
             long id,
             String title,
             String addr1,
+            String addr2,
             String contentTypeId,
             String overview
     ) {}

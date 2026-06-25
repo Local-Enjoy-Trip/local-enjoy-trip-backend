@@ -2,8 +2,10 @@ package com.ssafy.enjoytrip.core.domain.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -29,7 +31,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingResponse;
-import org.springframework.ai.embedding.EmbeddingResultMetadata;
 import org.springframework.beans.factory.ObjectProvider;
 
 @ExtendWith(MockitoExtension.class)
@@ -72,8 +73,11 @@ class AiCourseGenerationServiceTest {
         long attractionId = 101L;
         stubEmbeddingModel(1536);
         when(attractionMapper.findCandidatesByPreferenceEmbedding(
-                eq(1), isNull(), anyString(), eq(20)
+                isNull(), isNull(), isNull(), anyString(), eq(1)
         )).thenReturn(List.of(candidateRecord(attractionId, "카페 어니언")));
+        when(attractionMapper.findCandidatesWithinRadius(
+                isNull(), anyDouble(), anyDouble(), anyDouble(), anyString(), eq(attractionId), eq(20)
+        )).thenReturn(List.of());
         when(courseReader.hasMemberProfileEmbedding(1L)).thenReturn(false);
         when(memberProfileEmbeddingMapper.findProfileDescriptionByMemberId(1L)).thenReturn(null);
         when(aiCourseGenerationClient.generate(any())).thenReturn(
@@ -84,7 +88,7 @@ class AiCourseGenerationServiceTest {
         );
 
         AiCoursePreview preview = service.generatePreview(
-                1L, 1, 0, "연인과", List.of("감성 카페"), "여유롭게", 3
+                1L, null, "연인과", List.of("감성 카페"), "여유롭게", 3
         );
 
         assertThat(preview.title()).isEqualTo("감성 카페 투어");
@@ -95,12 +99,15 @@ class AiCourseGenerationServiceTest {
         assertThat(preview.stops().get(0).firstImage()).isEqualTo("http://img.jpg");
     }
 
-    @DisplayName("generatePreview는 gugunCode가 0이면 gugunFilter를 null로 전달한다")
+    @DisplayName("generatePreview는 regionName이 제공되면 1차 검색에서 시도와 regionName 조건으로 전달한다")
     @Test
-    void generatePreviewPassesNullGugunFilterWhenGugunCodeIsZero() {
+    void generatePreviewPassesNullGugunFilterWhenRegionNameIsProvided() {
         stubEmbeddingModel(1536);
         when(attractionMapper.findCandidatesByPreferenceEmbedding(
-                eq(1), isNull(), anyString(), eq(20)
+                isNull(), isNull(), eq("망원동"), anyString(), eq(1)
+        )).thenReturn(List.of(candidateRecord(101L, "테스트")));
+        when(attractionMapper.findCandidatesWithinRadius(
+                isNull(), anyDouble(), anyDouble(), anyDouble(), anyString(), anyLong(), eq(20)
         )).thenReturn(List.of());
         when(courseReader.hasMemberProfileEmbedding(1L)).thenReturn(false);
         when(memberProfileEmbeddingMapper.findProfileDescriptionByMemberId(1L)).thenReturn(null);
@@ -108,39 +115,23 @@ class AiCourseGenerationServiceTest {
                 new AiCourseGenerationResult("코스", List.of(), "이유")
         );
 
-        service.generatePreview(1L, 1, 0, "혼자", List.of("산책"), "알맞게", 4);
+        service.generatePreview(1L, "망원동", "친구와", List.of("맛집"), "알차게", 5);
 
         verify(attractionMapper).findCandidatesByPreferenceEmbedding(
-                eq(1), isNull(), anyString(), eq(20)
+                isNull(), isNull(), eq("망원동"), anyString(), eq(1)
         );
     }
 
-    @DisplayName("generatePreview는 gugunCode가 0이 아니면 gugunFilter로 전달한다")
-    @Test
-    void generatePreviewPassesGugunFilterWhenGugunCodeIsNonZero() {
-        stubEmbeddingModel(1536);
-        when(attractionMapper.findCandidatesByPreferenceEmbedding(
-                eq(1), eq(25), anyString(), eq(20)
-        )).thenReturn(List.of());
-        when(courseReader.hasMemberProfileEmbedding(1L)).thenReturn(false);
-        when(memberProfileEmbeddingMapper.findProfileDescriptionByMemberId(1L)).thenReturn(null);
-        when(aiCourseGenerationClient.generate(any())).thenReturn(
-                new AiCourseGenerationResult("코스", List.of(), "이유")
-        );
-
-        service.generatePreview(1L, 1, 25, "친구와", List.of("맛집"), "알차게", 5);
-
-        verify(attractionMapper).findCandidatesByPreferenceEmbedding(
-                eq(1), eq(25), anyString(), eq(20)
-        );
-    }
 
     @DisplayName("generatePreview는 멤버 프로필 임베딩이 없으면 참조 코스를 조회하지 않는다")
     @Test
     void generatePreviewSkipsReferenceCourseWhenNoMemberProfileEmbedding() {
         stubEmbeddingModel(1536);
         when(attractionMapper.findCandidatesByPreferenceEmbedding(
-                anyInt(), any(), anyString(), anyInt()
+                any(), any(), any(), anyString(), eq(1)
+        )).thenReturn(List.of(candidateRecord(101L, "테스트")));
+        when(attractionMapper.findCandidatesWithinRadius(
+                any(), anyDouble(), anyDouble(), anyDouble(), anyString(), anyLong(), eq(20)
         )).thenReturn(List.of());
         when(courseReader.hasMemberProfileEmbedding(1L)).thenReturn(false);
         when(memberProfileEmbeddingMapper.findProfileDescriptionByMemberId(1L)).thenReturn(null);
@@ -148,7 +139,7 @@ class AiCourseGenerationServiceTest {
                 new AiCourseGenerationResult("코스", List.of(), "이유")
         );
 
-        service.generatePreview(1L, 1, 0, "혼자", List.of("산책"), "알맞게", 4);
+        service.generatePreview(1L, null, "혼자", List.of("산책"), "알맞게", 4);
 
         verify(courseReader, never()).findCandidatesByMemberProfile(any(), anyInt());
     }
@@ -174,6 +165,9 @@ class AiCourseGenerationServiceTest {
             org.springframework.test.util.ReflectionTestUtils.setField(record, "id", id);
             org.springframework.test.util.ReflectionTestUtils.setField(record, "title", title);
             org.springframework.test.util.ReflectionTestUtils.setField(record, "addr1", "서울");
+            org.springframework.test.util.ReflectionTestUtils.setField(record, "addr2", "역삼동");
+            org.springframework.test.util.ReflectionTestUtils.setField(record, "latitude", 37.5);
+            org.springframework.test.util.ReflectionTestUtils.setField(record, "longitude", 126.9);
             return record;
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
@@ -181,7 +175,7 @@ class AiCourseGenerationServiceTest {
     }
 
     private static AttractionRecord attractionRecord(long id, String title, String addr1, String firstImage) {
-        return new AttractionRecord(id, title, addr1, null, null, null, firstImage,
+        return new AttractionRecord(id, title, addr1, "역삼동", null, null, firstImage,
                 null, 0, 1, 1, 37.5, 126.9, null, "12", null);
     }
 }

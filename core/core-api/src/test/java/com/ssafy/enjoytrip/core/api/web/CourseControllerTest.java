@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -51,6 +52,7 @@ class CourseControllerTest {
                 )
                 .setCustomArgumentResolvers(new TestAuthenticationPrincipalResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .alwaysDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
                 .build();
     }
 
@@ -398,15 +400,14 @@ class CourseControllerTest {
                 )
         );
         when(aiCourseGenerationService.generatePreview(
-                anyLong(), anyInt(), anyInt(), anyString(), anyList(), anyString(), anyInt()
+                anyLong(), any(), anyString(), anyList(), anyString(), anyInt()
         )).thenReturn(preview);
 
         mockMvc.perform(post("/api/courses/ai-generate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "sidoCode": 1,
-                                  "gugunCode": 0,
+                                  "regionName": "강남역",
                                   "companion": "WITH_PARTNER",
                                   "themes": ["CAFE", "PHOTO"],
                                   "pace": "RELAXED"
@@ -425,15 +426,14 @@ class CourseControllerTest {
     @Test
     void generateAiCoursePassesCompanionLabel() throws Exception {
         when(aiCourseGenerationService.generatePreview(
-                anyLong(), anyInt(), anyInt(), anyString(), anyList(), anyString(), anyInt()
+                anyLong(), any(), anyString(), anyList(), anyString(), anyInt()
         )).thenReturn(new AiCoursePreview("타이틀", "이유", List.of()));
 
         mockMvc.perform(post("/api/courses/ai-generate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "sidoCode": 1,
-                                  "gugunCode": 0,
+                                  "regionName": "망원동",
                                   "companion": "ALONE",
                                   "themes": ["WALK"],
                                   "pace": "MODERATE"
@@ -443,24 +443,22 @@ class CourseControllerTest {
                 .andExpect(status().isOk());
 
         verify(aiCourseGenerationService).generatePreview(
-                eq(10L), eq(1), eq(0), eq("혼자"), anyList(), eq("알맞게"), eq(4)
+                eq(10L), eq("망원동"), eq("혼자"), anyList(), eq("알맞게"), eq(4)
         );
     }
 
-    @DisplayName("POST /api/courses/ai-generate는 sidoCode가 없으면 400을 반환한다")
+    @DisplayName("POST /api/courses/ai-generate는 regionName이 없으면 400을 반환한다")
     @Test
-    void generateAiCourseReturnsBadRequestWhenSidoCodeMissing() throws Exception {
+    void generateAiCourseReturnsBadRequestWhenRegionNameMissing() throws Exception {
         mockMvc.perform(post("/api/courses/ai-generate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "gugunCode": 0,
                                   "companion": "ALONE",
                                   "themes": ["WALK"],
                                   "pace": "MODERATE"
                                 }
-                                """)
-                        .principal(jwtPrincipal(10L)))
+                                """))
                 .andExpect(status().isBadRequest());
     }
 }

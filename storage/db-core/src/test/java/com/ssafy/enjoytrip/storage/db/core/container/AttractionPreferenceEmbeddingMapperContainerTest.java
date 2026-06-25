@@ -27,7 +27,7 @@ class AttractionPreferenceEmbeddingMapperContainerTest extends StorageContainerT
 
         List<AttractionEmbeddingCandidateRecord> results =
                 attractionMapper.findCandidatesByPreferenceEmbedding(
-                        1, null, vectorLiteral(1536), 20
+                        1, null, null, vectorLiteral(1536), 20
                 );
 
         List<Long> ids = results.stream()
@@ -49,7 +49,7 @@ class AttractionPreferenceEmbeddingMapperContainerTest extends StorageContainerT
 
         List<AttractionEmbeddingCandidateRecord> results =
                 attractionMapper.findCandidatesByPreferenceEmbedding(
-                        1, null, vectorLiteral(1536), 20
+                        1, null, null, vectorLiteral(1536), 20
                 );
 
         List<Long> ids = results.stream()
@@ -71,7 +71,7 @@ class AttractionPreferenceEmbeddingMapperContainerTest extends StorageContainerT
 
         List<AttractionEmbeddingCandidateRecord> results =
                 attractionMapper.findCandidatesByPreferenceEmbedding(
-                        1, 0, vectorLiteral(1536), 20
+                        1, 0, null, vectorLiteral(1536), 20
                 );
 
         List<Long> ids = results.stream()
@@ -91,10 +91,35 @@ class AttractionPreferenceEmbeddingMapperContainerTest extends StorageContainerT
 
         List<AttractionEmbeddingCandidateRecord> results =
                 attractionMapper.findCandidatesByPreferenceEmbedding(
-                        1, null, vectorLiteral(1536), 3
+                        1, null, null, vectorLiteral(1536), 3
                 );
 
         assertThat(results).hasSize(3);
+    }
+
+    @DisplayName("findCandidatesByPreferenceEmbedding은 regionName(동네)으로 필터링한다")
+    @Test
+    void findCandidatesByPreferenceEmbeddingFiltersByRegionName() {
+        long yeoksamAttractionId = 8800501L;
+        long dogokAttractionId = 8800502L;
+        seedAttraction(yeoksamAttractionId, "역삼동 관광지", 1, 1);
+        seedAttraction(dogokAttractionId, "도곡동 관광지", 1, 1);
+
+        jdbcTemplate.update("update attractions set addr2 = '도곡동' where id = ?", dogokAttractionId);
+
+        seedAttractionEmbedding(yeoksamAttractionId, vectorLiteral(1536), "EMBEDDED");
+        seedAttractionEmbedding(dogokAttractionId, vectorLiteral(1536), "EMBEDDED");
+
+        List<AttractionEmbeddingCandidateRecord> results =
+                attractionMapper.findCandidatesByPreferenceEmbedding(
+                        null, null, "도곡동", vectorLiteral(1536), 20
+                );
+
+        List<Long> ids = results.stream()
+                .map(AttractionEmbeddingCandidateRecord::getId)
+                .toList();
+        assertThat(ids).contains(dogokAttractionId);
+        assertThat(ids).doesNotContain(yeoksamAttractionId);
     }
 
     @DisplayName("findCandidatesByPreferenceEmbedding 결과는 id, title, addr1, contentTypeId, overview 필드를 반환한다")
@@ -106,7 +131,7 @@ class AttractionPreferenceEmbeddingMapperContainerTest extends StorageContainerT
 
         List<AttractionEmbeddingCandidateRecord> results =
                 attractionMapper.findCandidatesByPreferenceEmbedding(
-                        1, null, vectorLiteral(1536), 20
+                        1, null, null, vectorLiteral(1536), 20
                 );
 
         AttractionEmbeddingCandidateRecord record = results.stream()
@@ -115,6 +140,7 @@ class AttractionPreferenceEmbeddingMapperContainerTest extends StorageContainerT
                 .orElseThrow();
         assertThat(record.getTitle()).isEqualTo("경복궁");
         assertThat(record.getAddr1()).isNotNull();
+        assertThat(record.getAddr2()).isEqualTo("역삼동");
         assertThat(record.getContentTypeId()).isNotNull();
     }
 

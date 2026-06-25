@@ -87,9 +87,20 @@ public interface AttractionMapper {
     List<AttractionRecord> findByIds(@Param("ids") List<Long> ids);
 
     List<AttractionEmbeddingCandidateRecord> findCandidatesByPreferenceEmbedding(
-            @Param("sidoCode") int sidoCode,
+            @Param("sidoCode") Integer sidoCode,
             @Param("gugunCode") Integer gugunCode,
+            @Param("regionName") String regionName,
             @Param("preferenceEmbeddingLiteral") String preferenceEmbeddingLiteral,
+            @Param("limit") int limit
+    );
+
+    List<AttractionEmbeddingCandidateRecord> findCandidatesWithinRadius(
+            @Param("sidoCode") Integer sidoCode,
+            @Param("latitude") double latitude,
+            @Param("longitude") double longitude,
+            @Param("radiusMeters") double radiusMeters,
+            @Param("preferenceEmbeddingLiteral") String preferenceEmbeddingLiteral,
+            @Param("excludeId") long excludeId,
             @Param("limit") int limit
     );
 

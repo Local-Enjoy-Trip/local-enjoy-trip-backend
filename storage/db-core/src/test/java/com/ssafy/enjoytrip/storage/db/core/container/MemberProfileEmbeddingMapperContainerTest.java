@@ -50,6 +50,8 @@ class MemberProfileEmbeddingMapperContainerTest extends StorageContainerTestSupp
         assertThat(results).hasSize(2);
         assertThat(results).extracting(SavedAttractionInputRecord::getTitle)
                 .containsExactlyInAnyOrder("경복궁", "남산타워");
+        assertThat(results).extracting(SavedAttractionInputRecord::getAddr2)
+                .containsOnly("역삼동");
     }
 
     @DisplayName("findSavedNoteInputsByMemberId는 저장한 쪽지와 태그를 string_agg로 집계해 반환한다")

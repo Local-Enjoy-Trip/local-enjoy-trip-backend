@@ -75,6 +75,7 @@ abstract class StorageContainerTestSupport {
                     id,
                     title,
                     addr1,
+                    addr2,
                     read_count,
                     sido_code,
                     gugun_code,
@@ -82,9 +83,9 @@ abstract class StorageContainerTestSupport {
                     overview,
                     location
                 )
-                values (?, ?, ?, 10, ?, ?, '12', ?, ST_SetSRID(ST_MakePoint(126.9780, 37.5665), 4326))
+                values (?, ?, ?, ?, 10, ?, ?, '12', ?, ST_SetSRID(ST_MakePoint(126.9780, 37.5665), 4326))
                 on conflict (id) do nothing
-                """, id, title, "서울 중구", sidoCode, gugunCode, title + " overview");
+                """, id, title, "서울 중구", "역삼동", sidoCode, gugunCode, title + " overview");
     }
 
     @SpringBootConfiguration

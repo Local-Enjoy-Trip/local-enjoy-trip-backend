@@ -415,13 +415,42 @@
         SELECT a.id,
                a.title,
                a.addr1,
+               a.addr2,
                a.content_type_id AS contentTypeId,
-               a.overview
+               a.overview,
+               ST_Y(a.location) AS latitude,
+               ST_X(a.location) AS longitude
         FROM attractions a
         JOIN attraction_embeddings ae ON ae.attraction_id = a.id
         WHERE ae.status = 'EMBEDDED'
-          AND a.sido_code = #{sidoCode}
+          <if test="sidoCode != null">AND a.sido_code = #{sidoCode}</if>
           <if test="gugunCode != null and gugunCode != 0">AND a.gugun_code = #{gugunCode}</if>
+          <if test="regionName != null and regionName != ''">AND (a.addr2 LIKE CONCAT(#{regionName}, '%') OR a.addr1 LIKE CONCAT('%', #{regionName}, '%'))</if>
+        ORDER BY ae.embedding &lt;=&gt; #{preferenceEmbeddingLiteral}::vector
+        LIMIT #{limit}
+    </select>
+
+    <select id="findCandidatesWithinRadius"
+            resultType="com.ssafy.enjoytrip.storage.db.core.model.AttractionEmbeddingCandidateRecord">
+        SELECT a.id,
+               a.title,
+               a.addr1,
+               a.addr2,
+               a.content_type_id AS contentTypeId,
+               a.overview,
+               ST_Y(a.location) AS latitude,
+               ST_X(a.location) AS longitude
+        FROM attractions a
+        JOIN attraction_embeddings ae ON ae.attraction_id = a.id
+        WHERE ae.status = 'EMBEDDED'
+          <if test="sidoCode != null">AND a.sido_code = #{sidoCode}</if>
+          AND a.id != #{excludeId}
+          AND a.location IS NOT NULL
+          AND ST_DWithin(
+              a.location::geography,
+              ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326)::geography,
+              #{radiusMeters}
+          )
         ORDER BY ae.embedding &lt;=&gt; #{preferenceEmbeddingLiteral}::vector
         LIMIT #{limit}
     </select>
