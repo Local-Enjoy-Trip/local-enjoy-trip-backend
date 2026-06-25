@@ -397,7 +397,8 @@ class CourseControllerTest {
                 List.of(
                         new AiCoursePreview.Stop(101L, "카페 어니언", "서울 강남구", "http://img.jpg"),
                         new AiCoursePreview.Stop(102L, "루프탑 카페", "서울 강남구", null)
-                )
+                ),
+                List.of("감성카페", "강남")
         );
         when(aiCourseGenerationService.generatePreview(
                 anyLong(), any(), anyString(), anyList(), anyString(), anyInt()
@@ -427,7 +428,7 @@ class CourseControllerTest {
     void generateAiCoursePassesCompanionLabel() throws Exception {
         when(aiCourseGenerationService.generatePreview(
                 anyLong(), any(), anyString(), anyList(), anyString(), anyInt()
-        )).thenReturn(new AiCoursePreview("타이틀", "이유", List.of()));
+        )).thenReturn(new AiCoursePreview("타이틀", "이유", List.of(), List.of()));
 
         mockMvc.perform(post("/api/courses/ai-generate")
                         .contentType(MediaType.APPLICATION_JSON)

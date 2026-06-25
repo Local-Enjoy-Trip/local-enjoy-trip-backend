@@ -81,7 +81,7 @@ class AiCourseGenerationServiceTest {
         when(courseReader.hasMemberProfileEmbedding(1L)).thenReturn(false);
         when(memberProfileEmbeddingMapper.findProfileDescriptionByMemberId(1L)).thenReturn(null);
         when(aiCourseGenerationClient.generate(any())).thenReturn(
-                new AiCourseGenerationResult("감성 카페 투어", List.of(attractionId), "좋은 카페들")
+                new AiCourseGenerationResult("감성 카페 투어", List.of(attractionId), "좋은 카페들", List.of("감성카페"))
         );
         when(attractionMapper.findByIds(List.of(attractionId))).thenReturn(
                 List.of(attractionRecord(attractionId, "카페 어니언", "서울 강남구", "http://img.jpg"))
@@ -112,7 +112,7 @@ class AiCourseGenerationServiceTest {
         when(courseReader.hasMemberProfileEmbedding(1L)).thenReturn(false);
         when(memberProfileEmbeddingMapper.findProfileDescriptionByMemberId(1L)).thenReturn(null);
         when(aiCourseGenerationClient.generate(any())).thenReturn(
-                new AiCourseGenerationResult("코스", List.of(), "이유")
+                new AiCourseGenerationResult("코스", List.of(), "이유", List.of())
         );
 
         service.generatePreview(1L, "망원동", "친구와", List.of("맛집"), "알차게", 5);
@@ -136,7 +136,7 @@ class AiCourseGenerationServiceTest {
         when(courseReader.hasMemberProfileEmbedding(1L)).thenReturn(false);
         when(memberProfileEmbeddingMapper.findProfileDescriptionByMemberId(1L)).thenReturn(null);
         when(aiCourseGenerationClient.generate(any())).thenReturn(
-                new AiCourseGenerationResult("코스", List.of(), "이유")
+                new AiCourseGenerationResult("코스", List.of(), "이유", List.of())
         );
 
         service.generatePreview(1L, null, "혼자", List.of("산책"), "알맞게", 4);

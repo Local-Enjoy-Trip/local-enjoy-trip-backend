@@ -25,7 +25,6 @@ import com.ssafy.enjoytrip.core.domain.vo.Coordinate;
 import com.ssafy.enjoytrip.core.domain.vo.RatingStats;
 import com.ssafy.enjoytrip.core.domain.vo.TemperatureRange;
 import com.ssafy.enjoytrip.core.domain.vo.DateRange;
-import com.ssafy.enjoytrip.core.domain.service.TagService;
 import com.ssafy.enjoytrip.core.domain.PopularAttractionResult;
 import com.ssafy.enjoytrip.core.domain.WeatherForecast;
 import com.ssafy.enjoytrip.core.domain.WeatherSummary;
@@ -100,8 +99,6 @@ class ControllerBehaviorTest {
     private OAuthSignupTicketService oauthSignupTicketService;
     private AttractionService attractionService;
     private AttractionStatsService attractionStatsService;
-    private TagService tagService;
-
     private WeatherService weatherService;
     private NeighborhoodBriefingService neighborhoodBriefingService;
     private NoteImageUploadService noteImageUploadService;
@@ -119,8 +116,6 @@ class ControllerBehaviorTest {
         oauthSignupTicketService = mock(OAuthSignupTicketService.class);
         attractionService = mock(AttractionService.class);
         attractionStatsService = mock(AttractionStatsService.class);
-        tagService = mock(TagService.class);
-
         weatherService = mock(WeatherService.class);
         neighborhoodBriefingService = mock(NeighborhoodBriefingService.class);
         noteImageUploadService = mock(NoteImageUploadService.class);
@@ -131,8 +126,6 @@ class ControllerBehaviorTest {
                         new MemberController(memberService, tokenService, oauthSignupTicketService),
                         new MemberProfileImageController(memberProfileImageService),
                         new AttractionController(attractionService, attractionStatsService),
-                        new TagController(tagService),
-
                         new NeighborhoodBriefingController(neighborhoodBriefingService, weatherService),
                         new MapController(mapExploreService, mapSearchService),
                         new NoteImageController(noteImageUploadService),

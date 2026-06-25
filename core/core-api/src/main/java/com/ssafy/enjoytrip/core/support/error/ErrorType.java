@@ -14,9 +14,7 @@ public enum ErrorType {
             WARN
     ),
     ATTRACTION_NOT_FOUND(ErrorCode.A001, HttpStatus.NOT_FOUND, "관광지를 찾을 수 없습니다.", WARN),
-    TAG_NOT_FOUND(ErrorCode.A002, HttpStatus.NOT_FOUND, "태그를 찾을 수 없습니다.", WARN),
-    TAG_ALREADY_EXISTS(ErrorCode.A003, HttpStatus.CONFLICT, "이미 존재하는 태그입니다.", WARN),
-    COURSE_NOT_FOUND(ErrorCode.P003, HttpStatus.NOT_FOUND, "코스를 찾을 수 없습니다.", WARN),
+COURSE_NOT_FOUND(ErrorCode.P003, HttpStatus.NOT_FOUND, "코스를 찾을 수 없습니다.", WARN),
     COURSE_ACCESS_DENIED(
             ErrorCode.P004,
             HttpStatus.FORBIDDEN,

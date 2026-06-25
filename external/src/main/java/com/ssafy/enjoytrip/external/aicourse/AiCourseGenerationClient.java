@@ -19,12 +19,17 @@ public class AiCourseGenerationClient {
             주어진 후보 관광지 목록에서만 장소를 선택하세요.
             요청한 장소 수를 반드시 지키세요.
             반드시 아래 JSON 형식으로만 응답하세요:
-            {"title": "...", "attractionIds": [...], "reason": "..."}
+            {"title": "...", "attractionIds": [...], "reason": "...", "tags": ["...", "..."]}
 
             title 규칙:
             - 코스를 대표하는 짧고 자연스러운 한국어 제목만 작성하세요.
             - 숫자(장소 수), 속도, 지역 코드, 괄호 안 부가 설명은 절대 포함하지 마세요.
             - 예시: "연인과 성수동 감성 카페 투어", "혼자 떠나는 북촌 골목 산책"
+
+            tags 규칙:
+            - 이 코스를 잘 설명하는 한국어 해시태그를 2~5개 작성하세요.
+            - # 기호 없이 단어나 짧은 구문만 작성하세요.
+            - 예시: ["감성카페", "성수동", "연인", "도보여행"]
             """;
 
     private final ObjectProvider<ChatClient.Builder> chatClientBuilderProvider;
@@ -82,7 +87,17 @@ public class AiCourseGenerationClient {
                 attractionIds.add(idNode.longValue());
             }
 
-            return new AiCourseGenerationResult(title, attractionIds, reason);
+            List<String> tags = new ArrayList<>();
+            JsonNode tagsNode = root.get("tags");
+            if (tagsNode != null && tagsNode.isArray()) {
+                for (JsonNode tagNode : tagsNode) {
+                    if (tagNode.isTextual()) {
+                        tags.add(tagNode.asText());
+                    }
+                }
+            }
+
+            return new AiCourseGenerationResult(title, attractionIds, reason, tags);
         } catch (JsonProcessingException exception) {
             throw new AiCourseGenerationException(
                     AiCourseGenerationException.Reason.MALFORMED_RESPONSE,

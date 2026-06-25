@@ -40,6 +40,7 @@ import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseInvitationMapper
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteTagMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.TagMapper;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,7 +77,7 @@ class CourseServiceTest {
         CourseInvitationMapper courseInvitationMapper = Mockito.mock(CourseInvitationMapper.class);
         service = new CourseService(
                 new CourseReader(courseMapper, courseInvitationMapper),
-                new CourseWriter(courseMapper, courseEmbeddingMapper, stopPointResolver, routePlanner),
+                new CourseWriter(courseMapper, courseEmbeddingMapper, stopPointResolver, routePlanner, Mockito.mock(TagMapper.class)),
                 new AiCourseOrderOptimizer(
                         new CourseOrderPreviewReader(attractionMapper, noteMapper),
                         routePlanner,

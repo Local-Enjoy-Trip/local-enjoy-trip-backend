@@ -67,7 +67,7 @@ public class AiCourseGenerationService {
         }
 
         if (firstStopCandidates.isEmpty()) {
-            return new AiCoursePreview("", "", List.of());
+            return new AiCoursePreview("", "", List.of(), List.of());
         }
 
         AttractionEmbeddingCandidateRecord firstStop = firstStopCandidates.get(0);
@@ -230,7 +230,7 @@ public class AiCourseGenerationService {
                 .map(id -> toStop(id, attractionById, candidates))
                 .toList();
 
-        return new AiCoursePreview(result.title(), result.reason(), stops);
+        return new AiCoursePreview(result.title(), result.reason(), stops, result.tags());
     }
 
     private String resolveRegionName(String regionName, List<AttractionEmbeddingCandidateRecord> candidates) {

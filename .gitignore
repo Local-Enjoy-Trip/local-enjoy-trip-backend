@@ -15,8 +15,6 @@ Thumbs.db
 
 .omx/
 
-# AI service will move to a separate repository later.
-ai/
 
 .env
 .env.*

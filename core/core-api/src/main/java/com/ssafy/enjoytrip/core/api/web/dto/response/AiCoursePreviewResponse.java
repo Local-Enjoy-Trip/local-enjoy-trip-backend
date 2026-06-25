@@ -6,7 +6,8 @@ import java.util.List;
 public record AiCoursePreviewResponse(
         String title,
         String reason,
-        List<StopPreview> stops
+        List<StopPreview> stops,
+        List<String> tags
 ) {
     public record StopPreview(
             long attractionId,
@@ -19,6 +20,6 @@ public record AiCoursePreviewResponse(
         List<StopPreview> stops = preview.stops().stream()
                 .map(s -> new StopPreview(s.attractionId(), s.title(), s.addr1(), s.firstImage()))
                 .toList();
-        return new AiCoursePreviewResponse(preview.title(), preview.reason(), stops);
+        return new AiCoursePreviewResponse(preview.title(), preview.reason(), stops, preview.tags());
     }
 }

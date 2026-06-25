@@ -3,8 +3,6 @@ package com.ssafy.enjoytrip.core.api.web.dto.request;
 import com.ssafy.enjoytrip.core.domain.Course;
 import com.ssafy.enjoytrip.core.domain.CourseStop;
 import com.ssafy.enjoytrip.core.domain.CourseTag;
-import com.ssafy.enjoytrip.core.support.error.CoreException;
-import com.ssafy.enjoytrip.core.support.error.ErrorType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
@@ -16,7 +14,7 @@ public record CourseCreateRequest(
         String regionName,
         String date,
         List<@Valid CourseItemRequest> items,
-        List<Long> tagIds
+        List<String> tags
 ) {
     public Course toCourse(Long ownerMemberId) {
         return new Course(
@@ -45,12 +43,14 @@ public record CourseCreateRequest(
     }
 
     private List<CourseTag> toCourseTags() {
-        if (tagIds == null) {
+        if (tags == null) {
             return List.of();
         }
-        return tagIds.stream()
+        return tags.stream()
+                .map(String::strip)
+                .filter(name -> !name.isBlank())
                 .distinct()
-                .map(id -> new CourseTag(id, null))
+                .map(name -> new CourseTag(null, name))
                 .toList();
     }
 
@@ -61,3 +61,4 @@ public record CourseCreateRequest(
         return value.strip();
     }
 }
+

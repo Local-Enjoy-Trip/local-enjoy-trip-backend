@@ -8,6 +8,7 @@ import com.ssafy.enjoytrip.storage.db.core.model.CourseItemRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseEmbeddingMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
+import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.TagMapper;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class CourseWriter {
     private final CourseEmbeddingMapper courseEmbeddingMapper;
     private final CourseStopPointResolver courseStopPointResolver;
     private final CourseRoutePlanner courseRoutePlanner;
+    private final TagMapper tagMapper;
 
     @Transactional
     public Course create(Course course) {
@@ -91,7 +93,13 @@ public class CourseWriter {
 
     private void saveCourseTags(String courseId, List<CourseTag> tags) {
         for (CourseTag tag : tags) {
-            courseMapper.insertCourseTag(courseId, tag.tagId());
+            Long tagId = tag.tagId();
+            if (tagId == null && tag.tagName() != null) {
+                tagId = tagMapper.insert(tag.tagName()).id();
+            }
+            if (tagId != null) {
+                courseMapper.insertCourseTag(courseId, tagId);
+            }
         }
     }
 
