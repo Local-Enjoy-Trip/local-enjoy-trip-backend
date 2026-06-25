@@ -78,6 +78,7 @@ public class NoteController implements NoteApi {
     }
 
     @PutMapping("/{id}/tags")
+    @Override
     public ApiResponse<Void> updateTags(
             @PathVariable Long id,
             @Valid @RequestBody NoteUpdateTagsRequest request,

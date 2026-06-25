@@ -4,6 +4,7 @@ import com.ssafy.enjoytrip.core.support.response.ApiResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NearbySectionRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteCreateRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateRequest;
+import com.ssafy.enjoytrip.core.api.web.dto.request.NoteUpdateTagsRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.request.SavedNotesRequest;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NoteResponse;
 import com.ssafy.enjoytrip.core.api.web.dto.response.NotesResponse;
@@ -190,6 +191,31 @@ public interface NoteApi {
     })
     ApiResponse<NotesResponse> nearby(
             @ParameterObject NearbySectionRequest request,
+            @Parameter(hidden = true) Long memberId
+    );
+
+    @Operation(
+            summary = "쪽지 태그 수정",
+            description = "작성자 본인의 쪽지 태그를 일괄 수정합니다.",
+            operationId = "updateNoteTags",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = NoteUpdateTagsRequest.class)
+                    )
+            )
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "쪽지 태그 수정 성공",
+                    content = @Content(mediaType = "application/json")
+            )
+    })
+    ApiResponse<Void> updateTags(
+            @Parameter(description = "쪽지 ID", example = "1", required = true) Long id,
+            NoteUpdateTagsRequest request,
             @Parameter(hidden = true) Long memberId
     );
 }

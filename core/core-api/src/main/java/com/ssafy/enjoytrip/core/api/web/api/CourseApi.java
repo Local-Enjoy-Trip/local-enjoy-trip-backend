@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
 
 @Tag(name = "Courses", description = "코스 피드, 추천, 생성, 수정, 삭제 API")
 public interface CourseApi {
@@ -102,7 +103,7 @@ public interface CourseApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "코스 없음")
     })
     ApiResponse<CourseResponse> detail(
-            @Parameter(description = "코스 ID", example = "c1") String id,
+            @Parameter(description = "코스 ID", example = "c1") @NotBlank String id,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
 
@@ -188,7 +189,7 @@ public interface CourseApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "코스 없음")
     })
     ApiResponse<CourseResponse> update(
-            @Parameter(description = "코스 ID", example = "c1") String id,
+            @Parameter(description = "코스 ID", example = "c1") @NotBlank String id,
             CourseUpdateRequest request,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
@@ -222,7 +223,7 @@ public interface CourseApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "코스 없음")
     })
     ApiResponse<CourseResponse> recommendOrder(
-            @Parameter(description = "코스 ID", example = "c1") String id,
+            @Parameter(description = "코스 ID", example = "c1") @NotBlank String id,
             CourseOrderRecommendationRequest request,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
@@ -246,7 +247,7 @@ public interface CourseApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "코스 없음")
     })
     ApiResponse<Void> save(
-            @Parameter(description = "코스 ID", example = "c1") String id,
+            @Parameter(description = "코스 ID", example = "c1") @NotBlank String id,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
 
@@ -269,7 +270,7 @@ public interface CourseApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "코스 없음")
     })
     ApiResponse<Void> unsave(
-            @Parameter(description = "코스 ID", example = "c1") String id,
+            @Parameter(description = "코스 ID", example = "c1") @NotBlank String id,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
 
@@ -293,7 +294,7 @@ public interface CourseApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "코스 없음")
     })
     ApiResponse<Void> delete(
-            @Parameter(description = "코스 ID", example = "c1") String id,
+            @Parameter(description = "코스 ID", example = "c1") @NotBlank String id,
             @Parameter(hidden = true) Long authenticatedMemberId
     );
 }

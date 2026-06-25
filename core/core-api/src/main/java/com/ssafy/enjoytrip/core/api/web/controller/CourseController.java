@@ -42,11 +42,13 @@ public class CourseController implements CourseApi {
     private final CourseService courseService;
 
     @GetMapping("/feed")
+    @Override
     public ApiResponse<CourseFeedResponse> feed(@Valid @ModelAttribute CourseFeedRequest request) {
         return success(CourseFeedResponse.from(courseService.findPublicFeed(request.toCondition())));
     }
 
     @GetMapping("/recommendations")
+    @Override
     public ApiResponse<CourseFeedResponse> recommendations(
             @Valid @ModelAttribute CourseRecommendationRequest request,
             @AuthenticatedMemberId Long authenticatedMemberId) {
@@ -60,6 +62,7 @@ public class CourseController implements CourseApi {
     }
 
     @GetMapping("/feed/popular")
+    @Override
     public ApiResponse<CourseFeedResponse> popularFeed(@Valid @ModelAttribute CoursePopularFeedRequest request) {
         return success(CourseFeedResponse.from(
                 courseService.findPopularByRegion(request.normalizedRegionName(), request.resolvedLimit())
@@ -67,15 +70,17 @@ public class CourseController implements CourseApi {
     }
 
     @GetMapping("/{id}")
+    @Override
     public ApiResponse<CourseResponse> detail(
-            @PathVariable @NotBlank String id,
-            @AuthenticatedMemberId(unauthenticated = NULL) Long authenticatedMemberId
+            @PathVariable String id,
+            @AuthenticatedMemberId(unauthenticated = AuthenticatedMemberId.Unauthenticated.NULL) Long authenticatedMemberId
     ) {
         Course course = courseService.view(id.strip(), authenticatedMemberId);
         return success(CourseResponse.from(course));
     }
 
     @GetMapping("/me")
+    @Override
     public ApiResponse<CoursesResponse> mine(@AuthenticatedMemberId Long authenticatedMemberId) {
         List<CourseResponse> courses = courseService.findMyCourses(authenticatedMemberId).stream()
                 .map(CourseResponse::from)
@@ -84,6 +89,7 @@ public class CourseController implements CourseApi {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Override
     public ApiResponse<CourseResponse> create(@Valid @RequestBody CourseCreateRequest request,
                                               @AuthenticatedMemberId Long authenticatedMemberId) {
         Course created = courseService.createCourse(request.toCourse(authenticatedMemberId));
@@ -91,7 +97,8 @@ public class CourseController implements CourseApi {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse<CourseResponse> update(@PathVariable @NotBlank String id,
+    @Override
+    public ApiResponse<CourseResponse> update(@PathVariable String id,
                                               @Valid @RequestBody CourseUpdateRequest request,
                                               @AuthenticatedMemberId Long authenticatedMemberId) {
         Course updated = courseService.updateCourse(
@@ -102,7 +109,8 @@ public class CourseController implements CourseApi {
     }
 
     @PostMapping("/{id}/order-recommendation")
-    public ApiResponse<CourseResponse> recommendOrder(@PathVariable @NotBlank String id,
+    @Override
+    public ApiResponse<CourseResponse> recommendOrder(@PathVariable String id,
                                                       @Valid @RequestBody(required = false)
                                                       CourseOrderRecommendationRequest request,
                                                       @AuthenticatedMemberId Long authenticatedMemberId) {
@@ -119,21 +127,24 @@ public class CourseController implements CourseApi {
     }
 
     @PostMapping("/{id}/save")
-    public ApiResponse<Void> save(@PathVariable @NotBlank String id,
+    @Override
+    public ApiResponse<Void> save(@PathVariable String id,
                                   @AuthenticatedMemberId Long authenticatedMemberId) {
         courseService.saveCourse(authenticatedMemberId, id.strip());
         return success();
     }
 
     @DeleteMapping("/{id}/save")
-    public ApiResponse<Void> unsave(@PathVariable @NotBlank String id,
+    @Override
+    public ApiResponse<Void> unsave(@PathVariable String id,
                                     @AuthenticatedMemberId Long authenticatedMemberId) {
         courseService.unsaveCourse(authenticatedMemberId, id.strip());
         return success();
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable @NotBlank String id,
+    @Override
+    public ApiResponse<Void> delete(@PathVariable String id,
                                     @AuthenticatedMemberId Long authenticatedMemberId) {
         courseService.deleteCourse(authenticatedMemberId, id.strip());
         return success();
