@@ -55,7 +55,7 @@ jobs:
           docker build -t enjoytrip-postgis-pgvector:17-3.5 ./infra/postgres-vector
 
       - name: Run Integration Tests (with Testcontainers)
-        run: ./gradlew test -PincludeContainerTests=true
+        run: ./gradlew integrationTest
 
   build:
     name: Build BootJar

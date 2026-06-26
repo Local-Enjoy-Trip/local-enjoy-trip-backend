@@ -163,6 +163,7 @@ public class MemberController implements MemberApi {
 
     private static UserResponse toUserResponse(Member member) {
         return new UserResponse(
+                String.valueOf(member.memberId()),
                 member.name(),
                 member.nickname(),
                 member.email(),

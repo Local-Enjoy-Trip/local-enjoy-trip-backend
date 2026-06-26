@@ -17,17 +17,21 @@ dependencies {
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
-def includeContainerTests = providers.gradleProperty("includeContainerTests")
-        .map { it.toBoolean() }
-        .orElse(false)
-
 tasks.named("test") {
     useJUnitPlatform {
-        if (includeContainerTests.get()) {
-            includeTags "container"
-        } else {
-            excludeTags "suite", "container", "slow", "postgis", "pgvector"
-        }
+        excludeTags "suite", "container", "slow", "postgis", "pgvector"
+        excludeEngines "junit-platform-suite"
+    }
+}
+
+tasks.register("integrationTest", Test) {
+    description = "Runs container-based integration tests (Testcontainers)."
+    group = "verification"
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    shouldRunAfter tasks.named("test")
+    useJUnitPlatform {
+        includeTags "container"
         excludeEngines "junit-platform-suite"
     }
 }
