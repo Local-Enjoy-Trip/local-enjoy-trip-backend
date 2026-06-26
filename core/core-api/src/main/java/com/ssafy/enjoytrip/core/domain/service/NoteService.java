@@ -334,6 +334,8 @@ public class NoteService {
     }
 
     private NoteMapPin toNoteMapPin(NoteMapPinRecord record, int matchTier) {
+        String objectKey = record.imageObjectKey();
+        String imageUrl = objectKey != null ? noteImageUploadUrlGenerator.publicUrl(objectKey) : null;
         return new NoteMapPin(
                 record.id(),
                 record.title(),
@@ -343,7 +345,8 @@ public class NoteService {
                 record.longitude().doubleValue(),
                 record.regionName(),
                 record.distanceMeters(),
-                record.imageObjectKey(),
+                objectKey,
+                imageUrl,
                 record.authorNickname(),
                 record.authorProfileImageUrl(),
                 NoteViewerRelationship.valueOf(record.relationship()),

@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
 
 import com.ssafy.enjoytrip.core.domain.MapExploreFilter;
+import com.ssafy.enjoytrip.external.minio.MinioNoteImageUploadUrlGenerator;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.NoteMapper;
 import java.util.List;
@@ -23,7 +24,8 @@ class MapExploreServiceTest {
     void savedPlaceFilterDelegatesSavedOnlyPlaceLookup() {
         AttractionMapper attractionMapper = mock(AttractionMapper.class);
         NoteMapper noteMapper = mock(NoteMapper.class);
-        MapExploreService service = new MapExploreService(attractionMapper, noteMapper);
+        MinioNoteImageUploadUrlGenerator noteImageUploadUrlGenerator = mock(MinioNoteImageUploadUrlGenerator.class);
+        MapExploreService service = new MapExploreService(attractionMapper, noteMapper, noteImageUploadUrlGenerator);
 
         when(attractionMapper.findNearby(
                 eq(126.9780),

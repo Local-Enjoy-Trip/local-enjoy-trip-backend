@@ -7,6 +7,7 @@ import com.ssafy.enjoytrip.core.domain.NoteMapPin;
 import com.ssafy.enjoytrip.core.domain.NoteVisibility;
 import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
 import com.ssafy.enjoytrip.core.domain.PlaceMapPin;
+import com.ssafy.enjoytrip.external.minio.MinioNoteImageUploadUrlGenerator;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class MapSearchService {
     private final NoteMapper noteMapper;
     private final AttractionMapper attractionMapper;
+    private final MinioNoteImageUploadUrlGenerator noteImageUploadUrlGenerator;
 
     public List<MapPin> search(
             String keyword,
@@ -122,6 +124,8 @@ public class MapSearchService {
         List<MapPin> pins = new ArrayList<>();
         for (NoteMapPinRecord r : records) {
             int matchTier = r.title().equalsIgnoreCase(keyword) ? 0 : 1;
+            String objectKey = r.imageObjectKey();
+            String imageUrl = objectKey != null ? noteImageUploadUrlGenerator.publicUrl(objectKey) : null;
             pins.add(new NoteMapPin(
                     r.id(),
                     r.title(),
@@ -131,7 +135,8 @@ public class MapSearchService {
                     r.longitude().doubleValue(),
                     r.regionName(),
                     r.distanceMeters(),
-                    r.imageObjectKey(),
+                    objectKey,
+                    imageUrl,
                     r.authorNickname(),
                     r.authorProfileImageUrl(),
                     NoteViewerRelationship.valueOf(r.relationship()),

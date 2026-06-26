@@ -8,6 +8,7 @@ import com.ssafy.enjoytrip.core.domain.NoteMapPin;
 import com.ssafy.enjoytrip.core.domain.NoteVisibility;
 import com.ssafy.enjoytrip.core.domain.NoteViewerRelationship;
 import com.ssafy.enjoytrip.core.domain.PlaceMapPin;
+import com.ssafy.enjoytrip.external.minio.MinioNoteImageUploadUrlGenerator;
 import com.ssafy.enjoytrip.storage.db.core.model.AttractionSearchRecord;
 import com.ssafy.enjoytrip.storage.db.core.model.NoteMapPinRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.AttractionMapper;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class MapExploreService {
     private final AttractionMapper attractionMapper;
     private final NoteMapper noteMapper;
+    private final MinioNoteImageUploadUrlGenerator noteImageUploadUrlGenerator;
 
     public MapExploreResult explore(
             Long viewerMemberId,
@@ -145,22 +147,27 @@ public class MapExploreService {
 
     private List<NoteMapPin> toNotePins(List<NoteMapPinRecord> records) {
         return records.stream()
-                .map(r -> new NoteMapPin(
-                        r.id(),
-                        r.title(),
-                        NoteCategory.valueOf(r.category()),
-                        NoteVisibility.valueOf(r.visibility()),
-                        r.latitude().doubleValue(),
-                        r.longitude().doubleValue(),
-                        r.regionName(),
-                        r.distanceMeters(),
-                        r.imageObjectKey(),
-                        r.authorNickname(),
-                        r.authorProfileImageUrl(),
-                        NoteViewerRelationship.valueOf(r.relationship()),
-                        r.createdAt(),
-                        0
-                ))
+                .map(r -> {
+                    String objectKey = r.imageObjectKey();
+                    String imageUrl = objectKey != null ? noteImageUploadUrlGenerator.publicUrl(objectKey) : null;
+                    return new NoteMapPin(
+                            r.id(),
+                            r.title(),
+                            NoteCategory.valueOf(r.category()),
+                            NoteVisibility.valueOf(r.visibility()),
+                            r.latitude().doubleValue(),
+                            r.longitude().doubleValue(),
+                            r.regionName(),
+                            r.distanceMeters(),
+                            objectKey,
+                            imageUrl,
+                            r.authorNickname(),
+                            r.authorProfileImageUrl(),
+                            NoteViewerRelationship.valueOf(r.relationship()),
+                            r.createdAt(),
+                            0
+                    );
+                })
                 .toList();
     }
 }

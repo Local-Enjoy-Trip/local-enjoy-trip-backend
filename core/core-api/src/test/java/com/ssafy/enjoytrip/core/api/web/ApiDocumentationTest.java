@@ -406,7 +406,7 @@ class ApiDocumentationTest {
                         500.0,
                         MapExploreFilter.ALL,
                         List.of(new PlaceMapPin(125405L, "경복궁", "서울 중구", 37.579617, 126.977041, "https://cdn.example.com/place.png", "12", 1450.2, true, 12, 4.5, 8, 0)),
-                        List.of(new NoteMapPin(1L, "서울 산책 메모", NoteCategory.TIP, NoteVisibility.PUBLIC, 37.5665, 126.9780, "서울 중구", 42.0, null, "동네핀러", null, NoteViewerRelationship.NONE, LocalDateTime.of(2026, 6, 22, 10, 0, 0), 1))
+                        List.of(new NoteMapPin(1L, "서울 산책 메모", NoteCategory.TIP, NoteVisibility.PUBLIC, 37.5665, 126.9780, "서울 중구", 42.0, null, null, "동네핀러", null, NoteViewerRelationship.NONE, LocalDateTime.of(2026, 6, 22, 10, 0, 0), 1))
                 ));
 
         mockMvc.perform(get("/api/map/explore")
@@ -428,7 +428,7 @@ class ApiDocumentationTest {
         when(mapSearchService.search(anyString(), anyDouble(), anyDouble(), any(), any(), any(), anyInt(), eq(11L)))
                 .thenReturn(List.of(
                         new PlaceMapPin(125405L, "경복궁", "서울 중구", 37.579617, 126.977041, "https://cdn.example.com/place.png", "12", 1450.2, true, 12, 4.5, 8, 0),
-                        new NoteMapPin(1L, "서울 산책 메모", NoteCategory.TIP, NoteVisibility.PUBLIC, 37.5665, 126.9780, "서울 중구", 42.0, null, "동네핀러", null, NoteViewerRelationship.NONE, LocalDateTime.of(2026, 6, 22, 10, 0, 0), 1)
+                        new NoteMapPin(1L, "서울 산책 메모", NoteCategory.TIP, NoteVisibility.PUBLIC, 37.5665, 126.9780, "서울 중구", 42.0, null, null, "동네핀러", null, NoteViewerRelationship.NONE, LocalDateTime.of(2026, 6, 22, 10, 0, 0), 1)
                 ));
 
         mockMvc.perform(get("/api/map/search")
