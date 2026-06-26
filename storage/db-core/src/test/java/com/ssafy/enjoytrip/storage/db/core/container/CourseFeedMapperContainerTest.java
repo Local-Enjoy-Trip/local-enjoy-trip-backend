@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ssafy.enjoytrip.storage.db.core.model.CourseRecord;
 import com.ssafy.enjoytrip.storage.db.core.mybatis.mapper.CourseMapper;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,12 @@ class CourseFeedMapperContainerTest extends StorageContainerTestSupport {
 
     @Autowired
     private CourseMapper courseMapper;
+
+    @BeforeEach
+    void clearCourses() {
+        jdbcTemplate.update("delete from course_saves");
+        jdbcTemplate.update("delete from courses");
+    }
 
     @DisplayName("공개 코스 피드는 거리순으로 정렬된다")
     @Test
