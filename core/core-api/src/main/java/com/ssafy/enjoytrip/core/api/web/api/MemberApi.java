@@ -41,12 +41,12 @@ public interface MemberApi {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
-                    description = "이메일 형식 오류 또는 빈 값"
+                    description = "빈 값"
             )
     })
     ApiResponse<UsersResponse> searchByEmail(
             @Parameter(description = "검색할 이메일 키워드 (앞부분 일치)", required = true)
-            @NotBlank @Email String email
+            @NotBlank String email
     );
 
     @Operation(

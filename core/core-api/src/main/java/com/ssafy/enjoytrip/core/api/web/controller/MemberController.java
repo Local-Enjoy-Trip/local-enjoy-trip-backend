@@ -46,7 +46,7 @@ public class MemberController implements MemberApi {
     @GetMapping("/search")
     @Override
     public ApiResponse<UsersResponse> searchByEmail(
-            @RequestParam @NotBlank @Email String email
+            @RequestParam @NotBlank String email
     ) {
         List<UserResponse> users = service.searchByEmail(email)
                 .stream()
