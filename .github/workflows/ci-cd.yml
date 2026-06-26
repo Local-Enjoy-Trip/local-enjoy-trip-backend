@@ -9,9 +9,10 @@ on:
       - main
 
 jobs:
-  # 1. 단위 + 통합 테스트를 한 번에 실행 (PR/push 공통 게이트)
+  # PR 올릴 때만 실행 — 단위 + 통합 테스트 게이트
   check:
     name: Test (unit + integration)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -33,10 +34,10 @@ jobs:
       - name: Run all tests
         run: ./gradlew test integrationTest
 
+  # main 머지(push) 때만 실행 — PR에서 이미 검증 완료
   build:
     name: Build BootJar
-    needs: check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -62,11 +63,10 @@ jobs:
           path: core/core-api/build/libs/core-api-*.jar
           retention-days: 1
 
-  # 3. CD 배포 단계 (통합 테스트와 빌드가 모두 성공했을 때 실행)
   deploy:
     name: Deploy to EC2
-    needs: [check, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
