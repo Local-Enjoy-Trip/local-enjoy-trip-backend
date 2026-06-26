@@ -262,6 +262,13 @@ public class NoteService {
         }
     }
 
+    public Note findAccessibleNote(Long noteId, Long viewerMemberId) {
+        Note note = findNoteById(noteId)
+                .orElseThrow(() -> new CoreException(NOTE_NOT_FOUND));
+        requireAccessibleActiveNote(noteId, viewerMemberId);
+        return note;
+    }
+
     private Optional<Note> findNoteById(Long id) {
         if (id == null) {
             return Optional.empty();

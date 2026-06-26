@@ -35,6 +35,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class NoteController implements NoteApi {
     private final NoteService service;
 
+    @GetMapping("/{id}")
+    @Override
+    public ApiResponse<NoteResponse> get(@PathVariable Long id,
+                                         @AuthenticatedMemberId(unauthenticated = NULL) Long memberId) {
+        Note note = service.findAccessibleNote(id, memberId);
+
+        return success(new NoteResponse(note));
+    }
+
     @PostMapping
     @Override
     public ApiResponse<NoteResponse> create(@RequestBody NoteCreateRequest request,

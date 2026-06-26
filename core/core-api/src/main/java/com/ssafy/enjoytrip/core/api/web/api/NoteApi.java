@@ -25,6 +25,33 @@ import org.springdoc.core.annotations.ParameterObject;
 public interface NoteApi {
 
     @Operation(
+            summary = "쪽지 단건 조회",
+            description = """
+                    쪽지 ID로 단건을 조회합니다.
+
+                    - 비인증 사용자는 PUBLIC 쪽지만 볼 수 있습니다.
+                    - 인증 사용자는 PUBLIC, 본인 PRIVATE/FRIENDS, 친구의 FRIENDS 쪽지를 볼 수 있습니다.
+                    - 존재하지 않거나 접근 불가한 쪽지는 404를 반환합니다.
+                    """,
+            operationId = "getNote"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "쪽지 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = NoteResponse.class),
+                            examples = @ExampleObject(value = ApiExamples.NOTE_RESPONSE)
+                    )
+            )
+    })
+    ApiResponse<NoteResponse> get(
+            @Parameter(description = "조회할 쪽지 ID", example = "1", required = true) Long id,
+            @Parameter(hidden = true) Long memberId
+    );
+
+    @Operation(
             summary = "쪽지 생성",
             description = "인증 사용자가 지도 좌표에 쪽지를 생성합니다.",
             operationId = "createNote",
