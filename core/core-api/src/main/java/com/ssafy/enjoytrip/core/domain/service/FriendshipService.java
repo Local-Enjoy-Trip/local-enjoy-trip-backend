@@ -35,8 +35,8 @@ public class FriendshipService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public Friendship requestFriendship(Long requesterMemberId, String targetEmail) {
-        MemberRecord target = findRequiredMemberByEmail(targetEmail);
+    public Friendship requestFriendship(Long requesterMemberId, Long targetUserId) {
+        MemberRecord target = findRequiredMemberById(targetUserId);
         Friendship.validateRequestableMembers(requesterMemberId, target.getId());
         if (existsActiveBetween(requesterMemberId, target.getId())) {
             throw new CoreException(FRIENDSHIP_ALREADY_ACTIVE);
@@ -171,8 +171,8 @@ public class FriendshipService {
         );
     }
 
-    private MemberRecord findRequiredMemberByEmail(String email) {
-        MemberRecord member = memberMapper.findByEmail(email);
+    private MemberRecord findRequiredMemberById(Long memberId) {
+        MemberRecord member = memberMapper.findById(memberId);
         if (member == null) {
             throw new CoreException(USER_NOT_FOUND);
         }

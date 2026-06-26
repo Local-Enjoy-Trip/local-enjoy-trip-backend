@@ -35,7 +35,7 @@ public class FriendshipController implements FriendshipApi {
     ) {
         Friendship friendship = friendshipService.requestFriendship(
                 memberId,
-                request.targetEmail()
+                request.targetUserId()
         );
         return success(FriendshipMutationResponse.from(friendship));
     }

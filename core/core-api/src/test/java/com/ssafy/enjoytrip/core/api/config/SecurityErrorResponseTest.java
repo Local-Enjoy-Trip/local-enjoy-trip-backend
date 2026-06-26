@@ -58,7 +58,7 @@ class SecurityErrorResponseTest {
     void postAuthenticationFailureUsesSecurityEntryPoint() throws Exception {
         mockMvc.perform(post("/api/friendships/requests")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"targetEmail\":\"bob\"}"))
+                        .content("{\"targetUserId\":2}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.code").value("S401"))

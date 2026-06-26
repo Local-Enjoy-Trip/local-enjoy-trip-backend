@@ -40,11 +40,10 @@ class FriendshipServiceTest {
         }).when(friendshipMapper).insert(any(FriendshipRecord.class));
 
         MemberRecord addressee = member(2L, "bob@example.com", "bob");
-        when(memberMapper.findByEmail("bob@example.com")).thenReturn(addressee);
         when(memberMapper.findById(1L)).thenReturn(member(1L, "alice@example.com", "alice"));
         when(memberMapper.findById(2L)).thenReturn(addressee);
 
-        service.requestFriendship(1L, "bob@example.com");
+        service.requestFriendship(1L, 2L);
 
         verify(eventPublisher).publishEvent(new FriendshipRequestedEvent(11L, 1L, 2L));
     }

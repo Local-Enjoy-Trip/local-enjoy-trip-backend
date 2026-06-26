@@ -345,7 +345,7 @@ final class ApiExamples {
 
     static final String FRIEND_REQUEST = """
             {
-              "targetEmail": "dongne@example.com"
+              "targetUserId": 2
             }
             """;
 

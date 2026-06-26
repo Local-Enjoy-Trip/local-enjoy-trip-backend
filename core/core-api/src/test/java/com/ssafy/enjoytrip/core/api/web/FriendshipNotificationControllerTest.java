@@ -53,7 +53,7 @@ class FriendshipNotificationControllerTest {
     @DisplayName("인증 사용자는 JSON 본문으로 친구 요청을 생성한다")
     @Test
     void requestFriendshipWithJsonBody() throws Exception {
-        when(friendshipService.requestFriendship(eq(1L), eq("bob@example.com")))
+        when(friendshipService.requestFriendship(eq(1L), eq(2L)))
                 .thenReturn(friendship(
                         1L,
                         1L,
@@ -66,14 +66,14 @@ class FriendshipNotificationControllerTest {
         mockMvc.perform(post("/api/friendships/requests")
                         .principal(jwtPrincipal("1"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"targetEmail\":\"bob@example.com\"}"))
+                        .content("{\"targetUserId\":2}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.friendship.id").value(1))
                 .andExpect(jsonPath("$.data.friendship.status").value("PENDING"))
                 .andExpect(jsonPath("$.error", nullValue()));
 
-        verify(friendshipService).requestFriendship(1L, "bob@example.com");
+        verify(friendshipService).requestFriendship(1L, 2L);
     }
 
     @DisplayName("친구 목록은 현재 사용자 관점의 counterpart를 friends 필드로 반환한다")
