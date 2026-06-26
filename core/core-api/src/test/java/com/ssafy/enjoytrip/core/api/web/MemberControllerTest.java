@@ -93,7 +93,7 @@ class MemberControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @DisplayName("로그인은 JWT 토큰을 반환하고 userId를 응답하지 않는다")
+    @DisplayName("로그인은 JWT 토큰과 userId를 반환하고 password를 응답하지 않는다")
     @Test
     void loginReturnsJwtToken() throws Exception {
         Member member = new Member(1L, "SSAFY", "동네핀러", "Case@Test.com", "hidden", null);
@@ -112,8 +112,8 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.data.expiresIn").value(7200))
+                .andExpect(jsonPath("$.data.user.userId").value("1"))
                 .andExpect(jsonPath("$.data.user.email").value("Case@Test.com"))
-                .andExpect(jsonPath("$.data.user.userId").doesNotExist())
                 .andExpect(jsonPath("$.data.user.password").doesNotExist());
     }
 
@@ -240,7 +240,7 @@ class MemberControllerTest {
 
         mockMvc.perform(get("/api/members/me").principal(jwtPrincipal("1")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.user.userId").doesNotExist())
+                .andExpect(jsonPath("$.data.user.userId").value("1"))
                 .andExpect(jsonPath("$.data.user.email").value("ssafy@example.com"))
                 .andExpect(jsonPath("$.data.user.nickname").value("동네핀러"))
                 .andExpect(jsonPath("$.data.user.profileImageUrl")
